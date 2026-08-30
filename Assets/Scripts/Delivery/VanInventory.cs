@@ -10,7 +10,7 @@ public class VanInventory : MonoBehaviour
     [Tooltip("Günde dağıtılacak maksimum paket sayısı")]
     public int dailyPackageCount = 10;
 
-    [Tooltip("Yere düşecek fiziksel kargo kutusu prefab'ı (Boş bırakılırsa otomatik küp oluşturulur)")]
+    [Tooltip("Yere düşecek fiziksel kargo kutusu prefab'ı (Boş bırakılırsa otomatik URP kutu oluşturulur)")]
     public GameObject cargoPackagePrefab;
 
     [Header("--- BAGAJDAKİ KARGOLAR ---")]
@@ -19,7 +19,7 @@ public class VanInventory : MonoBehaviour
     [Header("--- TESLİMAT GEÇMİŞİ ---")]
     [SerializeField] private List<CargoItem> deliveredHistory = new List<CargoItem>();
 
-    public static event Action<CargoItem, bool, string> OnCargoDeliveredWithFeedback; // (Kargo, Doğru mu?, Geri bildirim metni)
+    public static event Action<CargoItem, bool, string> OnCargoDeliveredWithFeedback;
     public static event Action<CargoItem, bool> OnCargoDelivered;
     public static event Action OnInventoryUpdated;
 
@@ -167,7 +167,32 @@ public class VanInventory : MonoBehaviour
             boxObj.transform.localScale = new Vector3(1.1f, 1.1f, 1.1f);
             
             Renderer ren = boxObj.GetComponent<Renderer>();
-            if (ren != null) ren.material.color = isCorrect ? new Color(0.2f, 0.7f, 0.3f) : new Color(0.7f, 0.3f, 0.2f);
+            if (ren != null)
+            {
+                // URP Uyumlu Shader Bul ve Ata
+                Shader s = Shader.Find("Universal Render Pipeline/Lit");
+                if (s == null) s = Shader.Find("Universal Render Pipeline/Simple Lit");
+                if (s == null) s = Shader.Find("Standard");
+
+                Material runtimeMat = (s != null) ? new Material(s) : null;
+                if (runtimeMat == null)
+                {
+                    Renderer anyRen = FindAnyObjectByType<Renderer>();
+                    if (anyRen != null && anyRen.sharedMaterial != null)
+                    {
+                        runtimeMat = new Material(anyRen.sharedMaterial);
+                    }
+                }
+
+                if (runtimeMat != null)
+                {
+                    runtimeMat.color = isCorrect 
+                        ? new Color(0.3f, 0.75f, 0.35f) 
+                        : new Color(0.72f, 0.52f, 0.32f);
+                    
+                    ren.material = runtimeMat;
+                }
+            }
         }
 
         Rigidbody rb = boxObj.GetComponent<Rigidbody>();
