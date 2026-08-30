@@ -9,16 +9,19 @@ public class CarController : MonoBehaviour
 {
     [Header("--- MOTOR & FREN AYARLARI ---")]
     public float motorForce = 15000f;
-    public float brakeForce = 25000f;
+    public float reverseForce = 10000f;
+    public float footBrakeForce = 100000f;
+    public float handBrakeForce = 150000f;
     public float maxSteerAngle = 35f;
     public Vector3 centerOfMassOffset = new Vector3(0, -1.2f, 0);
 
     [Header("--- EL FRENİ & DRİFT AYARLARI ---")]
-    [Tooltip("El frenine basınca arka tekerleklerin kayma katsayısı (0.2 - 0.4 arası dengelidir)")]
     public float driftSidewaysStiffness = 0.25f;
-    
-    [Tooltip("Drift esnasında dönüşe verilen hafif ekstra açı desteği")]
     public float driftYawBoost = 4.0f;
+
+    [Header("--- DRİFT TOPARLANMA DESTEĞİ ---")]
+    [Tooltip("Gaza basınca aracın yan kaymadan düz hatta toparlanma hızı (Yüksek = Hızlı toparlar)")]
+    public float driftRecoveryRate = 8.0f;
 
     [Header("--- WHEEL COLLIDERS (Fizik Tekerlekleri) ---")]
     public WheelCollider frontLeftCollider;
@@ -38,14 +41,15 @@ public class CarController : MonoBehaviour
 
     private Rigidbody rb;
     private float currentSteerAngle;
-    private float currentMotorForce;
-
     private float horizontalInput;
     private float verticalInput;
-    private bool isBraking;
+    private bool isHandbraking;
 
     private WheelFrictionCurve normalRearSidewaysFriction;
     private WheelFrictionCurve driftRearSidewaysFriction;
+    private float currentRearStiffness;
+
+    public float ForwardSpeed { get; private set; }
 
     private void Start()
     {
@@ -53,14 +57,14 @@ public class CarController : MonoBehaviour
         if (rb != null)
         {
             rb.centerOfMass += centerOfMassOffset;
-            rb.maxAngularVelocity = 7f; // Kontrolsüz fırıldak gibi dönmeyi engeller
+            rb.maxAngularVelocity = 7f;
         }
 
         if (rearLeftCollider != null)
         {
             normalRearSidewaysFriction = rearLeftCollider.sidewaysFriction;
             driftRearSidewaysFriction = rearLeftCollider.sidewaysFriction;
-            driftRearSidewaysFriction.stiffness = driftSidewaysStiffness;
+            currentRearStiffness = normalRearSidewaysFriction.stiffness;
         }
     }
 
@@ -71,17 +75,30 @@ public class CarController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        HandleMotor();
+        CalculateSpeed();
         HandleSteering();
-        HandleDriftAndBrakes();
+        HandleMotorAndBrakes();
+        HandleDriftRecovery();
         UpdateWheelMeshes();
+    }
+
+    private void CalculateSpeed()
+    {
+        if (rb != null)
+        {
+            ForwardSpeed = Vector3.Dot(transform.forward, rb.linearVelocity);
+        }
+        else
+        {
+            ForwardSpeed = 0f;
+        }
     }
 
     private void GetInput()
     {
         horizontalInput = 0f;
         verticalInput = 0f;
-        isBraking = false;
+        isHandbraking = false;
 
 #if ENABLE_INPUT_SYSTEM
         if (Keyboard.current != null)
@@ -90,23 +107,15 @@ public class CarController : MonoBehaviour
             if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) verticalInput -= 1f;
             if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) horizontalInput += 1f;
             if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) horizontalInput -= 1f;
-            if (Keyboard.current.spaceKey.isPressed) isBraking = true;
+            if (Keyboard.current.spaceKey.isPressed) isHandbraking = true;
         }
 #endif
 
 #if ENABLE_LEGACY_INPUT_MANAGER
         if (verticalInput == 0f) verticalInput = Input.GetAxis("Vertical");
         if (horizontalInput == 0f) horizontalInput = Input.GetAxis("Horizontal");
-        if (!isBraking) isBraking = Input.GetKey(KeyCode.Space);
+        if (!isHandbraking) isHandbraking = Input.GetKey(KeyCode.Space);
 #endif
-    }
-
-    private void HandleMotor()
-    {
-        currentMotorForce = verticalInput * motorForce;
-
-        if (rearLeftCollider != null) rearLeftCollider.motorTorque = currentMotorForce;
-        if (rearRightCollider != null) rearRightCollider.motorTorque = currentMotorForce;
     }
 
     private void HandleSteering()
@@ -116,47 +125,157 @@ public class CarController : MonoBehaviour
         if (frontRightCollider != null) frontRightCollider.steerAngle = currentSteerAngle;
     }
 
-    private void HandleDriftAndBrakes()
+    private void HandleMotorAndBrakes()
     {
-        if (isBraking)
+        float motor = 0f;
+        float footBrake = 0f;
+
+        // 1. SPACE (EL FRENİ)
+        if (isHandbraking)
         {
-            // Arka sürtünmeyi düşür
-            driftRearSidewaysFriction.stiffness = driftSidewaysStiffness;
-            if (rearLeftCollider != null) rearLeftCollider.sidewaysFriction = driftRearSidewaysFriction;
-            if (rearRightCollider != null) rearRightCollider.sidewaysFriction = driftRearSidewaysFriction;
+            HandleHandbrake();
+            return;
+        }
 
-            // Arka tekerleklere fren uygula
-            ApplyBrakes(rearLeftCollider, brakeForce * 0.7f);
-            ApplyBrakes(rearRightCollider, brakeForce * 0.7f);
-            ApplyBrakes(frontLeftCollider, 0f);
-            ApplyBrakes(frontRightCollider, 0f);
+        // 2. İLERİ GİDERKEN S'YE BASILIRSA -> AYAK FRENİ
+        if (ForwardSpeed > 1.0f && verticalInput < -0.05f)
+        {
+            footBrake = footBrakeForce * Mathf.Abs(verticalInput);
+            motor = 0f;
+        }
+        // 3. GERİ GİDERKEN W'YA BASILIRSA -> AYAK FRENİ
+        else if (ForwardSpeed < -1.0f && verticalInput > 0.05f)
+        {
+            footBrake = footBrakeForce * Mathf.Abs(verticalInput);
+            motor = 0f;
+        }
+        // 4. NORMAL SÜRÜŞ
+        else
+        {
+            footBrake = 0f;
 
-            // Sadece araç hareket halindeyse kontrollü yanlama torku ver
-            if (Mathf.Abs(horizontalInput) > 0.1f && rb != null && rb.linearVelocity.magnitude > 5f)
+            if (verticalInput > 0.05f)
+            {
+                motor = verticalInput * motorForce;
+            }
+            else if (verticalInput < -0.05f)
+            {
+                motor = verticalInput * reverseForce;
+            }
+            else
+            {
+                motor = 0f;
+                footBrake = 500f; // Doğal motor direnci
+            }
+        }
+
+        ApplyMotorTorque(motor);
+        ApplyBrakes(footBrake);
+    }
+
+    private void HandleHandbrake()
+    {
+        bool isSteering = Mathf.Abs(horizontalInput) > 0.1f;
+
+        if (isSteering)
+        {
+            // Dönüşlü El Freni -> Drift
+            currentRearStiffness = driftSidewaysStiffness;
+            SetRearStiffness(currentRearStiffness);
+
+            ApplyMotorTorque(0f);
+            if (rearLeftCollider != null) rearLeftCollider.brakeTorque = handBrakeForce * 0.5f;
+            if (rearRightCollider != null) rearRightCollider.brakeTorque = handBrakeForce * 0.5f;
+            if (frontLeftCollider != null) frontLeftCollider.brakeTorque = 0f;
+            if (frontRightCollider != null) frontRightCollider.brakeTorque = 0f;
+
+            if (rb != null && rb.linearVelocity.magnitude > 4f)
             {
                 rb.AddTorque(transform.up * horizontalInput * driftYawBoost, ForceMode.Acceleration);
             }
         }
         else
         {
-            // Normal sürtünmeye dön
-            if (rearLeftCollider != null) rearLeftCollider.sidewaysFriction = normalRearSidewaysFriction;
-            if (rearRightCollider != null) rearRightCollider.sidewaysFriction = normalRearSidewaysFriction;
+            // Düz El Freni -> Tam Durdurma
+            currentRearStiffness = normalRearSidewaysFriction.stiffness;
+            SetRearStiffness(currentRearStiffness);
 
-            // Frenleri bırak
-            ApplyBrakes(frontLeftCollider, 0f);
-            ApplyBrakes(frontRightCollider, 0f);
-            ApplyBrakes(rearLeftCollider, 0f);
-            ApplyBrakes(rearRightCollider, 0f);
+            ApplyMotorTorque(0f);
+            ApplyBrakes(handBrakeForce);
+
+            if (rb != null)
+            {
+                if (rb.linearVelocity.magnitude > 0.2f)
+                {
+                    rb.linearVelocity = Vector3.MoveTowards(rb.linearVelocity, Vector3.zero, Time.fixedDeltaTime * 20f);
+                }
+                else
+                {
+                    rb.linearVelocity = Vector3.zero;
+                }
+            }
         }
     }
 
-    private void ApplyBrakes(WheelCollider col, float force)
+    /// <summary>
+    /// Drift sonrasında gaza basıldığında aracın hızla çizgiye oturmasını ve kendini toplamasını sağlar
+    /// </summary>
+    private void HandleDriftRecovery()
     {
-        if (col != null)
+        if (isHandbraking) return;
+
+        // El freni bırakıldığında arka tekerlek tutuşunu yumuşakça normale çek
+        currentRearStiffness = Mathf.MoveTowards(currentRearStiffness, normalRearSidewaysFriction.stiffness, Time.fixedDeltaTime * 2.5f);
+        SetRearStiffness(currentRearStiffness);
+
+        // Gaza basılıyorsa ve araç yan kayıyorsa burnunu sürüş yönüne hızla toparla
+        if (verticalInput > 0.1f && rb != null && ForwardSpeed > 2f)
         {
-            col.brakeTorque = force;
+            Vector3 localVel = transform.InverseTransformDirection(rb.linearVelocity);
+
+            // Yan kayma hızını (X ekseni) sıfıra doğru sönümle (önden çekiş doğrultma etkisi)
+            if (Mathf.Abs(localVel.x) > 0.5f)
+            {
+                localVel.x = Mathf.MoveTowards(localVel.x, 0f, Time.fixedDeltaTime * driftRecoveryRate);
+                rb.linearVelocity = transform.TransformDirection(localVel);
+
+                // Aşırı savrulma açısal hızını dengele
+                Vector3 angularVel = rb.angularVelocity;
+                angularVel.y = Mathf.MoveTowards(angularVel.y, 0f, Time.fixedDeltaTime * 4f);
+                rb.angularVelocity = angularVel;
+            }
         }
+    }
+
+    private void SetRearStiffness(float stiffness)
+    {
+        if (rearLeftCollider != null)
+        {
+            WheelFrictionCurve f = rearLeftCollider.sidewaysFriction;
+            f.stiffness = stiffness;
+            rearLeftCollider.sidewaysFriction = f;
+        }
+
+        if (rearRightCollider != null)
+        {
+            WheelFrictionCurve f = rearRightCollider.sidewaysFriction;
+            f.stiffness = stiffness;
+            rearRightCollider.sidewaysFriction = f;
+        }
+    }
+
+    private void ApplyMotorTorque(float force)
+    {
+        if (rearLeftCollider != null) rearLeftCollider.motorTorque = force;
+        if (rearRightCollider != null) rearRightCollider.motorTorque = force;
+    }
+
+    private void ApplyBrakes(float force)
+    {
+        if (frontLeftCollider != null) frontLeftCollider.brakeTorque = force;
+        if (frontRightCollider != null) frontRightCollider.brakeTorque = force;
+        if (rearLeftCollider != null) rearLeftCollider.brakeTorque = force;
+        if (rearRightCollider != null) rearRightCollider.brakeTorque = force;
     }
 
     private void UpdateWheelMeshes()
