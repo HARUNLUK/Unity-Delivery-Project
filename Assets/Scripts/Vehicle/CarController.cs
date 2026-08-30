@@ -20,7 +20,7 @@ public class CarController : MonoBehaviour
     public float driftYawBoost = 4.0f;
 
     [Header("--- DRİFT TOPARLANMA DESTEĞİ ---")]
-    [Tooltip("Gaza basınca aracın yan kaymadan düz hatta toparlanma hızı (Yüksek = Hızlı toparlar)")]
+    [Tooltip("Gaza basınca aracın yan kaymadan düz hatta toparlanma hızı")]
     public float driftRecoveryRate = 8.0f;
 
     [Header("--- WHEEL COLLIDERS (Fizik Tekerlekleri) ---")]
@@ -50,6 +50,16 @@ public class CarController : MonoBehaviour
     private float currentRearStiffness;
 
     public float ForwardSpeed { get; private set; }
+
+    private void Awake()
+    {
+        // Araç üzerindeki tüm MeshCollider'ları otomatik Convex yap (Fizik motoru çakışmasını engelle)
+        MeshCollider[] meshColliders = GetComponentsInChildren<MeshCollider>();
+        foreach (var mc in meshColliders)
+        {
+            mc.convex = true;
+        }
+    }
 
     private void Start()
     {
@@ -130,26 +140,22 @@ public class CarController : MonoBehaviour
         float motor = 0f;
         float footBrake = 0f;
 
-        // 1. SPACE (EL FRENİ)
         if (isHandbraking)
         {
             HandleHandbrake();
             return;
         }
 
-        // 2. İLERİ GİDERKEN S'YE BASILIRSA -> AYAK FRENİ
         if (ForwardSpeed > 1.0f && verticalInput < -0.05f)
         {
             footBrake = footBrakeForce * Mathf.Abs(verticalInput);
             motor = 0f;
         }
-        // 3. GERİ GİDERKEN W'YA BASILIRSA -> AYAK FRENİ
         else if (ForwardSpeed < -1.0f && verticalInput > 0.05f)
         {
             footBrake = footBrakeForce * Mathf.Abs(verticalInput);
             motor = 0f;
         }
-        // 4. NORMAL SÜRÜŞ
         else
         {
             footBrake = 0f;
@@ -165,7 +171,7 @@ public class CarController : MonoBehaviour
             else
             {
                 motor = 0f;
-                footBrake = 500f; // Doğal motor direnci
+                footBrake = 500f;
             }
         }
 
@@ -179,7 +185,6 @@ public class CarController : MonoBehaviour
 
         if (isSteering)
         {
-            // Dönüşlü El Freni -> Drift
             currentRearStiffness = driftSidewaysStiffness;
             SetRearStiffness(currentRearStiffness);
 
@@ -196,7 +201,6 @@ public class CarController : MonoBehaviour
         }
         else
         {
-            // Düz El Freni -> Tam Durdurma
             currentRearStiffness = normalRearSidewaysFriction.stiffness;
             SetRearStiffness(currentRearStiffness);
 
@@ -217,29 +221,22 @@ public class CarController : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Drift sonrasında gaza basıldığında aracın hızla çizgiye oturmasını ve kendini toplamasını sağlar
-    /// </summary>
     private void HandleDriftRecovery()
     {
         if (isHandbraking) return;
 
-        // El freni bırakıldığında arka tekerlek tutuşunu yumuşakça normale çek
         currentRearStiffness = Mathf.MoveTowards(currentRearStiffness, normalRearSidewaysFriction.stiffness, Time.fixedDeltaTime * 2.5f);
         SetRearStiffness(currentRearStiffness);
 
-        // Gaza basılıyorsa ve araç yan kayıyorsa burnunu sürüş yönüne hızla toparla
         if (verticalInput > 0.1f && rb != null && ForwardSpeed > 2f)
         {
             Vector3 localVel = transform.InverseTransformDirection(rb.linearVelocity);
 
-            // Yan kayma hızını (X ekseni) sıfıra doğru sönümle (önden çekiş doğrultma etkisi)
             if (Mathf.Abs(localVel.x) > 0.5f)
             {
                 localVel.x = Mathf.MoveTowards(localVel.x, 0f, Time.fixedDeltaTime * driftRecoveryRate);
                 rb.linearVelocity = transform.TransformDirection(localVel);
 
-                // Aşırı savrulma açısal hızını dengele
                 Vector3 angularVel = rb.angularVelocity;
                 angularVel.y = Mathf.MoveTowards(angularVel.y, 0f, Time.fixedDeltaTime * 4f);
                 rb.angularVelocity = angularVel;

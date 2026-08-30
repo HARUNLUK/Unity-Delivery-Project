@@ -3,29 +3,36 @@ using UnityEngine;
 
 public class DeliveryPoint : MonoBehaviour
 {
-    [Header("--- ADRES TANIMI ---")]
-    [Tooltip("Bu teslimat noktasının adresi")]
-    public string addressName = "Atatürk Cad. No: 1";
+    [Header("--- ADRES & KİMLİK TANIMI ---")]
+    [Tooltip("Bu teslimat noktasının adresi (Örn: Papatya Sokak No: 4)")]
+    public string addressName = "Papatya Sokak No: 4";
+
+    [Tooltip("Oyuncunun evi bulabilmesi için ipucu / adres tarifi")]
+    [TextArea(2, 5)]
+    public string addressDescription = "Kırmızı çatılı, önünde mavi çiçekler ve beyaz çit olan ev.";
     
-    [Tooltip("Benzersiz nokta kimliği")]
+    [Tooltip("Bu noktanın benzersiz kimliği (Örn: Point_01, Point_02...)")]
     public string pointId = "Point_01";
 
     [Header("--- GÖRSEL İŞARETÇİ ---")]
-    [Tooltip("Yerde parlayan çember / efekt objesi")]
     public GameObject visualMarker;
 
     [Header("--- DURUM ---")]
     [SerializeField] private bool isPlayerInside = false;
+    [SerializeField] private bool isFulfilled = false;
 
-    // Araç alana girdiğinde ve çıktığında tetiklenen event'ler
     public static event Action<DeliveryPoint> OnDeliveryZoneEntered;
     public static event Action<DeliveryPoint> OnDeliveryZoneExited;
 
     public bool IsPlayerInside => isPlayerInside;
+    public bool IsFulfilled
+    {
+        get => isFulfilled;
+        set => isFulfilled = value;
+    }
 
     private void OnTriggerEnter(Collider other)
     {
-        // Alana giren objenin araç olup olmadığını kontrol et
         CarController car = other.GetComponentInParent<CarController>();
         if (car != null)
         {
@@ -46,8 +53,7 @@ public class DeliveryPoint : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        // Scene ekranında teslimat alanını sarı küre olarak göster
-        Gizmos.color = isPlayerInside ? Color.green : Color.yellow;
+        Gizmos.color = isFulfilled ? Color.gray : (isPlayerInside ? Color.green : Color.yellow);
         Gizmos.DrawWireSphere(transform.position, 3f);
     }
 }
