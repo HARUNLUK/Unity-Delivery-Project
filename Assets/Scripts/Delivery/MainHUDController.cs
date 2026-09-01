@@ -5,7 +5,7 @@ public class MainHUDController : MonoBehaviour
 {
     public static MainHUDController Instance { get; private set; }
 
-    [Header("--- HUD METİN REFERANSLARI ---")]
+    [Header("--- HUD TEXT REFERENCES ---")]
     public TextMeshProUGUI clockText;
     public TextMeshProUGUI remainingCargoText;
     public TextMeshProUGUI balanceEarningsText;
@@ -36,7 +36,7 @@ public class MainHUDController : MonoBehaviour
     {
         if (clockText != null && DayTimeManager.Instance != null)
         {
-            clockText.text = $"SAAT: {DayTimeManager.Instance.GetFormattedTime()}";
+            clockText.text = $"TIME: {DayTimeManager.Instance.GetFormattedTime()}";
         }
     }
 
@@ -49,7 +49,7 @@ public class MainHUDController : MonoBehaviour
     {
         if (remainingCargoText != null && VanInventory.Instance != null)
         {
-            remainingCargoText.text = $"KALAN: {VanInventory.Instance.RemainingCargoCount} / {VanInventory.Instance.dailyPackageCount}";
+            remainingCargoText.text = $"REMAINING: {VanInventory.Instance.RemainingCargoCount} / {VanInventory.Instance.dailyPackageCount}";
         }
     }
 
@@ -57,17 +57,17 @@ public class MainHUDController : MonoBehaviour
     {
         if (balanceEarningsText != null)
         {
-            string dailySign = todayNet >= 0 ? $"(+{todayNet} TL)" : $"({todayNet} TL)";
+            string dailySign = todayNet >= 0 ? $"(+{todayNet} $)" : $"({todayNet} $)";
             
             if (liveBalance >= 0)
             {
-                balanceEarningsText.text = $"BAKIYE: {liveBalance} TL {dailySign}";
-                balanceEarningsText.color = new Color(0.2f, 1f, 0.4f); // Yeşil
+                balanceEarningsText.text = $"BALANCE: {liveBalance} $ {dailySign}";
+                balanceEarningsText.color = new Color(0.2f, 1f, 0.4f); // Green
             }
             else
             {
-                balanceEarningsText.text = $"BAKIYE: {liveBalance} TL {dailySign}";
-                balanceEarningsText.color = new Color(1f, 0.25f, 0.25f); // Kırmızı
+                balanceEarningsText.text = $"BALANCE: {liveBalance} $ {dailySign}";
+                balanceEarningsText.color = new Color(1f, 0.25f, 0.25f); // Red
             }
         }
     }

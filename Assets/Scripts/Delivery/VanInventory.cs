@@ -6,17 +6,17 @@ public class VanInventory : MonoBehaviour
 {
     public static VanInventory Instance { get; private set; }
 
-    [Header("--- AYARLAR ---")]
-    [Tooltip("Günde dağıtılacak maksimum paket sayısı")]
+    [Header("--- SETTINGS ---")]
+    [Tooltip("Maximum packages to distribute per day")]
     public int dailyPackageCount = 10;
 
-    [Tooltip("Yere düşecek fiziksel kargo kutusu prefab'ı (Boş bırakılırsa otomatik URP kutu oluşturulur)")]
+    [Tooltip("Prefab of the physical cargo box dropped on the ground (Optional, creates URP box if empty)")]
     public GameObject cargoPackagePrefab;
 
-    [Header("--- BAGAJDAKİ KARGOLAR ---")]
+    [Header("--- LOADED CARGO IN VAN ---")]
     [SerializeField] private List<CargoItem> loadedCargoList = new List<CargoItem>();
 
-    [Header("--- TESLİMAT GEÇMİŞİ ---")]
+    [Header("--- DELIVERY HISTORY ---")]
     [SerializeField] private List<CargoItem> deliveredHistory = new List<CargoItem>();
 
     public static event Action<CargoItem, bool, string> OnCargoDeliveredWithFeedback;
@@ -46,15 +46,15 @@ public class VanInventory : MonoBehaviour
 
         if (scenePoints.Length == 0)
         {
-            Debug.LogWarning("[VanInventory] Sahnede hiç DeliveryPoint bulunamadı!");
+            Debug.LogWarning("[VanInventory] No DeliveryPoint found in the scene!");
             return;
         }
 
-        string[] randomNames = new string[]
+        string[] englishNames = new string[]
         {
-            "Ahmet Yilmaz", "Ayse Kaya", "Mehmet Demir", "Fatma Celik",
-            "Mustafa Sahin", "Zeynep Yildiz", "Emre Ozturk", "Elif Aydin",
-            "Burak Arslan", "Selin Dogan", "Can Polat", "Gizem Koc"
+            "John Smith", "Emma Watson", "Michael Brown", "Sarah Davis",
+            "David Wilson", "Emily Taylor", "James Anderson", "Olivia Martinez",
+            "William Thomas", "Sophia Jackson", "Daniel White", "Ava Harris"
         };
 
         List<DeliveryPoint> pointPool = new List<DeliveryPoint>(scenePoints);
@@ -65,12 +65,12 @@ public class VanInventory : MonoBehaviour
             DeliveryPoint p = pointPool[i];
 
             string description = string.IsNullOrEmpty(p.addressDescription) 
-                ? "Adres tarifi bulunmuyor." 
+                ? "No address description provided." 
                 : p.addressDescription;
 
             CargoItem cargo = new CargoItem(
-                $"#KRG-10{i + 1:D2}",
-                randomNames[UnityEngine.Random.Range(0, randomNames.Length)],
+                $"#CRG-10{i + 1:D2}",
+                englishNames[UnityEngine.Random.Range(0, englishNames.Length)],
                 p.addressName,
                 description,
                 p.pointId
@@ -79,12 +79,12 @@ public class VanInventory : MonoBehaviour
             loadedCargoList.Add(cargo);
         }
 
-        Debug.Log($"[VanInventory] Güne başlandı! Toplam {loadedCargoList.Count} paket yüklendi.");
+        Debug.Log($"[VanInventory] Day started! Loaded {loadedCargoList.Count} packages.");
         OnInventoryUpdated?.Invoke();
     }
 
     /// <summary>
-    /// Kargo paketini yere bırakır. KESİN KURAL: Yalnızca doğru noktaya düştüyse doğru sayılır, diğer tüm durumlarda CEZA kesilir.
+    /// Drops package from van. STRICT RULE: Only exact target point is correct (+50 $), everything else is penalized (-100 $).
     /// </summary>
     public void DropCargoFromVan(CargoItem item)
     {
@@ -103,7 +103,7 @@ public class VanInventory : MonoBehaviour
             if (carRb != null) carVelocity = carRb.linearVelocity * 0.3f;
         }
 
-        // Çevredeki DeliveryPoint'leri tara (6 metre yarıçap)
+        // Scan nearby delivery points within 6 meters
         Collider[] hits = Physics.OverlapSphere(spawnPos, 6.0f);
         DeliveryPoint reachedPoint = null;
 
@@ -117,7 +117,6 @@ public class VanInventory : MonoBehaviour
             }
         }
 
-        // KESİN KURAL KONTROLÜ
         bool isCorrect = false;
         string feedbackMessage = "";
 
@@ -125,35 +124,33 @@ public class VanInventory : MonoBehaviour
         {
             item.deliveredToAddressName = reachedPoint.addressName;
 
-            // Point ID tam eşleşiyorsa DOĞRU, değilse HATALI
             if (string.Equals(item.targetPointId.Trim(), reachedPoint.pointId.Trim(), StringComparison.OrdinalIgnoreCase))
             {
                 isCorrect = true;
-                feedbackMessage = $"[+] DOGRU TESLIMAT! (+{item.deliveryReward} TL)";
+                feedbackMessage = $"[+] SUCCESSFUL DELIVERY! (+{item.deliveryReward} $)";
                 reachedPoint.IsFulfilled = true;
                 if (reachedPoint.visualMarker != null) reachedPoint.visualMarker.SetActive(false);
             }
             else
             {
                 isCorrect = false;
-                feedbackMessage = $"[-] YANLIS ADRESE BIRAKILDI! (-{item.wrongDeliveryPenalty} TL CEZA)";
+                feedbackMessage = $"[-] WRONG ADDRESS! (-{item.wrongDeliveryPenalty} $ PENALTY)";
             }
         }
         else
         {
-            // Sokağa / boşluğa bırakıldı
-            item.deliveredToAddressName = "Sokak / Bos Alan";
+            item.deliveredToAddressName = "Street / Empty Area";
             isCorrect = false;
-            feedbackMessage = $"[-] SOKAK ORTASINA BIRAKILDI! (-{item.wrongDeliveryPenalty} TL CEZA)";
+            feedbackMessage = $"[-] DROPPED ON THE STREET! (-{item.wrongDeliveryPenalty} $ PENALTY)";
         }
 
         item.isDelivered = true;
         item.isDeliveredCorrectly = isCorrect;
         deliveredHistory.Add(item);
 
-        Debug.Log($"[TESLİMAT SONUCU] {item.trackingNumber} | {feedbackMessage} | Kalan Paket: {loadedCargoList.Count}");
+        Debug.Log($"[DELIVERY RESULT] {item.trackingNumber} | {feedbackMessage} | Remaining: {loadedCargoList.Count}");
 
-        // Görsel Fiziksel Kutu Oluştur
+        // Physical Cargo Box Spawn
         GameObject boxObj;
         if (cargoPackagePrefab != null)
         {
@@ -169,7 +166,6 @@ public class VanInventory : MonoBehaviour
             Renderer ren = boxObj.GetComponent<Renderer>();
             if (ren != null)
             {
-                // URP Uyumlu Shader Bul ve Ata
                 Shader s = Shader.Find("Universal Render Pipeline/Lit");
                 if (s == null) s = Shader.Find("Universal Render Pipeline/Simple Lit");
                 if (s == null) s = Shader.Find("Standard");

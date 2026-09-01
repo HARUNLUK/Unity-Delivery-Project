@@ -8,7 +8,7 @@ public class DaySummaryManager : MonoBehaviour
 {
     public static DaySummaryManager Instance { get; private set; }
 
-    [Header("--- PANEL REFERANSLARI ---")]
+    [Header("--- PANEL REFERENCES ---")]
     public GameObject summaryPanelRoot;
     public TextMeshProUGUI totalDeliveredText;
     public TextMeshProUGUI correctDeliveriesText;
@@ -123,7 +123,6 @@ public class DaySummaryManager : MonoBehaviour
 
         int netProfit = totalReward - totalPenalty;
 
-        // Bütçeyi kalıcı kasaya kaydet
         if (!isDayFinalized && PlayerEconomyManager.Instance != null)
         {
             isDayFinalized = true;
@@ -132,14 +131,14 @@ public class DaySummaryManager : MonoBehaviour
 
         int totalVault = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.TotalSavedBalance : netProfit;
 
-        if (totalDeliveredText != null) totalDeliveredText.text = $"Toplam Dagitilan: {totalDelivered} Paket";
-        if (correctDeliveriesText != null) correctDeliveriesText.text = $"[+] Dogru Teslimat: {correctCount} Adet (+{totalReward} TL)";
-        if (wrongDeliveriesText != null) wrongDeliveriesText.text = $"[-] Hatali Teslimat: {wrongCount} Adet (-{totalPenalty} TL Ceza)";
+        if (totalDeliveredText != null) totalDeliveredText.text = $"Total Delivered: {totalDelivered} Packages";
+        if (correctDeliveriesText != null) correctDeliveriesText.text = $"[+] Correct Deliveries: {correctCount} (+{totalReward} $)";
+        if (wrongDeliveriesText != null) wrongDeliveriesText.text = $"[-] Wrong Deliveries: {wrongCount} (-{totalPenalty} $ Penalty)";
         
         if (netEarningsText != null)
         {
-            string profitLabel = netProfit >= 0 ? $"+{netProfit} TL" : $"{netProfit} TL";
-            netEarningsText.text = $"BUGUN: {profitLabel} | TOPLAM KASA: {totalVault} TL";
+            string profitLabel = netProfit >= 0 ? $"+{netProfit} $" : $"{netProfit} $";
+            netEarningsText.text = $"TODAY: {profitLabel} | TOTAL VAULT: {totalVault} $";
             netEarningsText.color = netProfit >= 0 ? new Color(0.2f, 0.95f, 0.3f) : new Color(0.95f, 0.2f, 0.2f);
         }
 
@@ -168,8 +167,8 @@ public class DaySummaryManager : MonoBehaviour
 
             if (rowText != null)
             {
-                string statusText = item.isDeliveredCorrectly ? "[DOGRU]" : "[HATALI]";
-                rowText.text = $"{item.trackingNumber} ({item.recipientName})\nBirakilan: {item.deliveredToAddressName} | Hedef: {item.targetAddress} {statusText}";
+                string statusText = item.isDeliveredCorrectly ? "[CORRECT]" : "[WRONG]";
+                rowText.text = $"{item.trackingNumber} ({item.recipientName})\nDelivered to: {item.deliveredToAddressName} | Target: {item.targetAddress} {statusText}";
             }
 
             if (rowImg != null)

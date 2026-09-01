@@ -6,10 +6,10 @@ using TMPro;
 
 public static class DeliveryUIBuilder
 {
-    [MenuItem("Tools/Kargo Oyunu/Temiz Teslimat UI Insa Et", false, 1)]
+    [MenuItem("Tools/Delivery Game/Build Clean Delivery UI", false, 1)]
     public static void BuildCleanDeliveryUI()
     {
-        // 0. DeliveryManager Objesini Bul/Oluştur ve Gerekli Sistemleri Ekle
+        // 0. Find/Create DeliveryManager with all required managers
         GameObject deliveryManager = GameObject.Find("DeliveryManager");
         if (deliveryManager == null)
         {
@@ -31,7 +31,7 @@ public static class DeliveryUIBuilder
             deliveryManager.AddComponent<PlayerEconomyManager>();
         }
 
-        // 1. Canvas Bul veya Oluştur
+        // 1. Find or Create Canvas
         Canvas canvas = Object.FindAnyObjectByType<Canvas>();
         if (canvas == null)
         {
@@ -64,7 +64,7 @@ public static class DeliveryUIBuilder
             es.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
         }
 
-        // Varsa eski panelleri tamamen sil ve temizle
+        // Clean old UI roots
         Transform oldTablet = canvas.transform.Find("CargoTabletPanel");
         if (oldTablet != null) Object.DestroyImmediate(oldTablet.gameObject);
 
@@ -78,7 +78,7 @@ public static class DeliveryUIBuilder
         if (oldHud != null) Object.DestroyImmediate(oldHud.gameObject);
 
         // ==========================================
-        // 0. SÜREKLİ EKRANDA DURAN BÜYÜK ANA HUD (TOP BAR)
+        // 0. MAIN TOP STATUS BAR (PERMANENT HUD)
         // ==========================================
         GameObject hudObj = new GameObject("DeliveryHUD");
         hudObj.transform.SetParent(canvas.transform, false);
@@ -87,7 +87,7 @@ public static class DeliveryUIBuilder
         hudRect.anchorMax = Vector2.one;
         hudRect.sizeDelta = Vector2.zero;
 
-        // Üst Ana Çubuk (1300x85)
+        // Top Status Bar (1300x85)
         GameObject topBarObj = new GameObject("TopStatusBar");
         topBarObj.transform.SetParent(hudObj.transform, false);
         RectTransform topBarRect = topBarObj.AddComponent<RectTransform>();
@@ -108,7 +108,7 @@ public static class DeliveryUIBuilder
         topBarLayout.childForceExpandWidth = true;
         topBarLayout.childForceExpandHeight = true;
 
-        // 1. Saat Kartı (Konteyner + Alt Text Objesi)
+        // 1. Clock Card
         GameObject clockCard = new GameObject("ClockCard");
         clockCard.transform.SetParent(topBarObj.transform, false);
         clockCard.AddComponent<Image>().color = new Color(0.12f, 0.16f, 0.22f, 0.95f);
@@ -119,9 +119,9 @@ public static class DeliveryUIBuilder
         clockTextRect.anchorMin = Vector2.zero;
         clockTextRect.anchorMax = Vector2.one;
         clockTextRect.sizeDelta = Vector2.zero;
-        TextMeshProUGUI clockText = AddTextMeshPro(clockTextObj, "SAAT: 09:00", 30, FontStyles.Bold, TextAlignmentOptions.Center, new Color(1f, 0.85f, 0.2f));
+        TextMeshProUGUI clockText = AddTextMeshPro(clockTextObj, "TIME: 09:00", 30, FontStyles.Bold, TextAlignmentOptions.Center, new Color(1f, 0.85f, 0.2f));
 
-        // 2. Kalan Kargo Kartı (Konteyner + Alt Text Objesi)
+        // 2. Remaining Cargo Card
         GameObject cargoCard = new GameObject("CargoCard");
         cargoCard.transform.SetParent(topBarObj.transform, false);
         cargoCard.AddComponent<Image>().color = new Color(0.12f, 0.16f, 0.22f, 0.95f);
@@ -132,9 +132,9 @@ public static class DeliveryUIBuilder
         cargoTextRect.anchorMin = Vector2.zero;
         cargoTextRect.anchorMax = Vector2.one;
         cargoTextRect.sizeDelta = Vector2.zero;
-        TextMeshProUGUI remainingText = AddTextMeshPro(cargoTextObj, "KALAN: 10 / 10", 30, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        TextMeshProUGUI remainingText = AddTextMeshPro(cargoTextObj, "REMAINING: 10 / 10", 30, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
 
-        // 3. Bakiye / Kazanç Kartı (Konteyner + Alt Text Objesi)
+        // 3. Balance Card
         GameObject balanceCard = new GameObject("BalanceCard");
         balanceCard.transform.SetParent(topBarObj.transform, false);
         balanceCard.AddComponent<Image>().color = new Color(0.12f, 0.16f, 0.22f, 0.95f);
@@ -145,16 +145,16 @@ public static class DeliveryUIBuilder
         balanceTextRect.anchorMin = Vector2.zero;
         balanceTextRect.anchorMax = Vector2.one;
         balanceTextRect.sizeDelta = Vector2.zero;
-        TextMeshProUGUI balanceText = AddTextMeshPro(balanceTextObj, "BAKIYE: 0 TL (+0 TL)", 28, FontStyles.Bold, TextAlignmentOptions.Center, new Color(0.2f, 1f, 0.4f));
+        TextMeshProUGUI balanceText = AddTextMeshPro(balanceTextObj, "BALANCE: 0 $ (+0 $)", 28, FontStyles.Bold, TextAlignmentOptions.Center, new Color(0.2f, 1f, 0.4f));
 
-        // MainHUDController Bağla
+        // MainHUDController
         MainHUDController hudController = canvas.GetComponent<MainHUDController>();
         if (hudController == null) hudController = canvas.gameObject.AddComponent<MainHUDController>();
         hudController.clockText = clockText;
         hudController.remainingCargoText = remainingText;
         hudController.balanceEarningsText = balanceText;
 
-        // Anlık Ceza / Bildirim Şeridi (Büyük 900x70)
+        // Notification Banner
         GameObject notifObj = new GameObject("NotificationBanner");
         notifObj.transform.SetParent(hudObj.transform, false);
         RectTransform notifRect = notifObj.AddComponent<RectTransform>();
@@ -173,7 +173,7 @@ public static class DeliveryUIBuilder
         notifTextRect.anchorMin = Vector2.zero;
         notifTextRect.anchorMax = Vector2.one;
         notifTextRect.sizeDelta = Vector2.zero;
-        TextMeshProUGUI notifText = AddTextMeshPro(notifTextObj, "[-] SOKAK ORTASINA BIRAKILDI! (-100 TL CEZA)", 24, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        TextMeshProUGUI notifText = AddTextMeshPro(notifTextObj, "[-] DROPPED ON THE STREET! (-100 $ PENALTY)", 24, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
 
         DeliveryNotificationHUD hudScript = canvas.GetComponent<DeliveryNotificationHUD>();
         if (hudScript == null) hudScript = canvas.gameObject.AddComponent<DeliveryNotificationHUD>();
@@ -185,7 +185,7 @@ public static class DeliveryUIBuilder
         notifObj.SetActive(false);
 
         // ==========================================
-        // 1. KARGO TABLETİ (TAB TUŞU)
+        // 1. CARGO TABLET (TAB KEY)
         // ==========================================
         GameObject tabObj = new GameObject("CargoTabletPanel");
         tabObj.transform.SetParent(canvas.transform, false);
@@ -204,7 +204,7 @@ public static class DeliveryUIBuilder
         tabLayout.childControlWidth = true;
         tabLayout.childControlHeight = true;
 
-        // Sol Sütun: Liste
+        // Left Column: List
         GameObject leftCol = new GameObject("LeftColumn_List");
         leftCol.transform.SetParent(tabObj.transform, false);
         LayoutElement leftLayout = leftCol.AddComponent<LayoutElement>();
@@ -219,7 +219,7 @@ public static class DeliveryUIBuilder
         GameObject listTitleObj = new GameObject("ListTitle");
         listTitleObj.transform.SetParent(leftCol.transform, false);
         listTitleObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 45);
-        AddTextMeshPro(listTitleObj, "BAGAJDAKI KARGOLAR", 24, FontStyles.Bold, TextAlignmentOptions.Center, new Color(1f, 0.8f, 0.2f));
+        AddTextMeshPro(listTitleObj, "CARGO IN TRUNK", 24, FontStyles.Bold, TextAlignmentOptions.Center, new Color(1f, 0.8f, 0.2f));
 
         GameObject scrollObj = new GameObject("CargoScrollView");
         scrollObj.transform.SetParent(leftCol.transform, false);
@@ -260,7 +260,7 @@ public static class DeliveryUIBuilder
         scrollRect.viewport = viewRect;
         scrollRect.content = contentRect;
 
-        // Şablon Kart Buton
+        // Card Template
         GameObject cardTemplate = new GameObject("CargoCardTemplate");
         cardTemplate.transform.SetParent(contentObj.transform, false);
         cardTemplate.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 80);
@@ -280,10 +280,10 @@ public static class DeliveryUIBuilder
         cardTextRect.anchorMax = Vector2.one;
         cardTextRect.sizeDelta = Vector2.zero;
 
-        TextMeshProUGUI cardText = AddTextMeshPro(cardTextObj, "<b>#KRG-1001</b>\nAhmet Yilmaz", 18, FontStyles.Normal, TextAlignmentOptions.MidlineLeft, Color.white);
+        TextMeshProUGUI cardText = AddTextMeshPro(cardTextObj, "<b>#CRG-1001</b>\nJohn Smith", 18, FontStyles.Normal, TextAlignmentOptions.MidlineLeft, Color.white);
         if (cardText != null) cardText.margin = new Vector4(12, 0, 12, 0);
 
-        // Sağ Sütun: Detay ve Drop
+        // Right Column: Detail & Drop
         GameObject rightCol = new GameObject("RightColumn_Detail");
         rightCol.transform.SetParent(tabObj.transform, false);
         LayoutElement rightLayout = rightCol.AddComponent<LayoutElement>();
@@ -301,17 +301,17 @@ public static class DeliveryUIBuilder
         GameObject trackingObj = new GameObject("TrackingNumberText");
         trackingObj.transform.SetParent(rightCol.transform, false);
         trackingObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 30);
-        TextMeshProUGUI trackingText = AddTextMeshPro(trackingObj, "Takip No: #KRG-1001", 22, FontStyles.Bold, TextAlignmentOptions.Left, new Color(1f, 0.8f, 0.2f));
+        TextMeshProUGUI trackingText = AddTextMeshPro(trackingObj, "Tracking No: #CRG-1001", 22, FontStyles.Bold, TextAlignmentOptions.Left, new Color(1f, 0.8f, 0.2f));
 
         GameObject recipientObj = new GameObject("RecipientNameText");
         recipientObj.transform.SetParent(rightCol.transform, false);
         recipientObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 25);
-        TextMeshProUGUI recipientText = AddTextMeshPro(recipientObj, "Alici: Ahmet Yilmaz", 20, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
+        TextMeshProUGUI recipientText = AddTextMeshPro(recipientObj, "Recipient: John Smith", 20, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
 
         GameObject addressObj = new GameObject("TargetAddressText");
         addressObj.transform.SetParent(rightCol.transform, false);
         addressObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 25);
-        TextMeshProUGUI addressText = AddTextMeshPro(addressObj, "Kayitli Adres: Papatya Sokak No: 4", 20, FontStyles.Normal, TextAlignmentOptions.Left, new Color(0.4f, 0.8f, 1f));
+        TextMeshProUGUI addressText = AddTextMeshPro(addressObj, "Address: 104 Maple Street", 20, FontStyles.Normal, TextAlignmentOptions.Left, new Color(0.4f, 0.8f, 1f));
 
         GameObject descBoxObj = new GameObject("DescriptionBox");
         descBoxObj.transform.SetParent(rightCol.transform, false);
@@ -325,7 +325,7 @@ public static class DeliveryUIBuilder
 
         GameObject descTextObj = new GameObject("AddressDescriptionText");
         descTextObj.transform.SetParent(descBoxObj.transform, false);
-        TextMeshProUGUI descText = AddTextMeshPro(descTextObj, "<b>Adres / Ev Tarifi:</b>\n\n\"Kirmizi catili, onunde mavi cicekler olan ev.\"", 22, FontStyles.Normal, TextAlignmentOptions.TopLeft, new Color(1f, 0.95f, 0.75f));
+        TextMeshProUGUI descText = AddTextMeshPro(descTextObj, "<b>Delivery Clue / Description:</b>\n\n\"Red roof house with white picket fences.\"", 22, FontStyles.Normal, TextAlignmentOptions.TopLeft, new Color(1f, 0.95f, 0.75f));
 
         GameObject dropBtnObj = new GameObject("DropCargoButton");
         dropBtnObj.transform.SetParent(rightCol.transform, false);
@@ -340,9 +340,9 @@ public static class DeliveryUIBuilder
         dropTextRect.anchorMax = Vector2.one;
         dropTextRect.sizeDelta = Vector2.zero;
 
-        AddTextMeshPro(dropTextObj, "BU PAKETI YERE BIRAK (DROP)", 22, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        AddTextMeshPro(dropTextObj, "DROP THIS PACKAGE", 22, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
 
-        // CargoTabletUI Bağla
+        // CargoTabletUI
         CargoTabletUI tabletScript = canvas.GetComponent<CargoTabletUI>();
         if (tabletScript == null) tabletScript = canvas.gameObject.AddComponent<CargoTabletUI>();
 
@@ -360,7 +360,7 @@ public static class DeliveryUIBuilder
         tabObj.SetActive(false);
 
         // ==========================================
-        // 2. GÜN SONU BİLANÇO PANELİ
+        // 2. DAY SUMMARY PANEL
         // ==========================================
         GameObject sumObj = new GameObject("DaySummaryPanel");
         sumObj.transform.SetParent(canvas.transform, false);
@@ -381,47 +381,47 @@ public static class DeliveryUIBuilder
         sumLayout.childForceExpandWidth = true;
         sumLayout.childForceExpandHeight = false;
 
-        // Başlık
+        // Title
         GameObject sumTitleObj = new GameObject("SummaryTitle");
         sumTitleObj.transform.SetParent(sumObj.transform, false);
         LayoutElement titleLayout = sumTitleObj.AddComponent<LayoutElement>();
         titleLayout.preferredHeight = 45;
         titleLayout.minHeight = 45;
-        AddTextMeshPro(sumTitleObj, "GUN SONU BILANCO RAPORU", 26, FontStyles.Bold, TextAlignmentOptions.Center, new Color(1f, 0.85f, 0.3f));
+        AddTextMeshPro(sumTitleObj, "DAY SUMMARY REPORT", 26, FontStyles.Bold, TextAlignmentOptions.Center, new Color(1f, 0.85f, 0.3f));
 
-        // Toplam Dağıtılan
+        // Total Delivered
         GameObject sumTotObj = new GameObject("TotalDeliveredText");
         sumTotObj.transform.SetParent(sumObj.transform, false);
         LayoutElement totLayout = sumTotObj.AddComponent<LayoutElement>();
         totLayout.preferredHeight = 25;
         totLayout.minHeight = 25;
-        TextMeshProUGUI sumTotText = AddTextMeshPro(sumTotObj, "Toplam Dagitilan: 0 Paket", 18, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
+        TextMeshProUGUI sumTotText = AddTextMeshPro(sumTotObj, "Total Delivered: 0 Packages", 18, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
 
-        // Doğru Teslimat
+        // Correct Deliveries
         GameObject sumCorObj = new GameObject("CorrectDeliveriesText");
         sumCorObj.transform.SetParent(sumObj.transform, false);
         LayoutElement corLayout = sumCorObj.AddComponent<LayoutElement>();
         corLayout.preferredHeight = 25;
         corLayout.minHeight = 25;
-        TextMeshProUGUI sumCorText = AddTextMeshPro(sumCorObj, "[+] Dogru Teslimat: 0 Adet (+0 TL)", 18, FontStyles.Normal, TextAlignmentOptions.Left, new Color(0.3f, 0.95f, 0.4f));
+        TextMeshProUGUI sumCorText = AddTextMeshPro(sumCorObj, "[+] Correct Deliveries: 0 (+0 $)", 18, FontStyles.Normal, TextAlignmentOptions.Left, new Color(0.3f, 0.95f, 0.4f));
 
-        // Hatalı Teslimat
+        // Wrong Deliveries
         GameObject sumWrObj = new GameObject("WrongDeliveriesText");
         sumWrObj.transform.SetParent(sumObj.transform, false);
         LayoutElement wrLayout = sumWrObj.AddComponent<LayoutElement>();
         wrLayout.preferredHeight = 25;
         wrLayout.minHeight = 25;
-        TextMeshProUGUI sumWrText = AddTextMeshPro(sumWrObj, "[-] Hatali Teslimat: 0 Adet (-0 TL Ceza)", 18, FontStyles.Normal, TextAlignmentOptions.Left, new Color(0.95f, 0.3f, 0.3f));
+        TextMeshProUGUI sumWrText = AddTextMeshPro(sumWrObj, "[-] Wrong Deliveries: 0 (-0 $ Penalty)", 18, FontStyles.Normal, TextAlignmentOptions.Left, new Color(0.95f, 0.3f, 0.3f));
 
-        // Net Kazanç
+        // Net Earnings
         GameObject sumEarnObj = new GameObject("NetEarningsText");
         sumEarnObj.transform.SetParent(sumObj.transform, false);
         LayoutElement earnLayout = sumEarnObj.AddComponent<LayoutElement>();
         earnLayout.preferredHeight = 35;
         earnLayout.minHeight = 35;
-        TextMeshProUGUI sumEarnText = AddTextMeshPro(sumEarnObj, "NET GUNLUK KAZANC: 0 TL", 24, FontStyles.Bold, TextAlignmentOptions.Center, new Color(0.2f, 0.95f, 0.3f));
+        TextMeshProUGUI sumEarnText = AddTextMeshPro(sumEarnObj, "TODAY: +0 $ | TOTAL VAULT: 0 $", 24, FontStyles.Bold, TextAlignmentOptions.Center, new Color(0.2f, 0.95f, 0.3f));
 
-        // Döküm ScrollView
+        // History ScrollView
         GameObject sumScrollObj = new GameObject("HistoryScrollView");
         sumScrollObj.transform.SetParent(sumObj.transform, false);
         LayoutElement scrollLayout = sumScrollObj.AddComponent<LayoutElement>();
@@ -465,7 +465,7 @@ public static class DeliveryUIBuilder
         sumScrollRect.viewport = sumViewRect;
         sumScrollRect.content = sumContRect;
 
-        // Döküm Satır Şablonu
+        // History Row Template
         GameObject rowTemplate = new GameObject("HistoryRowTemplate");
         rowTemplate.transform.SetParent(sumContObj.transform, false);
         rowTemplate.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 55);
@@ -478,10 +478,10 @@ public static class DeliveryUIBuilder
         rowTextRect.anchorMax = Vector2.one;
         rowTextRect.sizeDelta = Vector2.zero;
 
-        TextMeshProUGUI rowText = AddTextMeshPro(rowTextObj, "#KRG-1001\nBirakilan: Ataturk Cad. No: 1 | Hedef: Ataturk Cad. No: 1 [DOGRU]", 15, FontStyles.Normal, TextAlignmentOptions.MidlineLeft, Color.white);
+        TextMeshProUGUI rowText = AddTextMeshPro(rowTextObj, "#CRG-1001\nDelivered to: Grand Ave. No: 1 | Target: Grand Ave. No: 1 [CORRECT]", 15, FontStyles.Normal, TextAlignmentOptions.MidlineLeft, Color.white);
         if (rowText != null) rowText.margin = new Vector4(12, 0, 12, 0);
 
-        // YENİDEN BAŞLA BUTONU
+        // START NEXT DAY BUTTON
         GameObject restartBtnObj = new GameObject("RestartDayButton");
         restartBtnObj.transform.SetParent(sumObj.transform, false);
         LayoutElement btnLayout = restartBtnObj.AddComponent<LayoutElement>();
@@ -505,9 +505,9 @@ public static class DeliveryUIBuilder
         restTextRect.anchorMax = Vector2.one;
         restTextRect.sizeDelta = Vector2.zero;
 
-        AddTextMeshPro(restTextObj, "YENI GUNE BASLA", 24, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        AddTextMeshPro(restTextObj, "START NEXT DAY", 24, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
 
-        // DaySummaryManager Bağla
+        // DaySummaryManager
         DaySummaryManager sumScript = canvas.GetComponent<DaySummaryManager>();
         if (sumScript == null) sumScript = canvas.gameObject.AddComponent<DaySummaryManager>();
 
@@ -524,7 +524,7 @@ public static class DeliveryUIBuilder
         sumObj.SetActive(false);
 
         EditorUtility.SetDirty(canvas.gameObject);
-        Debug.Log("[DeliveryUIBuilder] Kalıcı Ekonomi ve Bütçe Sistemi başarıyla kuruldu!");
+        Debug.Log("[DeliveryUIBuilder] English UI successfully generated!");
     }
 
     private static TextMeshProUGUI AddTextMeshPro(GameObject target, string text, float fontSize, FontStyles style, TextAlignmentOptions alignment, Color color)

@@ -8,12 +8,12 @@ public class CargoTabletUI : MonoBehaviour
 {
     public static CargoTabletUI Instance { get; private set; }
 
-    [Header("--- PANEL REFERANSLARI ---")]
+    [Header("--- PANEL REFERENCES ---")]
     public GameObject tabletPanelRoot;
     public Transform cargoListContent;
     public GameObject cargoCardTemplate;
 
-    [Header("--- DETAY VE TARİF PANELİ ---")]
+    [Header("--- DETAIL & CLUE PANEL ---")]
     public GameObject detailCardRoot;
     public TextMeshProUGUI trackingNumberText;
     public TextMeshProUGUI recipientNameText;
@@ -21,7 +21,7 @@ public class CargoTabletUI : MonoBehaviour
     public TextMeshProUGUI addressDescriptionText;
     public Button dropCargoButton;
 
-    [Header("--- BİLGİ & DURUM ---")]
+    [Header("--- INFO & STATUS ---")]
     public TextMeshProUGUI emptyListText;
 
     private CargoItem currentSelectedCargo;
@@ -33,7 +33,6 @@ public class CargoTabletUI : MonoBehaviour
     {
         Instance = this;
 
-        // Otomatik referans bulucu (Bağlantı kopsa bile garanti bulur)
         if (tabletPanelRoot == null)
         {
             Transform t = transform.Find("CargoTabletPanel");
@@ -67,14 +66,12 @@ public class CargoTabletUI : MonoBehaviour
 
     private void Update()
     {
-        // Gün sonu paneli açıksa tableti açma
         if (DaySummaryManager.Instance != null && DaySummaryManager.Instance.summaryPanelRoot != null && DaySummaryManager.Instance.summaryPanelRoot.activeSelf)
         {
             if (isTabletOpen) CloseTablet();
             return;
         }
 
-        // TAB, T, M veya I TUŞLARINI DOĞRUDAN DİNLE (Preprocessor engeli olmadan)
         if (CheckToggleInput())
         {
             ToggleTablet();
@@ -83,7 +80,6 @@ public class CargoTabletUI : MonoBehaviour
 
     private bool CheckToggleInput()
     {
-        // 1. New Input System Kontrolü
         if (Keyboard.current != null)
         {
             if (Keyboard.current.tabKey.wasPressedThisFrame ||
@@ -95,7 +91,6 @@ public class CargoTabletUI : MonoBehaviour
             }
         }
 
-        // 2. Legacy Input Manager Fallback (Eski Giriş Sistemi)
         try
         {
             if (Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.T) || Input.GetKeyDown(KeyCode.M) || Input.GetKeyDown(KeyCode.I))
@@ -128,11 +123,6 @@ public class CargoTabletUI : MonoBehaviour
         {
             tabletPanelRoot.SetActive(true);
         }
-        else
-        {
-            Debug.LogError("[CargoTabletUI] tabletPanelRoot bulunamadı! Lütfen Tools -> Kargo Oyunu -> Temiz Teslimat UI Insa Et seçeneğine tıklayın.");
-            return;
-        }
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -145,7 +135,6 @@ public class CargoTabletUI : MonoBehaviour
         isTabletOpen = false;
         if (tabletPanelRoot != null) tabletPanelRoot.SetActive(false);
 
-        // Gün sonu açık değilse fareyi sürüşe kilitle
         if (DaySummaryManager.Instance == null || DaySummaryManager.Instance.summaryPanelRoot == null || !DaySummaryManager.Instance.summaryPanelRoot.activeSelf)
         {
             Cursor.lockState = CursorLockMode.Locked;
@@ -202,7 +191,6 @@ public class CargoTabletUI : MonoBehaviour
             }
         }
 
-        // İlk paketi seç ve göster
         if (currentSelectedCargo == null || !loadedList.Contains(currentSelectedCargo))
         {
             DisplayCargoDetail(loadedList[0]);
@@ -218,13 +206,13 @@ public class CargoTabletUI : MonoBehaviour
         currentSelectedCargo = cargo;
         if (detailCardRoot != null) detailCardRoot.SetActive(true);
 
-        if (trackingNumberText != null) trackingNumberText.text = $"Takip No: {cargo.trackingNumber}";
-        if (recipientNameText != null) recipientNameText.text = $"Alici: {cargo.recipientName}";
-        if (targetAddressText != null) targetAddressText.text = $"Kayitli Adres: {cargo.targetAddress}";
+        if (trackingNumberText != null) trackingNumberText.text = $"Tracking No: {cargo.trackingNumber}";
+        if (recipientNameText != null) recipientNameText.text = $"Recipient: {cargo.recipientName}";
+        if (targetAddressText != null) targetAddressText.text = $"Address: {cargo.targetAddress}";
         
         if (addressDescriptionText != null)
         {
-            addressDescriptionText.text = $"<b>Adres / Ev Tarifi:</b>\n\n\"{cargo.targetAddressDescription}\"";
+            addressDescriptionText.text = $"<b>Delivery Clue / Description:</b>\n\n\"{cargo.targetAddressDescription}\"";
         }
     }
 
@@ -235,10 +223,7 @@ public class CargoTabletUI : MonoBehaviour
         CargoItem toDrop = currentSelectedCargo;
         currentSelectedCargo = null;
 
-        // Paketi yere düşür
         VanInventory.Instance.DropCargoFromVan(toDrop);
-
-        // Tableti kapat
         CloseTablet();
     }
 }
