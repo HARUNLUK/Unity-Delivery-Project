@@ -2,6 +2,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem.UI;
+#endif
 using TMPro;
 
 public class CargoTabletUI : MonoBehaviour
@@ -47,11 +51,14 @@ public class CargoTabletUI : MonoBehaviour
             dropCargoButton.onClick.RemoveAllListeners();
             dropCargoButton.onClick.AddListener(OnDropCargoClicked);
         }
+
+        EnsureEventSystemAndRaycaster();
     }
 
     private void Start()
     {
         if (tabletPanelRoot != null) tabletPanelRoot.SetActive(false);
+        EnsureEventSystemAndRaycaster();
     }
 
     private void OnEnable()
@@ -111,6 +118,8 @@ public class CargoTabletUI : MonoBehaviour
 
     public void OpenTablet()
     {
+        EnsureEventSystemAndRaycaster();
+
         if (tabletPanelRoot == null)
         {
             Transform t = transform.Find("CargoTabletPanel");
@@ -177,18 +186,26 @@ public class CargoTabletUI : MonoBehaviour
             GameObject cardObj = Instantiate(cargoCardTemplate, cargoListContent);
             cardObj.SetActive(true);
 
+            Image cardImg = cardObj.GetComponent<Image>();
+            if (cardImg != null) cardImg.raycastTarget = true;
+
             TextMeshProUGUI label = cardObj.GetComponentInChildren<TextMeshProUGUI>();
             if (label != null)
             {
                 label.text = $"<b>{cargo.trackingNumber}</b>\n{cargo.recipientName}";
+                label.raycastTarget = false; // Metnin tıklamayı engellemesini önler
             }
 
             Button btn = cardObj.GetComponent<Button>();
-            if (btn != null)
-            {
-                CargoItem itemRef = cargo;
-                btn.onClick.AddListener(() => DisplayCargoDetail(itemRef));
-            }
+            if (btn == null) btn = cardObj.AddComponent<Button>();
+
+            btn.interactable = true;
+            btn.onClick.RemoveAllListeners();
+
+            CargoItem itemRef = cargo;
+            btn.onClick.AddListener(() => {
+                DisplayCargoDetail(itemRef);
+            });
         }
 
         if (currentSelectedCargo == null || !loadedList.Contains(currentSelectedCargo))
@@ -201,7 +218,7 @@ public class CargoTabletUI : MonoBehaviour
         }
     }
 
-    private void DisplayCargoDetail(CargoItem cargo)
+    public void DisplayCargoDetail(CargoItem cargo)
     {
         currentSelectedCargo = cargo;
         if (detailCardRoot != null) detailCardRoot.SetActive(true);
@@ -225,5 +242,42 @@ public class CargoTabletUI : MonoBehaviour
 
         VanInventory.Instance.DropCargoFromVan(toDrop);
         CloseTablet();
+    }
+
+    /// <summary>
+    /// EventSystem ve GraphicRaycaster bileşenlerinin fare tıklamalarını yakalayabilmesini garantiye alır.
+    /// </summary>
+    public void EnsureEventSystemAndRaycaster()
+    {
+        Canvas canvas = GetComponentInParent<Canvas>();
+        if (canvas == null) canvas = Object.FindAnyObjectByType<Canvas>();
+
+        if (canvas != null)
+        {
+            GraphicRaycaster gr = canvas.GetComponent<GraphicRaycaster>();
+            if (gr == null) canvas.gameObject.AddComponent<GraphicRaycaster>();
+        }
+
+        EventSystem es = Object.FindAnyObjectByType<EventSystem>();
+        if (es == null)
+        {
+            GameObject esObj = new GameObject("EventSystem");
+            es = esObj.AddComponent<EventSystem>();
+        }
+
+#if ENABLE_INPUT_SYSTEM
+        if (es.GetComponent<InputSystemUIInputModule>() == null)
+        {
+            StandaloneInputModule oldMod = es.GetComponent<StandaloneInputModule>();
+            if (oldMod != null) DestroyImmediate(oldMod);
+
+            es.gameObject.AddComponent<InputSystemUIInputModule>();
+        }
+#else
+        if (es.GetComponent<StandaloneInputModule>() == null)
+        {
+            es.gameObject.AddComponent<StandaloneInputModule>();
+        }
+#endif
     }
 }

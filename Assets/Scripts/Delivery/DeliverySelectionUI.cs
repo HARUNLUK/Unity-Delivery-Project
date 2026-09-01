@@ -5,7 +5,7 @@ using TMPro;
 
 public class DeliverySelectionUI : MonoBehaviour
 {
-    [Header("--- PANEL REFERANSLARI ---")]
+    [Header("--- PANEL REFERENCES ---")]
     public GameObject panelRoot;
     public TextMeshProUGUI addressTitleText;
     public Transform cargoListContent;
@@ -43,7 +43,6 @@ public class DeliverySelectionUI : MonoBehaviour
 
     private void HandleZoneEntered(DeliveryPoint zone)
     {
-        // Eğer gün sonu paneli açıksa teslimat panelini açma
         if (DaySummaryManager.Instance != null && DaySummaryManager.Instance.summaryPanelRoot != null && DaySummaryManager.Instance.summaryPanelRoot.activeSelf)
         {
             return;
@@ -59,12 +58,12 @@ public class DeliverySelectionUI : MonoBehaviour
 
         if (addressTitleText != null)
         {
-            addressTitleText.text = $"📍 TESLİMAT NOKTASI: {zone.addressName}";
+            addressTitleText.text = $"📍 DELIVERY DESTINATION: {zone.addressName}";
         }
 
         if (feedbackText != null)
         {
-            feedbackText.text = "Lütfen bagajınızdan bu adrese bırakacağınız paketi seçin:";
+            feedbackText.text = "Select a package from your trunk to deliver to this address:";
         }
 
         PopulateCargoList();
@@ -79,7 +78,6 @@ public class DeliverySelectionUI : MonoBehaviour
 
             if (panelRoot != null) panelRoot.SetActive(false);
 
-            // Eğer gün sonu paneli açık değilse fareyi kilitle
             if (DaySummaryManager.Instance == null || DaySummaryManager.Instance.summaryPanelRoot == null || !DaySummaryManager.Instance.summaryPanelRoot.activeSelf)
             {
                 Cursor.lockState = CursorLockMode.Locked;
@@ -104,7 +102,7 @@ public class DeliverySelectionUI : MonoBehaviour
 
         if (loadedList.Count == 0)
         {
-            if (feedbackText != null) feedbackText.text = "Bagajınızda hiç kargo kalmadı!";
+            if (feedbackText != null) feedbackText.text = "No cargo left in your van trunk!";
             if (deliverButton != null) deliverButton.interactable = false;
             return;
         }
@@ -114,18 +112,24 @@ public class DeliverySelectionUI : MonoBehaviour
             GameObject cardObj = Instantiate(cargoCardTemplate, cargoListContent);
             cardObj.SetActive(true);
 
+            Image cardImg = cardObj.GetComponent<Image>();
+            if (cardImg != null) cardImg.raycastTarget = true;
+
             TextMeshProUGUI label = cardObj.GetComponentInChildren<TextMeshProUGUI>();
             if (label != null)
             {
-                label.text = $"{cargo.trackingNumber} | {cargo.recipientName}\n🎯 Adres: {cargo.targetAddress}";
+                label.text = $"{cargo.trackingNumber} | {cargo.recipientName}\n🎯 Address: {cargo.targetAddress}";
+                label.raycastTarget = false;
             }
 
             Button btn = cardObj.GetComponent<Button>();
-            if (btn != null)
-            {
-                CargoItem itemRef = cargo;
-                btn.onClick.AddListener(() => SelectCargo(itemRef, btn));
-            }
+            if (btn == null) btn = cardObj.AddComponent<Button>();
+
+            btn.interactable = true;
+            btn.onClick.RemoveAllListeners();
+
+            CargoItem itemRef = cargo;
+            btn.onClick.AddListener(() => SelectCargo(itemRef, btn));
         }
     }
 
@@ -140,7 +144,7 @@ public class DeliverySelectionUI : MonoBehaviour
 
         if (feedbackText != null)
         {
-            feedbackText.text = $"Seçilen Paket: {cargo.trackingNumber} ({cargo.targetAddress})";
+            feedbackText.text = $"Selected: {cargo.trackingNumber} ({cargo.targetAddress})";
         }
     }
 
@@ -151,10 +155,8 @@ public class DeliverySelectionUI : MonoBehaviour
         DeliveryPoint zoneToDisable = currentActiveZone;
         CargoItem cargoToDeliver = selectedCargoItem;
 
-        // UI'ı kapat
         if (panelRoot != null) panelRoot.SetActive(false);
 
-        // Teslimatı gerçekleştir
         VanInventory.Instance.DeliverCargo(cargoToDeliver, zoneToDisable);
 
         if (zoneToDisable.visualMarker != null)
@@ -162,16 +164,13 @@ public class DeliverySelectionUI : MonoBehaviour
             zoneToDisable.visualMarker.SetActive(false);
         }
 
-        // Kalan kargo varsa fareyi sürüş için kilitle, bittiyse serbest bırak
-        if (VanInventory.Instance.RemainingCargoCount > 0)
+        selectedCargoItem = null;
+        currentActiveZone = null;
+
+        if (DaySummaryManager.Instance == null || DaySummaryManager.Instance.summaryPanelRoot == null || !DaySummaryManager.Instance.summaryPanelRoot.activeSelf)
         {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
-        }
-        else
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
         }
     }
 }

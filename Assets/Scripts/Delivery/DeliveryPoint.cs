@@ -3,21 +3,21 @@ using UnityEngine;
 
 public class DeliveryPoint : MonoBehaviour
 {
-    [Header("--- ADRES & KİMLİK TANIMI ---")]
-    [Tooltip("Bu teslimat noktasının adresi (Örn: Papatya Sokak No: 4)")]
-    public string addressName = "Papatya Sokak No: 4";
+    [Header("--- ADDRESS & IDENTITY ---")]
+    [Tooltip("Unique Index / ID of this point (e.g. 1, 2, 3...)")]
+    public string pointId = "1";
 
-    [Tooltip("Oyuncunun evi bulabilmesi için ipucu / adres tarifi")]
+    [Tooltip("Address name of this delivery destination (e.g. 104 Maple Street)")]
+    public string addressName = "104 Maple Street";
+
+    [Tooltip("Visual hint / description of the house for the player")]
     [TextArea(2, 5)]
-    public string addressDescription = "Kırmızı çatılı, önünde mavi çiçekler ve beyaz çit olan ev.";
-    
-    [Tooltip("Bu noktanın benzersiz kimliği (Örn: Point_01, Point_02...)")]
-    public string pointId = "Point_01";
+    public string addressDescription = "Two-story suburban house with front yard and wooden fence.";
 
-    [Header("--- GÖRSEL İŞARETÇİ ---")]
+    [Header("--- VISUAL MARKER ---")]
     public GameObject visualMarker;
 
-    [Header("--- DURUM ---")]
+    [Header("--- STATE ---")]
     [SerializeField] private bool isPlayerInside = false;
     [SerializeField] private bool isFulfilled = false;
 
@@ -54,6 +54,6 @@ public class DeliveryPoint : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = isFulfilled ? Color.gray : (isPlayerInside ? Color.green : Color.yellow);
-        Gizmos.DrawWireSphere(transform.position, 3f);
+        Gizmos.DrawWireSphere(transform.position, 3.5f);
     }
 }

@@ -57,12 +57,27 @@ public static class DeliveryUIBuilder
             }
         }
 
-        if (Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
+        UnityEngine.EventSystems.EventSystem es = Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>();
+        if (es == null)
         {
-            GameObject es = new GameObject("EventSystem");
-            es.AddComponent<UnityEngine.EventSystems.EventSystem>();
-            es.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+            GameObject esObj = new GameObject("EventSystem");
+            es = esObj.AddComponent<UnityEngine.EventSystems.EventSystem>();
         }
+
+#if ENABLE_INPUT_SYSTEM
+        if (es.GetComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>() == null)
+        {
+            UnityEngine.EventSystems.StandaloneInputModule oldMod = es.GetComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+            if (oldMod != null) Object.DestroyImmediate(oldMod);
+
+            es.gameObject.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+        }
+#else
+        if (es.GetComponent<UnityEngine.EventSystems.StandaloneInputModule>() == null)
+        {
+            es.gameObject.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+        }
+#endif
 
         // Clean old UI roots
         Transform oldTablet = canvas.transform.Find("CargoTabletPanel");
