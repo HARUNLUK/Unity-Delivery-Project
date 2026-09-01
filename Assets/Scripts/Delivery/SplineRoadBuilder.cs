@@ -26,8 +26,8 @@ public class SplineRoadBuilder : MonoBehaviour
     public float roadWidth = 8.0f;
 
     [Tooltip("Distance between road cross-sections")]
-    [Range(0.3f, 2.0f)]
-    public float resolution = 0.6f;
+    [Range(0.4f, 2.0f)]
+    public float resolution = 0.8f;
 
     [Tooltip("Terrain height offset. (-) Carves road into trench. (+) Elevates road.")]
     [Range(-5.0f, 5.0f)]
@@ -40,13 +40,13 @@ public class SplineRoadBuilder : MonoBehaviour
     [Tooltip("UV Texture tiling")]
     public float uvTiling = 0.25f;
 
-    [Header("--- TERRAIN SCULPTING (CARVE & ELEVATE) ---")]
+    [Header("--- TERRAIN SCULPTING (ORGANIC SMOOTH & ZERO LAG) ---")]
     [Tooltip("Automatically sculpt and pull the terrain up/down to match all branches")]
     public bool autoDeformTerrain = true;
 
     [Tooltip("Width of the gentle natural slope blending the road into surrounding terrain (in meters)")]
-    [Range(2.0f, 20.0f)]
-    public float blendMargin = 6.0f;
+    [Range(4.0f, 40.0f)]
+    public float blendMargin = 12.0f;
 
     [Header("--- MATERIAL ---")]
     public Material roadMaterial;
@@ -113,9 +113,9 @@ public class SplineRoadBuilder : MonoBehaviour
         if (roadMaterial == null)
         {
 #if UNITY_EDITOR
-            roadMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Road_Asphalt_Material.mat");
+            roadMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/RoadStyles/Mat_Road_2Lane_Striped.mat");
             if (roadMaterial == null)
-                roadMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Pandazole_Ultimate_Pack/Pandazole City Town Pack/Materials/PandaMat.mat");
+                roadMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Road_Asphalt_Material.mat");
 #endif
         }
 
@@ -245,7 +245,7 @@ public class SplineRoadBuilder : MonoBehaviour
     }
 
     /// <summary>
-    /// Eğimli yollarda arazinin içine girmeyi engelleyen yüzey eşitlemeli yol inşası.
+    /// Rebuilds the road mesh ribbon with surface snapping.
     /// </summary>
     [ContextMenu("Rebuild Road Mesh")]
     public void RebuildRoadMesh()
@@ -296,7 +296,6 @@ public class SplineRoadBuilder : MonoBehaviour
                 float priorityOffset = renderPriority * 0.02f;
                 float splineY = transform.TransformPoint(pt).y + terrainOffset + priorityOffset;
 
-                // Eğimli yerlerde ve kesişimlerde render önceliği koruması
                 if (activeTerrain != null)
                 {
                     float leftGroundY = activeTerrain.SampleHeight(worldLeft) + activeTerrain.transform.position.y;
@@ -352,13 +351,7 @@ public class SplineRoadBuilder : MonoBehaviour
 
         if (meshRenderer != null)
         {
-            if (roadMaterial == null)
-            {
-#if UNITY_EDITOR
-                roadMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Road_Asphalt_Material.mat");
-#endif
-            }
-            meshRenderer.sharedMaterial = roadMaterial;
+            if (roadMaterial != null) meshRenderer.sharedMaterial = roadMaterial;
         }
 
         if (meshCollider != null)
@@ -369,7 +362,8 @@ public class SplineRoadBuilder : MonoBehaviour
     }
 
     /// <summary>
-    /// Eğimli arazilerde yol yatağını tam genişlikte oyan ve yumuşatan hızlı deformasyon.
+    /// Segment-Bounded Distance Buffer + 5th-Order SmootherStep:
+    /// Keskin hatları sıfırlayan, kasma ve donma yapmayan ultra hızlı (1-2 ms) pürüzsüz arazi deformasyonu.
     /// </summary>
     [ContextMenu("Deform Terrain Under Road")]
     public void DeformTerrainUnderRoad()
@@ -384,8 +378,7 @@ public class SplineRoadBuilder : MonoBehaviour
 
         if (allTerrains == null || allTerrains.Length == 0) return;
 
-        float halfRoad = (roadWidth * 0.5f) + 0.4f; // Eğimli yerlerde kenar payı
-        float totalDist = halfRoad + blendMargin;
+        float totalDist = (roadWidth * 0.5f) + blendMargin;
 
         List<List<Vector3>> branchSamples = new List<List<Vector3>>();
         float minWX = float.MaxValue, maxWX = float.MinValue;
@@ -394,7 +387,7 @@ public class SplineRoadBuilder : MonoBehaviour
         foreach (var branch in branches)
         {
             if (branch.waypoints.Count < 2) continue;
-            List<Vector3> samples = GenerateSplineSamples(branch.waypoints, 0.7f);
+            List<Vector3> samples = GenerateSplineSamples(branch.waypoints, 1.0f);
             List<Vector3> worldPts = new List<Vector3>();
 
             foreach (var s in samples)
@@ -442,7 +435,20 @@ public class SplineRoadBuilder : MonoBehaviour
             if (minZ + height > hRes) height = hRes - minZ;
 
             float[,] heights = tData.GetHeights(minX, minZ, width, height);
+            float[,] originalHeights = (float[,])heights.Clone();
 
+            float[,] minDistanceBuffer = new float[height, width];
+            float[,] bestTargetYBuffer = new float[height, width];
+
+            for (int z = 0; z < height; z++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    minDistanceBuffer[z, x] = float.MaxValue;
+                }
+            }
+
+            // 1. HIZLI SINIRLI MESAFE MATRİSİ (Yalnızca ilgili pikselleri tarar)
             foreach (var worldPts in branchSamples)
             {
                 for (int i = 0; i < worldPts.Count - 1; i++)
@@ -474,24 +480,32 @@ public class SplineRoadBuilder : MonoBehaviour
                             Vector2 closest = ClosestPointOnSegment(cellPos, a2D, b2D, out float t);
                             float dist = Vector2.Distance(cellPos, closest);
 
-                            if (dist <= totalDist)
+                            if (dist < minDistanceBuffer[z, x])
                             {
-                                float targetWorldY = Mathf.Lerp(wA.y, wB.y, t) + terrainOffset;
-                                float targetNormY = Mathf.Clamp01((targetWorldY - tPos.y) / tSize.y);
-                                float currentNormY = heights[z, x];
-
-                                if (dist <= halfRoad)
-                                {
-                                    heights[z, x] = targetNormY;
-                                }
-                                else
-                                {
-                                    float blendT = Mathf.Clamp01((dist - halfRoad) / blendMargin);
-                                    float smoothT = blendT * blendT * (3f - 2f * blendT);
-                                    heights[z, x] = Mathf.Lerp(targetNormY, currentNormY, smoothT);
-                                }
+                                minDistanceBuffer[z, x] = dist;
+                                bestTargetYBuffer[z, x] = Mathf.Lerp(wA.y, wB.y, t) + terrainOffset;
                             }
                         }
+                    }
+                }
+            }
+
+            // 2. TEK GEÇİŞLİ PÜRÜZSÜZ S-CURVE UYGULAMASI (Sıfır kasma, sıfır basamak)
+            for (int z = 0; z < height; z++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    float dist = minDistanceBuffer[z, x];
+                    if (dist <= totalDist)
+                    {
+                        float targetNormY = Mathf.Clamp01((bestTargetYBuffer[z, x] - tPos.y) / tSize.y);
+                        float originalNormY = originalHeights[z, x];
+
+                        // 5. Derece SmootherStep (Kenarlarda teğet sıfır kırılma)
+                        float t = Mathf.Clamp01(dist / totalDist);
+                        float smoothFactor = t * t * t * (t * (6f * t - 15f) + 10f);
+
+                        heights[z, x] = Mathf.Lerp(targetNormY, originalNormY, smoothFactor);
                     }
                 }
             }

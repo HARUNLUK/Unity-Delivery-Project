@@ -792,7 +792,7 @@ MonoBehaviour:
   centerOfMassOffset: {x: 0, y: -0.5, z: 0}
   driftSidewaysStiffness: 0.1
   driftYawBoost: 3
-  driftRecoveryRate: 4
+  driftRecoveryRate: 16
   frontLeftCollider: {fileID: 4844288762282373869}
   frontRightCollider: {fileID: 2222674215483751247}
   rearLeftCollider: {fileID: 1151912203877942307}
