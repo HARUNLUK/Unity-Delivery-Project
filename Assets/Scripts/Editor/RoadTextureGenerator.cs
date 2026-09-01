@@ -11,29 +11,34 @@ public static class RoadTextureGenerator
         string dir = "Assets/Materials/RoadStyles";
         if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-        // 1. ÇİFT ŞERİTLİ ÇİZGİLİ ASFALT (2-Lane Striped Road)
+        // 1. 2-LANE STRIPED ASPHALT
         Texture2D texStriped = CreateStripedRoadTexture();
         SaveTexture(texStriped, $"{dir}/Tex_Road_2Lane_Striped.png");
 
-        // 2. SAĞI VE SOLU KALDIRIMLI ŞEHİR CADDESİ (City Road with Sidewalks & Curbs)
+        // 2. CITY ROAD WITH STANDARD SIDEWALKS
         Texture2D texSidewalk = CreateSidewalkRoadTexture();
         SaveTexture(texSidewalk, $"{dir}/Tex_Road_City_Sidewalks.png");
 
-        // 3. DAĞ / TOPRAK KÖY YOLU (Mountain Dirt Road with Tire Tracks)
+        // 3. DOWNTOWN PLAIN ASPHALT WITH EXTRA WIDE SIDEWALKS
+        Texture2D texWideSidewalk = CreateWideSidewalkRoadTexture();
+        SaveTexture(texWideSidewalk, $"{dir}/Tex_Road_City_Wide_Sidewalk.png");
+
+        // 4. MOUNTAIN DIRT VILLAGE ROAD
         Texture2D texDirt = CreateDirtRoadTexture();
         SaveTexture(texDirt, $"{dir}/Tex_Road_Mountain_Dirt.png");
 
         AssetDatabase.Refresh();
 
-        // Material'ları oluştur
+        // Create Materials
         CreateURPLitMaterial($"{dir}/Tex_Road_2Lane_Striped.png", $"{dir}/Mat_Road_2Lane_Striped.mat");
         CreateURPLitMaterial($"{dir}/Tex_Road_City_Sidewalks.png", $"{dir}/Mat_Road_City_Sidewalks.mat");
+        CreateURPLitMaterial($"{dir}/Tex_Road_City_Wide_Sidewalk.png", $"{dir}/Mat_Road_City_Wide_Sidewalk.mat");
         CreateURPLitMaterial($"{dir}/Tex_Road_Mountain_Dirt.png", $"{dir}/Mat_Road_Mountain_Dirt.mat");
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
-        Debug.Log("[RoadTextureGenerator] 3 farklı hazır yol materyali 'Assets/Materials/RoadStyles' klasörüne başarıyla oluşturuldu!");
+        Debug.Log("[RoadTextureGenerator] Generated ready-to-use road materials in 'Assets/Materials/RoadStyles'!");
     }
 
     private static Texture2D CreateStripedRoadTexture()
@@ -54,17 +59,16 @@ public static class RoadTextureGenerator
                 float u = (float)x / width;
                 float v = (float)y / height;
 
-                // Asfalt gren/gürültü deseni
                 float noise = Mathf.PerlinNoise(x * 0.15f, y * 0.15f) * 0.05f;
                 Color col = Color.Lerp(asphalt, asphaltDark, noise);
 
-                // Sol ve Sağ Beyaz Emniyet Çizgileri
+                // White Shoulder Lines
                 if ((u >= 0.04f && u <= 0.06f) || (u >= 0.94f && u <= 0.96f))
                 {
                     col = lineWhite;
                 }
 
-                // Orta Sarı Kesikli Şerit Çizgisi (Dashed Yellow Center Line)
+                // Dashed Yellow Center Line
                 if (u >= 0.485f && u <= 0.515f)
                 {
                     float dashPattern = Mathf.Repeat(v * 4f, 1f);
@@ -102,17 +106,16 @@ public static class RoadTextureGenerator
 
                 Color col = asphalt;
 
-                // Sol Kaldırım (0.00 - 0.15) ve Sağ Kaldırım (0.85 - 1.00)
+                // Left & Right Sidewalk (14%)
                 if (u < 0.14f || u > 0.86f)
                 {
-                    // Kaldırım karo derz çizgileri
                     float tileX = Mathf.Repeat(u * 20f, 1f);
                     float tileY = Mathf.Repeat(v * 8f, 1f);
                     bool isJoint = (tileX < 0.06f || tileY < 0.06f);
 
                     col = isJoint ? new Color(0.55f, 0.55f, 0.55f, 1f) : sidewalkConcrete;
                 }
-                // Bordür Taşı (Curb Stone: 0.14-0.16 ve 0.84-0.86)
+                // Curb Stone (0.14-0.16 & 0.84-0.86)
                 else if ((u >= 0.14f && u <= 0.16f) || (u >= 0.84f && u <= 0.86f))
                 {
                     float curbSection = Mathf.Repeat(v * 4f, 1f);
@@ -120,7 +123,6 @@ public static class RoadTextureGenerator
                 }
                 else
                 {
-                    // Orta Asfalt Yol ve Beyaz Kesikli Çizgi
                     if (u >= 0.49f && u <= 0.51f)
                     {
                         float dashPattern = Mathf.Repeat(v * 4f, 1f);
@@ -129,6 +131,60 @@ public static class RoadTextureGenerator
                 }
 
                 tex.SetPixel(x, y, col);
+            }
+        }
+
+        tex.Apply();
+        return tex;
+    }
+
+    /// <summary>
+    /// Plain dark asphalt in the center with wide pedestrian sidewalks on both sides (Downtown / City Street).
+    /// </summary>
+    private static Texture2D CreateWideSidewalkRoadTexture()
+    {
+        int width = 512;
+        int height = 512;
+        Texture2D tex = new Texture2D(width, height, TextureFormat.RGBA32, true);
+
+        Color asphalt = new Color(0.20f, 0.21f, 0.22f, 1f);
+        Color asphaltDark = new Color(0.16f, 0.17f, 0.18f, 1f);
+        Color sidewalkConcrete = new Color(0.75f, 0.76f, 0.77f, 1f);
+        Color curbBorder = new Color(0.42f, 0.43f, 0.44f, 1f);
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                float u = (float)x / width;
+                float v = (float)y / height;
+
+                // Wide Sidewalks (0.00 - 0.22 & 0.78 - 1.00 = 22% on each side!)
+                if (u < 0.22f || u > 0.78f)
+                {
+                    float tileX = Mathf.Repeat(u * 14f, 1f);
+                    float tileY = Mathf.Repeat(v * 6f, 1f);
+                    bool isJoint = (tileX < 0.05f || tileY < 0.05f);
+
+                    float noise = Mathf.PerlinNoise(x * 0.1f, y * 0.1f) * 0.04f;
+                    Color concreteWithNoise = Color.Lerp(sidewalkConcrete, sidewalkConcrete * 0.9f, noise);
+
+                    tex.SetPixel(x, y, isJoint ? new Color(0.52f, 0.52f, 0.52f, 1f) : concreteWithNoise);
+                }
+                // Solid Curb Stone (0.22 - 0.245 & 0.755 - 0.78)
+                else if ((u >= 0.22f && u <= 0.245f) || (u >= 0.755f && u <= 0.78f))
+                {
+                    float curbSection = Mathf.Repeat(v * 3f, 1f);
+                    Color col = (curbSection < 0.08f) ? new Color(0.25f, 0.25f, 0.25f, 1f) : curbBorder;
+                    tex.SetPixel(x, y, col);
+                }
+                else
+                {
+                    // Plain Clean Downtown Asphalt (No center stripes)
+                    float noise = Mathf.PerlinNoise(x * 0.2f, y * 0.2f) * 0.06f;
+                    Color col = Color.Lerp(asphalt, asphaltDark, noise);
+                    tex.SetPixel(x, y, col);
+                }
             }
         }
 
@@ -156,13 +212,13 @@ public static class RoadTextureGenerator
                 float n = Mathf.PerlinNoise(x * 0.08f, y * 0.08f);
                 Color col = Color.Lerp(dirtBase, dirtDark, n);
 
-                // Tekerlek İzleri (Sol: 0.28-0.38, Sağ: 0.62-0.72)
+                // Tire Tracks
                 if ((u >= 0.26f && u <= 0.38f) || (u >= 0.62f && u <= 0.74f))
                 {
                     col = Color.Lerp(col, dirtDark * 0.85f, 0.6f);
                 }
 
-                // Kenar Otları (Grass Edges)
+                // Grass Edges
                 if (u < 0.10f || u > 0.90f)
                 {
                     float edgeT = (u < 0.10f) ? (1f - u / 0.10f) : ((u - 0.90f) / 0.10f);

@@ -33,10 +33,14 @@ public class SplineRoadBuilder : MonoBehaviour
     [Range(-5.0f, 5.0f)]
     public float terrainOffset = 0.0f;
 
+    [Tooltip("Render priority when overlapping other roads. Higher values (1, 2, 3...) sit on top with zero flickering.")]
+    [Range(0, 10)]
+    public int renderPriority = 0;
+
     [Tooltip("UV Texture tiling")]
     public float uvTiling = 0.25f;
 
-    [Header("--- TERRAIN SCULPTING (OYMA & YÜKSELTME) ---")]
+    [Header("--- TERRAIN SCULPTING (CARVE & ELEVATE) ---")]
     [Tooltip("Automatically sculpt and pull the terrain up/down to match all branches")]
     public bool autoDeformTerrain = true;
 
@@ -289,16 +293,17 @@ public class SplineRoadBuilder : MonoBehaviour
                 Vector3 worldLeft = transform.TransformPoint(localLeft);
                 Vector3 worldRight = transform.TransformPoint(localRight);
 
-                float splineY = transform.TransformPoint(pt).y + terrainOffset;
+                float priorityOffset = renderPriority * 0.02f;
+                float splineY = transform.TransformPoint(pt).y + terrainOffset + priorityOffset;
 
-                // Eğimli yerlerde toprağın yolun içine girmesini engelleyen zemin koruması
+                // Eğimli yerlerde ve kesişimlerde render önceliği koruması
                 if (activeTerrain != null)
                 {
                     float leftGroundY = activeTerrain.SampleHeight(worldLeft) + activeTerrain.transform.position.y;
                     float rightGroundY = activeTerrain.SampleHeight(worldRight) + activeTerrain.transform.position.y;
 
-                    worldLeft.y = Mathf.Max(splineY, leftGroundY) + 0.04f;
-                    worldRight.y = Mathf.Max(splineY, rightGroundY) + 0.04f;
+                    worldLeft.y = Mathf.Max(splineY, leftGroundY + priorityOffset) + 0.04f;
+                    worldRight.y = Mathf.Max(splineY, rightGroundY + priorityOffset) + 0.04f;
                 }
                 else
                 {

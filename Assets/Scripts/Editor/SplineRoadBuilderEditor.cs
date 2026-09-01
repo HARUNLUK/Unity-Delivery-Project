@@ -12,7 +12,7 @@ public class SplineRoadBuilderEditor : Editor
         if (existing != null)
         {
             Selection.activeGameObject = existing.gameObject;
-            Debug.Log($"[SplineRoadBuilder] Sahnede mevcut olan '{existing.gameObject.name}' seçildi! Yeni bir obje oluşturulmadı. Shift + Sol Tık ile çizmeye devam edebilirsin.");
+            Debug.Log($"[SplineRoadBuilder] Selected existing '{existing.gameObject.name}'. Hold SHIFT + Left Click to continue drawing.");
             return;
         }
 
@@ -22,29 +22,29 @@ public class SplineRoadBuilderEditor : Editor
         SplineRoadBuilder builder = roadObj.AddComponent<SplineRoadBuilder>();
         Selection.activeGameObject = roadObj;
 
-        Debug.Log("[SplineRoadBuilder] 'Spline_Road' oluşturuldu! Shift + Sol Tık ile çizmeye başla.");
+        Debug.Log("[SplineRoadBuilder] Created 'Spline_Road'. Hold SHIFT + Left Click on terrain to draw roads.");
     }
 
     public override void OnInspectorGUI()
     {
         SplineRoadBuilder builder = (SplineRoadBuilder)target;
 
-        EditorGUILayout.HelpBox("💡 DOĞRUDAN ÇATAL ÇIKARMA (SIFIR BUTON):\n1. Shift + Sol Tık ile yol noktalarını koy.\n2. Bir noktadan yeni yol ayırmak için Shift ile o noktaya tıkla, ardından boş araziye tıkla!\n3. Aşağıdaki Hazır Stil butonlarıyla yolun görünümünü anında değiştirebilirsin.", MessageType.Info);
+        EditorGUILayout.HelpBox("💡 DIRECT BRANCH DRAWING:\n1. Hold SHIFT + LEFT CLICK to place road points.\n2. To branch from an existing point: Hold SHIFT and click that waypoint, then click on the ground.\n3. Use presets below to instantly change road texture style.", MessageType.Info);
 
         EditorGUILayout.Space(10);
 
-        // 🎨 HAZIR YOL STİLLERİ (MATERYAL ÖN AYARLARI)
-        EditorGUILayout.LabelField("🎨 HAZIR YOL STİLLERİ (TEK TIKLA DEĞİŞTİR)", EditorStyles.boldLabel);
+        // ROAD STYLE PRESETS
+        EditorGUILayout.LabelField("🎨 ROAD STYLE PRESETS (ONE-CLICK)", EditorStyles.boldLabel);
         EditorGUILayout.BeginHorizontal();
 
         GUI.backgroundColor = new Color(0.9f, 0.7f, 0.2f);
-        if (GUILayout.Button("🛣️ Çizgili Asfalt\n(2-Lane Striped)", GUILayout.Height(36)))
+        if (GUILayout.Button("🛣️ 2-Lane Striped\n(Highway / Main Road)", GUILayout.Height(36)))
         {
             ApplyStylePreset(builder, "Mat_Road_2Lane_Striped.mat", 0.18f);
         }
 
         GUI.backgroundColor = new Color(0.3f, 0.8f, 0.9f);
-        if (GUILayout.Button("🏙️ Kaldırımlı Cadde\n(City Sidewalk)", GUILayout.Height(36)))
+        if (GUILayout.Button("🏙️ City Sidewalks\n(Striped Avenue)", GUILayout.Height(36)))
         {
             ApplyStylePreset(builder, "Mat_Road_City_Sidewalks.mat", 0.15f);
         }
@@ -52,14 +52,23 @@ public class SplineRoadBuilderEditor : Editor
         EditorGUILayout.EndHorizontal();
         EditorGUILayout.BeginHorizontal();
 
+        GUI.backgroundColor = new Color(0.2f, 0.9f, 0.7f);
+        if (GUILayout.Button("🏙️ Wide Sidewalk (Plain)\n(Downtown Street)", GUILayout.Height(36)))
+        {
+            ApplyStylePreset(builder, "Mat_Road_City_Wide_Sidewalk.mat", 0.15f);
+        }
+
         GUI.backgroundColor = new Color(0.7f, 0.5f, 0.3f);
-        if (GUILayout.Button("🏔️ Toprak Köy Yolu\n(Mountain Dirt)", GUILayout.Height(32)))
+        if (GUILayout.Button("🏔️ Mountain Dirt\n(Village Trail)", GUILayout.Height(36)))
         {
             ApplyStylePreset(builder, "Mat_Road_Mountain_Dirt.mat", 0.20f);
         }
 
+        EditorGUILayout.EndHorizontal();
+        EditorGUILayout.BeginHorizontal();
+
         GUI.backgroundColor = new Color(0.5f, 0.5f, 0.5f);
-        if (GUILayout.Button("⬛ Düz Sade Asfalt\n(Plain Asphalt)", GUILayout.Height(32)))
+        if (GUILayout.Button("⬛ Plain Asphalt\n(No Sidewalks)", GUILayout.Height(30)))
         {
             ApplyStylePreset(builder, "Road_Asphalt_Material.mat", 0.25f);
         }
@@ -69,17 +78,17 @@ public class SplineRoadBuilderEditor : Editor
 
         EditorGUILayout.Space(12);
 
-        // AKTİF DAL SEÇİCİ
+        // ACTIVE BRANCH SELECTOR
         if (builder.branches.Count > 1)
         {
-            EditorGUILayout.LabelField("🛣️ ROAD BRANCHES (KOLLAR / ÇATALLAR)", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("🛣️ ROAD NETWORK BRANCHES", EditorStyles.boldLabel);
             string[] branchNames = new string[builder.branches.Count];
             for (int i = 0; i < builder.branches.Count; i++)
             {
-                branchNames[i] = $"{i + 1}. {builder.branches[i].branchName} ({builder.branches[i].waypoints.Count} nokta)";
+                branchNames[i] = $"{i + 1}. {builder.branches[i].branchName} ({builder.branches[i].waypoints.Count} points)";
             }
 
-            int newBranchIdx = EditorGUILayout.Popup("Çizim Yapılan Aktif Kol:", builder.activeBranchIndex, branchNames);
+            int newBranchIdx = EditorGUILayout.Popup("Active Drawing Branch:", builder.activeBranchIndex, branchNames);
             if (newBranchIdx != builder.activeBranchIndex)
             {
                 builder.activeBranchIndex = newBranchIdx;
@@ -99,11 +108,11 @@ public class SplineRoadBuilderEditor : Editor
 
         EditorGUILayout.Space(10);
 
-        // SEÇİLİ NOKTA DETAYI
+        // SELECTED WAYPOINT ACTIONS
         RoadBranch activeBranch = builder.GetActiveBranch();
         if (builder.selectedPointIndex >= 0 && builder.selectedPointIndex < activeBranch.waypoints.Count)
         {
-            EditorGUILayout.LabelField($"📍 SEÇİLİ: {activeBranch.branchName} ➔ Nokta {builder.selectedPointIndex + 1}", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField($"📍 SELECTED: {activeBranch.branchName} ➔ Point {builder.selectedPointIndex + 1}", EditorStyles.boldLabel);
 
             EditorGUILayout.BeginHorizontal();
             GUI.backgroundColor = new Color(0.3f, 0.75f, 1f);
@@ -128,7 +137,7 @@ public class SplineRoadBuilderEditor : Editor
         EditorGUILayout.LabelField("🏔️ TERRAIN & ROAD ACTIONS", EditorStyles.boldLabel);
 
         GUI.backgroundColor = new Color(0.2f, 0.75f, 1f);
-        if (GUILayout.Button("🏔️ Snap & Deform Terrain Under Road (Araziyi Yola Yapıştır/Oy)", GUILayout.Height(32)))
+        if (GUILayout.Button("🏔️ Snap & Deform Terrain Under Road", GUILayout.Height(32)))
         {
             Undo.RegisterCompleteObjectUndo(Terrain.activeTerrain.terrainData, "Deform Terrain Under Road");
             builder.DeformTerrainUnderRoad();
@@ -188,7 +197,7 @@ public class SplineRoadBuilderEditor : Editor
             builder.uvTiling = uvTile;
             builder.RebuildRoadMesh();
             EditorUtility.SetDirty(builder);
-            Debug.Log($"[SplineRoadBuilder] Yol stili '{mat.name}' olarak değiştirildi!");
+            Debug.Log($"[SplineRoadBuilder] Applied Road Style: '{mat.name}'");
         }
     }
 
@@ -197,7 +206,7 @@ public class SplineRoadBuilderEditor : Editor
         SplineRoadBuilder builder = (SplineRoadBuilder)target;
         Event currentEvent = Event.current;
 
-        // 1. Shift + Left Click ile Doğrudan Nokta Ekleme veya Noktadan Çatal Çıkarma
+        // 1. Shift + Left Click for Direct Placement or Branching
         if (currentEvent.shift)
         {
             Ray ray = HandleUtility.GUIPointToWorldRay(currentEvent.mousePosition);
@@ -285,7 +294,7 @@ public class SplineRoadBuilderEditor : Editor
             }
         }
 
-        // 2. Tüm Dallardaki Noktaları Çiz ve Anlık Sürükleme ile Eşzamanlı Güncelle
+        // 2. Draw Waypoint Handles and Synchronize Real-time Movement
         bool hasChanges = false;
 
         for (int b = 0; b < builder.branches.Count; b++)
@@ -302,7 +311,6 @@ public class SplineRoadBuilderEditor : Editor
                     ? new Color(0.2f, 1f, 0.4f) 
                     : (isActiveBranch ? new Color(0.3f, 0.75f, 1f) : new Color(0.7f, 0.7f, 0.7f, 0.6f));
 
-                // Tıklanabilir Seçim Küresi
                 if (Handles.Button(worldPos + (Vector3.up * 0.5f), Quaternion.identity, 0.8f, 1.2f, Handles.SphereHandleCap))
                 {
                     builder.activeBranchIndex = b;
