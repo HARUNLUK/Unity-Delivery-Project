@@ -39,6 +39,18 @@ public class CarController : MonoBehaviour
     public Vector3 wheelMeshRotationOffset = new Vector3(-90f, 0f, 0f);
     public Vector3 wheelMeshPositionOffset = Vector3.zero;
 
+    [Header("--- DİREKSİYON (STEERING WHEEL) ---")]
+    [Tooltip("Sürüş sırasında dönecek direksiyon modeli objesi")]
+    public Transform steeringWheel;
+
+    [Tooltip("Direksiyon dönme çarpanı")]
+    public float steeringWheelMultiplier = 4.0f;
+
+    [Tooltip("Direksiyonun kendi etrafında döneceği yerel eksen")]
+    public Vector3 steeringWheelRotationAxis = Vector3.forward;
+
+    private Quaternion initialSteeringWheelRotation;
+
     private Rigidbody rb;
     private float currentSteerAngle;
     private float horizontalInput;
@@ -75,6 +87,11 @@ public class CarController : MonoBehaviour
             normalRearSidewaysFriction = rearLeftCollider.sidewaysFriction;
             driftRearSidewaysFriction = rearLeftCollider.sidewaysFriction;
             currentRearStiffness = normalRearSidewaysFriction.stiffness;
+        }
+
+        if (steeringWheel != null)
+        {
+            initialSteeringWheelRotation = steeringWheel.localRotation;
         }
     }
 
@@ -133,6 +150,12 @@ public class CarController : MonoBehaviour
         currentSteerAngle = maxSteerAngle * horizontalInput;
         if (frontLeftCollider != null) frontLeftCollider.steerAngle = currentSteerAngle;
         if (frontRightCollider != null) frontRightCollider.steerAngle = currentSteerAngle;
+
+        if (steeringWheel != null)
+        {
+            float steerRot = currentSteerAngle * steeringWheelMultiplier;
+            steeringWheel.localRotation = initialSteeringWheelRotation * Quaternion.AngleAxis(-steerRot, steeringWheelRotationAxis);
+        }
     }
 
     private void HandleMotorAndBrakes()
