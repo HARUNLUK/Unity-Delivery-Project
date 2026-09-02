@@ -11,7 +11,7 @@ public class SplineRoadBuilderEditor : Editor
         SplineRoadBuilder existing = Object.FindAnyObjectByType<SplineRoadBuilder>();
         if (existing != null)
         {
-            Selection.activeGameObject = existing.gameObject;aa
+            Selection.activeGameObject = existing.gameObject;
             Debug.Log($"[SplineRoadBuilder] Selected existing '{existing.gameObject.name}'. Hold SHIFT + Left Click to continue drawing.");
             return;
         }
