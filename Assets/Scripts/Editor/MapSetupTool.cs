@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 public class MapSetupTool : MonoBehaviour
@@ -95,7 +96,6 @@ public class MapSetupTool : MonoBehaviour
     [MenuItem("Tools/Delivery Game/Add Delivery Point at Selected Object", false, 2)]
     public static void AddDeliveryPointAtSelected()
     {
-        // Get all selected GameObjects directly
         GameObject[] selectedObjects = Selection.gameObjects;
 
         GameObject pointsPool = GameObject.Find("Delivery_Points_Pool");
@@ -108,7 +108,6 @@ public class MapSetupTool : MonoBehaviour
             Undo.RegisterCreatedObjectUndo(pointsPool, "Created Delivery_Points_Pool");
         }
 
-        // Find existing highest index in scene
         DeliveryPoint[] allExisting = Object.FindObjectsByType<DeliveryPoint>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         int highestIndex = 0;
         foreach (var dp in allExisting)
@@ -123,7 +122,6 @@ public class MapSetupTool : MonoBehaviour
         Terrain activeTerrain = Terrain.activeTerrain;
         List<GameObject> createdPoints = new List<GameObject>();
 
-        // If no objects selected, place 1 at Scene View center
         if (selectedObjects == null || selectedObjects.Length == 0)
         {
             highestIndex++;
@@ -138,15 +136,12 @@ public class MapSetupTool : MonoBehaviour
         }
         else
         {
-            // Expand selection: if user selected a parent group containing multiple buildings, process them
             List<GameObject> targetBuildings = new List<GameObject>();
             foreach (GameObject go in selectedObjects)
             {
-                // Skip already created DeliveryPoints or VisualMarkers
                 if (go.GetComponent<DeliveryPoint>() != null || go.name.Contains("VisualMarker") || go.name.Contains("DeliveryPoint_"))
                     continue;
 
-                // If selected object is a container with child buildings (and no mesh itself)
                 if (go.transform.childCount > 0 && go.GetComponent<Renderer>() == null && go.GetComponent<MeshFilter>() == null)
                 {
                     for (int c = 0; c < go.transform.childCount; c++)
@@ -166,13 +161,11 @@ public class MapSetupTool : MonoBehaviour
                 targetBuildings.AddRange(selectedObjects);
             }
 
-            // Create 1 delivery point for each building
             foreach (GameObject building in targetBuildings)
             {
                 highestIndex++;
                 Transform t = building.transform;
                 
-                // Calculate position in front of building based on bounds or forward vector
                 Renderer ren = building.GetComponentInChildren<Renderer>();
                 Vector3 center = ren != null ? ren.bounds.center : t.position;
                 Vector3 forwardDir = t.forward;
@@ -186,7 +179,113 @@ public class MapSetupTool : MonoBehaviour
         }
 
         Selection.objects = createdPoints.ToArray();
-        Debug.Log($"[MapSetupTool] Successfully created {createdPoints.Count} Delivery Points! (IDs: {highestIndex - createdPoints.Count + 1} to {highestIndex})");
+        Debug.Log($"[MapSetupTool] Successfully created {createdPoints.Count} Delivery Points from Prefab! (IDs: {highestIndex - createdPoints.Count + 1} to {highestIndex})");
+    }
+
+    /// <summary>
+    /// Sahnede önceden oluşturulmuş tüm DeliveryPoint objelerini verilerini (ID, adres, konum) koruyarak özel prefab ile değiştirir.
+    /// </summary>
+    [MenuItem("Tools/Delivery Game/Replace Existing Delivery Points With Custom Prefab", false, 3)]
+    public static void ReplaceAllDeliveryPointsWithPrefab()
+    {
+        GameObject prefabAsset = FindDeliveryPointPrefab();
+        if (prefabAsset == null)
+        {
+            EditorUtility.DisplayDialog("Error", "DeliveryPoint prefab could not be found in Assets/Prefabs/!", "OK");
+            return;
+        }
+
+        DeliveryPoint[] allExisting = Object.FindObjectsByType<DeliveryPoint>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        if (allExisting == null || allExisting.Length == 0)
+        {
+            Debug.Log("[MapSetupTool] Sahnede değiştirilecek herhangi bir DeliveryPoint bulunamadı.");
+            return;
+        }
+
+        int replacedCount = 0;
+        List<GameObject> newObjects = new List<GameObject>();
+
+        foreach (DeliveryPoint oldDp in allExisting)
+        {
+            if (oldDp == null) continue;
+
+            // Zaten hedef prefab ise atla
+            GameObject prefabRoot = PrefabUtility.GetNearestPrefabInstanceRoot(oldDp.gameObject);
+            if (prefabRoot != null && PrefabUtility.GetCorrespondingObjectFromSource(prefabRoot) == prefabAsset)
+            {
+                continue;
+            }
+
+            // Mevcut verileri yedekle
+            string pointId = oldDp.pointId;
+            string addressName = oldDp.addressName;
+            string addressDesc = oldDp.addressDescription;
+            Vector3 worldPos = oldDp.transform.position;
+            Quaternion worldRot = oldDp.transform.rotation;
+            Transform parent = oldDp.transform.parent;
+            string objName = oldDp.gameObject.name;
+            int siblingIndex = oldDp.transform.GetSiblingIndex();
+
+            // Yeni prefabı aynı hiyerarşik konuma yerleştir
+            GameObject newObj = (GameObject)PrefabUtility.InstantiatePrefab(prefabAsset, parent);
+            newObj.name = objName;
+            newObj.transform.position = worldPos;
+            newObj.transform.rotation = worldRot;
+            newObj.transform.SetSiblingIndex(siblingIndex);
+
+            // Verileri yeni objeye aktar
+            DeliveryPoint newDp = newObj.GetComponent<DeliveryPoint>();
+            if (newDp != null)
+            {
+                newDp.pointId = pointId;
+                newDp.addressName = addressName;
+                newDp.addressDescription = addressDesc;
+            }
+
+            Undo.RegisterCreatedObjectUndo(newObj, "Replaced Delivery Point with Prefab");
+            Undo.DestroyObjectImmediate(oldDp.gameObject);
+
+            newObjects.Add(newObj);
+            replacedCount++;
+        }
+
+        if (newObjects.Count > 0)
+        {
+            Selection.objects = newObjects.ToArray();
+            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        }
+
+        Debug.Log($"[MapSetupTool] Sahnede bulunan {replacedCount} adet teslimat noktası verileri (ID, Adres, İpucu, Konum) korunarak '{prefabAsset.name}' prefabı ile başarıyla güncellendi!");
+    }
+
+    private static GameObject FindDeliveryPointPrefab()
+    {
+        string[] knownPaths = new string[] {
+            "Assets/Prefabs/DeliveryPoint_01 .prefab",
+            "Assets/Prefabs/DeliveryPoint_01.prefab",
+            "Assets/Prefabs/DeliveryPoint.prefab",
+            "Assets/Prefabs/Delivery/DeliveryPoint.prefab",
+            "Assets/Prefabs/DeliveryPoint_01"
+        };
+
+        foreach (string p in knownPaths)
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(p);
+            if (prefab != null) return prefab;
+        }
+
+        string[] guids = AssetDatabase.FindAssets("DeliveryPoint t:Prefab");
+        foreach (string guid in guids)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (prefab != null && prefab.GetComponent<DeliveryPoint>() != null)
+            {
+                return prefab;
+            }
+        }
+
+        return null;
     }
 
     private static GameObject CreateSingleDeliveryPoint(Transform parent, Vector3 worldPos, int index, Terrain terrain, string buildingName)
@@ -197,38 +296,35 @@ public class MapSetupTool : MonoBehaviour
         }
 
         string idStr = index.ToString();
-        GameObject pointObj = new GameObject($"DeliveryPoint_{idStr}");
-        pointObj.transform.SetParent(parent);
-        pointObj.transform.position = worldPos;
+        GameObject pointObj = null;
+        GameObject prefabAsset = FindDeliveryPointPrefab();
 
-        SphereCollider col = pointObj.AddComponent<SphereCollider>();
-        col.isTrigger = true;
-        col.radius = 4.0f;
-
-        DeliveryPoint dp = pointObj.AddComponent<DeliveryPoint>();
-        dp.pointId = idStr;
-        dp.addressName = string.IsNullOrEmpty(buildingName) ? $"Street Address #{idStr}" : $"{buildingName} Address #{idStr}";
-        dp.addressDescription = "House / shop description clue for the player.";
-
-        // Visual Marker Cylinder Ring
-        GameObject marker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        marker.name = "VisualMarker";
-        marker.transform.SetParent(pointObj.transform);
-        marker.transform.localPosition = Vector3.zero;
-        marker.transform.localScale = new Vector3(4.5f, 0.04f, 4.5f);
-        Object.DestroyImmediate(marker.GetComponent<Collider>());
-
-        Renderer ren = marker.GetComponent<Renderer>();
-        if (ren != null)
+        if (prefabAsset != null)
         {
-            Shader s = Shader.Find("Universal Render Pipeline/Lit");
-            if (s == null) s = Shader.Find("Standard");
-            Material m = new Material(s);
-            m.color = new Color(0.2f, 0.9f, 0.4f, 0.65f);
-            ren.material = m;
+            pointObj = (GameObject)PrefabUtility.InstantiatePrefab(prefabAsset, parent);
+            pointObj.name = $"DeliveryPoint_{idStr}";
+            pointObj.transform.position = worldPos;
+        }
+        else
+        {
+            pointObj = new GameObject($"DeliveryPoint_{idStr}");
+            pointObj.transform.SetParent(parent);
+            pointObj.transform.position = worldPos;
+
+            SphereCollider col = pointObj.AddComponent<SphereCollider>();
+            col.isTrigger = true;
+            col.radius = 4.0f;
+
+            pointObj.AddComponent<DeliveryPoint>();
         }
 
-        dp.visualMarker = marker;
+        DeliveryPoint dp = pointObj.GetComponent<DeliveryPoint>();
+        if (dp != null)
+        {
+            dp.pointId = idStr;
+            dp.addressName = string.IsNullOrEmpty(buildingName) ? $"Street Address #{idStr}" : $"{buildingName} Address #{idStr}";
+            dp.addressDescription = "House / shop description clue for the player.";
+        }
 
         Undo.RegisterCreatedObjectUndo(pointObj, $"Created Delivery Point {idStr}");
         return pointObj;
