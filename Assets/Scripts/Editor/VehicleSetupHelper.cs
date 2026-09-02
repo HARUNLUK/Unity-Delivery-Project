@@ -8,7 +8,7 @@ public static class VehicleSetupHelper
 {
     private const string PREFAB_DIR = "Assets/Prefabs";
 
-    [MenuItem("Tools/Delivery Game/1. Setup Selected Object as Drivable Vehicle & Save Prefab", false, 5)]
+    [MenuItem("Tools/Delivery Game/Setup Selected Object as Drivable Vehicle", false, 40)]
     public static void SetupSelectedAsDrivable()
     {
         GameObject target = Selection.activeGameObject;
@@ -189,7 +189,7 @@ public static class VehicleSetupHelper
         Debug.Log($"[VehicleSetupHelper] Configured '{target.name}' as Drivable Vehicle and saved to '{prefabPath}'!");
     }
 
-    [MenuItem("Tools/Delivery Game/2. Create FPS Player in Scene & Save Prefab", false, 6)]
+    [MenuItem("Tools/Delivery Game/Spawn FPS Player", false, 50)]
     public static void CreateFPSPlayer()
     {
         if (!Directory.Exists(PREFAB_DIR)) Directory.CreateDirectory(PREFAB_DIR);

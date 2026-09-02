@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class MapSetupTool : MonoBehaviour
 {
-    [MenuItem("Tools/Delivery Game/Setup Map Architecture & Systems", false, 1)]
+    [MenuItem("Tools/Delivery Game/Setup Map Architecture", false, 10)]
     public static void SetupSceneArchitecture()
     {
         // 1. Root Containers
@@ -93,7 +93,7 @@ public class MapSetupTool : MonoBehaviour
         Debug.Log("[MapSetupTool] Scene architecture & delivery systems successfully set up!");
     }
 
-    [MenuItem("Tools/Delivery Game/Add Delivery Point at Selected Object", false, 2)]
+    [MenuItem("Tools/Delivery Game/Add Delivery Point at Selected Object", false, 30)]
     public static void AddDeliveryPointAtSelected()
     {
         GameObject[] selectedObjects = Selection.gameObjects;

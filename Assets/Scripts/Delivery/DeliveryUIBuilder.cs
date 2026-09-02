@@ -6,7 +6,7 @@ using TMPro;
 
 public static class DeliveryUIBuilder
 {
-    [MenuItem("Tools/Delivery Game/Build Clean Delivery UI", false, 1)]
+    [MenuItem("Tools/Delivery Game/Build Complete Delivery UI", false, 20)]
     public static void BuildCleanDeliveryUI()
     {
         // 0. Find/Create DeliveryManager with all required managers
@@ -538,8 +538,11 @@ public static class DeliveryUIBuilder
         rowTemplate.SetActive(false);
         sumObj.SetActive(false);
 
+        // Interaction Prompt HUD (Press E to interact, drive, pick cargo)
+        InteractionPromptHUD.CreatePromptHUDTool();
+
         EditorUtility.SetDirty(canvas.gameObject);
-        Debug.Log("[DeliveryUIBuilder] English UI successfully generated!");
+        Debug.Log("[DeliveryUIBuilder] English UI & Interaction Prompt HUD successfully generated!");
     }
 
     private static TextMeshProUGUI AddTextMeshPro(GameObject target, string text, float fontSize, FontStyles style, TextAlignmentOptions alignment, Color color)

@@ -262,19 +262,18 @@ public class FPSPlayerController : MonoBehaviour
                 return;
             }
 
-            // 3. Hit Vehicle - Distinguish between Driver Door and Rear Tailgate
+            // 3. Hit Vehicle - Prompt Drive everywhere except rear tailgate area
             DrivableVehicle vehicle = hit.collider.GetComponentInParent<DrivableVehicle>();
             if (vehicle != null && !vehicle.isPlayerInside)
             {
-                float distToDriverDoor = float.MaxValue;
-                if (vehicle.exitPoint != null) distToDriverDoor = Vector3.Distance(hit.point, vehicle.exitPoint.position);
-                else distToDriverDoor = Vector3.Distance(hit.point, vehicle.transform.position - (vehicle.transform.right * 1.5f));
-
                 float distToTailgate = float.MaxValue;
-                if (vehicle.rearTailgate != null) distToTailgate = Vector3.Distance(hit.point, vehicle.rearTailgate.transform.position);
+                if (vehicle.rearTailgate != null)
+                {
+                    distToTailgate = Vector3.Distance(hit.point, vehicle.rearTailgate.transform.position);
+                }
 
-                // If aiming at rear tailgate area (closer to tailgate than to driver door and < 2.0m from tailgate)
-                if (vehicle.rearTailgate != null && distToTailgate < 2.0f && distToTailgate < distToDriverDoor)
+                // If aiming specifically at the rear tailgate area (< 1.8m from tailgate)
+                if (vehicle.rearTailgate != null && distToTailgate < 1.8f)
                 {
                     if (InteractionPromptHUD.Instance != null)
                     {
@@ -288,20 +287,17 @@ public class FPSPlayerController : MonoBehaviour
                     return;
                 }
 
-                // If aiming at driver door area (closer to driver door than to tailgate and < 2.5m from driver door)
-                if (distToDriverDoor < 2.5f)
+                // Looking at the car cabin/body prompts driving
+                if (InteractionPromptHUD.Instance != null)
                 {
-                    if (InteractionPromptHUD.Instance != null)
-                    {
-                        InteractionPromptHUD.Instance.ShowPrompt($"[E] Drive {vehicle.vehicleName}");
-                    }
-
-                    if (interactPressed)
-                    {
-                        vehicle.EnterVehicle(this);
-                    }
-                    return;
+                    InteractionPromptHUD.Instance.ShowPrompt($"[E] Drive {vehicle.vehicleName}");
                 }
+
+                if (interactPressed)
+                {
+                    vehicle.EnterVehicle(this);
+                }
+                return;
             }
         }
 

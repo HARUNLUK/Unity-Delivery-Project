@@ -5,6 +5,7 @@ using UnityEngine;
 [CustomEditor(typeof(SplineRoadBuilder))]
 public class SplineRoadBuilderEditor : Editor
 {
+    [MenuItem("Tools/Delivery Game/Create Spline Road Drawer", false, 60)]
     public static void CreateSplineRoadDrawer()
     {
         SplineRoadBuilder existing = Object.FindAnyObjectByType<SplineRoadBuilder>();
