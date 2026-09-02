@@ -62,6 +62,21 @@ public class PlayerEconomyManager : MonoBehaviour
         OnEconomyUpdated?.Invoke(CurrentLiveBalance, TodayNetProfit);
     }
 
+    public void AddEarnings(int amount)
+    {
+        todayEarned += amount;
+        OnEconomyUpdated?.Invoke(CurrentLiveBalance, TodayNetProfit);
+    }
+
+    public void AddPenalty(int amount)
+    {
+        todayPenalties += amount;
+        OnEconomyUpdated?.Invoke(CurrentLiveBalance, TodayNetProfit);
+    }
+
+    public void AddCash(int amount) => AddEarnings(amount);
+    public void DeductCash(int amount) => AddPenalty(amount);
+
     /// <summary>
     /// Gün bittiğinde günlük kazancı kalıcı olarak toplam kasaya aktarır ve kaydeder.
     /// </summary>

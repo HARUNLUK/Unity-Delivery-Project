@@ -46,6 +46,11 @@ public class DeliveryNotificationHUD : MonoBehaviour
         }
     }
 
+    public void ShowNotification(string message, bool isCorrect)
+    {
+        ShowNotification(null, isCorrect, message);
+    }
+
     public void ShowNotification(CargoItem item, bool isCorrect, string message)
     {
         if (notificationRoot == null || notificationText == null) return;

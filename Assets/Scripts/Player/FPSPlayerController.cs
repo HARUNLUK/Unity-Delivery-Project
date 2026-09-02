@@ -219,19 +219,28 @@ public class FPSPlayerController : MonoBehaviour
 
         if (playerCamera == null) return;
 
-        // Raycast forward from camera center
+        // Raycast forward with fallback SphereCast for rock-solid interaction detection (zero flickering)
         Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
-        if (Physics.Raycast(ray, out RaycastHit hit, interactionDistance, interactionLayers, QueryTriggerInteraction.Collide))
+        bool hasHit = Physics.Raycast(ray, out RaycastHit hit, interactionDistance, interactionLayers, QueryTriggerInteraction.Collide);
+        if (!hasHit)
+        {
+            hasHit = Physics.SphereCast(ray, 0.20f, out hit, interactionDistance, interactionLayers, QueryTriggerInteraction.Collide);
+        }
+
+        if (hasHit)
         {
             // 1. Physical Cargo Package or Rigidbody Object
             PhysicalCargoPackage pkg = hit.collider.GetComponentInParent<PhysicalCargoPackage>();
+            if (pkg == null) pkg = hit.collider.GetComponent<PhysicalCargoPackage>();
+            if (pkg == null) pkg = hit.collider.GetComponentInChildren<PhysicalCargoPackage>();
+
             Rigidbody targetRb = hit.collider.attachedRigidbody;
 
             if (pkg != null || (targetRb != null && !targetRb.isKinematic && hit.collider.GetComponentInParent<DrivableVehicle>() == null))
             {
                 if (InteractionPromptHUD.Instance != null)
                 {
-                    string targetName = (pkg != null && pkg.cargoData != null) ? $"Cargo #{pkg.cargoData.targetPointId}" : "Cargo Box";
+                    string targetName = (pkg != null) ? $"Cargo #{pkg.targetPointId} (${pkg.deliveryReward})" : "Object";
                     InteractionPromptHUD.Instance.ShowPrompt($"[E] Pick up {targetName}");
                 }
 
@@ -248,6 +257,8 @@ public class FPSPlayerController : MonoBehaviour
 
             // 2. Direct hit on VehicleTailgate collider
             VehicleTailgate directTailgate = hit.collider.GetComponent<VehicleTailgate>();
+            if (directTailgate == null) directTailgate = hit.collider.GetComponentInParent<VehicleTailgate>();
+
             if (directTailgate != null)
             {
                 if (InteractionPromptHUD.Instance != null)

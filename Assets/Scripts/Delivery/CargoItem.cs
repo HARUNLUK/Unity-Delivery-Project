@@ -20,6 +20,26 @@ public class CargoItem
     public bool isDeliveredCorrectly = false;
     public string deliveredToAddressName = "";
 
+    public string targetAddressName
+    {
+        get => targetAddress;
+        set => targetAddress = value;
+    }
+
+    public CargoItem()
+    {
+        this.trackingNumber = $"#PKG-{UnityEngine.Random.Range(1000, 9999)}";
+        this.recipientName = "Customer";
+        this.targetAddress = "Main Street";
+        this.targetAddressDescription = "";
+        this.targetPointId = "1";
+        this.deliveryReward = 50;
+        this.wrongDeliveryPenalty = 100;
+        this.isDelivered = false;
+        this.isDeliveredCorrectly = false;
+        this.deliveredToAddressName = "";
+    }
+
     public CargoItem(string tracking, string recipient, string address, string description, string pointId, int reward = 50, int penalty = 100)
     {
         this.trackingNumber = tracking;

@@ -326,5 +326,44 @@ public class MapSetupTool : MonoBehaviour
         Undo.RegisterCreatedObjectUndo(pointObj, $"Created Delivery Point {idStr}");
         return pointObj;
     }
+
+    [MenuItem("Tools/Delivery Game/Create Cargo Generator Area", false, 35)]
+    public static void CreateCargoGeneratorArea()
+    {
+        Vector3 spawnPos = Vector3.zero;
+        if (SceneView.lastActiveSceneView != null)
+        {
+            spawnPos = SceneView.lastActiveSceneView.pivot;
+        }
+
+        GameObject areaObj = new GameObject("Cargo_Warehouse_Generator");
+        areaObj.transform.position = spawnPos;
+
+        // Visual Depot Platform/Pallet
+        GameObject platform = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        platform.name = "Depot_Platform";
+        platform.transform.SetParent(areaObj.transform, false);
+        platform.transform.localPosition = new Vector3(0f, 0.1f, 0f);
+        platform.transform.localScale = new Vector3(3.6f, 0.2f, 2.6f);
+
+        MeshRenderer mr = platform.GetComponent<MeshRenderer>();
+        if (mr != null)
+        {
+            Shader s = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard") ?? Shader.Find("Diffuse");
+            Material mat = new Material(s != null ? s : Shader.Find("Sprites/Default"));
+            mat.color = new Color(0.25f, 0.28f, 0.32f);
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", new Color(0.25f, 0.28f, 0.32f));
+            mr.material = mat;
+        }
+
+        CargoWarehouseGenerator gen = areaObj.AddComponent<CargoWarehouseGenerator>();
+        gen.spawnAreaSize = new Vector3(3.5f, 0.3f, 2.5f);
+        gen.packageCount = 6;
+        gen.autoSpawnOnStart = true;
+
+        Selection.activeGameObject = areaObj;
+        Undo.RegisterCreatedObjectUndo(areaObj, "Create Cargo Generator Area");
+        Debug.Log("[MapSetupTool] Cargo Warehouse Generator area successfully created in scene!");
+    }
 }
 #endif

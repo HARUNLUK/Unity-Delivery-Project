@@ -98,7 +98,7 @@ public class PhysicsGrabber : MonoBehaviour
 
     private void CheckDeliveryAtPoint(PhysicalCargoPackage pkg)
     {
-        if (pkg == null) return;
+        if (pkg == null || grabbedRb == null) return;
 
         Collider[] hits = Physics.OverlapSphere(grabbedRb.position, 4.0f);
         foreach (var hit in hits)
@@ -106,17 +106,20 @@ public class PhysicsGrabber : MonoBehaviour
             DeliveryPoint dp = hit.GetComponentInParent<DeliveryPoint>();
             if (dp != null)
             {
-                if (pkg.cargoData != null && VanInventory.Instance != null && VanInventory.Instance.LoadedCargoList.Contains(pkg.cargoData))
+                if (pkg.TryDeliverAtPoint(dp, out string msg, out bool isSuccess))
                 {
-                    VanInventory.Instance.DeliverCargo(pkg.cargoData, dp);
+                    if (DeliveryNotificationHUD.Instance != null)
+                    {
+                        DeliveryNotificationHUD.Instance.ShowNotification(msg, isSuccess);
+                    }
                 }
                 else
                 {
-                    dp.IsFulfilled = true;
-                    if (dp.visualMarker != null) dp.visualMarker.SetActive(false);
+                    if (DeliveryNotificationHUD.Instance != null)
+                    {
+                        DeliveryNotificationHUD.Instance.ShowNotification(msg, false);
+                    }
                 }
-
-                Destroy(pkg.gameObject, 1.5f);
                 break;
             }
         }
