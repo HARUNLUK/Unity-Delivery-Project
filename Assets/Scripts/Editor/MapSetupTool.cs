@@ -182,10 +182,7 @@ public class MapSetupTool : MonoBehaviour
         Debug.Log($"[MapSetupTool] Successfully created {createdPoints.Count} Delivery Points from Prefab! (IDs: {highestIndex - createdPoints.Count + 1} to {highestIndex})");
     }
 
-    /// <summary>
-    /// Sahnede önceden oluşturulmuş tüm DeliveryPoint objelerini verilerini (ID, adres, konum) koruyarak özel prefab ile değiştirir.
-    /// </summary>
-    [MenuItem("Tools/Delivery Game/Replace Existing Delivery Points With Custom Prefab", false, 3)]
+    // Obsolete menu item removed
     public static void ReplaceAllDeliveryPointsWithPrefab()
     {
         GameObject prefabAsset = FindDeliveryPointPrefab();

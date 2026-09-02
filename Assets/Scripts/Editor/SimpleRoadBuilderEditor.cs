@@ -7,7 +7,7 @@ public class SimpleRoadBuilderEditor : Editor
 {
     private int multiStraightCount = 5;
 
-    [MenuItem("Tools/Delivery Game/Create Quick Road Builder in Scene", false, 3)]
+    // Obsolete menu item removed
     public static void CreateRoadBuilderInScene()
     {
         GameObject existing = GameObject.Find("Road_Builder_Tool");

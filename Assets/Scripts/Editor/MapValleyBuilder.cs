@@ -9,7 +9,7 @@ public static class MapValleyBuilder
 {
     private const string SCENE_PATH = "Assets/Scenes/Map_Valley.unity";
 
-    [MenuItem("Tools/Kargo Oyunu/Yeni Vadi Haritasini Olustur (Map_Valley)", false, 2)]
+    // Obsolete menu item removed
     public static void GenerateValleyMap()
     {
         // 1. Yeni Sahne Oluştur

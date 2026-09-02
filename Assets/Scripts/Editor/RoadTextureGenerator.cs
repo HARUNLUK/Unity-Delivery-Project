@@ -5,7 +5,7 @@ using UnityEngine;
 
 public static class RoadTextureGenerator
 {
-    [MenuItem("Tools/Delivery Game/Generate Ready-To-Use Road Materials", false, 10)]
+    // Obsolete menu item removed (materials are generated on-demand by presets)
     public static void GenerateRoadMaterials()
     {
         string dir = "Assets/Materials/RoadStyles";

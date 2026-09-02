@@ -5,14 +5,12 @@ using UnityEngine;
 [CustomEditor(typeof(SplineRoadBuilder))]
 public class SplineRoadBuilderEditor : Editor
 {
-    [MenuItem("Tools/Delivery Game/Create Spline Road Drawer (Shift + Click)", false, 3)]
     public static void CreateSplineRoadDrawer()
     {
         SplineRoadBuilder existing = Object.FindAnyObjectByType<SplineRoadBuilder>();
         if (existing != null)
         {
             Selection.activeGameObject = existing.gameObject;
-            Debug.Log($"[SplineRoadBuilder] Selected existing '{existing.gameObject.name}'. Hold SHIFT + Left Click to continue drawing.");
             return;
         }
 
@@ -21,8 +19,6 @@ public class SplineRoadBuilderEditor : Editor
 
         SplineRoadBuilder builder = roadObj.AddComponent<SplineRoadBuilder>();
         Selection.activeGameObject = roadObj;
-
-        Debug.Log("[SplineRoadBuilder] Created 'Spline_Road'. Hold SHIFT + Left Click on terrain to draw roads.");
     }
 
     public override void OnInspectorGUI()

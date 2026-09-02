@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 63ee48a23b158a64eba5fad2cab6bd7a
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 273052
+  packageName: Stylized Pickup - 3d model
+  packageVersion: 1.0
+  assetPath: Assets/Pack_Pickup/Scripts/CarControl.cs
+  uploadId: 657945
