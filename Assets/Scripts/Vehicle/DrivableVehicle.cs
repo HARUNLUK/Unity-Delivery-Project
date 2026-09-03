@@ -27,6 +27,7 @@ public class DrivableVehicle : MonoBehaviour
     public FPSPlayerController currentPlayer;
 
     private Rigidbody rb;
+    private float enterTimestamp = 0f;
 
     private void Awake()
     {
@@ -94,14 +95,20 @@ public class DrivableVehicle : MonoBehaviour
 
         currentPlayer = player;
         isPlayerInside = true;
+        enterTimestamp = Time.time;
 
-        // 1. Disable player on-foot movement
+        // 1. Disable player on-foot movement and CharacterController
         player.SetOnFootActive(false);
 
-        // 2. Attach player camera to driver seat
+        // 2. Parent player object to driver seat so it travels with the car
+        player.transform.SetParent(driverSeatPoint);
+        player.transform.localPosition = Vector3.zero;
+        player.transform.localRotation = Quaternion.identity;
+
+        // 3. Attach player camera to driver seat
         player.AttachCameraToSeat(driverSeatPoint);
 
-        // 3. Enable vehicle controls
+        // 4. Enable vehicle controls
         if (carController != null)
         {
             carController.enabled = true;
@@ -119,20 +126,22 @@ public class DrivableVehicle : MonoBehaviour
     {
         if (!isPlayerInside || currentPlayer == null) return;
 
-        // 1. Disable vehicle controls & clear forces
+        // 1. Disable vehicle controls
         if (carController != null)
         {
             carController.enabled = false;
         }
 
-        // 2. Position player at exit point
-        Vector3 spawnPos = exitPoint != null ? exitPoint.position : transform.position - transform.right * 2.0f;
-        spawnPos.y += 0.2f;
+        // 2. Calculate exit position outside driver door
+        Vector3 spawnPos = exitPoint != null ? exitPoint.position : transform.position - (transform.right * 2.0f);
+        spawnPos.y += 0.1f;
 
+        // 3. Unparent player from vehicle
+        currentPlayer.transform.SetParent(null);
         currentPlayer.transform.position = spawnPos;
         currentPlayer.transform.rotation = Quaternion.LookRotation(transform.forward, Vector3.up);
 
-        // 3. Detach camera and restore on-foot player
+        // 4. Detach camera and restore on-foot player
         currentPlayer.DetachCameraFromSeat();
         currentPlayer.SetOnFootActive(true);
 
@@ -146,10 +155,13 @@ public class DrivableVehicle : MonoBehaviour
     {
         if (isPlayerInside)
         {
-            // Press E to exit vehicle
-            if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+            // Ignore [E] keypress in the same frame as entering (0.3s cooldown)
+            if (Time.time - enterTimestamp > 0.35f)
             {
-                ExitVehicle();
+                if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+                {
+                    ExitVehicle();
+                }
             }
         }
     }

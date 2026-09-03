@@ -8,12 +8,13 @@ using UnityEngine.InputSystem;
 public class CarController : MonoBehaviour
 {
     [Header("--- MOTOR & FREN AYARLARI ---")]
-    public float motorForce = 15000f;
-    public float reverseForce = 10000f;
+    public float motorForce = 16000f;
+    public float reverseForce = 11000f;
     public float footBrakeForce = 100000f;
     public float handBrakeForce = 150000f;
-    public float maxSteerAngle = 35f;
-    public Vector3 centerOfMassOffset = new Vector3(0, -1.2f, 0);
+    public float maxSteerAngle = 40f;
+    public float turnAssistTorque = 3.5f;
+    public Vector3 centerOfMassOffset = new Vector3(0, -1.0f, 0);
 
     [Header("--- EL FRENİ & DRİFT AYARLARI ---")]
     public float driftSidewaysStiffness = 0.25f;
@@ -148,8 +149,30 @@ public class CarController : MonoBehaviour
     private void HandleSteering()
     {
         currentSteerAngle = maxSteerAngle * horizontalInput;
-        if (frontLeftCollider != null) frontLeftCollider.steerAngle = currentSteerAngle;
-        if (frontRightCollider != null) frontRightCollider.steerAngle = currentSteerAngle;
+
+        // Ackermann Steering Angle Differential (İç tekerlek daha geniş döner, tekerlek kasması sıfırlanır)
+        if (horizontalInput > 0.05f)
+        {
+            if (frontLeftCollider != null) frontLeftCollider.steerAngle = currentSteerAngle * 0.85f;
+            if (frontRightCollider != null) frontRightCollider.steerAngle = currentSteerAngle * 1.05f;
+        }
+        else if (horizontalInput < -0.05f)
+        {
+            if (frontLeftCollider != null) frontLeftCollider.steerAngle = currentSteerAngle * 1.05f;
+            if (frontRightCollider != null) frontRightCollider.steerAngle = currentSteerAngle * 0.85f;
+        }
+        else
+        {
+            if (frontLeftCollider != null) frontLeftCollider.steerAngle = 0f;
+            if (frontRightCollider != null) frontRightCollider.steerAngle = 0f;
+        }
+
+        // Agile Yaw Torque Assist (Dönüşlerde araca çeviklik desteği vererek ağırlık hissini ortadan kaldırır)
+        if (rb != null && Mathf.Abs(horizontalInput) > 0.05f && rb.linearVelocity.magnitude > 0.5f)
+        {
+            float directionSign = ForwardSpeed >= -0.2f ? 1f : -1f;
+            rb.AddTorque(transform.up * (horizontalInput * turnAssistTorque * directionSign), ForceMode.Acceleration);
+        }
 
         if (steeringWheel != null)
         {
@@ -251,7 +274,8 @@ public class CarController : MonoBehaviour
         currentRearStiffness = Mathf.MoveTowards(currentRearStiffness, normalRearSidewaysFriction.stiffness, Time.fixedDeltaTime * 2.5f);
         SetRearStiffness(currentRearStiffness);
 
-        if (verticalInput > 0.1f && rb != null && ForwardSpeed > 2f)
+        // Yalnızca düz giderken toparla (dönüş yaparken dönüş açısını KISITLAMA!)
+        if (Mathf.Abs(horizontalInput) < 0.1f && verticalInput > 0.1f && rb != null && ForwardSpeed > 2f)
         {
             Vector3 localVel = transform.InverseTransformDirection(rb.linearVelocity);
 
@@ -286,8 +310,14 @@ public class CarController : MonoBehaviour
 
     private void ApplyMotorTorque(float force)
     {
-        if (rearLeftCollider != null) rearLeftCollider.motorTorque = force;
-        if (rearRightCollider != null) rearRightCollider.motorTorque = force;
+        // AWD Tork Dağılımı (Ön tekerlekler dönüş yönüne doğru aracı çeker, hantallığı bitirir)
+        float frontForce = force * 0.35f;
+        float rearForce = force * 0.65f;
+
+        if (frontLeftCollider != null) frontLeftCollider.motorTorque = frontForce;
+        if (frontRightCollider != null) frontRightCollider.motorTorque = frontForce;
+        if (rearLeftCollider != null) rearLeftCollider.motorTorque = rearForce;
+        if (rearRightCollider != null) rearRightCollider.motorTorque = rearForce;
     }
 
     private void ApplyBrakes(float force)
