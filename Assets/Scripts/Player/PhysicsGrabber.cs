@@ -6,34 +6,32 @@ public class PhysicsGrabber : MonoBehaviour
     [Tooltip("Distance in front of camera where grabbed objects float")]
     public float holdDistance = 1.6f;
 
-    [Tooltip("Strength of the force pulling the object towards the hold position")]
-    public float grabForce = 250f;
+    [Tooltip("Smooth follow damping speed (higher = snappier, lower = smoother)")]
+    public float grabFollowSpeed = 22f;
 
-    [Tooltip("Damping to prevent excessive bouncing and wobbling")]
-    public float grabDamping = 20f;
+    [Tooltip("Smooth rotation follow speed")]
+    public float grabRotateSpeed = 16f;
 
     [Tooltip("Maximum mass the player can pick up")]
     public float maxGrabMass = 100f;
 
     [Header("--- CURRENT GRAB STATE ---")]
     public Rigidbody grabbedRb;
-    private float originalDrag;
-    private float originalAngularDrag;
+    private float originalLinearDamping;
+    private float originalAngularDamping;
     private bool originalUseGravity;
+    private RigidbodyInterpolation originalInterpolation;
 
-    private Transform holdPoint;
     private Camera playerCam;
+    private Collider[] playerColliders;
 
     private void Awake()
     {
         playerCam = GetComponentInParent<Camera>();
         if (playerCam == null) playerCam = Camera.main;
 
-        // Create hold anchor
-        GameObject holdObj = new GameObject("CargoHoldPoint");
-        holdObj.transform.SetParent(transform);
-        holdObj.transform.localPosition = new Vector3(0f, -0.15f, holdDistance);
-        holdPoint = holdObj.transform;
+        // Cache player colliders to ignore collision while carrying
+        playerColliders = transform.root.GetComponentsInChildren<Collider>();
     }
 
     public bool IsHoldingObject => grabbedRb != null;
@@ -43,22 +41,32 @@ public class PhysicsGrabber : MonoBehaviour
         if (targetRb == null || targetRb.mass > maxGrabMass) return;
 
         grabbedRb = targetRb;
-        originalDrag = grabbedRb.linearDamping;
-        originalAngularDrag = grabbedRb.angularDamping;
+        originalLinearDamping = grabbedRb.linearDamping;
+        originalAngularDamping = grabbedRb.angularDamping;
         originalUseGravity = grabbedRb.useGravity;
+        originalInterpolation = grabbedRb.interpolation;
 
+        // Set optimal carry physics
         grabbedRb.useGravity = false;
-        grabbedRb.linearDamping = 10f;
-        grabbedRb.angularDamping = 10f;
+        grabbedRb.linearDamping = 8f;
+        grabbedRb.angularDamping = 8f;
+        grabbedRb.interpolation = RigidbodyInterpolation.Interpolate;
+
+        // Ignore collision between grabbed object and player body (eliminates jitter completely!)
+        SetCollisionWithPlayer(false);
     }
 
     public void ReleaseObject(Vector3 throwForce = default)
     {
         if (grabbedRb == null) return;
 
+        // Restore collision with player body
+        SetCollisionWithPlayer(true);
+
         grabbedRb.useGravity = originalUseGravity;
-        grabbedRb.linearDamping = originalDrag;
-        grabbedRb.angularDamping = originalAngularDrag;
+        grabbedRb.linearDamping = originalLinearDamping;
+        grabbedRb.angularDamping = originalAngularDamping;
+        grabbedRb.interpolation = originalInterpolation;
 
         if (throwForce != Vector3.zero)
         {
@@ -75,25 +83,55 @@ public class PhysicsGrabber : MonoBehaviour
         grabbedRb = null;
     }
 
+    private void SetCollisionWithPlayer(bool enable)
+    {
+        if (grabbedRb == null) return;
+
+        Collider[] objCols = grabbedRb.GetComponentsInChildren<Collider>();
+        if (playerColliders == null || playerColliders.Length == 0)
+        {
+            playerColliders = transform.root.GetComponentsInChildren<Collider>();
+        }
+
+        if (playerColliders == null) return;
+
+        foreach (var oc in objCols)
+        {
+            foreach (var pc in playerColliders)
+            {
+                if (oc != null && pc != null && oc != pc)
+                {
+                    Physics.IgnoreCollision(oc, pc, !enable);
+                }
+            }
+        }
+    }
+
     private void FixedUpdate()
     {
         if (grabbedRb == null) return;
 
-        // Smooth physics spring force towards hold point
-        Vector3 targetPos = holdPoint.position;
+        Camera cam = playerCam != null ? playerCam : Camera.main;
+        if (cam == null) return;
+
+        // Target hold position in front of camera
+        Vector3 targetPos = cam.transform.position + (cam.transform.forward * holdDistance) + (Vector3.down * 0.12f);
+        Quaternion targetRot = cam.transform.rotation;
+
         Vector3 forceDir = targetPos - grabbedRb.position;
         float distance = forceDir.magnitude;
 
-        // If dragged too far away (e.g. stuck behind a solid wall), drop it
+        // If dragged too far away (e.g. trapped behind a solid obstacle), drop it
         if (distance > 4.5f)
         {
             ReleaseObject();
             return;
         }
 
-        Vector3 targetVelocity = forceDir * grabForce;
-        grabbedRb.linearVelocity = Vector3.Lerp(grabbedRb.linearVelocity, targetVelocity, Time.fixedDeltaTime * grabDamping);
-        grabbedRb.angularVelocity = Vector3.Lerp(grabbedRb.angularVelocity, Vector3.zero, Time.fixedDeltaTime * grabDamping);
+        // Buttery-smooth spring velocity without any jitter or shaking
+        grabbedRb.linearVelocity = forceDir * grabFollowSpeed;
+        grabbedRb.angularVelocity = Vector3.zero;
+        grabbedRb.rotation = Quaternion.Slerp(grabbedRb.rotation, targetRot, Time.fixedDeltaTime * grabRotateSpeed);
     }
 
     private void CheckDeliveryAtPoint(PhysicalCargoPackage pkg)

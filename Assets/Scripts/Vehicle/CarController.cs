@@ -96,6 +96,41 @@ public class CarController : MonoBehaviour
         }
     }
 
+    private void OnDisable()
+    {
+        ClearAllForces();
+    }
+
+    public void ClearAllForces()
+    {
+        horizontalInput = 0f;
+        verticalInput = 0f;
+        isHandbraking = false;
+        currentSteerAngle = 0f;
+
+        // 1. Sıfır Gaz (Motor torkunu tüm tekerleklerde tamamen kes)
+        if (frontLeftCollider != null) frontLeftCollider.motorTorque = 0f;
+        if (frontRightCollider != null) frontRightCollider.motorTorque = 0f;
+        if (rearLeftCollider != null) rearLeftCollider.motorTorque = 0f;
+        if (rearRightCollider != null) rearRightCollider.motorTorque = 0f;
+
+        // 2. Direksiyonu Düzelt
+        if (frontLeftCollider != null) frontLeftCollider.steerAngle = 0f;
+        if (frontRightCollider != null) frontRightCollider.steerAngle = 0f;
+
+        // 3. Doğal Yavaşlama Freni (Boşa çıkmış araç gibi akıcı yavaşlayarak durması için)
+        float neutralBrake = 2000f;
+        if (frontLeftCollider != null) frontLeftCollider.brakeTorque = neutralBrake;
+        if (frontRightCollider != null) frontRightCollider.brakeTorque = neutralBrake;
+        if (rearLeftCollider != null) rearLeftCollider.brakeTorque = neutralBrake;
+        if (rearRightCollider != null) rearRightCollider.brakeTorque = neutralBrake;
+
+        if (steeringWheel != null)
+        {
+            steeringWheel.localRotation = initialSteeringWheelRotation;
+        }
+    }
+
     private void Update()
     {
         GetInput();

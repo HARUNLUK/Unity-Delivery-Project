@@ -126,9 +126,10 @@ public class DrivableVehicle : MonoBehaviour
     {
         if (!isPlayerInside || currentPlayer == null) return;
 
-        // 1. Disable vehicle controls
+        // 1. Cut all engine torque, center steer and apply neutral coasting deceleration
         if (carController != null)
         {
+            carController.ClearAllForces();
             carController.enabled = false;
         }
 
@@ -149,6 +150,19 @@ public class DrivableVehicle : MonoBehaviour
         currentPlayer = null;
 
         Debug.Log($"[DrivableVehicle] Player exited '{vehicleName}'. On-foot controls restored.");
+    }
+
+    private void FixedUpdate()
+    {
+        // Araçta kimse yokken boşa çıkmış gibi yumuşakça yavaşlayarak park eder
+        if (!isPlayerInside && rb != null)
+        {
+            if (rb.linearVelocity.magnitude > 0.05f)
+            {
+                rb.linearVelocity = Vector3.MoveTowards(rb.linearVelocity, Vector3.zero, Time.fixedDeltaTime * 2.5f);
+                rb.angularVelocity = Vector3.MoveTowards(rb.angularVelocity, Vector3.zero, Time.fixedDeltaTime * 4.0f);
+            }
+        }
     }
 
     private void Update()

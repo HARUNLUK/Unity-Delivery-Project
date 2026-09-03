@@ -49,12 +49,21 @@ public class FPSPlayerController : MonoBehaviour
     public float tpsRotationDamping = 6.0f;
     public float tpsHeightDamping = 5.0f;
 
+    [Header("--- CARGO THROW SETTINGS ---")]
+    [Tooltip("Maksimum fırlatma hızı")]
+    public float maxThrowForce = 11.0f;
+    [Tooltip("Tam güçte fırlatma için basılı tutma süresi (saniye)")]
+    public float throwChargeDuration = 0.85f;
+
     private float vehicleYaw = 0f;
     private float vehiclePitch = 0f;
     private float tpsYawOffset = 0f;
     private float tpsPitchOffset = 0f;
     private Transform currentSeatPoint;
     private Transform currentVehicleTransform;
+
+    private float currentDropHoldTime = 0f;
+    private float afterGrabSafetyTimer = 0f;
 
     private void Awake()
     {
@@ -351,56 +360,135 @@ public class FPSPlayerController : MonoBehaviour
         // If holding an object
         if (grabber != null && grabber.IsHoldingObject)
         {
-            if (InteractionPromptHUD.Instance != null)
+            if (afterGrabSafetyTimer > 0f)
             {
-                InteractionPromptHUD.Instance.ShowPrompt("[E] or [LMB] Drop Cargo");
+                afterGrabSafetyTimer -= Time.deltaTime;
+                if (InteractionPromptHUD.Instance != null)
+                {
+                    InteractionPromptHUD.Instance.ShowPrompt("[E] or [LMB] Drop (Hold to Throw)");
+                }
+                return;
             }
 
-            if (interactPressed || leftClickPressed)
+            bool isHoldingDropKey = (Keyboard.current != null && Keyboard.current.eKey.isPressed) ||
+                                    (Mouse.current != null && Mouse.current.leftButton.isPressed);
+
+            bool dropKeyReleased = (Keyboard.current != null && Keyboard.current.eKey.wasReleasedThisFrame) ||
+                                   (Mouse.current != null && Mouse.current.leftButton.wasReleasedThisFrame);
+
+            if (isHoldingDropKey)
             {
-                grabber.ReleaseObject();
+                currentDropHoldTime += Time.deltaTime;
+                float chargePercent = Mathf.Clamp01(currentDropHoldTime / throwChargeDuration);
+
+                if (currentDropHoldTime > 0.18f)
+                {
+                    if (InteractionPromptHUD.Instance != null)
+                    {
+                        InteractionPromptHUD.Instance.ShowPrompt($"🎯 Fırlatma Gücü: %{(int)(chargePercent * 100)} (Bırakınca Fırlat)");
+                    }
+                }
+                else
+                {
+                    if (InteractionPromptHUD.Instance != null)
+                    {
+                        InteractionPromptHUD.Instance.ShowPrompt("[E] / [Sol Tık] Bırak (Basılı Tut: Fırlat)");
+                    }
+                }
             }
+
+            if (dropKeyReleased)
+            {
+                if (currentDropHoldTime >= 0.25f)
+                {
+                    // Şarjlı fırlatma
+                    float charge = Mathf.Clamp01(currentDropHoldTime / throwChargeDuration);
+                    float throwSpeed = Mathf.Lerp(4.5f, maxThrowForce, charge);
+                    Vector3 throwVel = (playerCamera.transform.forward * throwSpeed) + (Vector3.up * 1.5f);
+                    grabber.ReleaseObject(throwVel);
+                }
+                else
+                {
+                    // Nazikçe yere bırakma
+                    grabber.ReleaseObject(Vector3.zero);
+                }
+
+                currentDropHoldTime = 0f;
+            }
+
             return;
         }
 
         if (playerCamera == null) return;
 
-        // Raycast forward with fallback SphereCast for rock-solid interaction detection (zero flickering)
+        // Raycast forward with fallback SphereCast (ignoring invisible trigger zones)
         Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
-        bool hasHit = Physics.Raycast(ray, out RaycastHit hit, interactionDistance, interactionLayers, QueryTriggerInteraction.Collide);
+        bool hasHit = Physics.Raycast(ray, out RaycastHit hit, interactionDistance, interactionLayers, QueryTriggerInteraction.Ignore);
         if (!hasHit)
         {
-            hasHit = Physics.SphereCast(ray, 0.20f, out hit, interactionDistance, interactionLayers, QueryTriggerInteraction.Collide);
+            hasHit = Physics.SphereCast(ray, 0.25f, out hit, interactionDistance, interactionLayers, QueryTriggerInteraction.Ignore);
+        }
+
+        // 1. Physical Cargo Package or Rigidbody Object Detection
+        PhysicalCargoPackage pkg = null;
+        Rigidbody targetRb = null;
+
+        if (hasHit)
+        {
+            pkg = hit.collider.GetComponentInParent<PhysicalCargoPackage>();
+            if (pkg == null) pkg = hit.collider.GetComponent<PhysicalCargoPackage>();
+            if (pkg == null) pkg = hit.collider.GetComponentInChildren<PhysicalCargoPackage>();
+
+            targetRb = hit.collider.attachedRigidbody;
+        }
+
+        // Yakın mesafe taraması (Kutunun dibinde durup aşağı bakarken kesin algılama)
+        if (pkg == null && targetRb == null)
+        {
+            Collider[] closeHits = Physics.OverlapSphere(playerCamera.transform.position + (playerCamera.transform.forward * 1.2f), 0.85f, interactionLayers, QueryTriggerInteraction.Ignore);
+            float closestDist = float.MaxValue;
+
+            foreach (var ch in closeHits)
+            {
+                if (ch.transform.IsChildOf(transform)) continue;
+
+                PhysicalCargoPackage p = ch.GetComponentInParent<PhysicalCargoPackage>();
+                if (p != null)
+                {
+                    float d = Vector3.Distance(playerCamera.transform.position, p.transform.position);
+                    if (d < closestDist)
+                    {
+                        closestDist = d;
+                        pkg = p;
+                        targetRb = p.GetComponent<Rigidbody>();
+                    }
+                }
+            }
+        }
+
+        if (pkg != null || (targetRb != null && !targetRb.isKinematic && (hasHit ? hit.collider.GetComponentInParent<DrivableVehicle>() == null : true)))
+        {
+            if (InteractionPromptHUD.Instance != null)
+            {
+                string targetName = (pkg != null) ? $"Cargo #{pkg.targetPointId} (${pkg.deliveryReward})" : "Object";
+                InteractionPromptHUD.Instance.ShowPrompt($"[E] Pick up {targetName}");
+            }
+
+            if (interactPressed && grabber != null)
+            {
+                Rigidbody rbToGrab = pkg != null ? pkg.GetComponent<Rigidbody>() : targetRb;
+                if (rbToGrab != null)
+                {
+                    grabber.GrabObject(rbToGrab);
+                    afterGrabSafetyTimer = 0.22f;
+                    currentDropHoldTime = 0f;
+                }
+            }
+            return;
         }
 
         if (hasHit)
         {
-            // 1. Physical Cargo Package or Rigidbody Object
-            PhysicalCargoPackage pkg = hit.collider.GetComponentInParent<PhysicalCargoPackage>();
-            if (pkg == null) pkg = hit.collider.GetComponent<PhysicalCargoPackage>();
-            if (pkg == null) pkg = hit.collider.GetComponentInChildren<PhysicalCargoPackage>();
-
-            Rigidbody targetRb = hit.collider.attachedRigidbody;
-
-            if (pkg != null || (targetRb != null && !targetRb.isKinematic && hit.collider.GetComponentInParent<DrivableVehicle>() == null))
-            {
-                if (InteractionPromptHUD.Instance != null)
-                {
-                    string targetName = (pkg != null) ? $"Cargo #{pkg.targetPointId} (${pkg.deliveryReward})" : "Object";
-                    InteractionPromptHUD.Instance.ShowPrompt($"[E] Pick up {targetName}");
-                }
-
-                if (interactPressed && grabber != null)
-                {
-                    Rigidbody rbToGrab = pkg != null ? pkg.GetComponent<Rigidbody>() : targetRb;
-                    if (rbToGrab != null)
-                    {
-                        grabber.GrabObject(rbToGrab);
-                    }
-                }
-                return;
-            }
-
             // 2. Direct hit on VehicleTailgate collider
             VehicleTailgate directTailgate = hit.collider.GetComponent<VehicleTailgate>();
             if (directTailgate == null) directTailgate = hit.collider.GetComponentInParent<VehicleTailgate>();
