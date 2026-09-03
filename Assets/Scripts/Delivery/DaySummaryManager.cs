@@ -14,6 +14,7 @@ public class DaySummaryManager : MonoBehaviour
     public TextMeshProUGUI correctDeliveriesText;
     public TextMeshProUGUI wrongDeliveriesText;
     public TextMeshProUGUI netEarningsText;
+    public TextMeshProUGUI progressionInfoText;
     public Transform historyListContent;
     public GameObject historyItemTemplate;
     public Button restartDayButton;
@@ -100,9 +101,11 @@ public class DaySummaryManager : MonoBehaviour
         int totalCount = scenePackages.Length;
         int correctCount = 0;
         int wrongCount = 0;
+        int brokenCount = 0;
         int undeliveredCount = 0;
         int totalReward = 0;
         int totalPenalty = 0;
+        int totalXP = 0;
 
         foreach (var pkg in scenePackages)
         {
@@ -111,10 +114,17 @@ public class DaySummaryManager : MonoBehaviour
             CargoDeliveryResult res = pkg.EvaluateEndOfDayResult();
             results.Add(res);
 
+            totalXP += res.xpAwarded;
+
             if (res.status == CargoDeliveryStatus.Correct)
             {
                 correctCount++;
                 totalReward += res.moneyChange;
+            }
+            else if (res.status == CargoDeliveryStatus.Broken)
+            {
+                brokenCount++;
+                totalPenalty += Mathf.Abs(res.moneyChange);
             }
             else if (res.status == CargoDeliveryStatus.WrongAddress)
             {
@@ -128,9 +138,19 @@ public class DaySummaryManager : MonoBehaviour
             }
         }
 
+        // 2. Günlük Dükkan Kirası Gideri
+        int dailyRent = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.GetDailyWarehouseRent() : 50;
+        totalPenalty += dailyRent;
+
         int netProfit = totalReward - totalPenalty;
 
-        // 2. Ekonomiyi güncelle ve kaydet
+        // 3. XP ve Seviyeyi Güncelle
+        if (PlayerProgressionManager.Instance != null)
+        {
+            PlayerProgressionManager.Instance.AddXP(totalXP);
+        }
+
+        // 4. Ekonomiyi güncelle ve kaydet
         if (PlayerEconomyManager.Instance != null)
         {
             PlayerEconomyManager.Instance.AddEarnings(totalReward);
@@ -140,10 +160,14 @@ public class DaySummaryManager : MonoBehaviour
 
         int totalVault = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.TotalSavedBalance : netProfit;
 
-        // 3. UI Metinlerini Doldur
+        // 5. UI Metinlerini Doldur
         if (totalDeliveredText != null) totalDeliveredText.text = $"Total Packages Today: {totalCount}";
         if (correctDeliveriesText != null) correctDeliveriesText.text = $"[+] Correct Deliveries: {correctCount} (+${totalReward})";
-        if (wrongDeliveriesText != null) wrongDeliveriesText.text = $"[-] Wrong / Undelivered: {wrongCount + undeliveredCount} (-${totalPenalty} Penalty)";
+        
+        string wrongBreakdown = $"[-] Penalties: -${totalPenalty - dailyRent}";
+        if (brokenCount > 0) wrongBreakdown += $" (Broken: {brokenCount})";
+        wrongBreakdown += $" | Warehouse Rent: -${dailyRent}";
+        if (wrongDeliveriesText != null) wrongDeliveriesText.text = wrongBreakdown;
         
         if (netEarningsText != null)
         {
@@ -152,7 +176,15 @@ public class DaySummaryManager : MonoBehaviour
             netEarningsText.color = netProfit >= 0 ? new Color(0.2f, 0.95f, 0.3f) : new Color(0.95f, 0.2f, 0.2f);
         }
 
-        // 4. Detaylı Liste Satırlarını Oluştur
+        if (progressionInfoText != null && PlayerProgressionManager.Instance != null)
+        {
+            int pLvl = PlayerProgressionManager.Instance.PlayerLevel;
+            int cXp = PlayerProgressionManager.Instance.CurrentXP;
+            int nXp = PlayerProgressionManager.Instance.XPForNextLevel;
+            progressionInfoText.text = $"★ PLAYER LEVEL {pLvl} | XP: {cXp}/{nXp} (+{totalXP} XP Today)";
+        }
+
+        // 6. Detaylı Liste Satırlarını Oluştur
         PopulateResultsList(results);
     }
 
@@ -179,19 +211,39 @@ public class DaySummaryManager : MonoBehaviour
             if (rowText != null)
             {
                 string statusLabel = "";
-                if (res.status == CargoDeliveryStatus.Correct) statusLabel = "<color=#32FF64>[CORRECT DELIVERY]</color>";
-                else if (res.status == CargoDeliveryStatus.WrongAddress) statusLabel = "<color=#FF4444>[WRONG ADDRESS]</color>";
-                else statusLabel = "<color=#FFAA22>[NOT DELIVERED]</color>";
+                string typeBadge = res.cargoType == CargoType.Standard ? "" : $" [{res.cargoType.ToString().ToUpper()}]";
+
+                if (res.status == CargoDeliveryStatus.Correct)
+                {
+                    statusLabel = res.isExpressBonus 
+                        ? "<color=#00CCFF>[EXPRESS ON-TIME]</color>" 
+                        : "<color=#32FF64>[CORRECT DELIVERY]</color>";
+                }
+                else if (res.status == CargoDeliveryStatus.Broken)
+                {
+                    statusLabel = "<color=#FF2222>[BROKEN FRAGILE]</color>";
+                }
+                else if (res.status == CargoDeliveryStatus.WrongAddress)
+                {
+                    statusLabel = "<color=#FF4444>[WRONG ADDRESS]</color>";
+                }
+                else
+                {
+                    statusLabel = "<color=#FFAA22>[NOT DELIVERED]</color>";
+                }
 
                 string moneyLabel = res.moneyChange >= 0 ? $"+${res.moneyChange}" : $"-${Mathf.Abs(res.moneyChange)}";
+                string xpLabel = res.xpAwarded > 0 ? $" (+{res.xpAwarded} XP)" : "";
 
-                rowText.text = $"{res.trackingNumber} | {statusLabel} ({moneyLabel})\nTarget: {res.targetAddress} | Location: {res.actualAddress}";
+                rowText.text = $"{res.trackingNumber}{typeBadge} | {statusLabel} ({moneyLabel}){xpLabel}\nRecipient: {res.recipientName} | Target: {res.targetAddress} | Landed: {res.actualAddress}";
             }
 
             if (rowImg != null)
             {
                 if (res.status == CargoDeliveryStatus.Correct)
                     rowImg.color = new Color(0.12f, 0.38f, 0.18f, 0.9f);
+                else if (res.status == CargoDeliveryStatus.Broken)
+                    rowImg.color = new Color(0.55f, 0.10f, 0.10f, 0.9f);
                 else if (res.status == CargoDeliveryStatus.WrongAddress)
                     rowImg.color = new Color(0.48f, 0.14f, 0.14f, 0.9f);
                 else

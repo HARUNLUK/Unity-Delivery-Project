@@ -1,6 +1,13 @@
 using System;
 using UnityEngine;
 
+public enum CargoType
+{
+    Standard,
+    Fragile,
+    Express
+}
+
 [System.Serializable]
 public class CargoItem
 {
@@ -10,10 +17,12 @@ public class CargoItem
     public string targetAddress;           // Örn: "Papatya Sokak No: 4"
     public string targetAddressDescription;// Örn: "Kırmızı çatılı, bahçesinde mavi çiçekler olan ev"
     public string targetPointId;           // Eşleşen DeliveryPoint ID'si
+    public CargoType cargoType = CargoType.Standard;
     
     [Header("--- EKONOMİ ---")]
     public int deliveryReward = 50;        // Doğru teslimat ödülü (TL)
     public int wrongDeliveryPenalty = 100; // Hatalı teslimat cezası (TL)
+    public int bonusReward = 0;
 
     [Header("--- DURUM ---")]
     public bool isDelivered = false;

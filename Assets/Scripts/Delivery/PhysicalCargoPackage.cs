@@ -5,18 +5,23 @@ public enum CargoDeliveryStatus
 {
     Correct,
     WrongAddress,
-    Undelivered
+    Undelivered,
+    Broken
 }
 
 public struct CargoDeliveryResult
 {
     public PhysicalCargoPackage package;
     public CargoDeliveryStatus status;
+    public CargoType cargoType;
     public string trackingNumber;
     public string recipientName;
     public string targetAddress;
     public string actualAddress;
     public int moneyChange;
+    public int xpAwarded;
+    public bool isExpressBonus;
+    public bool isBroken;
 }
 
 [RequireComponent(typeof(Rigidbody), typeof(BoxCollider))]
@@ -24,11 +29,18 @@ public class PhysicalCargoPackage : MonoBehaviour
 {
     [Header("--- CARGO DATA ---")]
     public CargoItem cargoData;
+    public CargoType cargoType = CargoType.Standard;
     public string targetPointId = "1";
     public string recipientName = "John Doe";
     public string targetAddressName = "104 Maple Street";
     public int deliveryReward = 100;
     public int wrongPenalty = 30;
+    public int xpReward = 80;
+
+    [Header("--- FRAGILE & EXPRESS SPECS ---")]
+    public float health = 100f;
+    public float targetDeliveryHour = 13.0f; // 13:00'e kadar teslimat bonusu
+    public bool isBroken => health <= 0f;
 
     [Header("--- VISUAL COMPONENTS ---")]
     public MeshRenderer boxRenderer;
@@ -66,18 +78,29 @@ public class PhysicalCargoPackage : MonoBehaviour
         }
     }
 
-    public void SetupPackage(string pointId, string address, int reward, int penalty)
-    {
-        SetupPackage(pointId, address, "Resident", reward, penalty);
-    }
-
-    public void SetupPackage(string pointId, string address, string recipient, int reward, int penalty)
+    public void SetupPackage(string pointId, string address, string recipient, int reward, int penalty, CargoType type = CargoType.Standard, int xp = 80)
     {
         targetPointId = pointId;
         targetAddressName = address;
         recipientName = string.IsNullOrEmpty(recipient) ? "Resident" : recipient;
         deliveryReward = reward;
         wrongPenalty = penalty;
+        cargoType = type;
+        xpReward = xp;
+        health = 100f;
+
+        // Apply bonus multiplier for specialty cargo
+        if (cargoType == CargoType.Fragile)
+        {
+            deliveryReward = Mathf.RoundToInt(deliveryReward * 1.5f);
+            wrongPenalty = Mathf.RoundToInt(wrongPenalty * 1.5f);
+            xpReward = Mathf.RoundToInt(xpReward * 1.4f);
+        }
+        else if (cargoType == CargoType.Express)
+        {
+            deliveryReward = Mathf.RoundToInt(deliveryReward * 1.8f);
+            xpReward = Mathf.RoundToInt(xpReward * 1.6f);
+        }
 
         if (cargoData == null)
         {
@@ -87,14 +110,35 @@ public class PhysicalCargoPackage : MonoBehaviour
                 recipientName = recipientName,
                 targetPointId = pointId,
                 targetAddressName = address,
-                deliveryReward = reward,
-                wrongDeliveryPenalty = penalty,
+                cargoType = cargoType,
+                deliveryReward = deliveryReward,
+                wrongDeliveryPenalty = wrongPenalty,
                 isDelivered = false
             };
         }
 
         ApplyRandomDimensionsAndColor();
         BuildShippingLabel();
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (cargoType != CargoType.Fragile || isBroken) return;
+
+        float relativeVelocity = collision.relativeVelocity.magnitude;
+
+        // If dropped from high, thrown too hard or car crashes hard (> 6.5 m/s)
+        if (relativeVelocity > 6.5f)
+        {
+            float damage = (relativeVelocity - 5.5f) * 35f;
+            health = Mathf.Max(0f, health - damage);
+
+            if (isBroken)
+            {
+                Debug.LogWarning($"<color=#FF4444>[PhysicalCargoPackage] FRAGILE CARGO BROKEN! Impact: {relativeVelocity:F1} m/s</color>");
+                UpdateLabelText();
+            }
+        }
     }
 
     private void ApplyRandomDimensionsAndColor()
@@ -150,7 +194,11 @@ public class PhysicalCargoPackage : MonoBehaviour
         MeshRenderer quadRenderer = quadObj.AddComponent<MeshRenderer>();
         if (quadRenderer != null)
         {
-            quadRenderer.material = CreateLitMaterial(new Color(0.96f, 0.96f, 0.94f), 0.05f);
+            Color labelBgColor = new Color(0.96f, 0.96f, 0.94f);
+            if (cargoType == CargoType.Fragile) labelBgColor = new Color(1.0f, 0.92f, 0.88f); // Soft peach/red tint
+            else if (cargoType == CargoType.Express) labelBgColor = new Color(0.88f, 0.96f, 1.0f); // Soft cyan tint
+
+            quadRenderer.material = CreateLitMaterial(labelBgColor, 0.05f);
         }
 
         // Text on the label (Only Recipient Name & Address, auto-sized and truncated with ...)
@@ -174,10 +222,22 @@ public class PhysicalCargoPackage : MonoBehaviour
         labelText.overflowMode = TextOverflowModes.Ellipsis;
         labelText.margin = new Vector4(0.04f, 0.04f, 0.04f, 0.04f);
 
+        UpdateLabelText();
+    }
+
+    private void UpdateLabelText()
+    {
+        if (labelText == null) return;
+
         string shortRecipient = TruncateWithEllipsis(recipientName, 15);
         string shortAddress = TruncateWithEllipsis(targetAddressName, 18);
 
-        labelText.text = $"{shortRecipient}\n<size=85%>{shortAddress}</size>";
+        string badge = "";
+        if (isBroken) badge = "<color=#FF2222>[BROKEN / HASARLI]</color>\n";
+        else if (cargoType == CargoType.Fragile) badge = "<color=#FF5500>[FRAGILE]</color>\n";
+        else if (cargoType == CargoType.Express) badge = "<color=#0088FF>[EXPRESS]</color>\n";
+
+        labelText.text = $"{badge}{shortRecipient}\n<size=85%>{shortAddress}</size>";
     }
 
     private string TruncateWithEllipsis(string text, int maxLength)
@@ -243,7 +303,7 @@ public class PhysicalCargoPackage : MonoBehaviour
     }
 
     /// <summary>
-    /// Gün sonunda paketin konumunu kontrol eder ve kazanç/ceza sonucunu üretir.
+    /// Gün sonunda paketin konumunu, hasar durumunu ve ekspres zamanlamasını değerlendirir.
     /// </summary>
     public CargoDeliveryResult EvaluateEndOfDayResult()
     {
@@ -253,9 +313,12 @@ public class PhysicalCargoPackage : MonoBehaviour
         CargoDeliveryResult result = new CargoDeliveryResult
         {
             package = this,
+            cargoType = cargoType,
             trackingNumber = tracking,
             recipientName = recipientName,
-            targetAddress = targetAddressName
+            targetAddress = targetAddressName,
+            isBroken = isBroken,
+            isExpressBonus = false
         };
 
         if (nearbyPoint != null)
@@ -265,13 +328,36 @@ public class PhysicalCargoPackage : MonoBehaviour
 
             if (isMatch)
             {
-                result.status = CargoDeliveryStatus.Correct;
-                result.moneyChange = deliveryReward;
+                if (isBroken)
+                {
+                    result.status = CargoDeliveryStatus.Broken;
+                    result.moneyChange = -wrongPenalty * 2; // Broken fragile penalty
+                    result.xpAwarded = 0;
+                }
+                else
+                {
+                    result.status = CargoDeliveryStatus.Correct;
+                    result.moneyChange = deliveryReward;
+                    result.xpAwarded = xpReward;
+
+                    // Check Express timing bonus (before 13:00)
+                    if (cargoType == CargoType.Express)
+                    {
+                        if (DayTimeManager.Instance != null && DayTimeManager.Instance.CurrentHour < targetDeliveryHour)
+                        {
+                            int bonus = Mathf.RoundToInt(deliveryReward * 0.4f);
+                            result.moneyChange += bonus;
+                            result.xpAwarded += 50;
+                            result.isExpressBonus = true;
+                        }
+                    }
+                }
             }
             else
             {
                 result.status = CargoDeliveryStatus.WrongAddress;
                 result.moneyChange = -wrongPenalty;
+                result.xpAwarded = 0;
             }
         }
         else
@@ -279,6 +365,7 @@ public class PhysicalCargoPackage : MonoBehaviour
             result.actualAddress = "Undelivered (Vehicle / Street)";
             result.status = CargoDeliveryStatus.Undelivered;
             result.moneyChange = -wrongPenalty;
+            result.xpAwarded = 0;
         }
 
         return result;

@@ -2746,7 +2746,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eaf8faebd914202479385b94e153cd9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CargoWarehouseGenerator
-  packageCount: 15
+  packageCount: 5
   spawnAreaSize: {x: 3.5, y: 0.3, z: 2.5}
   autoSpawnOnStart: 1
   minReward: 80

@@ -18,6 +18,7 @@ public class InteractionPromptHUD : MonoBehaviour
     public GameObject heldCargoPanel;
     public TextMeshProUGUI heldCargoHeaderText;
     public TextMeshProUGUI heldCargoTrackingText;
+    public TextMeshProUGUI heldCargoTypeText;
     public TextMeshProUGUI heldCargoRecipientText;
     public TextMeshProUGUI heldCargoAddressText;
     public TextMeshProUGUI heldCargoRewardText;
@@ -136,7 +137,7 @@ public class InteractionPromptHUD : MonoBehaviour
             sideRect.anchorMax = new Vector2(1f, 0.5f);
             sideRect.pivot = new Vector2(1f, 0.5f);
             sideRect.anchoredPosition = new Vector2(-40, 0);
-            sideRect.sizeDelta = new Vector2(470, 300);
+            sideRect.sizeDelta = new Vector2(480, 330);
 
             Image sideBg = heldCargoPanel.AddComponent<Image>();
             sideBg.color = new Color(0.06f, 0.08f, 0.13f, 0.95f);
@@ -144,7 +145,7 @@ public class InteractionPromptHUD : MonoBehaviour
 
             VerticalLayoutGroup vLayout = heldCargoPanel.AddComponent<VerticalLayoutGroup>();
             vLayout.padding = new RectOffset(24, 24, 20, 20);
-            vLayout.spacing = 9;
+            vLayout.spacing = 8;
             vLayout.childControlHeight = true;
             vLayout.childControlWidth = true;
             vLayout.childForceExpandHeight = false;
@@ -163,15 +164,23 @@ public class InteractionPromptHUD : MonoBehaviour
             GameObject trackObj = new GameObject("Tracking");
             trackObj.transform.SetParent(heldCargoPanel.transform, false);
             heldCargoTrackingText = trackObj.AddComponent<TextMeshProUGUI>();
-            heldCargoTrackingText.fontSize = 22;
+            heldCargoTrackingText.fontSize = 21;
             heldCargoTrackingText.fontStyle = FontStyles.Bold;
             heldCargoTrackingText.color = Color.white;
+
+            // Type
+            GameObject typeObj = new GameObject("Type");
+            typeObj.transform.SetParent(heldCargoPanel.transform, false);
+            heldCargoTypeText = typeObj.AddComponent<TextMeshProUGUI>();
+            heldCargoTypeText.fontSize = 20;
+            heldCargoTypeText.fontStyle = FontStyles.Bold;
+            heldCargoTypeText.color = new Color(1f, 0.6f, 0.2f);
 
             // Recipient Name
             GameObject recObj = new GameObject("Recipient");
             recObj.transform.SetParent(heldCargoPanel.transform, false);
             heldCargoRecipientText = recObj.AddComponent<TextMeshProUGUI>();
-            heldCargoRecipientText.fontSize = 21;
+            heldCargoRecipientText.fontSize = 20;
             heldCargoRecipientText.fontStyle = FontStyles.Bold;
             heldCargoRecipientText.color = new Color(0.95f, 0.85f, 0.45f);
 
@@ -179,7 +188,7 @@ public class InteractionPromptHUD : MonoBehaviour
             GameObject addrObj = new GameObject("Address");
             addrObj.transform.SetParent(heldCargoPanel.transform, false);
             heldCargoAddressText = addrObj.AddComponent<TextMeshProUGUI>();
-            heldCargoAddressText.fontSize = 21;
+            heldCargoAddressText.fontSize = 20;
             heldCargoAddressText.fontStyle = FontStyles.Bold;
             heldCargoAddressText.color = new Color(0.35f, 0.85f, 1f);
 
@@ -187,7 +196,7 @@ public class InteractionPromptHUD : MonoBehaviour
             GameObject rewardObj = new GameObject("Reward");
             rewardObj.transform.SetParent(heldCargoPanel.transform, false);
             heldCargoRewardText = rewardObj.AddComponent<TextMeshProUGUI>();
-            heldCargoRewardText.fontSize = 22;
+            heldCargoRewardText.fontSize = 21;
             heldCargoRewardText.fontStyle = FontStyles.Bold;
             heldCargoRewardText.color = new Color(0.35f, 1f, 0.45f);
 
@@ -195,7 +204,7 @@ public class InteractionPromptHUD : MonoBehaviour
             GameObject penObj = new GameObject("Penalty");
             penObj.transform.SetParent(heldCargoPanel.transform, false);
             heldCargoPenaltyText = penObj.AddComponent<TextMeshProUGUI>();
-            heldCargoPenaltyText.fontSize = 20;
+            heldCargoPenaltyText.fontSize = 19;
             heldCargoPenaltyText.fontStyle = FontStyles.Bold;
             heldCargoPenaltyText.color = new Color(1f, 0.45f, 0.45f);
 
@@ -204,7 +213,7 @@ public class InteractionPromptHUD : MonoBehaviour
             hintObj.transform.SetParent(heldCargoPanel.transform, false);
             heldCargoActionHintText = hintObj.AddComponent<TextMeshProUGUI>();
             heldCargoActionHintText.text = "[E] / [LMB] Drop  •  (Hold: Throw)";
-            heldCargoActionHintText.fontSize = 18;
+            heldCargoActionHintText.fontSize = 17;
             heldCargoActionHintText.fontStyle = FontStyles.Bold;
             heldCargoActionHintText.color = new Color(0.85f, 0.85f, 0.85f);
             heldCargoActionHintText.alignment = TextAlignmentOptions.Center;
@@ -234,9 +243,22 @@ public class InteractionPromptHUD : MonoBehaviour
 
             string tracking = pkg.cargoData != null ? pkg.cargoData.trackingNumber : $"PKG-#{pkg.targetPointId}";
             if (heldCargoTrackingText != null) heldCargoTrackingText.text = $"Tracking: {tracking}";
+            
+            if (heldCargoTypeText != null)
+            {
+                if (pkg.isBroken)
+                    heldCargoTypeText.text = "Type: <color=#FF3333>BROKEN FRAGILE</color>";
+                else if (pkg.cargoType == CargoType.Fragile)
+                    heldCargoTypeText.text = $"Type: <color=#FF7722>FRAGILE ({Mathf.CeilToInt(pkg.health)}% HP)</color>";
+                else if (pkg.cargoType == CargoType.Express)
+                    heldCargoTypeText.text = "Type: <color=#00CCFF>EXPRESS (Deliver by 13:00)</color>";
+                else
+                    heldCargoTypeText.text = "Type: STANDARD";
+            }
+
             if (heldCargoRecipientText != null) heldCargoRecipientText.text = $"Recipient: {pkg.recipientName}";
             if (heldCargoAddressText != null) heldCargoAddressText.text = $"Destination: {pkg.targetAddressName} (Point #{pkg.targetPointId})";
-            if (heldCargoRewardText != null) heldCargoRewardText.text = $"Reward: +${pkg.deliveryReward}";
+            if (heldCargoRewardText != null) heldCargoRewardText.text = $"Reward: +${pkg.deliveryReward} (+{pkg.xpReward} XP)";
             if (heldCargoPenaltyText != null) heldCargoPenaltyText.text = $"Penalty: -${pkg.wrongPenalty}";
         }
     }

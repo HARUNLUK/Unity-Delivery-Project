@@ -7,6 +7,12 @@ public class DeliveryPoint : MonoBehaviour
     [Tooltip("Unique Index / ID of this point (e.g. 1, 2, 3...)")]
     public string pointId = "1";
 
+    [Tooltip("Required Player Level to receive deliveries here (1 = Starter Suburbs, 2 = Commercial, 3 = Hillside Villas, etc.)")]
+    public int requiredLevel = 1;
+
+    [Tooltip("District / Neighborhood name")]
+    public string districtName = "Maple Suburbs";
+
     [Tooltip("Recipient Name (Person or Business receiving the parcel)")]
     public string recipientName = "John Doe";
 
