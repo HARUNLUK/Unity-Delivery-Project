@@ -73,13 +73,6 @@ public class PhysicsGrabber : MonoBehaviour
             grabbedRb.linearVelocity = throwForce;
         }
 
-        // Check if dropped inside a DeliveryPoint trigger
-        PhysicalCargoPackage pkg = grabbedRb.GetComponent<PhysicalCargoPackage>();
-        if (pkg != null)
-        {
-            CheckDeliveryAtPoint(pkg);
-        }
-
         grabbedRb = null;
     }
 
@@ -132,34 +125,5 @@ public class PhysicsGrabber : MonoBehaviour
         grabbedRb.linearVelocity = forceDir * grabFollowSpeed;
         grabbedRb.angularVelocity = Vector3.zero;
         grabbedRb.rotation = Quaternion.Slerp(grabbedRb.rotation, targetRot, Time.fixedDeltaTime * grabRotateSpeed);
-    }
-
-    private void CheckDeliveryAtPoint(PhysicalCargoPackage pkg)
-    {
-        if (pkg == null || grabbedRb == null) return;
-
-        Collider[] hits = Physics.OverlapSphere(grabbedRb.position, 4.0f);
-        foreach (var hit in hits)
-        {
-            DeliveryPoint dp = hit.GetComponentInParent<DeliveryPoint>();
-            if (dp != null)
-            {
-                if (pkg.TryDeliverAtPoint(dp, out string msg, out bool isSuccess))
-                {
-                    if (DeliveryNotificationHUD.Instance != null)
-                    {
-                        DeliveryNotificationHUD.Instance.ShowNotification(msg, isSuccess);
-                    }
-                }
-                else
-                {
-                    if (DeliveryNotificationHUD.Instance != null)
-                    {
-                        DeliveryNotificationHUD.Instance.ShowNotification(msg, false);
-                    }
-                }
-                break;
-            }
-        }
     }
 }

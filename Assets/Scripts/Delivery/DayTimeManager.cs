@@ -88,6 +88,13 @@ public class DayTimeManager : MonoBehaviour
         {
             EndShift();
         }
+
+#if ENABLE_INPUT_SYSTEM
+        if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.f8Key.wasPressedThisFrame)
+        {
+            EndShift();
+        }
+#endif
     }
 
     private void UpdateSunPosition(float progress)

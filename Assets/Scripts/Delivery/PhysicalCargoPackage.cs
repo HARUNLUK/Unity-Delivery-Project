@@ -1,6 +1,23 @@
 using UnityEngine;
 using TMPro;
 
+public enum CargoDeliveryStatus
+{
+    Correct,
+    WrongAddress,
+    Undelivered
+}
+
+public struct CargoDeliveryResult
+{
+    public PhysicalCargoPackage package;
+    public CargoDeliveryStatus status;
+    public string trackingNumber;
+    public string targetAddress;
+    public string actualAddress;
+    public int moneyChange;
+}
+
 [RequireComponent(typeof(Rigidbody), typeof(BoxCollider))]
 public class PhysicalCargoPackage : MonoBehaviour
 {
@@ -18,7 +35,6 @@ public class PhysicalCargoPackage : MonoBehaviour
 
     private Rigidbody rb;
     private BoxCollider col;
-    private bool isDelivered = false;
 
     // Realistic Cardboard & Logistics Color Palettes
     private static readonly Color[] CardboardPalette = new Color[]
@@ -154,41 +170,55 @@ public class PhysicalCargoPackage : MonoBehaviour
         return mat;
     }
 
-    public bool TryDeliverAtPoint(DeliveryPoint point, out string message, out bool isSuccess)
+    public DeliveryPoint FindNearbyDeliveryPoint()
     {
-        if (isDelivered || point == null)
+        Collider[] hits = Physics.OverlapSphere(transform.position, 4.5f);
+        foreach (var hit in hits)
         {
-            message = "";
-            isSuccess = false;
-            return false;
+            DeliveryPoint dp = hit.GetComponentInParent<DeliveryPoint>();
+            if (dp != null) return dp;
         }
+        return null;
+    }
 
-        bool correct = string.Equals(targetPointId.Trim(), point.pointId.Trim(), System.StringComparison.OrdinalIgnoreCase);
+    /// <summary>
+    /// Gün sonunda paketin konumunu kontrol eder ve kazanç/ceza sonucunu üretir.
+    /// </summary>
+    public CargoDeliveryResult EvaluateEndOfDayResult()
+    {
+        DeliveryPoint nearbyPoint = FindNearbyDeliveryPoint();
+        string tracking = cargoData != null ? cargoData.trackingNumber : $"#PKG-{targetPointId}";
 
-        if (correct)
+        CargoDeliveryResult result = new CargoDeliveryResult
         {
-            isDelivered = true;
-            isSuccess = true;
-            message = $"[+] SUCCESSFUL DELIVERY! (+${deliveryReward})\nDelivered to: {point.addressName}";
+            package = this,
+            trackingNumber = tracking,
+            targetAddress = targetAddressName
+        };
 
-            PlayerEconomyManager econ = Object.FindAnyObjectByType<PlayerEconomyManager>();
-            if (econ != null) econ.AddCash(deliveryReward);
+        if (nearbyPoint != null)
+        {
+            result.actualAddress = nearbyPoint.addressName;
+            bool isMatch = string.Equals(targetPointId.Trim(), nearbyPoint.pointId.Trim(), System.StringComparison.OrdinalIgnoreCase);
 
-            point.IsFulfilled = true;
-            if (point.visualMarker != null) point.visualMarker.SetActive(false);
-
-            Destroy(gameObject, 1.2f);
-            return true;
+            if (isMatch)
+            {
+                result.status = CargoDeliveryStatus.Correct;
+                result.moneyChange = deliveryReward;
+            }
+            else
+            {
+                result.status = CargoDeliveryStatus.WrongAddress;
+                result.moneyChange = -wrongPenalty;
+            }
         }
         else
         {
-            isSuccess = false;
-            message = $"[-] WRONG ADDRESS! (-${wrongPenalty})\nThis package belongs to Point #{targetPointId} ({targetAddressName})!";
-
-            PlayerEconomyManager econ = Object.FindAnyObjectByType<PlayerEconomyManager>();
-            if (econ != null) econ.DeductCash(wrongPenalty);
-
-            return false;
+            result.actualAddress = "Undelivered (Vehicle / Street)";
+            result.status = CargoDeliveryStatus.Undelivered;
+            result.moneyChange = -wrongPenalty;
         }
+
+        return result;
     }
 }

@@ -48,12 +48,12 @@ public class DaySummaryManager : MonoBehaviour
 
     private void OnEnable()
     {
-        VanInventory.OnCargoDelivered += CheckForEndOfDay;
+        DayTimeManager.OnShiftEnded += ShowDaySummary;
     }
 
     private void OnDisable()
     {
-        VanInventory.OnCargoDelivered -= CheckForEndOfDay;
+        DayTimeManager.OnShiftEnded -= ShowDaySummary;
     }
 
     private void Update()
@@ -68,18 +68,12 @@ public class DaySummaryManager : MonoBehaviour
         }
     }
 
-    private void CheckForEndOfDay(CargoItem deliveredCargo, bool isCorrect)
-    {
-        if (VanInventory.Instance == null) return;
-
-        if (VanInventory.Instance.RemainingCargoCount <= 0)
-        {
-            ShowDaySummary();
-        }
-    }
-
+    [ContextMenu("Trigger End Of Day Summary")]
     public void ShowDaySummary()
     {
+        if (isDayFinalized) return;
+        isDayFinalized = true;
+
         if (summaryPanelRoot == null)
         {
             Transform t = transform.Find("DaySummaryPanel");
@@ -99,53 +93,70 @@ public class DaySummaryManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        List<CargoItem> history = VanInventory.Instance != null ? VanInventory.Instance.DeliveredHistory : new List<CargoItem>();
+        // 1. Sahnede bulunan tüm fiziksel kargo paketlerini topla
+        PhysicalCargoPackage[] scenePackages = Object.FindObjectsByType<PhysicalCargoPackage>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        List<CargoDeliveryResult> results = new List<CargoDeliveryResult>();
 
-        int totalDelivered = history.Count;
+        int totalCount = scenePackages.Length;
         int correctCount = 0;
         int wrongCount = 0;
+        int undeliveredCount = 0;
         int totalReward = 0;
         int totalPenalty = 0;
 
-        foreach (var item in history)
+        foreach (var pkg in scenePackages)
         {
-            if (item.isDeliveredCorrectly)
+            if (pkg == null) continue;
+
+            CargoDeliveryResult res = pkg.EvaluateEndOfDayResult();
+            results.Add(res);
+
+            if (res.status == CargoDeliveryStatus.Correct)
             {
                 correctCount++;
-                totalReward += item.deliveryReward;
+                totalReward += res.moneyChange;
+            }
+            else if (res.status == CargoDeliveryStatus.WrongAddress)
+            {
+                wrongCount++;
+                totalPenalty += Mathf.Abs(res.moneyChange);
             }
             else
             {
-                wrongCount++;
-                totalPenalty += item.wrongDeliveryPenalty;
+                undeliveredCount++;
+                totalPenalty += Mathf.Abs(res.moneyChange);
             }
         }
 
         int netProfit = totalReward - totalPenalty;
 
-        if (!isDayFinalized && PlayerEconomyManager.Instance != null)
+        // 2. Ekonomiyi güncelle ve kaydet
+        if (PlayerEconomyManager.Instance != null)
         {
-            isDayFinalized = true;
+            PlayerEconomyManager.Instance.AddEarnings(totalReward);
+            PlayerEconomyManager.Instance.AddPenalty(totalPenalty);
             PlayerEconomyManager.Instance.FinalizeAndSaveDay();
         }
 
         int totalVault = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.TotalSavedBalance : netProfit;
 
-        if (totalDeliveredText != null) totalDeliveredText.text = $"Total Delivered: {totalDelivered} Packages";
-        if (correctDeliveriesText != null) correctDeliveriesText.text = $"[+] Correct Deliveries: {correctCount} (+{totalReward} $)";
-        if (wrongDeliveriesText != null) wrongDeliveriesText.text = $"[-] Wrong Deliveries: {wrongCount} (-{totalPenalty} $ Penalty)";
+        // 3. UI Metinlerini Doldur
+        if (totalDeliveredText != null) totalDeliveredText.text = $"Total Packages Today: {totalCount}";
+        if (correctDeliveriesText != null) correctDeliveriesText.text = $"[+] Correct Deliveries: {correctCount} (+${totalReward})";
+        if (wrongDeliveriesText != null) wrongDeliveriesText.text = $"[-] Wrong / Undelivered: {wrongCount + undeliveredCount} (-${totalPenalty} Penalty)";
         
         if (netEarningsText != null)
         {
-            string profitLabel = netProfit >= 0 ? $"+{netProfit} $" : $"{netProfit} $";
-            netEarningsText.text = $"TODAY: {profitLabel} | TOTAL VAULT: {totalVault} $";
+            string profitLabel = netProfit >= 0 ? $"+${netProfit}" : $"-${Mathf.Abs(netProfit)}";
+            netEarningsText.text = $"TODAY NET: {profitLabel} | TOTAL VAULT: ${totalVault}";
             netEarningsText.color = netProfit >= 0 ? new Color(0.2f, 0.95f, 0.3f) : new Color(0.95f, 0.2f, 0.2f);
         }
 
-        PopulateHistoryList(history);
+        // 4. Detaylı Liste Satırlarını Oluştur
+        PopulateResultsList(results);
     }
 
-    private void PopulateHistoryList(List<CargoItem> history)
+    private void PopulateResultsList(List<CargoDeliveryResult> results)
     {
         if (historyListContent == null || historyItemTemplate == null) return;
 
@@ -157,7 +168,7 @@ public class DaySummaryManager : MonoBehaviour
             }
         }
 
-        foreach (var item in history)
+        foreach (var res in results)
         {
             GameObject rowObj = Instantiate(historyItemTemplate, historyListContent);
             rowObj.SetActive(true);
@@ -167,15 +178,24 @@ public class DaySummaryManager : MonoBehaviour
 
             if (rowText != null)
             {
-                string statusText = item.isDeliveredCorrectly ? "[CORRECT]" : "[WRONG]";
-                rowText.text = $"{item.trackingNumber} ({item.recipientName})\nDelivered to: {item.deliveredToAddressName} | Target: {item.targetAddress} {statusText}";
+                string statusLabel = "";
+                if (res.status == CargoDeliveryStatus.Correct) statusLabel = "<color=#32FF64>[CORRECT DELIVERY]</color>";
+                else if (res.status == CargoDeliveryStatus.WrongAddress) statusLabel = "<color=#FF4444>[WRONG ADDRESS]</color>";
+                else statusLabel = "<color=#FFAA22>[NOT DELIVERED]</color>";
+
+                string moneyLabel = res.moneyChange >= 0 ? $"+${res.moneyChange}" : $"-${Mathf.Abs(res.moneyChange)}";
+
+                rowText.text = $"{res.trackingNumber} | {statusLabel} ({moneyLabel})\nTarget: {res.targetAddress} | Location: {res.actualAddress}";
             }
 
             if (rowImg != null)
             {
-                rowImg.color = item.isDeliveredCorrectly 
-                    ? new Color(0.15f, 0.4f, 0.2f, 0.9f)
-                    : new Color(0.5f, 0.15f, 0.15f, 0.9f);
+                if (res.status == CargoDeliveryStatus.Correct)
+                    rowImg.color = new Color(0.12f, 0.38f, 0.18f, 0.9f);
+                else if (res.status == CargoDeliveryStatus.WrongAddress)
+                    rowImg.color = new Color(0.48f, 0.14f, 0.14f, 0.9f);
+                else
+                    rowImg.color = new Color(0.38f, 0.28f, 0.12f, 0.9f);
             }
         }
     }
