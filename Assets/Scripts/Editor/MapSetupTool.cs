@@ -319,6 +319,7 @@ public class MapSetupTool : MonoBehaviour
         if (dp != null)
         {
             dp.pointId = idStr;
+            dp.recipientName = string.IsNullOrEmpty(dp.recipientName) || dp.recipientName == "John Doe" ? $"Customer #{idStr}" : dp.recipientName;
             dp.addressName = string.IsNullOrEmpty(buildingName) ? $"Street Address #{idStr}" : $"{buildingName} Address #{idStr}";
             dp.addressDescription = "House / shop description clue for the player.";
         }

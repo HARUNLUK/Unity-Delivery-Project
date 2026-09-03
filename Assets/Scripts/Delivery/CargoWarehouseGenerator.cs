@@ -67,7 +67,7 @@ public class CargoWarehouseGenerator : MonoBehaviour
             PhysicalCargoPackage pkg = boxObj.AddComponent<PhysicalCargoPackage>();
             int reward = Random.Range(minReward / 10, (maxReward / 10) + 1) * 10;
 
-            pkg.SetupPackage(targetPoint.pointId, targetPoint.addressName, reward, wrongPenalty);
+            pkg.SetupPackage(targetPoint.pointId, targetPoint.addressName, targetPoint.recipientName, reward, wrongPenalty);
             currentPackages.Add(pkg);
         }
 

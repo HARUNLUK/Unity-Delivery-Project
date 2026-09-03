@@ -15,6 +15,10 @@ public class PhysicsGrabber : MonoBehaviour
     [Tooltip("Maximum mass the player can pick up")]
     public float maxGrabMass = 100f;
 
+    [Header("--- HOLD ORIENTATION ---")]
+    [Tooltip("Kutu tutulduğunda yazılı üst yüzeyin oyuncuya bakması için rotasyon ofseti")]
+    public Vector3 holdRotationOffset = new Vector3(-60f, 0f, 0f);
+
     [Header("--- CURRENT GRAB STATE ---")]
     public Rigidbody grabbedRb;
     private float originalLinearDamping;
@@ -54,6 +58,14 @@ public class PhysicsGrabber : MonoBehaviour
 
         // Ignore collision between grabbed object and player body (eliminates jitter completely!)
         SetCollisionWithPlayer(false);
+
+        // Show side UI card with held cargo details
+        PhysicalCargoPackage pkg = targetRb.GetComponent<PhysicalCargoPackage>();
+        if (pkg == null) pkg = targetRb.GetComponentInParent<PhysicalCargoPackage>();
+        if (pkg != null && InteractionPromptHUD.Instance != null)
+        {
+            InteractionPromptHUD.Instance.ShowHeldCargoInfo(pkg);
+        }
     }
 
     public void ReleaseObject(Vector3 throwForce = default)
@@ -62,6 +74,12 @@ public class PhysicsGrabber : MonoBehaviour
 
         // Restore collision with player body
         SetCollisionWithPlayer(true);
+
+        // Hide side UI card
+        if (InteractionPromptHUD.Instance != null)
+        {
+            InteractionPromptHUD.Instance.HideHeldCargoInfo();
+        }
 
         grabbedRb.useGravity = originalUseGravity;
         grabbedRb.linearDamping = originalLinearDamping;
@@ -108,8 +126,10 @@ public class PhysicsGrabber : MonoBehaviour
         if (cam == null) return;
 
         // Target hold position in front of camera
-        Vector3 targetPos = cam.transform.position + (cam.transform.forward * holdDistance) + (Vector3.down * 0.12f);
-        Quaternion targetRot = cam.transform.rotation;
+        Vector3 targetPos = cam.transform.position + (cam.transform.forward * holdDistance) + (cam.transform.up * -0.22f);
+        
+        // Auto-orient package so the top shipping label tilts directly towards player's eyes
+        Quaternion targetRot = cam.transform.rotation * Quaternion.Euler(holdRotationOffset);
 
         Vector3 forceDir = targetPos - grabbedRb.position;
         float distance = forceDir.magnitude;

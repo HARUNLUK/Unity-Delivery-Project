@@ -13,6 +13,7 @@ public struct CargoDeliveryResult
     public PhysicalCargoPackage package;
     public CargoDeliveryStatus status;
     public string trackingNumber;
+    public string recipientName;
     public string targetAddress;
     public string actualAddress;
     public int moneyChange;
@@ -24,6 +25,7 @@ public class PhysicalCargoPackage : MonoBehaviour
     [Header("--- CARGO DATA ---")]
     public CargoItem cargoData;
     public string targetPointId = "1";
+    public string recipientName = "John Doe";
     public string targetAddressName = "104 Maple Street";
     public int deliveryReward = 100;
     public int wrongPenalty = 30;
@@ -66,8 +68,14 @@ public class PhysicalCargoPackage : MonoBehaviour
 
     public void SetupPackage(string pointId, string address, int reward, int penalty)
     {
+        SetupPackage(pointId, address, "Resident", reward, penalty);
+    }
+
+    public void SetupPackage(string pointId, string address, string recipient, int reward, int penalty)
+    {
         targetPointId = pointId;
         targetAddressName = address;
+        recipientName = string.IsNullOrEmpty(recipient) ? "Resident" : recipient;
         deliveryReward = reward;
         wrongPenalty = penalty;
 
@@ -76,6 +84,7 @@ public class PhysicalCargoPackage : MonoBehaviour
             cargoData = new CargoItem
             {
                 trackingNumber = $"PKG-{Random.Range(1000, 9999)}",
+                recipientName = recipientName,
                 targetPointId = pointId,
                 targetAddressName = address,
                 deliveryReward = reward,
@@ -128,31 +137,54 @@ public class PhysicalCargoPackage : MonoBehaviour
         shippingLabel.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
         shippingLabel.transform.localScale = new Vector3(0.85f, 0.75f, 1f);
 
-        GameObject quadObj = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        // Clean quad mesh without any MeshCollider (fixes dynamic Rigidbody concave warning)
+        GameObject quadObj = new GameObject("LabelBackground");
         quadObj.transform.SetParent(shippingLabel.transform, false);
         quadObj.transform.localPosition = Vector3.zero;
         quadObj.transform.localRotation = Quaternion.identity;
         quadObj.transform.localScale = new Vector3(0.9f, 0.9f, 1f);
-        Destroy(quadObj.GetComponent<Collider>());
 
-        MeshRenderer quadRenderer = quadObj.GetComponent<MeshRenderer>();
+        MeshFilter mf = quadObj.AddComponent<MeshFilter>();
+        mf.sharedMesh = GetQuadMesh();
+
+        MeshRenderer quadRenderer = quadObj.AddComponent<MeshRenderer>();
         if (quadRenderer != null)
         {
-            quadRenderer.material = CreateLitMaterial(new Color(0.95f, 0.95f, 0.93f), 0.05f);
+            quadRenderer.material = CreateLitMaterial(new Color(0.96f, 0.96f, 0.94f), 0.05f);
         }
 
-        // Text on the label
+        // Text on the label (Only Recipient Name & Address, auto-sized and truncated with ...)
         GameObject labelTextObj = new GameObject("LabelText");
         labelTextObj.transform.SetParent(shippingLabel.transform, false);
         labelTextObj.transform.localPosition = new Vector3(0f, 0f, -0.01f);
         labelTextObj.transform.localRotation = Quaternion.identity;
 
+        RectTransform textRect = labelTextObj.AddComponent<RectTransform>();
+        textRect.sizeDelta = new Vector2(0.82f, 0.82f);
+
         labelText = labelTextObj.AddComponent<TextMeshPro>();
-        labelText.fontSize = 2.4f;
+        labelText.fontSize = 1.35f;
         labelText.fontStyle = FontStyles.Bold;
         labelText.alignment = TextAlignmentOptions.Center;
-        labelText.color = new Color(0.1f, 0.1f, 0.12f);
-        labelText.text = $"📦 #{targetPointId}\n<size=75%>{targetAddressName}</size>\n<size=65%>Reward: ${deliveryReward}</size>";
+        labelText.color = new Color(0.12f, 0.12f, 0.15f);
+        labelText.enableWordWrapping = true;
+        labelText.enableAutoSizing = true;
+        labelText.fontSizeMin = 0.65f;
+        labelText.fontSizeMax = 1.35f;
+        labelText.overflowMode = TextOverflowModes.Ellipsis;
+        labelText.margin = new Vector4(0.04f, 0.04f, 0.04f, 0.04f);
+
+        string shortRecipient = TruncateWithEllipsis(recipientName, 15);
+        string shortAddress = TruncateWithEllipsis(targetAddressName, 18);
+
+        labelText.text = $"{shortRecipient}\n<size=85%>{shortAddress}</size>";
+    }
+
+    private string TruncateWithEllipsis(string text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text)) return "";
+        if (text.Length <= maxLength) return text;
+        return text.Substring(0, maxLength - 3).TrimEnd() + "...";
     }
 
     private static Material CreateLitMaterial(Color color, float smoothness = 0.15f)
@@ -168,6 +200,35 @@ public class PhysicalCargoPackage : MonoBehaviour
         if (mat.HasProperty("_Color")) mat.SetColor("_Color", color);
         if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", smoothness);
         return mat;
+    }
+
+    private static Mesh cachedQuadMesh;
+    private static Mesh GetQuadMesh()
+    {
+        if (cachedQuadMesh == null)
+        {
+            cachedQuadMesh = new Mesh
+            {
+                name = "StickerQuad",
+                vertices = new Vector3[]
+                {
+                    new Vector3(-0.5f, -0.5f, 0f),
+                    new Vector3(0.5f, -0.5f, 0f),
+                    new Vector3(-0.5f, 0.5f, 0f),
+                    new Vector3(0.5f, 0.5f, 0f)
+                },
+                uv = new Vector2[]
+                {
+                    new Vector2(0f, 0f),
+                    new Vector2(1f, 0f),
+                    new Vector2(0f, 1f),
+                    new Vector2(1f, 1f)
+                },
+                triangles = new int[] { 0, 2, 1, 2, 3, 1 }
+            };
+            cachedQuadMesh.RecalculateNormals();
+        }
+        return cachedQuadMesh;
     }
 
     public DeliveryPoint FindNearbyDeliveryPoint()
@@ -187,12 +248,13 @@ public class PhysicalCargoPackage : MonoBehaviour
     public CargoDeliveryResult EvaluateEndOfDayResult()
     {
         DeliveryPoint nearbyPoint = FindNearbyDeliveryPoint();
-        string tracking = cargoData != null ? cargoData.trackingNumber : $"#PKG-{targetPointId}";
+        string tracking = cargoData != null ? cargoData.trackingNumber : $"PKG-{targetPointId}";
 
         CargoDeliveryResult result = new CargoDeliveryResult
         {
             package = this,
             trackingNumber = tracking,
+            recipientName = recipientName,
             targetAddress = targetAddressName
         };
 

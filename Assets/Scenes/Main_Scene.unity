@@ -1894,7 +1894,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5331812964472642919, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: addressName
-      value: 1
+      value: 1 dafadfgdsg fdhfdhgfs hfsg fsg sd dsgfdh gjhgf j hgk jghlkl
       objectReference: {fileID: 0}
     - target: {fileID: 5331812964472642919, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: addressDescription
@@ -5473,6 +5473,14 @@ MonoBehaviour:
   crosshairDot: {fileID: 1398317001}
   promptPanel: {fileID: 1483902704}
   promptText: {fileID: 1541604643}
+  heldCargoPanel: {fileID: 0}
+  heldCargoHeaderText: {fileID: 0}
+  heldCargoTrackingText: {fileID: 0}
+  heldCargoRecipientText: {fileID: 0}
+  heldCargoAddressText: {fileID: 0}
+  heldCargoRewardText: {fileID: 0}
+  heldCargoPenaltyText: {fileID: 0}
+  heldCargoActionHintText: {fileID: 0}
 --- !u!1 &1813240352
 GameObject:
   m_ObjectHideFlags: 0

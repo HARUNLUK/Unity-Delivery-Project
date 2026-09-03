@@ -385,14 +385,14 @@ public class FPSPlayerController : MonoBehaviour
                 {
                     if (InteractionPromptHUD.Instance != null)
                     {
-                        InteractionPromptHUD.Instance.ShowPrompt($"🎯 Fırlatma Gücü: %{(int)(chargePercent * 100)} (Bırakınca Fırlat)");
+                        InteractionPromptHUD.Instance.ShowPrompt($"Throw Power: {(int)(chargePercent * 100)}% (Release to Throw)");
                     }
                 }
                 else
                 {
                     if (InteractionPromptHUD.Instance != null)
                     {
-                        InteractionPromptHUD.Instance.ShowPrompt("[E] / [Sol Tık] Bırak (Basılı Tut: Fırlat)");
+                        InteractionPromptHUD.Instance.ShowPrompt("[E] / [LMB] Drop (Hold: Throw)");
                     }
                 }
             }

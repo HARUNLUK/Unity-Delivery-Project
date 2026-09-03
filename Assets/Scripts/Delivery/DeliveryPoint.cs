@@ -7,6 +7,9 @@ public class DeliveryPoint : MonoBehaviour
     [Tooltip("Unique Index / ID of this point (e.g. 1, 2, 3...)")]
     public string pointId = "1";
 
+    [Tooltip("Recipient Name (Person or Business receiving the parcel)")]
+    public string recipientName = "John Doe";
+
     [Tooltip("Address name of this delivery destination (e.g. 104 Maple Street)")]
     public string addressName = "104 Maple Street";
 
