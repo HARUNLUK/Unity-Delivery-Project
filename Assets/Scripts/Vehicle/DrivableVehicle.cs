@@ -29,6 +29,19 @@ public class DrivableVehicle : MonoBehaviour
     [Tooltip("If checked, this vehicle is immediately unlocked from the start (e.g. Pickup Truck)")]
     public bool isUnlockedByDefault = false;
 
+    [Header("--- FUEL & CONSUMPTION ---")]
+    [Tooltip("Maximum fuel capacity in Litres")]
+    public float maxFuel = 50f;
+
+    [Tooltip("Current fuel in Litres")]
+    public float currentFuel = 50f;
+
+    [Tooltip("Fuel consumed per second while driving/accelerating (Litres/sec)")]
+    public float fuelBurnRate = 0.06f; // ~3.6 Litres/minute of driving
+
+    [Tooltip("Fuel consumed per second while idling (Litres/sec)")]
+    public float idleFuelBurnRate = 0.008f;
+
     [Header("--- SPOTS & ANCHORS ---")]
     [Tooltip("Camera position & view when driving inside the cabin")]
     public Transform driverSeatPoint;
@@ -57,9 +70,13 @@ public class DrivableVehicle : MonoBehaviour
     public static event Action OnAnyVehicleReset;
 
     public const string SAVE_PREFIX = "DELIVERY_VEHICLE_UNLOCKED_";
+    public const string FUEL_SAVE_PREFIX = "DELIVERY_VEHICLE_FUEL_";
 
     private Rigidbody rb;
     private float enterTimestamp = 0f;
+
+    public float FuelPercentage => maxFuel > 0 ? Mathf.Clamp01(currentFuel / maxFuel) : 0f;
+    public bool HasFuel => currentFuel > 0.05f;
 
     /// <summary>
     /// Returns unique ID for saving. Prevents copy-pasted 'pickup_truck' ID on other vehicles.
@@ -124,6 +141,10 @@ public class DrivableVehicle : MonoBehaviour
         {
             carController.enabled = false;
         }
+
+        // Load saved fuel
+        currentFuel = PlayerPrefs.GetFloat(FUEL_SAVE_PREFIX + EffectiveVehicleId, maxFuel);
+        currentFuel = Mathf.Clamp(currentFuel, 0f, maxFuel);
     }
 
     private void EnsureAnchors()
@@ -160,6 +181,101 @@ public class DrivableVehicle : MonoBehaviour
                 exitObj.transform.localRotation = Quaternion.identity;
                 exitPoint = exitObj.transform;
             }
+        }
+    }
+
+    private void Update()
+    {
+        if (isPlayerInside)
+        {
+            // 1. Fuel Consumption
+            HandleFuelConsumption();
+
+            // 2. Debounce to prevent immediate exit on the frame of entry
+            if (Time.time - enterTimestamp > 0.35f)
+            {
+                bool exitPressed = false;
+#if ENABLE_INPUT_SYSTEM
+                if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+                {
+                    exitPressed = true;
+                }
+#endif
+                try
+                {
+                    if (Input.GetKeyDown(KeyCode.E))
+                    {
+                        exitPressed = true;
+                    }
+                }
+                catch { }
+
+                if (exitPressed)
+                {
+                    ExitVehicle();
+                }
+            }
+        }
+    }
+
+    private void HandleFuelConsumption()
+    {
+        if (carController == null) return;
+
+        bool isDriving = Mathf.Abs(carController.verticalInput) > 0.1f || (rb != null && rb.linearVelocity.magnitude > 0.5f);
+
+        if (HasFuel)
+        {
+            float burn = isDriving ? fuelBurnRate : idleFuelBurnRate;
+            currentFuel = Mathf.Max(0f, currentFuel - (burn * Time.deltaTime));
+
+            // Enable car controller if it was turned off due to empty fuel
+            if (!carController.enabled && isPlayerInside)
+            {
+                carController.enabled = true;
+            }
+        }
+        else
+        {
+            // Yakıt bitti: Motor gücünü kes
+            if (carController.enabled)
+            {
+                carController.ClearAllForces();
+                carController.enabled = false;
+            }
+
+            if (InteractionPromptHUD.Instance != null)
+            {
+                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>⛽ YAKIT BİTTİ! Motor durdu. İstasyon pompasından yakıt doldurun.</color>");
+            }
+        }
+
+        // Canlı Yakıt HUD Göstergesi
+        if (InteractionPromptHUD.Instance != null)
+        {
+            bool isLowFuel = currentFuel < (maxFuel * 0.18f);
+            InteractionPromptHUD.Instance.UpdateFuelHUD(currentFuel, maxFuel, isLowFuel);
+        }
+    }
+
+    /// <summary>
+    /// Adds fuel to tank and saves state.
+    /// </summary>
+    public void Refuel(float liters)
+    {
+        currentFuel = Mathf.Clamp(currentFuel + liters, 0f, maxFuel);
+        PlayerPrefs.SetFloat(FUEL_SAVE_PREFIX + EffectiveVehicleId, currentFuel);
+        PlayerPrefs.Save();
+
+        if (carController != null && !carController.enabled && isPlayerInside && HasFuel)
+        {
+            carController.enabled = true;
+        }
+
+        if (InteractionPromptHUD.Instance != null && isPlayerInside)
+        {
+            bool isLowFuel = currentFuel < (maxFuel * 0.18f);
+            InteractionPromptHUD.Instance.UpdateFuelHUD(currentFuel, maxFuel, isLowFuel);
         }
     }
 
@@ -205,7 +321,7 @@ public class DrivableVehicle : MonoBehaviour
     /// </summary>
     public void ForceUnlock()
     {
-        PlayerPrefs.SetInt(SAVE_PREFIX + vehicleId, 1);
+        PlayerPrefs.SetInt(SAVE_PREFIX + EffectiveVehicleId, 1);
         PlayerPrefs.Save();
         OnVehiclePurchased?.Invoke(this);
     }
@@ -215,8 +331,11 @@ public class DrivableVehicle : MonoBehaviour
     /// </summary>
     public void ResetLockState()
     {
+        PlayerPrefs.DeleteKey(SAVE_PREFIX + EffectiveVehicleId);
         PlayerPrefs.DeleteKey(SAVE_PREFIX + vehicleId);
         PlayerPrefs.DeleteKey(SAVE_PREFIX + gameObject.name.ToLower().Replace(" ", "_"));
+        currentFuel = maxFuel;
+        PlayerPrefs.SetFloat(FUEL_SAVE_PREFIX + EffectiveVehicleId, maxFuel);
         PlayerPrefs.Save();
     }
 
@@ -244,7 +363,7 @@ public class DrivableVehicle : MonoBehaviour
         PlayerPrefs.Save();
 
         OnAnyVehicleReset?.Invoke();
-        Debug.Log("<color=#FF3333>★★★ [DEV] F9 TUŞUNA BASILDI: TÜM ARAÇ SATIN ALIMLARI SIFIRLANDI! ★★★</color>");
+        Debug.Log("<color=#FF3333>★★★ [DEV] F9 TUŞUNA BASILDI: TÜM ARAÇ SATIN ALIMLARI VE YAKITLARI SIFIRLANDI! ★★★</color>");
     }
 
     /// <summary>
@@ -288,37 +407,6 @@ public class DrivableVehicle : MonoBehaviour
         OnVehicleRecalled?.Invoke(this);
     }
 
-    private void Update()
-    {
-        if (isPlayerInside)
-        {
-            // Debounce to prevent immediate exit on the frame of entry
-            if (Time.time - enterTimestamp > 0.35f)
-            {
-                bool exitPressed = false;
-#if ENABLE_INPUT_SYSTEM
-                if (Keyboard.current != null && (Keyboard.current.eKey.wasPressedThisFrame || Keyboard.current.fKey.wasPressedThisFrame))
-                {
-                    exitPressed = true;
-                }
-#endif
-                try
-                {
-                    if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.F))
-                    {
-                        exitPressed = true;
-                    }
-                }
-                catch { }
-
-                if (exitPressed)
-                {
-                    ExitVehicle();
-                }
-            }
-        }
-    }
-
     public void EnterVehicle(FPSPlayerController player)
     {
         if (isPlayerInside || player == null) return;
@@ -344,15 +432,16 @@ public class DrivableVehicle : MonoBehaviour
         // 3. Attach player camera to driver seat
         player.AttachCameraToSeat(driverSeatPoint);
 
-        // 4. Enable vehicle controls
+        // 4. Enable vehicle controls only if has fuel
         if (carController != null)
         {
-            carController.enabled = true;
+            carController.enabled = HasFuel;
         }
 
         if (InteractionPromptHUD.Instance != null)
         {
             InteractionPromptHUD.Instance.ShowPrompt("[E] In  |  [V] Kamera Değiştir");
+            InteractionPromptHUD.Instance.UpdateFuelHUD(currentFuel, maxFuel, currentFuel < (maxFuel * 0.18f));
         }
 
         Debug.Log($"[DrivableVehicle] Player entered '{vehicleName}'. Press [E] to exit.");
@@ -369,16 +458,20 @@ public class DrivableVehicle : MonoBehaviour
             carController.enabled = false;
         }
 
-        // 2. Calculate exit position outside driver door
+        // 2. Save remaining fuel
+        PlayerPrefs.SetFloat(FUEL_SAVE_PREFIX + EffectiveVehicleId, currentFuel);
+        PlayerPrefs.Save();
+
+        // 3. Calculate exit position outside driver door
         Vector3 spawnPos = exitPoint != null ? exitPoint.position : transform.position - (transform.right * 2.0f);
         spawnPos.y += 0.1f;
 
-        // 3. Unparent player from vehicle
+        // 4. Unparent player from vehicle
         currentPlayer.transform.SetParent(null);
         currentPlayer.transform.position = spawnPos;
         currentPlayer.transform.rotation = Quaternion.LookRotation(transform.forward, Vector3.up);
 
-        // 4. Detach camera and restore on-foot player
+        // 5. Detach camera and restore on-foot player
         currentPlayer.DetachCameraFromSeat();
         currentPlayer.SetOnFootActive(true);
 
@@ -388,6 +481,7 @@ public class DrivableVehicle : MonoBehaviour
         if (InteractionPromptHUD.Instance != null)
         {
             InteractionPromptHUD.Instance.HidePrompt();
+            InteractionPromptHUD.Instance.HideFuelHUD();
         }
 
         Debug.Log($"[DrivableVehicle] Player exited '{vehicleName}'. On-foot controls restored.");

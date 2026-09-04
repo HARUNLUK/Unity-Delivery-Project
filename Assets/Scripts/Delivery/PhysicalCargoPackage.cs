@@ -33,8 +33,10 @@ public class PhysicalCargoPackage : MonoBehaviour
     public string targetPointId = "1";
     public string recipientName = "John Doe";
     public string targetAddressName = "104 Maple Street";
+    public string targetAddress => targetAddressName;
     public int deliveryReward = 100;
     public int wrongPenalty = 30;
+    public int wrongDeliveryPenalty => wrongPenalty;
     public int xpReward = 80;
 
     [Header("--- FRAGILE & EXPRESS SPECS ---")]

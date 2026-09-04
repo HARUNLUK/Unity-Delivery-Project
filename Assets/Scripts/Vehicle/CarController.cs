@@ -54,9 +54,13 @@ public class CarController : MonoBehaviour
 
     private Rigidbody rb;
     private float currentSteerAngle;
-    private float horizontalInput;
-    private float verticalInput;
-    private bool isHandbraking;
+    public float horizontalInput;
+    public float verticalInput;
+    public bool isHandbraking;
+
+    public float VerticalInput => verticalInput;
+    public float HorizontalInput => horizontalInput;
+    public bool IsHandbraking => isHandbraking;
 
     private WheelFrictionCurve normalRearSidewaysFriction;
     private WheelFrictionCurve driftRearSidewaysFriction;

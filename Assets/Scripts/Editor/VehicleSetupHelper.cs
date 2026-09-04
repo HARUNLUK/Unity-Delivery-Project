@@ -372,5 +372,63 @@ public static class VehicleSetupHelper
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         Debug.Log("[VehicleSetupHelper] Depo Garaj Spawn Noktası (Warehouse_Garage_SpawnPoint) oluşturuldu ve bağlandı!");
     }
+
+    [MenuItem("Tools/Delivery Game/Create Fuel Station Pump Area (Benzinlik Pompası)", false, 47)]
+    public static void CreateFuelStationPumpArea()
+    {
+        if (!Directory.Exists(PREFAB_DIR)) Directory.CreateDirectory(PREFAB_DIR);
+
+        GameObject pumpRoot = new GameObject("Fuel_Station_Pump");
+        pumpRoot.transform.position = new Vector3(0, 0, 0);
+
+        // 1. Trigger Zone Collider (Car Drive-Thru Area)
+        BoxCollider boxCol = pumpRoot.AddComponent<BoxCollider>();
+        boxCol.isTrigger = true;
+        boxCol.size = new Vector3(8.0f, 4.0f, 8.0f);
+        boxCol.center = new Vector3(0, 2.0f, 0);
+
+        // 2. Physical Pump Dispenser Stand (Visual Model)
+        GameObject standObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        standObj.name = "Pump_Dispenser_Stand";
+        standObj.transform.SetParent(pumpRoot.transform, false);
+        standObj.transform.localPosition = new Vector3(3.5f, 1.2f, 0);
+        standObj.transform.localScale = new Vector3(0.8f, 2.4f, 1.4f);
+
+        // Stand Roof / Top Indicator
+        GameObject topSignObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        topSignObj.name = "TopSign";
+        topSignObj.transform.SetParent(standObj.transform, false);
+        topSignObj.transform.localPosition = new Vector3(0, 0.6f, 0);
+        topSignObj.transform.localScale = new Vector3(1.2f, 0.25f, 1.1f);
+
+        // Status Indicator Light
+        GameObject lightObj = new GameObject("StatusLight");
+        lightObj.transform.SetParent(standObj.transform, false);
+        lightObj.transform.localPosition = new Vector3(0, 0.8f, 0);
+        Light pLight = lightObj.AddComponent<Light>();
+        pLight.type = LightType.Point;
+        pLight.color = Color.yellow;
+        pLight.range = 8f;
+        pLight.intensity = 1.5f;
+
+        // 3. Attach FuelStationPump Component
+        FuelStationPump pumpScript = pumpRoot.AddComponent<FuelStationPump>();
+        pumpScript.stationName = "Petrol İstasyonu";
+        pumpScript.pricePerLiter = 35f;
+        pumpScript.refuelRateLitersPerSecond = 6.0f;
+        pumpScript.pumpStatusLight = pLight;
+
+        // 4. Save as Prefab
+        string prefabPath = Path.Combine(PREFAB_DIR, "Fuel_Station_Pump.prefab").Replace("\\", "/");
+        GameObject savedPrefab = PrefabUtility.SaveAsPrefabAssetAndConnect(pumpRoot, prefabPath, InteractionMode.UserAction);
+
+        Selection.activeGameObject = pumpRoot;
+        Undo.RegisterCreatedObjectUndo(pumpRoot, "Created Fuel Station Pump");
+        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+
+        Debug.Log($"[VehicleSetupHelper] Benzin Dolum İstasyonu başarıyla oluşturuldu ve Prefab olarak kaydedildi: '{prefabPath}'!");
+    }
 }
 #endif

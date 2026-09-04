@@ -25,6 +25,11 @@ public class InteractionPromptHUD : MonoBehaviour
     public TextMeshProUGUI heldCargoPenaltyText;
     public TextMeshProUGUI heldCargoActionHintText;
 
+    [Header("--- VEHICLE FUEL GAUGE ---")]
+    public GameObject fuelGaugePanel;
+    public Image fuelBarFill;
+    public TextMeshProUGUI fuelValueText;
+
     private void Awake()
     {
         Instance = this;
@@ -36,12 +41,13 @@ public class InteractionPromptHUD : MonoBehaviour
         EnsureUI();
         HidePrompt();
         HideHeldCargoInfo();
+        HideFuelHUD();
     }
 
     public void EnsureUI()
     {
         Canvas canvas = GetComponentInParent<Canvas>();
-        if (canvas == null) canvas = Object.FindAnyObjectByType<Canvas>();
+        if (canvas == null) canvas = UnityEngine.Object.FindAnyObjectByType<Canvas>();
 
         if (canvas == null)
         {
@@ -98,10 +104,10 @@ public class InteractionPromptHUD : MonoBehaviour
                 boxRect.anchorMax = new Vector2(0.5f, 0.5f);
                 boxRect.pivot = new Vector2(0.5f, 1f);
                 boxRect.anchoredPosition = new Vector2(0, -40);
-                boxRect.sizeDelta = new Vector2(520, 62);
+                boxRect.sizeDelta = new Vector2(580, 64);
 
                 Image boxImg = promptPanel.AddComponent<Image>();
-                boxImg.color = new Color(0.05f, 0.07f, 0.11f, 0.92f);
+                boxImg.color = new Color(0.05f, 0.07f, 0.11f, 0.94f);
                 boxImg.raycastTarget = false;
 
                 GameObject textObj = new GameObject("PromptText");
@@ -112,7 +118,7 @@ public class InteractionPromptHUD : MonoBehaviour
                 textRect.sizeDelta = Vector2.zero;
 
                 promptText = textObj.AddComponent<TextMeshProUGUI>();
-                promptText.fontSize = 26;
+                promptText.fontSize = 24;
                 promptText.fontStyle = FontStyles.Bold;
                 promptText.alignment = TextAlignmentOptions.Center;
                 promptText.color = new Color(1f, 0.88f, 0.25f);
@@ -120,13 +126,13 @@ public class InteractionPromptHUD : MonoBehaviour
             }
         }
 
-        // 3. Held Cargo Side Details Panel (Büyük & İkonsuz Temiz Tasarım)
+        // 3. Held Cargo Side Details Panel
         if (heldCargoPanel == null)
         {
             Transform existingSide = canvas.transform.Find("HeldCargoSideCard");
             if (existingSide != null)
             {
-                DestroyImmediate(existingSide.gameObject); // Rebuild with large clean layout
+                DestroyImmediate(existingSide.gameObject);
             }
 
             heldCargoPanel = new GameObject("HeldCargoSideCard");
@@ -198,68 +204,186 @@ public class InteractionPromptHUD : MonoBehaviour
             heldCargoRewardText = rewardObj.AddComponent<TextMeshProUGUI>();
             heldCargoRewardText.fontSize = 21;
             heldCargoRewardText.fontStyle = FontStyles.Bold;
-            heldCargoRewardText.color = new Color(0.35f, 1f, 0.45f);
+            heldCargoRewardText.color = new Color(0.3f, 1f, 0.4f);
 
             // Penalty Line
             GameObject penObj = new GameObject("Penalty");
             penObj.transform.SetParent(heldCargoPanel.transform, false);
             heldCargoPenaltyText = penObj.AddComponent<TextMeshProUGUI>();
-            heldCargoPenaltyText.fontSize = 19;
+            heldCargoPenaltyText.fontSize = 20;
             heldCargoPenaltyText.fontStyle = FontStyles.Bold;
-            heldCargoPenaltyText.color = new Color(1f, 0.45f, 0.45f);
+            heldCargoPenaltyText.color = new Color(1f, 0.4f, 0.4f);
 
             // Action Hint
-            GameObject hintObj = new GameObject("Hint");
+            GameObject hintObj = new GameObject("ActionHint");
             hintObj.transform.SetParent(heldCargoPanel.transform, false);
             heldCargoActionHintText = hintObj.AddComponent<TextMeshProUGUI>();
-            heldCargoActionHintText.text = "[E] / [LMB] Drop  •  (Hold: Throw)";
-            heldCargoActionHintText.fontSize = 17;
-            heldCargoActionHintText.fontStyle = FontStyles.Bold;
+            heldCargoActionHintText.text = "[E] Bırak  |  Basılı Tut: Fırlat";
+            heldCargoActionHintText.fontSize = 19;
             heldCargoActionHintText.color = new Color(0.85f, 0.85f, 0.85f);
-            heldCargoActionHintText.alignment = TextAlignmentOptions.Center;
+        }
+
+        // 4. In-Vehicle Fuel Gauge Panel (Bottom Right)
+        if (fuelGaugePanel == null)
+        {
+            Transform existingFuel = canvas.transform.Find("VehicleFuelGaugePanel");
+            if (existingFuel != null)
+            {
+                fuelGaugePanel = existingFuel.gameObject;
+                fuelBarFill = fuelGaugePanel.transform.Find("FuelBarBg/FuelBarFill")?.GetComponent<Image>();
+                fuelValueText = fuelGaugePanel.GetComponentInChildren<TextMeshProUGUI>();
+            }
+            else
+            {
+                fuelGaugePanel = new GameObject("VehicleFuelGaugePanel");
+                fuelGaugePanel.transform.SetParent(canvas.transform, false);
+
+                RectTransform fRect = fuelGaugePanel.AddComponent<RectTransform>();
+                fRect.anchorMin = new Vector2(1f, 0f);
+                fRect.anchorMax = new Vector2(1f, 0f);
+                fRect.pivot = new Vector2(1f, 0f);
+                fRect.anchoredPosition = new Vector2(-40, 40);
+                fRect.sizeDelta = new Vector2(280, 56);
+
+                Image fBg = fuelGaugePanel.AddComponent<Image>();
+                fBg.color = new Color(0.06f, 0.08f, 0.12f, 0.92f);
+                fBg.raycastTarget = false;
+
+                // Fuel Bar Background
+                GameObject barBgObj = new GameObject("FuelBarBg");
+                barBgObj.transform.SetParent(fuelGaugePanel.transform, false);
+                RectTransform bbgRect = barBgObj.AddComponent<RectTransform>();
+                bbgRect.anchorMin = new Vector2(0f, 0f);
+                bbgRect.anchorMax = new Vector2(1f, 0f);
+                bbgRect.pivot = new Vector2(0.5f, 0f);
+                bbgRect.anchoredPosition = new Vector2(0, 6);
+                bbgRect.sizeDelta = new Vector2(-24, 10);
+
+                Image barBgImg = barBgObj.AddComponent<Image>();
+                barBgImg.color = new Color(0.15f, 0.18f, 0.22f, 0.9f);
+                barBgImg.raycastTarget = false;
+
+                // Fuel Bar Fill
+                GameObject barFillObj = new GameObject("FuelBarFill");
+                barFillObj.transform.SetParent(barBgObj.transform, false);
+                RectTransform bFillRect = barFillObj.AddComponent<RectTransform>();
+                bFillRect.anchorMin = Vector2.zero;
+                bFillRect.anchorMax = Vector2.one;
+                bFillRect.sizeDelta = Vector2.zero;
+
+                fuelBarFill = barFillObj.AddComponent<Image>();
+                fuelBarFill.color = new Color(0.2f, 0.85f, 0.4f, 1f);
+                fuelBarFill.type = Image.Type.Filled;
+                fuelBarFill.fillMethod = Image.FillMethod.Horizontal;
+                fuelBarFill.fillOrigin = 0;
+                fuelBarFill.fillAmount = 1f;
+                fuelBarFill.raycastTarget = false;
+
+                // Text
+                GameObject textObj = new GameObject("FuelText");
+                textObj.transform.SetParent(fuelGaugePanel.transform, false);
+                RectTransform tRect = textObj.AddComponent<RectTransform>();
+                tRect.anchorMin = new Vector2(0, 0);
+                tRect.anchorMax = new Vector2(1, 1);
+                tRect.anchoredPosition = new Vector2(0, 5);
+                tRect.sizeDelta = new Vector2(-24, 0);
+
+                fuelValueText = textObj.AddComponent<TextMeshProUGUI>();
+                fuelValueText.text = "⛽ 50.0 / 50.0 L (%100)";
+                fuelValueText.fontSize = 19;
+                fuelValueText.fontStyle = FontStyles.Bold;
+                fuelValueText.alignment = TextAlignmentOptions.MidlineLeft;
+                fuelValueText.color = Color.white;
+                fuelValueText.raycastTarget = false;
+
+                fuelGaugePanel.SetActive(false);
+            }
         }
     }
 
     public void ShowPrompt(string message)
     {
-        if (promptPanel == null || promptText == null) EnsureUI();
-        if (promptPanel != null) promptPanel.SetActive(true);
-        if (promptText != null) promptText.text = message;
+        if (promptPanel != null && promptText != null)
+        {
+            promptText.text = message;
+            promptPanel.SetActive(true);
+        }
     }
 
     public void HidePrompt()
     {
-        if (promptPanel != null) promptPanel.SetActive(false);
+        if (promptPanel != null)
+        {
+            promptPanel.SetActive(false);
+        }
+    }
+
+    public void UpdateFuelHUD(float currentFuel, float maxFuel, bool isLow)
+    {
+        if (fuelGaugePanel == null) EnsureUI();
+        if (fuelGaugePanel != null && !fuelGaugePanel.activeSelf)
+        {
+            fuelGaugePanel.SetActive(true);
+        }
+
+        float pct = maxFuel > 0 ? Mathf.Clamp01(currentFuel / maxFuel) : 0f;
+
+        if (fuelBarFill != null)
+        {
+            fuelBarFill.fillAmount = pct;
+            if (pct > 0.4f) fuelBarFill.color = new Color(0.2f, 0.85f, 0.4f);
+            else if (pct > 0.15f) fuelBarFill.color = new Color(1f, 0.75f, 0.2f);
+            else fuelBarFill.color = new Color(1f, 0.25f, 0.25f);
+        }
+
+        if (fuelValueText != null)
+        {
+            string colorTag = isLow ? "<color=#FF4444>" : "<color=#FFFFFF>";
+            fuelValueText.text = $"⛽ {colorTag}{currentFuel:F1} / {maxFuel:F1} L (%{(pct * 100):F0})</color>";
+        }
+    }
+
+    public void HideFuelHUD()
+    {
+        if (fuelGaugePanel != null)
+        {
+            fuelGaugePanel.SetActive(false);
+        }
     }
 
     public void ShowHeldCargoInfo(PhysicalCargoPackage pkg)
     {
-        if (pkg == null) return;
-        if (heldCargoPanel == null) EnsureUI();
-
-        if (heldCargoPanel != null)
+        if (pkg == null)
         {
-            heldCargoPanel.SetActive(true);
+            HideHeldCargoInfo();
+            return;
+        }
 
-            string tracking = pkg.cargoData != null ? pkg.cargoData.trackingNumber : $"PKG-#{pkg.targetPointId}";
-            if (heldCargoTrackingText != null) heldCargoTrackingText.text = $"Tracking: {tracking}";
-            
-            if (heldCargoTypeText != null)
+        if (heldCargoPanel == null) EnsureUI();
+        if (heldCargoPanel != null) heldCargoPanel.SetActive(true);
+
+        if (heldCargoTrackingText != null) heldCargoTrackingText.text = $"📦 <b>Takip No:</b> #{pkg.targetPointId}";
+        if (heldCargoRecipientText != null) heldCargoRecipientText.text = $"👤 <b>Alıcı:</b> {pkg.recipientName}";
+        if (heldCargoAddressText != null) heldCargoAddressText.text = $"📍 <b>Adres:</b> {pkg.targetAddressName}";
+        if (heldCargoRewardText != null) heldCargoRewardText.text = $"💰 <b>Ödül:</b> +${pkg.deliveryReward} TL  <color=#32FFFF>(+{pkg.xpReward} XP)</color>";
+        if (heldCargoPenaltyText != null) heldCargoPenaltyText.text = $"⚠️ <b>Ceza:</b> -${pkg.wrongPenalty} TL";
+
+        if (heldCargoTypeText != null)
+        {
+            switch (pkg.cargoType)
             {
-                if (pkg.isBroken)
-                    heldCargoTypeText.text = "Type: <color=#FF3333>BROKEN FRAGILE</color>";
-                else if (pkg.cargoType == CargoType.Fragile)
-                    heldCargoTypeText.text = $"Type: <color=#FF7722>FRAGILE ({Mathf.CeilToInt(pkg.health)}% HP)</color>";
-                else if (pkg.cargoType == CargoType.Express)
-                    heldCargoTypeText.text = "Type: <color=#00CCFF>EXPRESS (Deliver by 13:00)</color>";
-                else
-                    heldCargoTypeText.text = "Type: STANDARD";
+                case CargoType.Fragile:
+                    heldCargoTypeText.text = pkg.isBroken ?
+                        "<color=#FF4444>⚠️ TÜR: KIRILABİLİR (KIRILDI! - Ödül İptal)</color>" :
+                        $"<color=#FFAA33>⚠️ TÜR: KIRILABİLİR (Sağlık: %{pkg.health:F0})</color>";
+                    break;
+                case CargoType.Express:
+                    heldCargoTypeText.text = "<color=#32FFFF>⚡ TÜR: EKSPRES (13:00 Öncesi +%40 Bonus)</color>";
+                    break;
+                default:
+                    heldCargoTypeText.text = "<color=#AAAAAA>📦 TÜR: STANDART KARGO</color>";
+                    break;
             }
-
-            if (heldCargoRecipientText != null) heldCargoRecipientText.text = $"Recipient: {pkg.recipientName}";
-            if (heldCargoAddressText != null) heldCargoAddressText.text = $"Destination: {pkg.targetAddressName} (Point #{pkg.targetPointId})";
-            if (heldCargoRewardText != null) heldCargoRewardText.text = $"Reward: +${pkg.deliveryReward} (+{pkg.xpReward} XP)";
-            if (heldCargoPenaltyText != null) heldCargoPenaltyText.text = $"Penalty: -${pkg.wrongPenalty}";
         }
     }
 
@@ -272,10 +396,10 @@ public class InteractionPromptHUD : MonoBehaviour
     }
 
 #if UNITY_EDITOR
-    [MenuItem("Tools/Delivery Game/Create Interaction Prompt HUD", false, 25)]
+    [MenuItem("Tools/Delivery Game/Create Interaction Prompt HUD", false, 43)]
     public static void CreatePromptHUDTool()
     {
-        Canvas canvas = Object.FindAnyObjectByType<Canvas>();
+        Canvas canvas = UnityEngine.Object.FindAnyObjectByType<Canvas>();
         if (canvas == null)
         {
             GameObject canvasObj = new GameObject("HUD_Canvas");
@@ -286,21 +410,15 @@ public class InteractionPromptHUD : MonoBehaviour
             scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.matchWidthOrHeight = 0.5f;
             canvasObj.AddComponent<GraphicRaycaster>();
-            Undo.RegisterCreatedObjectUndo(canvasObj, "Create HUD Canvas");
         }
 
-        InteractionPromptHUD existing = canvas.GetComponentInChildren<InteractionPromptHUD>();
-        if (existing == null)
+        InteractionPromptHUD hud = canvas.GetComponentInChildren<InteractionPromptHUD>(true);
+        if (hud == null)
         {
-            GameObject hudObj = new GameObject("InteractionPromptHUD");
-            hudObj.transform.SetParent(canvas.transform, false);
-            existing = hudObj.AddComponent<InteractionPromptHUD>();
-            Undo.RegisterCreatedObjectUndo(hudObj, "Create InteractionPromptHUD");
+            hud = canvas.gameObject.AddComponent<InteractionPromptHUD>();
         }
-
-        existing.EnsureUI();
-        Selection.activeGameObject = existing.gameObject;
-        Debug.Log("[InteractionPromptHUD] Interaction prompt UI successfully created on Canvas!");
+        hud.EnsureUI();
+        EditorUtility.SetDirty(hud.gameObject);
     }
 #endif
 }

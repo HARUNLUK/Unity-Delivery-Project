@@ -59,8 +59,8 @@ public class FPSPlayerController : MonoBehaviour
     private float vehiclePitch = 0f;
     private float tpsYawOffset = 0f;
     private float tpsPitchOffset = 0f;
-    private Transform currentSeatPoint;
-    private Transform currentVehicleTransform;
+    public Transform currentSeatPoint;
+    public Transform currentVehicleTransform;
 
     private float currentDropHoldTime = 0f;
     private float afterGrabSafetyTimer = 0f;
