@@ -22,7 +22,7 @@ public class PlayerProgressionManager : MonoBehaviour
 
     public int PlayerLevel => playerLevel;
     public int CurrentXP => currentXP;
-    public int WarehouseLevel => warehouseLevel;
+    public int WarehouseLevel => BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : warehouseLevel;
 
     public int XPForNextLevel => GetXPRequiredForLevel(playerLevel + 1);
     public int XPForCurrentLevel => GetXPRequiredForLevel(playerLevel);
@@ -49,6 +49,11 @@ public class PlayerProgressionManager : MonoBehaviour
 
     public int GetDailyPackageLimit()
     {
+        if (BranchManager.Instance != null)
+        {
+            return BranchManager.Instance.GetDailyPackageLimit();
+        }
+
         switch (warehouseLevel)
         {
             case 1: return 4;
@@ -61,6 +66,11 @@ public class PlayerProgressionManager : MonoBehaviour
 
     public int GetDailyWarehouseRent()
     {
+        if (BranchManager.Instance != null)
+        {
+            return BranchManager.Instance.GetDailyRent();
+        }
+
         switch (warehouseLevel)
         {
             case 1: return 50;
@@ -91,6 +101,11 @@ public class PlayerProgressionManager : MonoBehaviour
 
     public bool UpgradeWarehouse()
     {
+        if (BranchManager.Instance != null)
+        {
+            return BranchManager.Instance.TryUpgradeBranch();
+        }
+
         int upgradeCost = GetWarehouseUpgradeCost(warehouseLevel + 1);
         if (PlayerEconomyManager.Instance != null && PlayerEconomyManager.Instance.TotalSavedBalance >= upgradeCost)
         {

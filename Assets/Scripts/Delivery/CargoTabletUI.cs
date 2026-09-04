@@ -11,7 +11,8 @@ using TMPro;
 public enum TabletTab
 {
     CargoInventory,
-    VehicleDealership
+    VehicleDealership,
+    BranchOffice
 }
 
 public class CargoTabletUI : MonoBehaviour
@@ -51,9 +52,27 @@ public class CargoTabletUI : MonoBehaviour
     public Button vehicleRecallButton;
     public TextMeshProUGUI vehicleRecallButtonText;
 
-    [Header("--- TAB SWITCHING BUTTONS ---")]
+    [Header("--- BRANCH OFFICE UPGRADE TAB ---")]
+    public GameObject branchViewRoot;
+    public TextMeshProUGUI currentBranchTitleText;
+    public TextMeshProUGUI currentBranchDescText;
+    public TextMeshProUGUI currentBranchCapacityText;
+    public TextMeshProUGUI currentBranchRentText;
+    public GameObject nextBranchInfoRoot;
+    public TextMeshProUGUI nextBranchTitleText;
+    public TextMeshProUGUI nextBranchDescText;
+    public TextMeshProUGUI nextBranchCapacityText;
+    public TextMeshProUGUI nextBranchRentText;
+    public TextMeshProUGUI nextBranchLevelReqText;
+    public Button branchUpgradeButton;
+    public TextMeshProUGUI branchUpgradeButtonText;
+    public TextMeshProUGUI branchMaxLevelBadge;
+
+    [Header("--- TAB SWITCHING & CLOSE BUTTONS ---")]
     public Button tabCargoButton;
     public Button tabVehicleButton;
+    public Button tabBranchButton;
+    public Button closeTabletButton;
 
     private CargoItem currentSelectedCargo;
     private DrivableVehicle currentSelectedVehicle;
@@ -61,6 +80,7 @@ public class CargoTabletUI : MonoBehaviour
     private bool isTabletOpen = false;
 
     public bool IsTabletOpen => isTabletOpen;
+    public TabletTab CurrentTab => currentTab;
 
     private void Awake()
     {
@@ -89,7 +109,7 @@ public class CargoTabletUI : MonoBehaviour
     {
         if (tabletPanelRoot != null) tabletPanelRoot.SetActive(false);
         EnsureEventSystemAndRaycaster();
-        EnsureVehicleUIElements();
+        EnsureTabletStructure();
     }
 
     private void OnEnable()
@@ -98,6 +118,8 @@ public class CargoTabletUI : MonoBehaviour
         DrivableVehicle.OnVehiclePurchased += HandleVehiclePurchased;
         DrivableVehicle.OnVehicleRecalled += HandleVehicleRecalled;
         DrivableVehicle.OnAnyVehicleReset += HandleAnyVehicleReset;
+        BranchManager.OnBranchUpgraded += HandleBranchUpgraded;
+        BranchManager.OnBranchReset += HandleBranchReset;
     }
 
     private void OnDisable()
@@ -106,6 +128,24 @@ public class CargoTabletUI : MonoBehaviour
         DrivableVehicle.OnVehiclePurchased -= HandleVehiclePurchased;
         DrivableVehicle.OnVehicleRecalled -= HandleVehicleRecalled;
         DrivableVehicle.OnAnyVehicleReset -= HandleAnyVehicleReset;
+        BranchManager.OnBranchUpgraded -= HandleBranchUpgraded;
+        BranchManager.OnBranchReset -= HandleBranchReset;
+    }
+
+    private void HandleBranchUpgraded(int lvl, BranchTier tier)
+    {
+        if (isTabletOpen && currentTab == TabletTab.BranchOffice)
+        {
+            PopulateBranchInfo();
+        }
+    }
+
+    private void HandleBranchReset()
+    {
+        if (isTabletOpen && currentTab == TabletTab.BranchOffice)
+        {
+            PopulateBranchInfo();
+        }
     }
 
     private void HandleAnyVehicleReset()
@@ -157,11 +197,20 @@ public class CargoTabletUI : MonoBehaviour
             {
                 return true;
             }
+
+            if (isTabletOpen && Keyboard.current.escapeKey.wasPressedThisFrame)
+            {
+                return true;
+            }
         }
 
         try
         {
             if (Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.T) || Input.GetKeyDown(KeyCode.M) || Input.GetKeyDown(KeyCode.I))
+            {
+                return true;
+            }
+            if (isTabletOpen && Input.GetKeyDown(KeyCode.Escape))
             {
                 return true;
             }
@@ -180,7 +229,7 @@ public class CargoTabletUI : MonoBehaviour
     public void OpenTablet()
     {
         EnsureEventSystemAndRaycaster();
-        EnsureVehicleUIElements();
+        EnsureTabletStructure();
 
         if (tabletPanelRoot == null)
         {
@@ -216,21 +265,30 @@ public class CargoTabletUI : MonoBehaviour
     public void SwitchTab(TabletTab tab)
     {
         currentTab = tab;
-        EnsureVehicleUIElements();
+        EnsureTabletStructure();
 
         if (cargoViewRoot != null) cargoViewRoot.SetActive(currentTab == TabletTab.CargoInventory);
         if (vehicleViewRoot != null) vehicleViewRoot.SetActive(currentTab == TabletTab.VehicleDealership);
+        if (branchViewRoot != null) branchViewRoot.SetActive(currentTab == TabletTab.BranchOffice);
+
+        Color activeColor = new Color(0.12f, 0.53f, 0.9f, 1f); // Vibrant Cyan/Blue #1E88E5
+        Color inactiveColor = new Color(0.09f, 0.13f, 0.19f, 0.95f); // Dark Slate
 
         // Update tab buttons appearance
         if (tabCargoButton != null)
         {
             Image img = tabCargoButton.GetComponent<Image>();
-            if (img != null) img.color = (currentTab == TabletTab.CargoInventory) ? new Color(0.2f, 0.6f, 0.9f) : new Color(0.12f, 0.15f, 0.2f);
+            if (img != null) img.color = (currentTab == TabletTab.CargoInventory) ? activeColor : inactiveColor;
         }
         if (tabVehicleButton != null)
         {
             Image img = tabVehicleButton.GetComponent<Image>();
-            if (img != null) img.color = (currentTab == TabletTab.VehicleDealership) ? new Color(0.2f, 0.6f, 0.9f) : new Color(0.12f, 0.15f, 0.2f);
+            if (img != null) img.color = (currentTab == TabletTab.VehicleDealership) ? activeColor : inactiveColor;
+        }
+        if (tabBranchButton != null)
+        {
+            Image img = tabBranchButton.GetComponent<Image>();
+            if (img != null) img.color = (currentTab == TabletTab.BranchOffice) ? activeColor : inactiveColor;
         }
 
         RefreshUI();
@@ -244,9 +302,13 @@ public class CargoTabletUI : MonoBehaviour
         {
             PopulateCargoList();
         }
-        else
+        else if (currentTab == TabletTab.VehicleDealership)
         {
             PopulateVehicleList();
+        }
+        else if (currentTab == TabletTab.BranchOffice)
+        {
+            PopulateBranchInfo();
         }
     }
 
@@ -318,13 +380,13 @@ public class CargoTabletUI : MonoBehaviour
         currentSelectedCargo = cargo;
         if (detailCardRoot != null) detailCardRoot.SetActive(true);
 
-        if (trackingNumberText != null) trackingNumberText.text = $"Tracking No: {cargo.trackingNumber}";
-        if (recipientNameText != null) recipientNameText.text = $"Recipient: {cargo.recipientName}";
-        if (targetAddressText != null) targetAddressText.text = $"Address: {cargo.targetAddress}";
+        if (trackingNumberText != null) trackingNumberText.text = $"Takip No: {cargo.trackingNumber}";
+        if (recipientNameText != null) recipientNameText.text = $"Alıcı: {cargo.recipientName}";
+        if (targetAddressText != null) targetAddressText.text = $"Adres: {cargo.targetAddress}";
         
         if (addressDescriptionText != null)
         {
-            addressDescriptionText.text = $"<b>Delivery Clue / Description:</b>\n\n\"{cargo.targetAddressDescription}\"";
+            addressDescriptionText.text = $"<b>Adres İpucu ve Açıklaması:</b>\n\n\"{cargo.targetAddressDescription}\"";
         }
     }
 
@@ -375,7 +437,7 @@ public class CargoTabletUI : MonoBehaviour
             if (cardImg != null)
             {
                 cardImg.raycastTarget = true;
-                cardImg.color = v.IsUnlocked ? new Color(0.12f, 0.22f, 0.16f, 0.95f) : new Color(0.18f, 0.14f, 0.14f, 0.95f);
+                cardImg.color = v.IsUnlocked ? new Color(0.1f, 0.22f, 0.15f, 0.95f) : new Color(0.15f, 0.15f, 0.18f, 0.95f);
             }
 
             TextMeshProUGUI label = cardObj.GetComponentInChildren<TextMeshProUGUI>();
@@ -497,316 +559,247 @@ public class CargoTabletUI : MonoBehaviour
 
         if (vehicleRecallButton != null)
         {
-            if (v.IsUnlocked)
+            vehicleRecallButton.gameObject.SetActive(false);
+        }
+    }
+
+    // ==========================================
+    // BRANCH OFFICE UPGRADE TAB
+    // ==========================================
+    private void PopulateBranchInfo()
+    {
+        if (BranchManager.Instance == null) return;
+
+        BranchTier current = BranchManager.Instance.CurrentTier;
+        BranchTier next = BranchManager.Instance.NextTier;
+
+        if (current != null)
+        {
+            if (currentBranchTitleText != null) currentBranchTitleText.text = $"<b>{current.tierName}</b> <color=#32FFFF>(Seviye {current.tierLevel})</color>";
+            if (currentBranchDescText != null) currentBranchDescText.text = current.description;
+            if (currentBranchCapacityText != null) currentBranchCapacityText.text = $"📦 <b>Günlük Paket Kapasitesi:</b> {current.dailyPackageCapacity} Paket";
+            if (currentBranchRentText != null) currentBranchRentText.text = $"💸 <b>Günlük İşletme Kirası:</b> ${current.dailyRent} TL / gün";
+        }
+
+        if (next != null)
+        {
+            if (nextBranchTitleText != null)
             {
-                vehicleRecallButton.gameObject.SetActive(true);
-                vehicleRecallButton.onClick.RemoveAllListeners();
-                vehicleRecallButton.onClick.AddListener(() => {
-                    v.RecallToGarage();
-                    CloseTablet();
-                });
+                nextBranchTitleText.gameObject.SetActive(true);
+                nextBranchTitleText.text = $"<b>{next.tierName}</b> <color=#32FF64>(Seviye {next.tierLevel})</color>";
             }
-            else
+            if (nextBranchDescText != null)
             {
-                vehicleRecallButton.gameObject.SetActive(false);
+                nextBranchDescText.gameObject.SetActive(true);
+                nextBranchDescText.text = next.description;
+            }
+            if (nextBranchCapacityText != null)
+            {
+                nextBranchCapacityText.gameObject.SetActive(true);
+                nextBranchCapacityText.text = $"📦 <b>Yeni Paket Kotası:</b> {current.dailyPackageCapacity} ➔ <color=#32FF64>{next.dailyPackageCapacity} Paket</color> (+{next.dailyPackageCapacity - current.dailyPackageCapacity})";
+            }
+            if (nextBranchRentText != null)
+            {
+                nextBranchRentText.gameObject.SetActive(true);
+                nextBranchRentText.text = $"💸 <b>Yeni Kira Bedeli:</b> ${current.dailyRent} ➔ <color=#FFAA33>${next.dailyRent} TL</color>";
+            }
+
+            int playerLvl = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.PlayerLevel : 1;
+            int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
+
+            if (nextBranchLevelReqText != null)
+            {
+                nextBranchLevelReqText.gameObject.SetActive(true);
+                string lvlTag = playerLvl >= next.requiredPlayerLevel ? "<color=#32FF64>" : "<color=#FF5555>";
+                nextBranchLevelReqText.text = $"👤 <b>Gerekli Seviye:</b> {lvlTag}Seviye {next.requiredPlayerLevel} (Senin: {playerLvl})</color>";
+            }
+
+            if (branchUpgradeButton != null)
+            {
+                branchUpgradeButton.gameObject.SetActive(true);
+                bool canAfford = balance >= next.upgradeCost;
+                bool canLevel = playerLvl >= next.requiredPlayerLevel;
+
+                branchUpgradeButton.interactable = canAfford && canLevel;
+
+                Image btnImg = branchUpgradeButton.GetComponent<Image>();
+                if (btnImg != null)
+                {
+                    btnImg.color = (canAfford && canLevel) ? new Color(0.1f, 0.7f, 0.35f) : new Color(0.3f, 0.3f, 0.35f);
+                }
+
+                if (branchUpgradeButtonText != null)
+                {
+                    if (!canLevel) branchUpgradeButtonText.text = $"🔒 SEVİYE {next.requiredPlayerLevel} GEREKLİ";
+                    else if (!canAfford) branchUpgradeButtonText.text = $"🔒 YETERSİZ BAKİYE (${next.upgradeCost} TL)";
+                    else branchUpgradeButtonText.text = $"🏢 ŞUBEYİ GELİŞTİR (${next.upgradeCost} TL)";
+                }
+            }
+
+            if (branchMaxLevelBadge != null) branchMaxLevelBadge.gameObject.SetActive(false);
+        }
+        else
+        {
+            // Max level reached
+            if (nextBranchTitleText != null) nextBranchTitleText.gameObject.SetActive(false);
+            if (nextBranchDescText != null) nextBranchDescText.gameObject.SetActive(false);
+            if (nextBranchCapacityText != null) nextBranchCapacityText.gameObject.SetActive(false);
+            if (nextBranchRentText != null) nextBranchRentText.gameObject.SetActive(false);
+            if (nextBranchLevelReqText != null) nextBranchLevelReqText.gameObject.SetActive(false);
+            if (branchUpgradeButton != null) branchUpgradeButton.gameObject.SetActive(false);
+            if (branchMaxLevelBadge != null) branchMaxLevelBadge.gameObject.SetActive(true);
+        }
+    }
+
+    private void OnUpgradeBranchClicked()
+    {
+        if (BranchManager.Instance != null)
+        {
+            bool ok = BranchManager.Instance.TryUpgradeBranch();
+            if (ok)
+            {
+                PopulateBranchInfo();
+                if (InteractionPromptHUD.Instance != null)
+                {
+                    InteractionPromptHUD.Instance.ShowPrompt("<color=#32FFFF>★ ŞUBE BAŞARIYLA GELİŞTİRİLDİ! ★</color>");
+                }
             }
         }
     }
 
     /// <summary>
-    /// Ensures tabs, vehicle view and dealership UI are dynamically built if missing in hierarchy.
+    /// Ensures tablet hierarchy is structured with a TopBar and ContentArea containing 3 separate views.
     /// </summary>
-    public void EnsureVehicleUIElements()
+    public void EnsureTabletStructure()
     {
+        if (tabletPanelRoot == null)
+        {
+            Transform t = transform.Find("CargoTabletPanel");
+            if (t != null) tabletPanelRoot = t.gameObject;
+        }
+
         if (tabletPanelRoot == null) return;
 
-        // 1. Identify or Create Navigation Tabs Header
-        Transform tabHeader = tabletPanelRoot.transform.Find("TabletTabBar");
-        if (tabHeader == null)
+        // Remove any old conflicting layout group directly on tabletPanelRoot
+        HorizontalLayoutGroup hlg = tabletPanelRoot.GetComponent<HorizontalLayoutGroup>();
+        if (hlg != null) DestroyImmediate(hlg);
+
+        VerticalLayoutGroup vlg = tabletPanelRoot.GetComponent<VerticalLayoutGroup>();
+        if (vlg != null) DestroyImmediate(vlg);
+
+        // Find or locate TabletTopBar
+        Transform topBarTransform = tabletPanelRoot.transform.Find("TabletTopBar");
+        if (topBarTransform == null)
         {
-            GameObject headerObj = new GameObject("TabletTabBar");
-            headerObj.transform.SetParent(tabletPanelRoot.transform, false);
-            headerObj.transform.SetAsFirstSibling();
-            RectTransform hRect = headerObj.AddComponent<RectTransform>();
-            hRect.anchorMin = new Vector2(0, 1);
-            hRect.anchorMax = new Vector2(1, 1);
-            hRect.pivot = new Vector2(0.5f, 1);
-            hRect.anchoredPosition = new Vector2(0, 48);
-            hRect.sizeDelta = new Vector2(0, 42);
+            // check legacy TabBar or TabletTabBar
+            Transform oldBar = tabletPanelRoot.transform.Find("TabletTabBar");
+            if (oldBar == null) oldBar = tabletPanelRoot.transform.Find("TabBar");
+            if (oldBar != null)
+            {
+                oldBar.name = "TabletTopBar";
+                topBarTransform = oldBar;
+            }
+        }
 
-            HorizontalLayoutGroup hLayout = headerObj.AddComponent<HorizontalLayoutGroup>();
-            hLayout.spacing = 10;
-            hLayout.childControlWidth = true;
-            hLayout.childControlHeight = true;
+        // Find or locate TabletContentArea
+        Transform contentAreaTransform = tabletPanelRoot.transform.Find("TabletContentArea");
 
-            // Tab 1: Cargo
-            GameObject btn1 = new GameObject("Tab_Cargo");
-            btn1.transform.SetParent(headerObj.transform, false);
-            btn1.AddComponent<Image>().color = new Color(0.2f, 0.6f, 0.9f);
-            tabCargoButton = btn1.AddComponent<Button>();
-            GameObject t1 = new GameObject("Text");
-            t1.transform.SetParent(btn1.transform, false);
-            RectTransform tr1 = t1.AddComponent<RectTransform>();
-            tr1.anchorMin = Vector2.zero; tr1.anchorMax = Vector2.one; tr1.sizeDelta = Vector2.zero;
-            TextMeshProUGUI tmp1 = t1.AddComponent<TextMeshProUGUI>();
-            tmp1.text = "📦 KARGO LİSTESİ";
-            tmp1.fontSize = 18;
-            tmp1.fontStyle = FontStyles.Bold;
-            tmp1.alignment = TextAlignmentOptions.Center;
-            tmp1.color = Color.white;
-            tmp1.raycastTarget = false;
+        // Hook up tab buttons if present in TopBar
+        if (topBarTransform != null)
+        {
+            if (tabCargoButton == null)
+            {
+                Transform b = topBarTransform.Find("TabBar/Tab_Cargo");
+                if (b == null) b = topBarTransform.Find("Tab_Cargo");
+                if (b != null) tabCargoButton = b.GetComponent<Button>();
+            }
 
-            // Tab 2: Vehicle Dealership & Garage
-            GameObject btn2 = new GameObject("Tab_Vehicles");
-            btn2.transform.SetParent(headerObj.transform, false);
-            btn2.AddComponent<Image>().color = new Color(0.12f, 0.15f, 0.2f);
-            tabVehicleButton = btn2.AddComponent<Button>();
-            GameObject t2 = new GameObject("Text");
-            t2.transform.SetParent(btn2.transform, false);
-            RectTransform tr2 = t2.AddComponent<RectTransform>();
-            tr2.anchorMin = Vector2.zero; tr2.anchorMax = Vector2.one; tr2.sizeDelta = Vector2.zero;
-            TextMeshProUGUI tmp2 = t2.AddComponent<TextMeshProUGUI>();
-            tmp2.text = "🚚 ARAÇ GALERİSİ & GARAJ";
-            tmp2.fontSize = 18;
-            tmp2.fontStyle = FontStyles.Bold;
-            tmp2.alignment = TextAlignmentOptions.Center;
-            tmp2.color = Color.white;
-            tmp2.raycastTarget = false;
+            if (tabVehicleButton == null)
+            {
+                Transform b = topBarTransform.Find("TabBar/Tab_Vehicles");
+                if (b == null) b = topBarTransform.Find("Tab_Vehicles");
+                if (b != null) tabVehicleButton = b.GetComponent<Button>();
+            }
 
+            if (tabBranchButton == null)
+            {
+                Transform b = topBarTransform.Find("TabBar/Tab_Branch");
+                if (b == null) b = topBarTransform.Find("Tab_Branch");
+                if (b != null) tabBranchButton = b.GetComponent<Button>();
+            }
+
+            if (closeTabletButton == null)
+            {
+                Transform b = topBarTransform.Find("CloseButton");
+                if (b != null) closeTabletButton = b.GetComponent<Button>();
+            }
+        }
+
+        // Bind button listeners safely
+        if (tabCargoButton != null)
+        {
+            tabCargoButton.onClick.RemoveAllListeners();
             tabCargoButton.onClick.AddListener(() => SwitchTab(TabletTab.CargoInventory));
+        }
+
+        if (tabVehicleButton != null)
+        {
+            tabVehicleButton.onClick.RemoveAllListeners();
             tabVehicleButton.onClick.AddListener(() => SwitchTab(TabletTab.VehicleDealership));
         }
 
-        // 2. Identify Cargo View
-        if (cargoViewRoot == null)
+        if (tabBranchButton != null)
         {
-            Transform leftCol = tabletPanelRoot.transform.Find("LeftColumn_List");
-            Transform rightCol = tabletPanelRoot.transform.Find("RightColumn_Detail");
-            if (leftCol != null && rightCol != null)
-            {
-                // Both columns form the cargo inventory view
-                cargoViewRoot = leftCol.gameObject;
-            }
+            tabBranchButton.onClick.RemoveAllListeners();
+            tabBranchButton.onClick.AddListener(() => SwitchTab(TabletTab.BranchOffice));
         }
 
-        // 3. Build Vehicle Dealership View if missing
+        if (closeTabletButton != null)
+        {
+            closeTabletButton.onClick.RemoveAllListeners();
+            closeTabletButton.onClick.AddListener(CloseTablet);
+        }
+
+        // Locate views
+        if (cargoViewRoot == null)
+        {
+            Transform v = tabletPanelRoot.transform.Find("TabletContentArea/CargoViewRoot");
+            if (v == null) v = tabletPanelRoot.transform.Find("CargoViewRoot");
+            if (v != null) cargoViewRoot = v.gameObject;
+        }
+
         if (vehicleViewRoot == null)
         {
-            Transform existingVeh = tabletPanelRoot.transform.Find("VehicleDealershipView");
-            if (existingVeh != null)
-            {
-                vehicleViewRoot = existingVeh.gameObject;
-            }
-            else
-            {
-                vehicleViewRoot = new GameObject("VehicleDealershipView");
-                vehicleViewRoot.transform.SetParent(tabletPanelRoot.transform, false);
+            Transform v = tabletPanelRoot.transform.Find("TabletContentArea/VehicleViewRoot");
+            if (v == null) v = tabletPanelRoot.transform.Find("VehicleDealershipView");
+            if (v == null) v = tabletPanelRoot.transform.Find("VehicleViewRoot");
+            if (v != null) vehicleViewRoot = v.gameObject;
+        }
 
-                RectTransform vRect = vehicleViewRoot.AddComponent<RectTransform>();
-                vRect.anchorMin = Vector2.zero;
-                vRect.anchorMax = Vector2.one;
-                vRect.sizeDelta = Vector2.zero;
+        if (branchViewRoot == null)
+        {
+            Transform v = tabletPanelRoot.transform.Find("TabletContentArea/BranchViewRoot");
+            if (v == null) v = tabletPanelRoot.transform.Find("BranchViewRoot");
+            if (v != null) branchViewRoot = v.gameObject;
+        }
 
-                HorizontalLayoutGroup vLayout = vehicleViewRoot.AddComponent<HorizontalLayoutGroup>();
-                vLayout.padding = new RectOffset(20, 20, 20, 20);
-                vLayout.spacing = 20;
-                vLayout.childControlWidth = true;
-                vLayout.childControlHeight = true;
+        // Bind branch upgrade button listener if not already bound
+        if (branchUpgradeButton != null)
+        {
+            branchUpgradeButton.onClick.RemoveAllListeners();
+            branchUpgradeButton.onClick.AddListener(OnUpgradeBranchClicked);
+        }
 
-                // Left Column: Vehicle List
-                GameObject leftVehCol = new GameObject("LeftColumn_Vehicles");
-                leftVehCol.transform.SetParent(vehicleViewRoot.transform, false);
-                LayoutElement leftElem = leftVehCol.AddComponent<LayoutElement>();
-                leftElem.preferredWidth = 420;
-                leftElem.flexibleWidth = 0;
-
-                VerticalLayoutGroup leftL = leftVehCol.AddComponent<VerticalLayoutGroup>();
-                leftL.spacing = 10;
-                leftL.childControlWidth = true;
-                leftL.childControlHeight = false;
-
-                GameObject titleObj = new GameObject("Title");
-                titleObj.transform.SetParent(leftVehCol.transform, false);
-                titleObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 40);
-                TextMeshProUGUI titleText = titleObj.AddComponent<TextMeshProUGUI>();
-                titleText.text = "ARAÇ KATALOĞU";
-                titleText.fontSize = 24;
-                titleText.fontStyle = FontStyles.Bold;
-                titleText.alignment = TextAlignmentOptions.Center;
-                titleText.color = new Color(1f, 0.8f, 0.2f);
-
-                // Scroll View
-                GameObject scrollObj = new GameObject("VehicleScrollView");
-                scrollObj.transform.SetParent(leftVehCol.transform, false);
-                scrollObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 580);
-                scrollObj.AddComponent<Image>().color = new Color(0.04f, 0.06f, 0.08f, 0.85f);
-                ScrollRect sRect = scrollObj.AddComponent<ScrollRect>();
-                sRect.horizontal = false;
-                sRect.vertical = true;
-                sRect.scrollSensitivity = 35f;
-
-                GameObject viewportObj = new GameObject("Viewport");
-                viewportObj.transform.SetParent(scrollObj.transform, false);
-                RectTransform viewRect = viewportObj.AddComponent<RectTransform>();
-                viewRect.anchorMin = Vector2.zero; viewRect.anchorMax = Vector2.one; viewRect.sizeDelta = Vector2.zero;
-                viewportObj.AddComponent<Image>().color = Color.white;
-                Mask mask = viewportObj.AddComponent<Mask>();
-                mask.showMaskGraphic = false;
-
-                GameObject contentObj = new GameObject("Content");
-                contentObj.transform.SetParent(viewportObj.transform, false);
-                RectTransform contentRect = contentObj.AddComponent<RectTransform>();
-                contentRect.anchorMin = new Vector2(0, 1);
-                contentRect.anchorMax = new Vector2(1, 1);
-                contentRect.pivot = new Vector2(0.5f, 1);
-                contentRect.sizeDelta = Vector2.zero;
-
-                VerticalLayoutGroup cLayout = contentObj.AddComponent<VerticalLayoutGroup>();
-                cLayout.padding = new RectOffset(8, 8, 8, 8);
-                cLayout.spacing = 8;
-                cLayout.childControlWidth = true;
-                cLayout.childControlHeight = false;
-
-                ContentSizeFitter fitter = contentObj.AddComponent<ContentSizeFitter>();
-                fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-                sRect.viewport = viewRect;
-                sRect.content = contentRect;
-                vehicleListContent = contentRect;
-
-                // Vehicle Card Template
-                GameObject cardTemplate = new GameObject("VehicleCardTemplate");
-                cardTemplate.transform.SetParent(contentObj.transform, false);
-                cardTemplate.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 85);
-                cardTemplate.AddComponent<Image>().color = new Color(0.16f, 0.2f, 0.26f, 1f);
-                cardTemplate.AddComponent<Button>();
-
-                GameObject cardTextObj = new GameObject("Text");
-                cardTextObj.transform.SetParent(cardTemplate.transform, false);
-                RectTransform ctRect = cardTextObj.AddComponent<RectTransform>();
-                ctRect.anchorMin = Vector2.zero; ctRect.anchorMax = Vector2.one; ctRect.sizeDelta = Vector2.zero;
-                TextMeshProUGUI cText = cardTextObj.AddComponent<TextMeshProUGUI>();
-                cText.text = "<b>Heavy Cargo Van</b>\n$2,500 TL (Lvl 2)";
-                cText.fontSize = 18;
-                cText.alignment = TextAlignmentOptions.MidlineLeft;
-                cText.color = Color.white;
-                cText.margin = new Vector4(12, 0, 12, 0);
-                cText.raycastTarget = false;
-
-                vehicleCardTemplate = cardTemplate;
-                cardTemplate.SetActive(false);
-
-                // Right Column: Details & Actions
-                GameObject rightVehCol = new GameObject("RightColumn_VehicleDetail");
-                rightVehCol.transform.SetParent(vehicleViewRoot.transform, false);
-                LayoutElement rightElem = rightVehCol.AddComponent<LayoutElement>();
-                rightElem.flexibleWidth = 1;
-
-                rightVehCol.AddComponent<Image>().color = new Color(0.12f, 0.15f, 0.2f, 0.95f);
-                VerticalLayoutGroup rLayout = rightVehCol.AddComponent<VerticalLayoutGroup>();
-                rLayout.padding = new RectOffset(24, 24, 24, 24);
-                rLayout.spacing = 16;
-                rLayout.childControlWidth = true;
-                rLayout.childControlHeight = false;
-
-                vehicleDetailRoot = rightVehCol;
-
-                // Name
-                GameObject nObj = new GameObject("VehicleName");
-                nObj.transform.SetParent(rightVehCol.transform, false);
-                nObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 35);
-                vehicleNameText = nObj.AddComponent<TextMeshProUGUI>();
-                vehicleNameText.text = "Heavy Cargo Van";
-                vehicleNameText.fontSize = 26;
-                vehicleNameText.fontStyle = FontStyles.Bold;
-                vehicleNameText.color = new Color(1f, 0.85f, 0.2f);
-
-                // Stats
-                GameObject capObj = new GameObject("CapacityText");
-                capObj.transform.SetParent(rightVehCol.transform, false);
-                capObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 26);
-                vehicleCapacityText = capObj.AddComponent<TextMeshProUGUI>();
-                vehicleCapacityText.fontSize = 20;
-
-                GameObject reqObj = new GameObject("LevelReqText");
-                reqObj.transform.SetParent(rightVehCol.transform, false);
-                reqObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 26);
-                vehicleLevelReqText = reqObj.AddComponent<TextMeshProUGUI>();
-                vehicleLevelReqText.fontSize = 20;
-
-                GameObject prObj = new GameObject("PriceText");
-                prObj.transform.SetParent(rightVehCol.transform, false);
-                prObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 26);
-                vehiclePriceText = prObj.AddComponent<TextMeshProUGUI>();
-                vehiclePriceText.fontSize = 20;
-
-                // Description Box
-                GameObject dBox = new GameObject("DescBox");
-                dBox.transform.SetParent(rightVehCol.transform, false);
-                dBox.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 150);
-                dBox.AddComponent<Image>().color = new Color(0.05f, 0.07f, 0.1f, 0.98f);
-                VerticalLayoutGroup dbLayout = dBox.AddComponent<VerticalLayoutGroup>();
-                dbLayout.padding = new RectOffset(14, 14, 14, 14);
-
-                GameObject dtObj = new GameObject("DescText");
-                dtObj.transform.SetParent(dBox.transform, false);
-                vehicleDescText = dtObj.AddComponent<TextMeshProUGUI>();
-                vehicleDescText.fontSize = 19;
-                vehicleDescText.color = new Color(0.9f, 0.9f, 0.95f);
-
-                // Status Banner
-                GameObject stObj = new GameObject("StatusText");
-                stObj.transform.SetParent(rightVehCol.transform, false);
-                stObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 30);
-                vehicleStatusText = stObj.AddComponent<TextMeshProUGUI>();
-                vehicleStatusText.fontSize = 20;
-                vehicleStatusText.fontStyle = FontStyles.Bold;
-
-                // Buy Button
-                GameObject bBtnObj = new GameObject("BuyButton");
-                bBtnObj.transform.SetParent(rightVehCol.transform, false);
-                bBtnObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 60);
-                bBtnObj.AddComponent<Image>().color = new Color(0.1f, 0.7f, 0.35f);
-                vehicleBuyButton = bBtnObj.AddComponent<Button>();
-
-                GameObject bbtObj = new GameObject("Text");
-                bbtObj.transform.SetParent(bBtnObj.transform, false);
-                RectTransform bbtRect = bbtObj.AddComponent<RectTransform>();
-                bbtRect.anchorMin = Vector2.zero; bbtRect.anchorMax = Vector2.one; bbtRect.sizeDelta = Vector2.zero;
-                vehicleBuyButtonText = bbtObj.AddComponent<TextMeshProUGUI>();
-                vehicleBuyButtonText.text = "🛒 ARACI SATIN AL ($2,500 TL)";
-                vehicleBuyButtonText.fontSize = 22;
-                vehicleBuyButtonText.fontStyle = FontStyles.Bold;
-                vehicleBuyButtonText.alignment = TextAlignmentOptions.Center;
-                vehicleBuyButtonText.color = Color.white;
-                vehicleBuyButtonText.raycastTarget = false;
-
-                // Recall Button
-                GameObject rBtnObj = new GameObject("RecallButton");
-                rBtnObj.transform.SetParent(rightVehCol.transform, false);
-                rBtnObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 55);
-                rBtnObj.AddComponent<Image>().color = new Color(0.15f, 0.5f, 0.85f);
-                vehicleRecallButton = rBtnObj.AddComponent<Button>();
-
-                GameObject rbtObj = new GameObject("Text");
-                rbtObj.transform.SetParent(rBtnObj.transform, false);
-                RectTransform rbtRect = rbtObj.AddComponent<RectTransform>();
-                rbtRect.anchorMin = Vector2.zero; rbtRect.anchorMax = Vector2.one; rbtRect.sizeDelta = Vector2.zero;
-                vehicleRecallButtonText = rbtObj.AddComponent<TextMeshProUGUI>();
-                vehicleRecallButtonText.text = "📍 ŞUBEYE ÇAĞIR / GARAJA ÇEK (SPAWN)";
-                vehicleRecallButtonText.fontSize = 20;
-                vehicleRecallButtonText.fontStyle = FontStyles.Bold;
-                vehicleRecallButtonText.alignment = TextAlignmentOptions.Center;
-                vehicleRecallButtonText.color = Color.white;
-                vehicleRecallButtonText.raycastTarget = false;
-
-                vehicleViewRoot.SetActive(false);
-            }
+        // Bind cargo drop button listener
+        if (dropCargoButton != null)
+        {
+            dropCargoButton.onClick.RemoveAllListeners();
+            dropCargoButton.onClick.AddListener(OnDropCargoClicked);
         }
     }
 
     /// <summary>
-    /// EventSystem ve GraphicRaycaster bileşenlerinin fare tıklamalarını yakalayabilmesini garantiye alır.
+    /// EventSystem and GraphicRaycaster verification
     /// </summary>
     public void EnsureEventSystemAndRaycaster()
     {

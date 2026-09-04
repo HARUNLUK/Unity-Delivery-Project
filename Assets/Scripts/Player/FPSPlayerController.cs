@@ -179,13 +179,17 @@ public class FPSPlayerController : MonoBehaviour
             return;
         }
 
-        // F9 Dev Reset for Vehicle Purchases
+        // F9 Dev Reset for Vehicle Purchases & Branch Progression
         if (CheckF9DevInput())
         {
             DrivableVehicle.ResetAllVehiclesInGame();
+            if (BranchManager.Instance != null)
+            {
+                BranchManager.Instance.ResetBranchProgression();
+            }
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF5555>★ TÜM ARAÇ SATIN ALIMLARI SIFIRLANDI (F9) ★</color>");
+                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF5555>★ TÜM ARAÇ & ŞUBE GELİŞİMLERİ SIFIRLANDI (F9) ★</color>");
             }
             if (CargoTabletUI.Instance != null && CargoTabletUI.Instance.IsTabletOpen)
             {
@@ -461,6 +465,45 @@ public class FPSPlayerController : MonoBehaviour
         if (!hasHit)
         {
             hasHit = Physics.SphereCast(ray, 0.25f, out hit, interactionDistance, interactionLayers, QueryTriggerInteraction.Ignore);
+        }
+
+        // 0. Check Branch Upgrade Terminal (Direct Hit or Proximity)
+        BranchUpgradeTerminal terminal = null;
+        if (hasHit)
+        {
+            terminal = hit.collider.GetComponentInParent<BranchUpgradeTerminal>();
+            if (terminal == null) terminal = hit.collider.GetComponent<BranchUpgradeTerminal>();
+            if (terminal == null) terminal = hit.collider.GetComponentInChildren<BranchUpgradeTerminal>();
+        }
+
+        if (terminal == null)
+        {
+            Collider[] closeTerminals = Physics.OverlapSphere(playerCamera.transform.position + (playerCamera.transform.forward * 1.0f), 1.2f, interactionLayers, QueryTriggerInteraction.Collide);
+            foreach (var ct in closeTerminals)
+            {
+                if (ct.transform.IsChildOf(transform)) continue;
+                BranchUpgradeTerminal t = ct.GetComponentInParent<BranchUpgradeTerminal>();
+                if (t == null) t = ct.GetComponent<BranchUpgradeTerminal>();
+                if (t != null)
+                {
+                    terminal = t;
+                    break;
+                }
+            }
+        }
+
+        if (terminal != null)
+        {
+            if (InteractionPromptHUD.Instance != null)
+            {
+                InteractionPromptHUD.Instance.ShowPrompt(terminal.GetPromptText());
+            }
+
+            if (interactPressed)
+            {
+                terminal.InteractTerminal();
+            }
+            return;
         }
 
         // 1. Physical Cargo Package or Rigidbody Object Detection

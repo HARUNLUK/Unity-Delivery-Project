@@ -23,16 +23,28 @@ public class CargoWarehouseGenerator : MonoBehaviour
 
     private void Start()
     {
-        // Auto-generate packages on day start if enabled and none currently spawned
-        if (autoSpawnOnStart && currentPackages.Count == 0)
+        if (!autoSpawnOnStart) return;
+
+        // Prevent duplicate/double spawning: check if packages are already in the scene!
+        PhysicalCargoPackage[] existing = Object.FindObjectsByType<PhysicalCargoPackage>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        if (existing != null && existing.Length > 0)
         {
-            SpawnCargoBatch();
+            return;
         }
+
+        SpawnCargoBatch();
     }
 
     [ContextMenu("Generate Cargo Batch")]
     public void SpawnCargoBatch()
     {
+        // Don't spawn if packages are already active in the scene
+        PhysicalCargoPackage[] existing = Object.FindObjectsByType<PhysicalCargoPackage>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        if (existing != null && existing.Length > 0)
+        {
+            return;
+        }
+
         ClearOldPackages();
 
         int playerLevel = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.PlayerLevel : 1;
@@ -66,18 +78,20 @@ public class CargoWarehouseGenerator : MonoBehaviour
             // Pick a destination point
             DeliveryPoint targetPoint = availablePoints[Random.Range(0, availablePoints.Count)];
 
-            // Random position inside the spawn area
+            // Random position inside the local spawn area
             float rx = Random.Range(-spawnAreaSize.x * 0.42f, spawnAreaSize.x * 0.42f);
             float rz = Random.Range(-spawnAreaSize.z * 0.42f, spawnAreaSize.z * 0.42f);
-            Vector3 spawnPos = transform.position + new Vector3(rx, spawnAreaSize.y + 0.3f + (i * 0.05f), rz);
-            Quaternion spawnRot = Quaternion.Euler(0f, Random.Range(-35f, 35f), 0f);
+            float ry = (spawnAreaSize.y * 0.5f) + 0.25f + (i * 0.02f);
+            Vector3 localOffset = new Vector3(rx, ry, rz);
+            Vector3 spawnPos = transform.TransformPoint(localOffset);
+            Quaternion spawnRot = transform.rotation * Quaternion.Euler(0f, Random.Range(-25f, 25f), 0f);
 
-            // Create standard physical cargo cube
+            // Create standard physical cargo cube directly in the scene (no extra containers)
             GameObject boxObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
             boxObj.name = $"Cargo_Package_#{targetPoint.pointId}_{i + 1}";
             boxObj.transform.position = spawnPos;
             boxObj.transform.rotation = spawnRot;
-            boxObj.transform.SetParent(transform);
+            boxObj.transform.SetParent(null); // Standalone in scene root
 
             PhysicalCargoPackage pkg = boxObj.AddComponent<PhysicalCargoPackage>();
             int reward = Random.Range(minReward / 10, (maxReward / 10) + 1) * 10;
@@ -100,7 +114,7 @@ public class CargoWarehouseGenerator : MonoBehaviour
             currentPackages.Add(pkg);
         }
 
-        Debug.Log($"<color=#32FF64>[CargoWarehouseGenerator] Spawned {currentPackages.Count} packages for Player Level {playerLevel}!</color>");
+        Debug.Log($"<color=#32FF64>[CargoWarehouseGenerator] Spawned {currentPackages.Count} packages at {transform.position} for Player Level {playerLevel}!</color>");
     }
 
     [ContextMenu("Clear Packages")]
@@ -123,9 +137,12 @@ public class CargoWarehouseGenerator : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        Matrix4x4 oldMatrix = Gizmos.matrix;
+        Gizmos.matrix = transform.localToWorldMatrix;
         Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.35f);
-        Gizmos.DrawCube(transform.position + new Vector3(0, spawnAreaSize.y * 0.5f, 0), spawnAreaSize);
+        Gizmos.DrawCube(new Vector3(0, spawnAreaSize.y * 0.5f, 0), spawnAreaSize);
         Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.9f);
-        Gizmos.DrawWireCube(transform.position + new Vector3(0, spawnAreaSize.y * 0.5f, 0), spawnAreaSize);
+        Gizmos.DrawWireCube(new Vector3(0, spawnAreaSize.y * 0.5f, 0), spawnAreaSize);
+        Gizmos.matrix = oldMatrix;
     }
 }
