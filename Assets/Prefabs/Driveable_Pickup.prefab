@@ -14,15 +14,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1076196169278958764, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 998.5983
+      value: -6.46
       objectReference: {fileID: 0}
     - target: {fileID: 1076196169278958764, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.017939901
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1076196169278958764, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1001.5185
+      value: -5.57
       objectReference: {fileID: 0}
     - target: {fileID: 1076196169278958764, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
       propertyPath: m_LocalRotation.w
@@ -51,6 +51,14 @@ PrefabInstance:
     - target: {fileID: 1076196169278958764, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
+      propertyPath: fuelBurnRate
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
+      propertyPath: purchasePrice
+      value: 100
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -443,15 +443,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1132022550193295568, guid: af1c3e5a3edbe1d4193759238a03cab0, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1005.87476
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1132022550193295568, guid: af1c3e5a3edbe1d4193759238a03cab0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.006761131
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1132022550193295568, guid: af1c3e5a3edbe1d4193759238a03cab0, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 997.0961
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1132022550193295568, guid: af1c3e5a3edbe1d4193759238a03cab0, type: 3}
       propertyPath: m_LocalRotation.w
@@ -483,7 +483,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1132022550193720560, guid: af1c3e5a3edbe1d4193759238a03cab0, type: 3}
       propertyPath: m_Name
-      value: Drivable_Driveable_Van
+      value: Driveable_Van
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -587,6 +587,9 @@ MonoBehaviour:
   steeringWheel: {fileID: 0}
   steeringWheelMultiplier: 4
   steeringWheelRotationAxis: {x: 0, y: 0, z: 1}
+  horizontalInput: 0
+  verticalInput: 0
+  isHandbraking: 0
 --- !u!114 &1177453382735003394
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -599,9 +602,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60d3569c58479c145a4d2eeacb7e659a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DrivableVehicle
+  vehicleId: pickup_truck
   vehicleName: Driveable_Van
+  description: "Ba\u015Flang\u0131\xE7 seviyesi \xE7evik ve pratik kargo arac\u0131."
+  purchasePrice: 2000
+  requiredPlayerLevel: 1
+  cargoCapacity: 8
+  isUnlockedByDefault: 0
+  maxFuel: 50
+  currentFuel: 50
+  fuelBurnRate: 0.06
+  idleFuelBurnRate: 0.008
   driverSeatPoint: {fileID: 4363969771654599954}
   exitPoint: {fileID: 1061039923200421296}
+  parkingSpotTransform: {fileID: 0}
+  garageSpawnTransform: {fileID: 0}
   enterDistance: 3
   carController: {fileID: 6586464378740253697}
   rearTailgate: {fileID: 456779280965847682}
