@@ -62,15 +62,27 @@ public class PhysicsGrabber : MonoBehaviour
         // Show side UI card with held cargo details
         PhysicalCargoPackage pkg = targetRb.GetComponent<PhysicalCargoPackage>();
         if (pkg == null) pkg = targetRb.GetComponentInParent<PhysicalCargoPackage>();
-        if (pkg != null && InteractionPromptHUD.Instance != null)
+        if (pkg != null)
         {
-            InteractionPromptHUD.Instance.ShowHeldCargoInfo(pkg);
+            pkg.hasBeenHandledByPlayer = true;
+            pkg.isBeingCarried = true;
+            if (InteractionPromptHUD.Instance != null)
+            {
+                InteractionPromptHUD.Instance.ShowHeldCargoInfo(pkg);
+            }
         }
     }
 
     public void ReleaseObject(Vector3 throwForce = default)
     {
         if (grabbedRb == null) return;
+
+        PhysicalCargoPackage pkg = grabbedRb.GetComponent<PhysicalCargoPackage>();
+        if (pkg == null) pkg = grabbedRb.GetComponentInParent<PhysicalCargoPackage>();
+        if (pkg != null)
+        {
+            pkg.isBeingCarried = false;
+        }
 
         // Restore collision with player body
         SetCollisionWithPlayer(true);

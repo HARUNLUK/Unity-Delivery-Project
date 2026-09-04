@@ -43,6 +43,22 @@ public class PhysicalCargoPackage : MonoBehaviour
     public float health = 100f;
     public float targetDeliveryHour = 13.0f; // 13:00'e kadar teslimat bonusu
     public bool isBroken => health <= 0f;
+    public bool hasBeenHandledByPlayer = false;
+    public bool isBeingCarried = false; // Elimizde taşırken duvara/kapıya sürtünme hasarlarını önler!
+    
+    [Tooltip("Hasar almaya başlaması için gereken minimum çarpma hızı (m/s). Yere nazikçe koyma < 2.5 m/s, 1.5m elden düşüş ~5.0 m/s, yüksekten düşüş > 7.0 m/s.")]
+    public float minDamageSpeedThreshold = 3.5f;
+
+    [Tooltip("Eşik hız aşıldığında çarpma şiddetine göre hasar çarpanı.")]
+    public float damageMultiplier = 16.0f;
+
+    [Tooltip("Kargolar birbirine çarptığında alınan hasar çarpanı (0.20 = %80 daha az hasar).")]
+    public float packageCollisionDamageRatio = 0.20f;
+
+    public float spawnImmunityDuration = 3.5f;
+    public float damageCooldown = 0.20f;
+    private float spawnImmunityUntil = 0f;
+    private float lastDamageTime = 0f;
 
     [Header("--- VISUAL COMPONENTS ---")]
     public MeshRenderer boxRenderer;
@@ -69,12 +85,13 @@ public class PhysicalCargoPackage : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         col = GetComponent<BoxCollider>();
         if (boxRenderer == null) boxRenderer = GetComponent<MeshRenderer>();
+        spawnImmunityUntil = Time.time + spawnImmunityDuration;
 
         if (rb != null)
         {
             rb.mass = 8f;
-            rb.linearDamping = 0.5f;
-            rb.angularDamping = 1.0f;
+            rb.linearDamping = 0.05f; // Gerçekçi yerçekimi ivmesi (0.5 hava sürtünmesi düşüşü yavaşlatıyordu)
+            rb.angularDamping = 0.5f;
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             rb.interpolation = RigidbodyInterpolation.Interpolate;
         }
@@ -90,6 +107,7 @@ public class PhysicalCargoPackage : MonoBehaviour
         cargoType = type;
         xpReward = xp;
         health = 100f;
+        spawnImmunityUntil = Time.time + spawnImmunityDuration;
 
         // Apply bonus multiplier for specialty cargo
         if (cargoType == CargoType.Fragile)
@@ -126,19 +144,48 @@ public class PhysicalCargoPackage : MonoBehaviour
     private void OnCollisionEnter(Collision collision)
     {
         if (cargoType != CargoType.Fragile || isBroken) return;
+        if (isBeingCarried) return; // Elimizde taşırken duvara veya kapılara sürtününce asla hasar almaz!
+        if (Time.time < spawnImmunityUntil) return; // Do not take damage during initial spawn settling (3.5s)
+        if (Time.time - lastDamageTime < damageCooldown) return; // Cooldown to prevent multi-hit bounce/rolling frame spam
 
-        float relativeVelocity = collision.relativeVelocity.magnitude;
-
-        // If dropped from high, thrown too hard or car crashes hard (> 6.5 m/s)
-        if (relativeVelocity > 6.5f)
+        float impactSpeed = collision.relativeVelocity.magnitude;
+        if (rb != null && collision.impulse.magnitude > 0.01f)
         {
-            float damage = (relativeVelocity - 5.5f) * 35f;
+            float impulseSpeed = collision.impulse.magnitude / rb.mass;
+            if (impulseSpeed > impactSpeed) impactSpeed = impulseSpeed;
+        }
+
+        // Kargoların birbirine çarpmasını tespit et (karton-karton teması yumuşaktır)
+        bool hitOtherCargo = collision.gameObject.GetComponent<PhysicalCargoPackage>() != null || 
+                             collision.transform.GetComponentInParent<PhysicalCargoPackage>() != null;
+
+        float effectiveThreshold = hitOtherCargo ? (minDamageSpeedThreshold + 1.8f) : minDamageSpeedThreshold;
+
+        // Hasar eşiği kontrolü
+        if (impactSpeed > effectiveThreshold)
+        {
+            lastDamageTime = Time.time;
+            float excessSpeed = impactSpeed - effectiveThreshold;
+
+            // Kinetik Enerji & Yükseklik Hasar Formülü:
+            float damage = (excessSpeed * damageMultiplier) + (excessSpeed * excessSpeed * 3.5f);
+
+            // Paket-paket çarpışmalarında hasarı %80 oranında azalt
+            if (hitOtherCargo)
+            {
+                damage *= packageCollisionDamageRatio;
+            }
+
             health = Mathf.Max(0f, health - damage);
+            UpdateLabelText();
 
             if (isBroken)
             {
-                Debug.LogWarning($"<color=#FF4444>[PhysicalCargoPackage] FRAGILE CARGO BROKEN! Impact: {relativeVelocity:F1} m/s</color>");
-                UpdateLabelText();
+                Debug.LogWarning($"<color=#FF4444>[PhysicalCargoPackage] FRAGILE CARGO BROKEN! Hit: '{collision.gameObject.name}', Impact: {impactSpeed:F1} m/s (Damage: -{damage:F0} HP)</color>");
+            }
+            else
+            {
+                Debug.Log($"<color=#FFAA00>[PhysicalCargoPackage] Fragile Cargo Damaged! Hit: '{collision.gameObject.name}', Impact: {impactSpeed:F1} m/s, Damage: -{damage:F0} HP (Health: {health:F0}/100)</color>");
             }
         }
     }
@@ -236,7 +283,11 @@ public class PhysicalCargoPackage : MonoBehaviour
 
         string badge = "";
         if (isBroken) badge = "<color=#FF2222>[BROKEN / HASARLI]</color>\n";
-        else if (cargoType == CargoType.Fragile) badge = "<color=#FF5500>[FRAGILE]</color>\n";
+        else if (cargoType == CargoType.Fragile)
+        {
+            if (health < 100f) badge = $"<color=#FF5500>[FRAGILE %{Mathf.CeilToInt(health)}]</color>\n";
+            else badge = "<color=#FF5500>[FRAGILE]</color>\n";
+        }
         else if (cargoType == CargoType.Express) badge = "<color=#0088FF>[EXPRESS]</color>\n";
 
         labelText.text = $"{badge}{shortRecipient}\n<size=85%>{shortAddress}</size>";
