@@ -292,5 +292,85 @@ public static class VehicleSetupHelper
 
         Debug.Log($"[VehicleSetupHelper] Spawned FPS Player, transferred Main Camera, and saved '{playerPrefabPath}'!");
     }
+
+    [MenuItem("Tools/Delivery Game/Configure Selected Vehicle as Lockable Showroom Vehicle", false, 45)]
+    public static void ConfigureSelectedAsLockableShowroomVehicle()
+    {
+        GameObject target = Selection.activeGameObject;
+        if (target == null)
+        {
+            EditorUtility.DisplayDialog("Select Vehicle", "Lütfen sahnedeki bir araç GameObject'ini seçin!", "Tamam");
+            return;
+        }
+
+        DrivableVehicle drivable = target.GetComponent<DrivableVehicle>();
+        if (drivable == null)
+        {
+            SetupSelectedAsDrivable();
+            drivable = target.GetComponent<DrivableVehicle>();
+        }
+
+        drivable.vehicleName = target.name.Replace("(Clone)", "").Trim();
+        drivable.vehicleId = drivable.vehicleName.ToLower().Replace(" ", "_");
+        drivable.purchasePrice = 1000;
+        drivable.requiredPlayerLevel = 1;
+        drivable.cargoCapacity = 16;
+        drivable.isUnlockedByDefault = false;
+
+        // Ensure parking spot
+        if (drivable.parkingSpotTransform == null)
+        {
+            GameObject parkObj = new GameObject($"{drivable.vehicleName}_ParkingSpot");
+            parkObj.transform.position = target.transform.position;
+            parkObj.transform.rotation = target.transform.rotation;
+            drivable.parkingSpotTransform = parkObj.transform;
+            Undo.RegisterCreatedObjectUndo(parkObj, "Created Vehicle Parking Spot");
+        }
+
+        // Ensure Showroom Manager in scene
+        VehicleShowroomManager sm = UnityEngine.Object.FindAnyObjectByType<VehicleShowroomManager>();
+        if (sm == null)
+        {
+            GameObject smObj = new GameObject("Vehicle_Showroom_Manager");
+            sm = smObj.AddComponent<VehicleShowroomManager>();
+            Undo.RegisterCreatedObjectUndo(smObj, "Created Vehicle Showroom Manager");
+        }
+        sm.AutoDetectVehicles();
+
+        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        Debug.Log($"[VehicleSetupHelper] '{target.name}' başarıyla Kilitli/Showroom aracı olarak ayarlandı!");
+    }
+
+    [MenuItem("Tools/Delivery Game/Create Warehouse Garage Spawn Point", false, 46)]
+    public static void CreateWarehouseGarageSpawnPoint()
+    {
+        GameObject spawnObj = GameObject.Find("Warehouse_Garage_SpawnPoint");
+        if (spawnObj == null)
+        {
+            spawnObj = new GameObject("Warehouse_Garage_SpawnPoint");
+            CargoWarehouseGenerator gen = Object.FindAnyObjectByType<CargoWarehouseGenerator>();
+            if (gen != null)
+            {
+                spawnObj.transform.position = gen.transform.position + gen.transform.forward * 8f + Vector3.up * 0.2f;
+                spawnObj.transform.rotation = gen.transform.rotation;
+            }
+            else
+            {
+                spawnObj.transform.position = new Vector3(0, 0.5f, 0);
+            }
+            Undo.RegisterCreatedObjectUndo(spawnObj, "Created Warehouse Garage SpawnPoint");
+        }
+
+        VehicleShowroomManager sm = Object.FindAnyObjectByType<VehicleShowroomManager>();
+        if (sm != null)
+        {
+            sm.warehouseGarageSpawnPoint = spawnObj.transform;
+            sm.UpdateAllGarageSpawnPoints();
+        }
+
+        Selection.activeGameObject = spawnObj;
+        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        Debug.Log("[VehicleSetupHelper] Depo Garaj Spawn Noktası (Warehouse_Garage_SpawnPoint) oluşturuldu ve bağlandı!");
+    }
 }
 #endif

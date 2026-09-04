@@ -179,9 +179,43 @@ public class FPSPlayerController : MonoBehaviour
             return;
         }
 
+        // F9 Dev Reset for Vehicle Purchases
+        if (CheckF9DevInput())
+        {
+            DrivableVehicle.ResetAllVehiclesInGame();
+            if (InteractionPromptHUD.Instance != null)
+            {
+                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF5555>★ TÜM ARAÇ SATIN ALIMLARI SIFIRLANDI (F9) ★</color>");
+            }
+            if (CargoTabletUI.Instance != null && CargoTabletUI.Instance.IsTabletOpen)
+            {
+                CargoTabletUI.Instance.PopulateVehicleList();
+            }
+        }
+
         HandleMouseLook();
         HandleMovement();
         HandleInteraction();
+    }
+
+    private bool CheckF9DevInput()
+    {
+#if ENABLE_INPUT_SYSTEM
+        if (Keyboard.current != null && Keyboard.current.f9Key.wasPressedThisFrame)
+        {
+            return true;
+        }
+#endif
+        try
+        {
+            if (Input.GetKeyDown(KeyCode.F9))
+            {
+                return true;
+            }
+        }
+        catch { }
+
+        return false;
     }
 
     private void LateUpdate()
@@ -507,10 +541,48 @@ public class FPSPlayerController : MonoBehaviour
                 return;
             }
 
-            // 3. Hit Vehicle - Prompt Drive everywhere except rear tailgate area
+            // 3. Hit Vehicle - Check lock & ownership or drive
             DrivableVehicle vehicle = hit.collider.GetComponentInParent<DrivableVehicle>();
             if (vehicle != null && !vehicle.isPlayerInside)
             {
+                if (!vehicle.IsUnlocked)
+                {
+                    int playerLevel = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.PlayerLevel : 1;
+                    int currentBalance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
+
+                    if (playerLevel < vehicle.requiredPlayerLevel)
+                    {
+                        if (InteractionPromptHUD.Instance != null)
+                        {
+                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF5555>🔒 [KİLİTLİ] {vehicle.vehicleName}</color> (Seviye {vehicle.requiredPlayerLevel} Gerekli - ${vehicle.purchasePrice} TL)");
+                        }
+                    }
+                    else if (currentBalance < vehicle.purchasePrice)
+                    {
+                        if (InteractionPromptHUD.Instance != null)
+                        {
+                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#FFAA33>🔒 [KİLİTLİ] {vehicle.vehicleName}</color> (${vehicle.purchasePrice} TL - Bakiye: ${currentBalance} TL)");
+                        }
+                    }
+                    else
+                    {
+                        if (InteractionPromptHUD.Instance != null)
+                        {
+                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Satın Al: {vehicle.vehicleName}</color> (${vehicle.purchasePrice} TL)");
+                        }
+
+                        if (interactPressed)
+                        {
+                            bool bought = vehicle.TryPurchase();
+                            if (bought && InteractionPromptHUD.Instance != null)
+                            {
+                                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>★ {vehicle.vehicleName} Satın Alındı! ★</color>");
+                            }
+                        }
+                    }
+                    return;
+                }
+
                 float distToTailgate = float.MaxValue;
                 if (vehicle.rearTailgate != null)
                 {

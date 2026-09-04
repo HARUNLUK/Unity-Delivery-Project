@@ -37,7 +37,7 @@ public class CargoItem
 
     public CargoItem()
     {
-        this.trackingNumber = $"#PKG-{UnityEngine.Random.Range(1000, 9999)}";
+        this.trackingNumber = "#PKG-1001";
         this.recipientName = "Customer";
         this.targetAddress = "Main Street";
         this.targetAddressDescription = "";
