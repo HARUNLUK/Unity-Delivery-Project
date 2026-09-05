@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 28cf27bd5046ccf47b3ed961e8e6e819
+guid: c64d59d8c0a593b488900eb2eec7504d
 ShaderImporter:
   externalObjects: {}
   defaultTextures: []
@@ -7,10 +7,3 @@ ShaderImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 987
-  packageName: EasyRoads3D Free v3
-  packageVersion: v3.2.4f3
-  assetPath: Assets/EasyRoads3D/shaders/ER Surface.shader
-  uploadId: 701396

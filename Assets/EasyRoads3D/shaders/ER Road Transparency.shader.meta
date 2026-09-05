@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 0a71a8de312724b469e9caf9464e8351
+guid: c2564ca67ea6de041b6bbe8c96078e43
 ShaderImporter:
   externalObjects: {}
   defaultTextures: []
@@ -7,10 +7,3 @@ ShaderImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 987
-  packageName: EasyRoads3D Free v3
-  packageVersion: v3.2.4f3
-  assetPath: Assets/EasyRoads3D/shaders/ER Road Transparency.shader
-  uploadId: 701396
