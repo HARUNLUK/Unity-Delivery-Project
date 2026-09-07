@@ -34,6 +34,7 @@ public class PhysicalCargoPackage : MonoBehaviour
     public string recipientName = "John Doe";
     public string targetAddressName = "104 Maple Street";
     public string targetAddress => targetAddressName;
+    public string targetAddressDescription = "";
     public int deliveryReward = 100;
     public int wrongPenalty = 30;
     public int wrongDeliveryPenalty => wrongPenalty;
@@ -97,11 +98,12 @@ public class PhysicalCargoPackage : MonoBehaviour
         }
     }
 
-    public void SetupPackage(string pointId, string address, string recipient, int reward, int penalty, CargoType type = CargoType.Standard, int xp = 80)
+    public void SetupPackage(string pointId, string address, string recipient, int reward, int penalty, CargoType type = CargoType.Standard, int xp = 80, string addressDescription = "")
     {
         targetPointId = pointId;
         targetAddressName = address;
         recipientName = string.IsNullOrEmpty(recipient) ? "Resident" : recipient;
+        targetAddressDescription = addressDescription;
         deliveryReward = reward;
         wrongPenalty = penalty;
         cargoType = type;
@@ -130,11 +132,16 @@ public class PhysicalCargoPackage : MonoBehaviour
                 recipientName = recipientName,
                 targetPointId = pointId,
                 targetAddressName = address,
+                targetAddressDescription = addressDescription,
                 cargoType = cargoType,
                 deliveryReward = deliveryReward,
                 wrongDeliveryPenalty = wrongPenalty,
                 isDelivered = false
             };
+        }
+        else
+        {
+            cargoData.targetAddressDescription = addressDescription;
         }
 
         ApplyRandomDimensionsAndColor();

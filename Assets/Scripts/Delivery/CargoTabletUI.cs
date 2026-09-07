@@ -99,7 +99,7 @@ public class CargoTabletUI : MonoBehaviour
         if (dropCargoButton != null)
         {
             dropCargoButton.onClick.RemoveAllListeners();
-            dropCargoButton.onClick.AddListener(OnDropCargoClicked);
+            dropCargoButton.gameObject.SetActive(false);
         }
 
         EnsureEventSystemAndRaycaster();
@@ -790,11 +790,11 @@ public class CargoTabletUI : MonoBehaviour
             branchUpgradeButton.onClick.AddListener(OnUpgradeBranchClicked);
         }
 
-        // Bind cargo drop button listener
+        // Disable legacy cargo drop button
         if (dropCargoButton != null)
         {
             dropCargoButton.onClick.RemoveAllListeners();
-            dropCargoButton.onClick.AddListener(OnDropCargoClicked);
+            dropCargoButton.gameObject.SetActive(false);
         }
     }
 

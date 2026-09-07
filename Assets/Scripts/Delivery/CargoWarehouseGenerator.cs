@@ -142,7 +142,7 @@ public class CargoWarehouseGenerator : MonoBehaviour
             pkg.damageMultiplier = fragileDamageMultiplier;
             pkg.packageCollisionDamageRatio = fragilePackageCollisionRatio;
             pkg.spawnImmunityDuration = fragileSpawnImmunityDuration;
-            pkg.SetupPackage(targetPoint.pointId, targetPoint.addressName, targetPoint.recipientName, reward, wrongPenalty, chosenType, xp);
+            pkg.SetupPackage(targetPoint.pointId, targetPoint.addressName, targetPoint.recipientName, reward, wrongPenalty, chosenType, xp, targetPoint.addressDescription);
             currentPackages.Add(pkg);
         }
 

@@ -477,17 +477,16 @@ public static class DeliveryUIBuilder
         descTextObj.transform.SetParent(descBoxObj.transform, false);
         TextMeshProUGUI descText = AddTextMeshPro(descTextObj, "<b>Adres İpucu ve Açıklama:</b>\n\n\"Kırmızı çatılı, beyaz çitli ev...\"", 20, FontStyles.Normal, TextAlignmentOptions.TopLeft, new Color(1f, 0.95f, 0.75f));
 
-        GameObject dropBtnObj = new GameObject("DropCargoButton");
-        dropBtnObj.transform.SetParent(rightCargoCol.transform, false);
-        dropBtnObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 65);
-        dropBtnObj.AddComponent<Image>().color = new Color(0.1f, 0.7f, 0.35f);
-        Button dropBtn = dropBtnObj.AddComponent<Button>();
+        GameObject infoBoxObj = new GameObject("PhysicalDeliveryTipBox");
+        infoBoxObj.transform.SetParent(rightCargoCol.transform, false);
+        infoBoxObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 56);
+        infoBoxObj.AddComponent<Image>().color = new Color(0.08f, 0.18f, 0.14f, 0.95f);
 
-        GameObject dropTextObj = new GameObject("Text");
-        dropTextObj.transform.SetParent(dropBtnObj.transform, false);
-        RectTransform dropTextRect = dropTextObj.AddComponent<RectTransform>();
-        dropTextRect.anchorMin = Vector2.zero; dropTextRect.anchorMax = Vector2.one; dropTextRect.sizeDelta = Vector2.zero;
-        AddTextMeshPro(dropTextObj, "📦 BU PAKETİ BIRAK / İNDİR", 21, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        GameObject infoTextObj = new GameObject("Text");
+        infoTextObj.transform.SetParent(infoBoxObj.transform, false);
+        RectTransform infoTextRect = infoTextObj.AddComponent<RectTransform>();
+        infoTextRect.anchorMin = Vector2.zero; infoTextRect.anchorMax = Vector2.one; infoTextRect.sizeDelta = new Vector2(-20, 0);
+        AddTextMeshPro(infoTextObj, "🚚 <b>Fiziksel Teslimat:</b> Paketi araçtan <b>[E]</b> ile alıp kapıdaki alana bırakınız.", 18, FontStyles.Bold, TextAlignmentOptions.Center, new Color(0.35f, 1f, 0.6f));
 
         // ==========================================
         // SUBVIEW 2: VEHICLE DEALERSHIP VIEW
@@ -777,7 +776,7 @@ public static class DeliveryUIBuilder
         tabletScript.recipientNameText = recipientText;
         tabletScript.targetAddressText = addressText;
         tabletScript.addressDescriptionText = descText;
-        tabletScript.dropCargoButton = dropBtn;
+        tabletScript.dropCargoButton = null;
         tabletScript.emptyListText = emptyTmp;
 
         tabletScript.vehicleViewRoot = vehicleView;

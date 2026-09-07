@@ -52,38 +52,11 @@ public class BranchUpgradeTerminal : MonoBehaviour
         if (screenText == null)
         {
             screenText = GetComponentInChildren<TextMeshPro>(true);
-            if (screenText == null)
-            {
-                GameObject textObj = new GameObject("ScreenText");
-                textObj.transform.SetParent(transform, false);
-                textObj.transform.localPosition = new Vector3(0f, 0.9f, 0f);
-                textObj.transform.localRotation = Quaternion.identity;
-                screenText = textObj.AddComponent<TextMeshPro>();
-            }
-        }
-
-        if (screenText != null)
-        {
-            screenText.fontSize = 3.5f;
-            screenText.alignment = TextAlignmentOptions.Center;
-            screenText.rectTransform.sizeDelta = new Vector2(4.5f, 2.5f);
-            screenText.color = Color.cyan;
         }
 
         if (terminalLight == null)
         {
             terminalLight = GetComponentInChildren<Light>(true);
-            if (terminalLight == null)
-            {
-                GameObject lObj = new GameObject("TerminalLight");
-                lObj.transform.SetParent(transform, false);
-                lObj.transform.localPosition = new Vector3(0f, 1.2f, 0f);
-                terminalLight = lObj.AddComponent<Light>();
-                terminalLight.type = LightType.Point;
-                terminalLight.range = 4f;
-                terminalLight.intensity = 1.5f;
-                terminalLight.color = Color.cyan;
-            }
         }
     }
 

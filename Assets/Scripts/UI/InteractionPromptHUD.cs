@@ -7,7 +7,36 @@ using UnityEditor;
 
 public class InteractionPromptHUD : MonoBehaviour
 {
-    public static InteractionPromptHUD Instance { get; private set; }
+    private static InteractionPromptHUD instance;
+    public static InteractionPromptHUD Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = UnityEngine.Object.FindAnyObjectByType<InteractionPromptHUD>(FindObjectsInactive.Include);
+                if (instance == null)
+                {
+                    Canvas canvas = UnityEngine.Object.FindAnyObjectByType<Canvas>();
+                    if (canvas == null)
+                    {
+                        GameObject canvasObj = new GameObject("HUD_Canvas");
+                        canvas = canvasObj.AddComponent<Canvas>();
+                        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                        CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>();
+                        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                        scaler.referenceResolution = new Vector2(1920, 1080);
+                        scaler.matchWidthOrHeight = 0.5f;
+                        canvasObj.AddComponent<GraphicRaycaster>();
+                    }
+                    instance = canvas.gameObject.AddComponent<InteractionPromptHUD>();
+                    instance.EnsureUI();
+                }
+            }
+            return instance;
+        }
+        private set => instance = value;
+    }
 
     [Header("--- UI REFERENCES ---")]
     public GameObject crosshairDot;
@@ -21,6 +50,7 @@ public class InteractionPromptHUD : MonoBehaviour
     public TextMeshProUGUI heldCargoTypeText;
     public TextMeshProUGUI heldCargoRecipientText;
     public TextMeshProUGUI heldCargoAddressText;
+    public TextMeshProUGUI heldCargoAddressDescText;
     public TextMeshProUGUI heldCargoRewardText;
     public TextMeshProUGUI heldCargoPenaltyText;
     public TextMeshProUGUI heldCargoActionHintText;
@@ -126,11 +156,18 @@ public class InteractionPromptHUD : MonoBehaviour
             }
         }
 
-        // 3. Held Cargo Side Details Panel
-        if (heldCargoPanel == null)
+        // 3. Held Cargo Side Details Panel (Always verify AddressDescription exists)
+        Transform existingSide = canvas.transform.Find("HeldCargoSideCard");
+        if (existingSide != null && (heldCargoAddressDescText == null || existingSide.Find("ClueBox") == null))
         {
-            Transform existingSide = canvas.transform.Find("HeldCargoSideCard");
-            if (existingSide != null)
+            DestroyImmediate(existingSide.gameObject);
+            heldCargoPanel = null;
+            heldCargoAddressDescText = null;
+        }
+
+        if (heldCargoPanel == null || heldCargoAddressDescText == null)
+        {
+            if (existingSide != null && heldCargoPanel == null)
             {
                 DestroyImmediate(existingSide.gameObject);
             }
@@ -143,15 +180,15 @@ public class InteractionPromptHUD : MonoBehaviour
             sideRect.anchorMax = new Vector2(1f, 0.5f);
             sideRect.pivot = new Vector2(1f, 0.5f);
             sideRect.anchoredPosition = new Vector2(-40, 0);
-            sideRect.sizeDelta = new Vector2(480, 330);
+            sideRect.sizeDelta = new Vector2(560, 530);
 
             Image sideBg = heldCargoPanel.AddComponent<Image>();
-            sideBg.color = new Color(0.06f, 0.08f, 0.13f, 0.95f);
+            sideBg.color = new Color(0.06f, 0.08f, 0.13f, 0.96f);
             sideBg.raycastTarget = false;
 
             VerticalLayoutGroup vLayout = heldCargoPanel.AddComponent<VerticalLayoutGroup>();
             vLayout.padding = new RectOffset(24, 24, 20, 20);
-            vLayout.spacing = 8;
+            vLayout.spacing = 9;
             vLayout.childControlHeight = true;
             vLayout.childControlWidth = true;
             vLayout.childForceExpandHeight = false;
@@ -160,17 +197,17 @@ public class InteractionPromptHUD : MonoBehaviour
             GameObject headObj = new GameObject("Header");
             headObj.transform.SetParent(heldCargoPanel.transform, false);
             heldCargoHeaderText = headObj.AddComponent<TextMeshProUGUI>();
-            heldCargoHeaderText.text = "CARGO DETAILS";
+            heldCargoHeaderText.text = "📦 ELDEKİ KARGO";
             heldCargoHeaderText.fontSize = 24;
             heldCargoHeaderText.fontStyle = FontStyles.Bold;
             heldCargoHeaderText.color = new Color(1f, 0.82f, 0.2f);
             heldCargoHeaderText.alignment = TextAlignmentOptions.Left;
 
-            // Tracking
+            // Tracking & Type Row
             GameObject trackObj = new GameObject("Tracking");
             trackObj.transform.SetParent(heldCargoPanel.transform, false);
             heldCargoTrackingText = trackObj.AddComponent<TextMeshProUGUI>();
-            heldCargoTrackingText.fontSize = 21;
+            heldCargoTrackingText.fontSize = 20;
             heldCargoTrackingText.fontStyle = FontStyles.Bold;
             heldCargoTrackingText.color = Color.white;
 
@@ -178,7 +215,7 @@ public class InteractionPromptHUD : MonoBehaviour
             GameObject typeObj = new GameObject("Type");
             typeObj.transform.SetParent(heldCargoPanel.transform, false);
             heldCargoTypeText = typeObj.AddComponent<TextMeshProUGUI>();
-            heldCargoTypeText.fontSize = 20;
+            heldCargoTypeText.fontSize = 19;
             heldCargoTypeText.fontStyle = FontStyles.Bold;
             heldCargoTypeText.color = new Color(1f, 0.6f, 0.2f);
 
@@ -194,15 +231,49 @@ public class InteractionPromptHUD : MonoBehaviour
             GameObject addrObj = new GameObject("Address");
             addrObj.transform.SetParent(heldCargoPanel.transform, false);
             heldCargoAddressText = addrObj.AddComponent<TextMeshProUGUI>();
-            heldCargoAddressText.fontSize = 20;
+            heldCargoAddressText.fontSize = 21;
             heldCargoAddressText.fontStyle = FontStyles.Bold;
-            heldCargoAddressText.color = new Color(0.35f, 0.85f, 1f);
+            heldCargoAddressText.color = new Color(0.35f, 0.88f, 1f);
+
+            // --- PROMINENT LARGE ADDRESS CLUE & DESCRIPTION BOX ---
+            GameObject clueBoxObj = new GameObject("ClueBox");
+            clueBoxObj.transform.SetParent(heldCargoPanel.transform, false);
+            RectTransform clueBoxRect = clueBoxObj.AddComponent<RectTransform>();
+            clueBoxRect.sizeDelta = new Vector2(0, 160);
+
+            Image clueBoxBg = clueBoxObj.AddComponent<Image>();
+            clueBoxBg.color = new Color(0.04f, 0.06f, 0.09f, 0.98f);
+            clueBoxBg.raycastTarget = false;
+
+            VerticalLayoutGroup cbLayout = clueBoxObj.AddComponent<VerticalLayoutGroup>();
+            cbLayout.padding = new RectOffset(16, 16, 14, 14);
+            cbLayout.spacing = 6;
+            cbLayout.childControlWidth = true;
+            cbLayout.childControlHeight = true;
+            cbLayout.childForceExpandHeight = false;
+
+            GameObject clueTitleObj = new GameObject("ClueTitle");
+            clueTitleObj.transform.SetParent(clueBoxObj.transform, false);
+            TextMeshProUGUI clueTitle = clueTitleObj.AddComponent<TextMeshProUGUI>();
+            clueTitle.text = "📝 <b>HEDEF BİNA & GÖRSEL TARİF:</b>";
+            clueTitle.fontSize = 19;
+            clueTitle.fontStyle = FontStyles.Bold;
+            clueTitle.color = new Color(1f, 0.85f, 0.25f);
+
+            GameObject descObj = new GameObject("AddressDescription");
+            descObj.transform.SetParent(clueBoxObj.transform, false);
+            heldCargoAddressDescText = descObj.AddComponent<TextMeshProUGUI>();
+            heldCargoAddressDescText.fontSize = 24; // Large & prominent!
+            heldCargoAddressDescText.fontStyle = FontStyles.Bold;
+            heldCargoAddressDescText.color = new Color(1f, 0.96f, 0.78f); // High-contrast warm cream
+            heldCargoAddressDescText.enableWordWrapping = true;
+            heldCargoAddressDescText.lineSpacing = 1.25f;
 
             // Reward Line
             GameObject rewardObj = new GameObject("Reward");
             rewardObj.transform.SetParent(heldCargoPanel.transform, false);
             heldCargoRewardText = rewardObj.AddComponent<TextMeshProUGUI>();
-            heldCargoRewardText.fontSize = 21;
+            heldCargoRewardText.fontSize = 20;
             heldCargoRewardText.fontStyle = FontStyles.Bold;
             heldCargoRewardText.color = new Color(0.3f, 1f, 0.4f);
 
@@ -210,7 +281,7 @@ public class InteractionPromptHUD : MonoBehaviour
             GameObject penObj = new GameObject("Penalty");
             penObj.transform.SetParent(heldCargoPanel.transform, false);
             heldCargoPenaltyText = penObj.AddComponent<TextMeshProUGUI>();
-            heldCargoPenaltyText.fontSize = 20;
+            heldCargoPenaltyText.fontSize = 19;
             heldCargoPenaltyText.fontStyle = FontStyles.Bold;
             heldCargoPenaltyText.color = new Color(1f, 0.4f, 0.4f);
 
@@ -218,8 +289,8 @@ public class InteractionPromptHUD : MonoBehaviour
             GameObject hintObj = new GameObject("ActionHint");
             hintObj.transform.SetParent(heldCargoPanel.transform, false);
             heldCargoActionHintText = hintObj.AddComponent<TextMeshProUGUI>();
-            heldCargoActionHintText.text = "[E] Bırak  |  Basılı Tut: Fırlat";
-            heldCargoActionHintText.fontSize = 19;
+            heldCargoActionHintText.text = "🎮 <b>[E]</b> Bırak  |  <b>Basılı Tut:</b> Fırlat";
+            heldCargoActionHintText.fontSize = 18;
             heldCargoActionHintText.color = new Color(0.85f, 0.85f, 0.85f);
         }
 
@@ -359,12 +430,26 @@ public class InteractionPromptHUD : MonoBehaviour
             return;
         }
 
-        if (heldCargoPanel == null) EnsureUI();
+        if (heldCargoPanel == null || heldCargoAddressDescText == null) EnsureUI();
         if (heldCargoPanel != null) heldCargoPanel.SetActive(true);
 
         if (heldCargoTrackingText != null) heldCargoTrackingText.text = $"📦 <b>Takip No:</b> #{pkg.targetPointId}";
         if (heldCargoRecipientText != null) heldCargoRecipientText.text = $"👤 <b>Alıcı:</b> {pkg.recipientName}";
         if (heldCargoAddressText != null) heldCargoAddressText.text = $"📍 <b>Adres:</b> {pkg.targetAddressName}";
+        
+        if (heldCargoAddressDescText != null)
+        {
+            string desc = !string.IsNullOrEmpty(pkg.targetAddressDescription) ? pkg.targetAddressDescription : (pkg.cargoData != null ? pkg.cargoData.targetAddressDescription : "");
+            if (!string.IsNullOrEmpty(desc))
+            {
+                heldCargoAddressDescText.text = $"\"{desc}\"";
+            }
+            else
+            {
+                heldCargoAddressDescText.text = "\"(Adres görsel ipucu bulunamadı)\"";
+            }
+        }
+
         if (heldCargoRewardText != null) heldCargoRewardText.text = $"💰 <b>Ödül:</b> +${pkg.deliveryReward} TL  <color=#32FFFF>(+{pkg.xpReward} XP)</color>";
         if (heldCargoPenaltyText != null) heldCargoPenaltyText.text = $"⚠️ <b>Ceza:</b> -${pkg.wrongPenalty} TL";
 
