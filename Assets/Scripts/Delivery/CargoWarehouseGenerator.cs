@@ -47,6 +47,16 @@ public class CargoWarehouseGenerator : MonoBehaviour
     [Tooltip("Paket ilk oluştuğunda kaç saniye boyunca hasar almaz.")]
     public float fragileSpawnImmunityDuration = 3.5f;
 
+    [Header("--- CARGO BOX MATERIALS (SKINS) ---")]
+    [Tooltip("Standart kargo paketleri için karton kaplama materyalleri (Inspector'dan materyal sürükleyebilirsiniz, birden fazla ise rastgele seçilir)")]
+    public List<Material> cardboardMaterials = new List<Material>();
+
+    [Tooltip("Kırılabilir (Fragile) kargolar için özel materyaller (Boş bırakılırsa standart materyaller kullanılır)")]
+    public List<Material> fragileMaterials = new List<Material>();
+
+    [Tooltip("Zamanlı / Ekspres (Express) kargolar için özel materyaller (Boş bırakılırsa standart materyaller kullanılır)")]
+    public List<Material> expressMaterials = new List<Material>();
+
     [Header("--- CURRENT ACTIVE PACKAGES ---")]
     public List<PhysicalCargoPackage> currentPackages = new List<PhysicalCargoPackage>();
 
@@ -142,11 +152,38 @@ public class CargoWarehouseGenerator : MonoBehaviour
             pkg.damageMultiplier = fragileDamageMultiplier;
             pkg.packageCollisionDamageRatio = fragilePackageCollisionRatio;
             pkg.spawnImmunityDuration = fragileSpawnImmunityDuration;
-            pkg.SetupPackage(targetPoint.pointId, targetPoint.addressName, targetPoint.recipientName, reward, wrongPenalty, chosenType, xp, targetPoint.addressDescription);
+            
+            Material chosenMaterial = GetMaterialForCargoType(chosenType);
+            pkg.SetupPackage(targetPoint.pointId, targetPoint.addressName, targetPoint.recipientName, reward, wrongPenalty, chosenType, xp, targetPoint.addressDescription, chosenMaterial);
             currentPackages.Add(pkg);
         }
 
         Debug.Log($"<color=#32FF64>[CargoWarehouseGenerator] Spawned {currentPackages.Count} packages safely at {transform.position} for Player Level {playerLevel}!</color>");
+    }
+
+    /// <summary>
+    /// Belirtilen kargo türüne uygun karton materyalini seçer. (Tanımlı değilse varsayılan renk paletine düşer)
+    /// </summary>
+    public Material GetMaterialForCargoType(CargoType type)
+    {
+        if (type == CargoType.Fragile && fragileMaterials != null && fragileMaterials.Count > 0)
+        {
+            var valid = fragileMaterials.FindAll(m => m != null);
+            if (valid.Count > 0) return valid[Random.Range(0, valid.Count)];
+        }
+        else if (type == CargoType.Express && expressMaterials != null && expressMaterials.Count > 0)
+        {
+            var valid = expressMaterials.FindAll(m => m != null);
+            if (valid.Count > 0) return valid[Random.Range(0, valid.Count)];
+        }
+
+        if (cardboardMaterials != null && cardboardMaterials.Count > 0)
+        {
+            var valid = cardboardMaterials.FindAll(m => m != null);
+            if (valid.Count > 0) return valid[Random.Range(0, valid.Count)];
+        }
+
+        return null;
     }
 
     /// <summary>

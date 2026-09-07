@@ -1971,6 +1971,30 @@ PrefabInstance:
       propertyPath: spawnAreaSize.z
       value: 1.62
       objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: expressMaterials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: fragileMaterials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: cardboardMaterials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: 'expressMaterials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: d09e1e001de19fc46bc36944861655cd, type: 2}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: 'fragileMaterials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: d09e1e001de19fc46bc36944861655cd, type: 2}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: 'cardboardMaterials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 7d6dfe16dde3c234581f224f5c2c0408, type: 2}
     - target: {fileID: 1540539102297366380, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.03

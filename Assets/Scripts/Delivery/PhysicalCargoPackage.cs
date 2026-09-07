@@ -98,7 +98,7 @@ public class PhysicalCargoPackage : MonoBehaviour
         }
     }
 
-    public void SetupPackage(string pointId, string address, string recipient, int reward, int penalty, CargoType type = CargoType.Standard, int xp = 80, string addressDescription = "")
+    public void SetupPackage(string pointId, string address, string recipient, int reward, int penalty, CargoType type = CargoType.Standard, int xp = 80, string addressDescription = "", Material customMaterial = null)
     {
         targetPointId = pointId;
         targetAddressName = address;
@@ -144,7 +144,7 @@ public class PhysicalCargoPackage : MonoBehaviour
             cargoData.targetAddressDescription = addressDescription;
         }
 
-        ApplyRandomDimensionsAndColor();
+        ApplyRandomDimensionsAndColor(customMaterial);
         BuildShippingLabel();
     }
 
@@ -197,7 +197,7 @@ public class PhysicalCargoPackage : MonoBehaviour
         }
     }
 
-    private void ApplyRandomDimensionsAndColor()
+    private void ApplyRandomDimensionsAndColor(Material customMaterial = null)
     {
         // 1. Varied Realistic Dimensions
         Vector3[] dimensionPresets = new Vector3[]
@@ -218,11 +218,18 @@ public class PhysicalCargoPackage : MonoBehaviour
         transform.localScale = chosenSize;
         if (col != null) col.size = Vector3.one;
 
-        // 2. Realistic Color Palette
+        // 2. Realistic Color or Custom Material
         if (boxRenderer != null)
         {
-            Color boxColor = CardboardPalette[Random.Range(0, CardboardPalette.Length)];
-            boxRenderer.material = CreateLitMaterial(boxColor, 0.15f);
+            if (customMaterial != null)
+            {
+                boxRenderer.material = customMaterial;
+            }
+            else
+            {
+                Color boxColor = CardboardPalette[Random.Range(0, CardboardPalette.Length)];
+                boxRenderer.material = CreateLitMaterial(boxColor, 0.15f);
+            }
         }
     }
 

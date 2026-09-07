@@ -67,7 +67,7 @@ Sokak ve kapı numarası gerektirmeyen, tamamen **görsel bina mimarisi, dükkan
 
 | ID | Müşteri (`Recipient`) | Adres (`Address Name`) | Görsel Tarif (`addressDescription`) | Seviye | Kargo Türü |
 |:--:|:---|:---|:---|:--:|:---:|
-| **MT-01** | **Lucas Baker** | `Maple Town - Kırmızı Çatılı Bahçeli Ev` | *Geniş yeşil çimenliği ve parlak kırmızı dik çatısı olan ev.* | Lvl 1 | Standart |
+| **MT-01** | **    ** | `Maple Town - Kırmızı Çatılı Bahçeli Ev` | *Geniş yeşil çimenliği ve parlak kırmızı dik çatısı olan ev.* | Lvl 1 | Standart |
 | **MT-02** | **Hannah Miller** | `Maple Town - Sarı Verandalı Ev` | *Önünde sallanan sandalye ve rüzgar çanı olan neşeli sarı ev.* | Lvl 1 | Standart |
 | **MT-03** | **Noah Campbell** | `Maple Town - İki Katlı Mavi Ev` | *Mavi boyalı, çatısında tavan penceresi olan aile evi.* | Lvl 1 | Standart |
 | **MT-04** | **Bella Martinez** | `Maple Town - Beyaz Çitli Pembe Ev` | *Etrafı beyaz tahta çitlerle çevrili, pembe panjurlu ev.* | Lvl 1 | Standart |
