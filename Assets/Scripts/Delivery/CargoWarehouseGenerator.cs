@@ -47,6 +47,26 @@ public class CargoWarehouseGenerator : MonoBehaviour
     [Tooltip("Paket ilk oluştuğunda kaç saniye boyunca hasar almaz.")]
     public float fragileSpawnImmunityDuration = 3.5f;
 
+    [Header("--- CUSTOM CARGO PACKAGE PREFABS (3D MODELLER / PREFABLAR) ---")]
+    [Tooltip("Standart kargo paketleri için özel 3D Prefab listesi. (Inspector'dan prefab sürükleyebilirsiniz. Boş bırakılırsa küp üretilir, birden fazla ise rastgele seçilir)")]
+    public List<GameObject> packagePrefabs = new List<GameObject>();
+
+    [Tooltip("Kırılabilir (Fragile) kargolar için özel 3D Prefab listesi. (Boş bırakılırsa standart prefablar veya küp kullanılır)")]
+    public List<GameObject> fragilePackagePrefabs = new List<GameObject>();
+
+    [Tooltip("Zamanlı / Ekspres (Express) kargolar için özel 3D Prefab listesi. (Boş bırakılırsa standart prefablar veya küp kullanılır)")]
+    public List<GameObject> expressPackagePrefabs = new List<GameObject>();
+
+    [Header("--- PREFAB SCALE MULTIPLIER (BOYUT ÇARPANI & RANDOM) ---")]
+    [Tooltip("Prefabların orijinal boyutunu küçültmek/büyütmek için minimum çarpan (Örn: 0.35 = %35 boyut)")]
+    public float minPrefabScale = 0.35f;
+
+    [Tooltip("Prefabların orijinal boyutunu küçültmek/büyütmek için maksimum çarpan (Örn: 0.55 = %55 boyut)")]
+    public float maxPrefabScale = 0.55f;
+
+    [Tooltip("X, Y ve Z eksenlerini bağımsız rastgele mi çarpsın (Açık ise her eksen min-max arası farklı oranla ölçeklenir, kapalı ise orantılı/düzgün küçültür)")]
+    public bool randomizeAxesIndependently = false;
+
     [Header("--- CARGO BOX MATERIALS (SKINS) ---")]
     [Tooltip("Standart kargo paketleri için karton kaplama materyalleri (Inspector'dan materyal sürükleyebilirsiniz, birden fazla ise rastgele seçilir)")]
     public List<Material> cardboardMaterials = new List<Material>();
@@ -134,19 +154,57 @@ public class CargoWarehouseGenerator : MonoBehaviour
             Vector3 spawnPos = GetSafeSpawnPosition(i);
             Quaternion spawnRot = transform.rotation * Quaternion.Euler(0f, Random.Range(-25f, 25f), 0f);
 
-            // Create standard physical cargo cube directly in the scene (no extra containers)
-            GameObject boxObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            boxObj.name = $"Cargo_Package_#{targetPoint.pointId}_{i + 1}";
-            boxObj.transform.position = spawnPos;
-            boxObj.transform.rotation = spawnRot;
-            boxObj.transform.SetParent(null); // Standalone in scene root
-
-            PhysicalCargoPackage pkg = boxObj.AddComponent<PhysicalCargoPackage>();
-            int reward = Random.Range(minReward / 10, (maxReward / 10) + 1) * 10;
-            int xp = 70 + (targetPoint.requiredLevel * 20);
-
             // Determine Cargo Type based on player level unlock rules & weighted random selection
             CargoType chosenType = DetermineRandomCargoType(playerLevel);
+
+            // Check if user provided custom 3D Prefab model
+            GameObject chosenPrefab = GetPrefabForCargoType(chosenType);
+            GameObject boxObj;
+            bool isCustom = false;
+
+            if (chosenPrefab != null)
+            {
+                boxObj = Instantiate(chosenPrefab, spawnPos, spawnRot);
+                isCustom = true;
+
+                // Scale multiplier applied to original prefab localScale
+                if (minPrefabScale > 0f && maxPrefabScale > 0f)
+                {
+                    float minS = Mathf.Min(minPrefabScale, maxPrefabScale);
+                    float maxS = Mathf.Max(minPrefabScale, maxPrefabScale);
+                    Vector3 origScale = chosenPrefab.transform.localScale;
+                    if (origScale == Vector3.zero) origScale = Vector3.one;
+
+                    if (randomizeAxesIndependently)
+                    {
+                        float rx = Random.Range(minS, maxS);
+                        float ry = Random.Range(minS, maxS);
+                        float rz = Random.Range(minS, maxS);
+                        boxObj.transform.localScale = new Vector3(origScale.x * rx, origScale.y * ry, origScale.z * rz);
+                    }
+                    else
+                    {
+                        float uniformScale = Random.Range(minS, maxS);
+                        boxObj.transform.localScale = origScale * uniformScale;
+                    }
+                }
+            }
+            else
+            {
+                // Fallback: Create standard physical cargo cube directly in the scene
+                boxObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                boxObj.transform.position = spawnPos;
+                boxObj.transform.rotation = spawnRot;
+            }
+
+            boxObj.name = $"Cargo_Package_#{targetPoint.pointId}_{i + 1}";
+            boxObj.transform.SetParent(null); // Standalone in scene root
+
+            PhysicalCargoPackage pkg = boxObj.GetComponent<PhysicalCargoPackage>();
+            if (pkg == null) pkg = boxObj.AddComponent<PhysicalCargoPackage>();
+
+            int reward = Random.Range(minReward / 10, (maxReward / 10) + 1) * 10;
+            int xp = 70 + (targetPoint.requiredLevel * 20);
 
             pkg.minDamageSpeedThreshold = fragileMinDamageSpeedThreshold;
             pkg.damageMultiplier = fragileDamageMultiplier;
@@ -154,11 +212,36 @@ public class CargoWarehouseGenerator : MonoBehaviour
             pkg.spawnImmunityDuration = fragileSpawnImmunityDuration;
             
             Material chosenMaterial = GetMaterialForCargoType(chosenType);
-            pkg.SetupPackage(targetPoint.pointId, targetPoint.addressName, targetPoint.recipientName, reward, wrongPenalty, chosenType, xp, targetPoint.addressDescription, chosenMaterial);
+            pkg.SetupPackage(targetPoint.pointId, targetPoint.addressName, targetPoint.recipientName, reward, wrongPenalty, chosenType, xp, targetPoint.addressDescription, chosenMaterial, isCustom);
             currentPackages.Add(pkg);
         }
 
         Debug.Log($"<color=#32FF64>[CargoWarehouseGenerator] Spawned {currentPackages.Count} packages safely at {transform.position} for Player Level {playerLevel}!</color>");
+    }
+
+    /// <summary>
+    /// Belirtilen kargo türüne uygun 3D Prefab modelini seçer. (Tanımlı değilse null döner, küp fallback yapılır)
+    /// </summary>
+    public GameObject GetPrefabForCargoType(CargoType type)
+    {
+        if (type == CargoType.Fragile && fragilePackagePrefabs != null && fragilePackagePrefabs.Count > 0)
+        {
+            var valid = fragilePackagePrefabs.FindAll(p => p != null);
+            if (valid.Count > 0) return valid[Random.Range(0, valid.Count)];
+        }
+        else if (type == CargoType.Express && expressPackagePrefabs != null && expressPackagePrefabs.Count > 0)
+        {
+            var valid = expressPackagePrefabs.FindAll(p => p != null);
+            if (valid.Count > 0) return valid[Random.Range(0, valid.Count)];
+        }
+
+        if (packagePrefabs != null && packagePrefabs.Count > 0)
+        {
+            var valid = packagePrefabs.FindAll(p => p != null);
+            if (valid.Count > 0) return valid[Random.Range(0, valid.Count)];
+        }
+
+        return null;
     }
 
     /// <summary>

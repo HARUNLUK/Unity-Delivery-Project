@@ -58,7 +58,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
       propertyPath: purchasePrice
-      value: 100
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

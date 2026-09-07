@@ -2688,6 +2688,42 @@ PrefabInstance:
       propertyPath: spawnAreaSize.z
       value: 1.62
       objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: expressRequiredLevel
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: fragileRequiredLevel
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: packagePrefabs.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: 'packagePrefabs.Array.data[0]'
+      value: 
+      objectReference: {fileID: 6647389897064652335, guid: 84e7bb05d79dd194abf53c73a500d9a0, type: 3}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: 'packagePrefabs.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2568665596070292744, guid: 7232d1220e1e8294ca9566dfae4e9c02, type: 3}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: expressPackagePrefabs.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: fragilePackagePrefabs.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: 'expressPackagePrefabs.Array.data[0]'
+      value: 
+      objectReference: {fileID: 919132149155446097, guid: 6cbeb3df977f2b04fbf7706953a56e04, type: 3}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: 'fragilePackagePrefabs.Array.data[0]'
+      value: 
+      objectReference: {fileID: 919132149155446097, guid: 964d584ccce655649ae2e76a7f31ae50, type: 3}
     - target: {fileID: 1540539102297366380, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.622

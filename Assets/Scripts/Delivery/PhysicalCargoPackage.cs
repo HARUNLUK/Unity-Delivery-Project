@@ -81,25 +81,40 @@ public class PhysicalCargoPackage : MonoBehaviour
         new Color(0.36f, 0.44f, 0.34f)  // Eco Dull Green
     };
 
+    public bool isCustomPrefab = false;
+
     private void Awake()
     {
-        rb = GetComponent<Rigidbody>();
-        col = GetComponent<BoxCollider>();
-        if (boxRenderer == null) boxRenderer = GetComponent<MeshRenderer>();
+        EnsurePhysicsComponents();
         spawnImmunityUntil = Time.time + spawnImmunityDuration;
+    }
+
+    public void EnsurePhysicsComponents()
+    {
+        if (rb == null) rb = GetComponent<Rigidbody>();
+        if (rb == null) rb = gameObject.AddComponent<Rigidbody>();
+
+        if (col == null) col = GetComponent<BoxCollider>();
+        if (col == null && GetComponent<Collider>() == null) col = gameObject.AddComponent<BoxCollider>();
+
+        if (boxRenderer == null) boxRenderer = GetComponent<MeshRenderer>();
+        if (boxRenderer == null) boxRenderer = GetComponentInChildren<MeshRenderer>();
 
         if (rb != null)
         {
             rb.mass = 8f;
-            rb.linearDamping = 0.05f; // Gerçekçi yerçekimi ivmesi (0.5 hava sürtünmesi düşüşü yavaşlatıyordu)
+            rb.linearDamping = 0.05f;
             rb.angularDamping = 0.5f;
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             rb.interpolation = RigidbodyInterpolation.Interpolate;
         }
     }
 
-    public void SetupPackage(string pointId, string address, string recipient, int reward, int penalty, CargoType type = CargoType.Standard, int xp = 80, string addressDescription = "", Material customMaterial = null)
+    public void SetupPackage(string pointId, string address, string recipient, int reward, int penalty, CargoType type = CargoType.Standard, int xp = 80, string addressDescription = "", Material customMaterial = null, bool customPrefab = false)
     {
+        isCustomPrefab = customPrefab;
+        EnsurePhysicsComponents();
+
         targetPointId = pointId;
         targetAddressName = address;
         recipientName = string.IsNullOrEmpty(recipient) ? "Resident" : recipient;
@@ -144,7 +159,15 @@ public class PhysicalCargoPackage : MonoBehaviour
             cargoData.targetAddressDescription = addressDescription;
         }
 
-        ApplyRandomDimensionsAndColor(customMaterial);
+        if (!isCustomPrefab)
+        {
+            ApplyRandomDimensionsAndColor(customMaterial);
+        }
+        else if (customMaterial != null && boxRenderer != null)
+        {
+            boxRenderer.material = customMaterial;
+        }
+
         BuildShippingLabel();
     }
 
@@ -237,12 +260,32 @@ public class PhysicalCargoPackage : MonoBehaviour
     {
         if (shippingLabel != null) Destroy(shippingLabel);
 
+        // Dynamically compute the top surface position and dimensions
+        float topY = 0.505f;
+        float labelScaleX = 0.85f;
+        float labelScaleZ = 0.75f;
+
+        if (col != null)
+        {
+            topY = col.center.y + (col.size.y * 0.5f) + 0.005f;
+            labelScaleX = Mathf.Clamp(col.size.x * 0.75f, 0.25f, 1.2f);
+            labelScaleZ = Mathf.Clamp(col.size.z * 0.65f, 0.25f, 1.2f);
+        }
+        else if (boxRenderer != null)
+        {
+            Vector3 topWorld = boxRenderer.bounds.center + new Vector3(0f, boxRenderer.bounds.extents.y + 0.005f, 0f);
+            topY = transform.InverseTransformPoint(topWorld).y;
+            Vector3 localExtents = transform.InverseTransformVector(boxRenderer.bounds.extents);
+            labelScaleX = Mathf.Clamp(Mathf.Abs(localExtents.x) * 1.5f, 0.25f, 1.2f);
+            labelScaleZ = Mathf.Clamp(Mathf.Abs(localExtents.z) * 1.3f, 0.25f, 1.2f);
+        }
+
         // White shipping label sticker on top of the box
         shippingLabel = new GameObject("ShippingLabel");
         shippingLabel.transform.SetParent(transform, false);
-        shippingLabel.transform.localPosition = new Vector3(0f, 0.505f, 0f);
+        shippingLabel.transform.localPosition = new Vector3(0f, topY, 0f);
         shippingLabel.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-        shippingLabel.transform.localScale = new Vector3(0.85f, 0.75f, 1f);
+        shippingLabel.transform.localScale = new Vector3(labelScaleX, labelScaleZ, 1f);
 
         // Clean quad mesh without any MeshCollider (fixes dynamic Rigidbody concave warning)
         GameObject quadObj = new GameObject("LabelBackground");
