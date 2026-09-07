@@ -74,6 +74,35 @@ public class PlayerEconomyManager : MonoBehaviour
         OnEconomyUpdated?.Invoke(CurrentLiveBalance, TodayNetProfit);
     }
 
+    private void Update()
+    {
+#if ENABLE_INPUT_SYSTEM
+        if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.f7Key.wasPressedThisFrame)
+        {
+            ResetEntireEconomy();
+            ShowResetFeedback();
+        }
+#endif
+        try
+        {
+            if (Input.GetKeyDown(KeyCode.F7))
+            {
+                ResetEntireEconomy();
+                ShowResetFeedback();
+            }
+        }
+        catch { }
+    }
+
+    private void ShowResetFeedback()
+    {
+        Debug.Log("<color=yellow>[PlayerEconomyManager] F7 Tuşuna Basıldı: Bakiye ($0 TL) ve Oyuncu Seviyesi (Seviye 1) sıfırlandı!</color>");
+        if (InteractionPromptHUD.Instance != null)
+        {
+            InteractionPromptHUD.Instance.ShowPrompt("<color=#FFAA33>★ Seviye 1 & Bakiye $0 TL Olarak Sıfırlandı! [F7] ★</color>");
+        }
+    }
+
     public void AddCash(int amount) => AddEarnings(amount);
     public void DeductCash(int amount) => AddPenalty(amount);
 
@@ -89,8 +118,9 @@ public class PlayerEconomyManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Test için bütçeyi sıfırlar.
+    /// Test için bütçeyi ve seviyeyi sıfırlar.
     /// </summary>
+    [ContextMenu("Reset Entire Economy & Level (F7)")]
     public void ResetEntireEconomy()
     {
         PlayerPrefs.DeleteKey(BALANCE_KEY);
@@ -98,5 +128,15 @@ public class PlayerEconomyManager : MonoBehaviour
         todayEarned = 0;
         todayPenalties = 0;
         OnEconomyUpdated?.Invoke(0, 0);
+
+        if (PlayerProgressionManager.Instance != null)
+        {
+            PlayerProgressionManager.Instance.ResetProgression();
+        }
+
+        if (CargoTabletUI.Instance != null && CargoTabletUI.Instance.IsTabletOpen)
+        {
+            CargoTabletUI.Instance.RefreshUI();
+        }
     }
 }

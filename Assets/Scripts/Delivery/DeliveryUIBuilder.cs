@@ -241,8 +241,9 @@ public static class DeliveryUIBuilder
         tbTitleRect.anchorMax = new Vector2(0, 1);
         tbTitleRect.pivot = new Vector2(0, 0.5f);
         tbTitleRect.anchoredPosition = new Vector2(16, 0);
-        tbTitleRect.sizeDelta = new Vector2(230, 0);
-        AddTextMeshPro(titleBadgeObj, "🚚 <b>LOJİSTİK TABLETİ</b>", 20, FontStyles.Bold, TextAlignmentOptions.MidlineLeft, new Color(0.3f, 0.85f, 1f));
+        tbTitleRect.sizeDelta = new Vector2(185, 0);
+        TextMeshProUGUI titleTmp = AddTextMeshPro(titleBadgeObj, "🚚 <b>LOJİSTİK</b>", 18, FontStyles.Bold, TextAlignmentOptions.MidlineLeft, new Color(0.3f, 0.85f, 1f));
+        if (titleTmp != null) titleTmp.enableWordWrapping = false;
 
         // Tab Buttons Container in the center
         GameObject tabButtonsContainer = new GameObject("TabBar");
@@ -250,11 +251,11 @@ public static class DeliveryUIBuilder
         RectTransform tbcRect = tabButtonsContainer.AddComponent<RectTransform>();
         tbcRect.anchorMin = new Vector2(0, 0);
         tbcRect.anchorMax = new Vector2(1, 1);
-        tbcRect.offsetMin = new Vector2(250, 7);
-        tbcRect.offsetMax = new Vector2(-140, -7);
+        tbcRect.offsetMin = new Vector2(210, 8);
+        tbcRect.offsetMax = new Vector2(-268, -8);
 
         HorizontalLayoutGroup tbhLayout = tabButtonsContainer.AddComponent<HorizontalLayoutGroup>();
-        tbhLayout.spacing = 10;
+        tbhLayout.spacing = 6;
         tbhLayout.childControlWidth = true;
         tbhLayout.childControlHeight = true;
         tbhLayout.childForceExpandWidth = true;
@@ -271,8 +272,9 @@ public static class DeliveryUIBuilder
         t1TextObj.transform.SetParent(tab1BtnObj.transform, false);
         RectTransform t1Tr = t1TextObj.AddComponent<RectTransform>();
         t1Tr.anchorMin = Vector2.zero; t1Tr.anchorMax = Vector2.one; t1Tr.sizeDelta = Vector2.zero;
-        TextMeshProUGUI t1Tmp = AddTextMeshPro(t1TextObj, "📦 KARGO LİSTESİ", 17, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        TextMeshProUGUI t1Tmp = AddTextMeshPro(t1TextObj, "📦 KARGOLAR", 14, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
         t1Tmp.raycastTarget = false;
+        t1Tmp.enableWordWrapping = false;
 
         // Tab 2: Vehicles Button
         GameObject tab2BtnObj = new GameObject("Tab_Vehicles");
@@ -285,8 +287,9 @@ public static class DeliveryUIBuilder
         t2TextObj.transform.SetParent(tab2BtnObj.transform, false);
         RectTransform t2Tr = t2TextObj.AddComponent<RectTransform>();
         t2Tr.anchorMin = Vector2.zero; t2Tr.anchorMax = Vector2.one; t2Tr.sizeDelta = Vector2.zero;
-        TextMeshProUGUI t2Tmp = AddTextMeshPro(t2TextObj, "🚚 ARAÇ GALERİSİ & GARAJ", 17, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        TextMeshProUGUI t2Tmp = AddTextMeshPro(t2TextObj, "🚚 ARAÇLAR", 14, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
         t2Tmp.raycastTarget = false;
+        t2Tmp.enableWordWrapping = false;
 
         // Tab 3: Branch Button
         GameObject tab3BtnObj = new GameObject("Tab_Branch");
@@ -299,8 +302,31 @@ public static class DeliveryUIBuilder
         t3TextObj.transform.SetParent(tab3BtnObj.transform, false);
         RectTransform t3Tr = t3TextObj.AddComponent<RectTransform>();
         t3Tr.anchorMin = Vector2.zero; t3Tr.anchorMax = Vector2.one; t3Tr.sizeDelta = Vector2.zero;
-        TextMeshProUGUI t3Tmp = AddTextMeshPro(t3TextObj, "🏢 ŞUBE / DEPO", 17, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        TextMeshProUGUI t3Tmp = AddTextMeshPro(t3TextObj, "🏢 ŞUBE", 14, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
         t3Tmp.raycastTarget = false;
+        t3Tmp.enableWordWrapping = false;
+
+        // End Shift Button on top-right next to Close Button
+        GameObject endShiftBtnObj = new GameObject("EndShiftButton");
+        endShiftBtnObj.transform.SetParent(topBarHeaderObj.transform, false);
+        RectTransform endShiftRect = endShiftBtnObj.AddComponent<RectTransform>();
+        endShiftRect.anchorMin = new Vector2(1, 0.5f);
+        endShiftRect.anchorMax = new Vector2(1, 0.5f);
+        endShiftRect.pivot = new Vector2(1, 0.5f);
+        endShiftRect.anchoredPosition = new Vector2(-115, 0);
+        endShiftRect.sizeDelta = new Vector2(145, 36);
+
+        Image endShiftImg = endShiftBtnObj.AddComponent<Image>();
+        endShiftImg.color = new Color(0.85f, 0.35f, 0.1f);
+        Button endShiftBtn = endShiftBtnObj.AddComponent<Button>();
+
+        GameObject endShiftTextObj = new GameObject("Text");
+        endShiftTextObj.transform.SetParent(endShiftBtnObj.transform, false);
+        RectTransform esTr = endShiftTextObj.AddComponent<RectTransform>();
+        esTr.anchorMin = Vector2.zero; esTr.anchorMax = Vector2.one; esTr.sizeDelta = Vector2.zero;
+        TextMeshProUGUI esTmp = AddTextMeshPro(endShiftTextObj, "⏰ GÜNÜ BİTİR", 14, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        esTmp.raycastTarget = false;
+        esTmp.enableWordWrapping = false;
 
         // Close Button on top-right
         GameObject closeBtnObj = new GameObject("CloseButton");
@@ -310,7 +336,7 @@ public static class DeliveryUIBuilder
         closeRect.anchorMax = new Vector2(1, 0.5f);
         closeRect.pivot = new Vector2(1, 0.5f);
         closeRect.anchoredPosition = new Vector2(-12, 0);
-        closeRect.sizeDelta = new Vector2(115, 38);
+        closeRect.sizeDelta = new Vector2(95, 36);
 
         Image closeImg = closeBtnObj.AddComponent<Image>();
         closeImg.color = new Color(0.7f, 0.15f, 0.15f);
@@ -320,8 +346,9 @@ public static class DeliveryUIBuilder
         closeTextObj.transform.SetParent(closeBtnObj.transform, false);
         RectTransform clTr = closeTextObj.AddComponent<RectTransform>();
         clTr.anchorMin = Vector2.zero; clTr.anchorMax = Vector2.one; clTr.sizeDelta = Vector2.zero;
-        TextMeshProUGUI clTmp = AddTextMeshPro(closeTextObj, "✖ KAPAT", 16, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        TextMeshProUGUI clTmp = AddTextMeshPro(closeTextObj, "✖ KAPAT", 14, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
         clTmp.raycastTarget = false;
+        clTmp.enableWordWrapping = false;
 
         // ------------------------------------------
         // MAIN CONTENT AREA (Fills space under top bar)
@@ -412,7 +439,7 @@ public static class DeliveryUIBuilder
         // Card Template
         GameObject cardTemplate = new GameObject("CargoCardTemplate");
         cardTemplate.transform.SetParent(contentObj.transform, false);
-        cardTemplate.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 78);
+        cardTemplate.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 84);
         cardTemplate.AddComponent<Image>().color = new Color(0.16f, 0.22f, 0.3f, 1f);
 
         Button cardBtn = cardTemplate.AddComponent<Button>();
@@ -420,7 +447,7 @@ public static class DeliveryUIBuilder
         cardTextObj.transform.SetParent(cardTemplate.transform, false);
         RectTransform cardTextRect = cardTextObj.AddComponent<RectTransform>();
         cardTextRect.anchorMin = Vector2.zero; cardTextRect.anchorMax = Vector2.one; cardTextRect.sizeDelta = Vector2.zero;
-        TextMeshProUGUI cardText = AddTextMeshPro(cardTextObj, "<b>#CRG-1001</b>\nJohn Smith", 17, FontStyles.Normal, TextAlignmentOptions.MidlineLeft, Color.white);
+        TextMeshProUGUI cardText = AddTextMeshPro(cardTextObj, "<b>PKG-1</b> - John Doe\n📍 104 Akçaağaç Sokak\n<color=#64B5F6>⏳ DAĞITIMDA</color>", 16, FontStyles.Normal, TextAlignmentOptions.MidlineLeft, Color.white);
         if (cardText != null) cardText.margin = new Vector4(12, 0, 12, 0);
 
         // Empty list placeholder text
@@ -766,6 +793,7 @@ public static class DeliveryUIBuilder
         tabletScript.tabCargoButton = tabCargoBtn;
         tabletScript.tabVehicleButton = tabVehicleBtn;
         tabletScript.tabBranchButton = tabBranchBtn;
+        tabletScript.endShiftButton = endShiftBtn;
         tabletScript.closeTabletButton = closeBtn;
 
         tabletScript.cargoViewRoot = cargoView;

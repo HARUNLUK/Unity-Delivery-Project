@@ -110,7 +110,7 @@ public class DayTimeManager : MonoBehaviour
         return $"{CurrentHour:D2}:{CurrentMinute:D2}";
     }
 
-    private void EndShift()
+    public void EndShift()
     {
         if (IsShiftEnded) return;
         IsShiftEnded = true;

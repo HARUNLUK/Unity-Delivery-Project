@@ -282,9 +282,9 @@ public class BranchManager : MonoBehaviour
             }
 
             activeBuildingInstance = Instantiate(current.branchPrefab, parent);
-            activeBuildingInstance.transform.localPosition = Vector3.zero;
-            activeBuildingInstance.transform.localRotation = Quaternion.identity;
-            activeBuildingInstance.transform.localScale = Vector3.one;
+            activeBuildingInstance.transform.localPosition = current.branchPrefab.transform.localPosition;
+            activeBuildingInstance.transform.localRotation = current.branchPrefab.transform.localRotation;
+            activeBuildingInstance.transform.localScale = current.branchPrefab.transform.localScale;
         }
         else
         {

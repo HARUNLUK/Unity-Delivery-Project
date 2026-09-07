@@ -158,23 +158,42 @@ public class FPSPlayerController : MonoBehaviour
         LockCursor(true);
     }
 
+    public bool IsUIBlockingInput()
+    {
+        if (CargoTabletUI.Instance != null && CargoTabletUI.Instance.IsTabletOpen)
+            return true;
+
+        if (DaySummaryManager.Instance != null && DaySummaryManager.Instance.summaryPanelRoot != null && DaySummaryManager.Instance.summaryPanelRoot.activeSelf)
+            return true;
+
+        if (Cursor.lockState != CursorLockMode.Locked || Cursor.visible)
+            return true;
+
+        return false;
+    }
+
     private void Update()
     {
+        bool isUIOpen = IsUIBlockingInput();
+
         if (!isOnFoot)
         {
             // V tuşu ile FPS (İç görünüm) ve TPS (Dış takip) arasında geçiş yap
-            if (Keyboard.current != null && Keyboard.current.vKey.wasPressedThisFrame)
+            if (!isUIOpen && Keyboard.current != null && Keyboard.current.vKey.wasPressedThisFrame)
             {
                 ToggleVehicleCameraMode();
             }
 
-            if (vehicleCameraMode == VehicleCameraMode.FirstPerson)
+            if (!isUIOpen)
             {
-                HandleInVehicleLook();
-            }
-            else
-            {
-                HandleTPSOrbitInput();
+                if (vehicleCameraMode == VehicleCameraMode.FirstPerson)
+                {
+                    HandleInVehicleLook();
+                }
+                else
+                {
+                    HandleTPSOrbitInput();
+                }
             }
             return;
         }
@@ -197,9 +216,13 @@ public class FPSPlayerController : MonoBehaviour
             }
         }
 
-        HandleMouseLook();
+        if (!isUIOpen)
+        {
+            HandleMouseLook();
+            HandleInteraction();
+        }
+
         HandleMovement();
-        HandleInteraction();
     }
 
     private bool CheckF9DevInput()
@@ -330,6 +353,8 @@ public class FPSPlayerController : MonoBehaviour
 
     private void HandleMouseLook()
     {
+        if (IsUIBlockingInput()) return;
+
         float mouseX = 0f;
         float mouseY = 0f;
 
@@ -365,7 +390,7 @@ public class FPSPlayerController : MonoBehaviour
         bool isSprinting = false;
         bool jumpPressed = false;
 
-        if (Keyboard.current != null)
+        if (!IsUIBlockingInput() && Keyboard.current != null)
         {
             if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) moveZ += 1f;
             if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) moveZ -= 1f;

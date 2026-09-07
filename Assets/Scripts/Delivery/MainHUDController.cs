@@ -38,6 +38,11 @@ public class MainHUDController : MonoBehaviour
         {
             clockText.text = $"TIME: {DayTimeManager.Instance.GetFormattedTime()}";
         }
+
+        if (Time.frameCount % 30 == 0)
+        {
+            RefreshCargoCount();
+        }
     }
 
     private void HandleEconomyUpdated(int liveBalance, int todayNet)
@@ -47,7 +52,24 @@ public class MainHUDController : MonoBehaviour
 
     private void RefreshCargoCount()
     {
-        if (remainingCargoText != null && VanInventory.Instance != null)
+        if (remainingCargoText == null) return;
+
+        PhysicalCargoPackage[] scenePackages = Object.FindObjectsByType<PhysicalCargoPackage>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        if (scenePackages != null && scenePackages.Length > 0)
+        {
+            int remaining = 0;
+            foreach (var p in scenePackages)
+            {
+                if (p != null && p.FindNearbyDeliveryPoint() == null && !p.isBroken)
+                {
+                    remaining++;
+                }
+            }
+            remainingCargoText.text = $"REMAINING: {remaining} / {scenePackages.Length}";
+            return;
+        }
+
+        if (VanInventory.Instance != null)
         {
             remainingCargoText.text = $"REMAINING: {VanInventory.Instance.RemainingCargoCount} / {VanInventory.Instance.dailyPackageCount}";
         }

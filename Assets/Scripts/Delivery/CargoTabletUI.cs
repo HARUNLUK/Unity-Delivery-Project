@@ -72,8 +72,10 @@ public class CargoTabletUI : MonoBehaviour
     public Button tabCargoButton;
     public Button tabVehicleButton;
     public Button tabBranchButton;
+    public Button endShiftButton;
     public Button closeTabletButton;
 
+    private PhysicalCargoPackage currentSelectedPackage;
     private CargoItem currentSelectedCargo;
     private DrivableVehicle currentSelectedVehicle;
     private TabletTab currentTab = TabletTab.CargoInventory;
@@ -327,29 +329,88 @@ public class CargoTabletUI : MonoBehaviour
             }
         }
 
-        List<CargoItem> loadedList = VanInventory.Instance != null ? VanInventory.Instance.LoadedCargoList : new List<CargoItem>();
+        PhysicalCargoPackage[] scenePackages = UnityEngine.Object.FindObjectsByType<PhysicalCargoPackage>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
 
-        if (loadedList.Count == 0)
+        if (scenePackages == null || scenePackages.Length == 0)
         {
-            if (emptyListText != null) emptyListText.gameObject.SetActive(true);
+            if (emptyListText != null)
+            {
+                emptyListText.gameObject.SetActive(true);
+                emptyListText.text = "📦 Bugün için depoda veya sahada teslim edilecek paket bulunamadı.";
+            }
             if (detailCardRoot != null) detailCardRoot.SetActive(false);
             return;
         }
 
         if (emptyListText != null) emptyListText.gameObject.SetActive(false);
 
-        foreach (CargoItem cargo in loadedList)
+        // Sort by pointId or tracking number for consistent order
+        System.Array.Sort(scenePackages, (a, b) =>
         {
+            if (a == null && b == null) return 0;
+            if (a == null) return 1;
+            if (b == null) return -1;
+            int aId, bId;
+            if (int.TryParse(a.targetPointId, out aId) && int.TryParse(b.targetPointId, out bId))
+            {
+                return aId.CompareTo(bId);
+            }
+            return string.Compare(a.targetPointId, b.targetPointId, System.StringComparison.OrdinalIgnoreCase);
+        });
+
+        PhysicalCargoPackage packageToSelect = null;
+
+        foreach (PhysicalCargoPackage pkg in scenePackages)
+        {
+            if (pkg == null) continue;
+
             GameObject cardObj = Instantiate(cargoCardTemplate, cargoListContent);
             cardObj.SetActive(true);
 
             Image cardImg = cardObj.GetComponent<Image>();
             if (cardImg != null) cardImg.raycastTarget = true;
 
+            DeliveryPoint nearbyPoint = pkg.FindNearbyDeliveryPoint();
+            bool isAtDeliveryZone = nearbyPoint != null;
+            bool isBroken = pkg.isBroken;
+
+            // Status color & badge
+            string statusBadge;
+            Color cardBgColor;
+
+            if (isBroken)
+            {
+                cardBgColor = new Color(0.38f, 0.10f, 0.10f, 0.95f); // Red
+                statusBadge = "<color=#FF5555>🔴 KIRILDI / HASARLI</color>";
+            }
+            else if (isAtDeliveryZone)
+            {
+                cardBgColor = new Color(0.38f, 0.28f, 0.05f, 0.95f); // Amber / Yellow
+                statusBadge = "<color=#FFD700>🟡 TESLİMAT ALANINDA (Gün Sonu Doğrulanacak)</color>";
+            }
+            else
+            {
+                cardBgColor = new Color(0.12f, 0.17f, 0.24f, 0.95f); // Slate Blue
+                statusBadge = "<color=#64B5F6>⏳ DAĞITIMDA / ARAÇTA</color>";
+            }
+
+            if (cardImg != null)
+            {
+                cardImg.color = cardBgColor;
+            }
+
+            string typeTag = "";
+            if (pkg.cargoType == CargoType.Fragile) typeTag = " <color=#FFAA44>[KIRILABİLİR]</color>";
+            else if (pkg.cargoType == CargoType.Express) typeTag = " <color=#33E0FF>[EKSPRES]</color>";
+
+            string tracking = pkg.cargoData != null && !string.IsNullOrEmpty(pkg.cargoData.trackingNumber)
+                ? pkg.cargoData.trackingNumber
+                : $"PKG-{pkg.targetPointId}";
+
             TextMeshProUGUI label = cardObj.GetComponentInChildren<TextMeshProUGUI>();
             if (label != null)
             {
-                label.text = $"<b>{cargo.trackingNumber}</b>\n{cargo.recipientName}";
+                label.text = $"<b>{tracking}</b> - {pkg.recipientName}{typeTag}\n<size=85%>📍 {pkg.targetAddressName}</size>\n<size=80%>{statusBadge}</size>";
                 label.raycastTarget = false;
             }
 
@@ -359,19 +420,84 @@ public class CargoTabletUI : MonoBehaviour
             btn.interactable = true;
             btn.onClick.RemoveAllListeners();
 
-            CargoItem itemRef = cargo;
+            PhysicalCargoPackage pkgRef = pkg;
             btn.onClick.AddListener(() => {
-                DisplayCargoDetail(itemRef);
+                DisplayCargoDetail(pkgRef);
             });
+
+            if (packageToSelect == null && currentSelectedPackage != null && currentSelectedPackage == pkg)
+            {
+                packageToSelect = pkg;
+            }
         }
 
-        if (currentSelectedCargo == null || !loadedList.Contains(currentSelectedCargo))
+        if (packageToSelect == null && scenePackages.Length > 0)
         {
-            DisplayCargoDetail(loadedList[0]);
+            packageToSelect = scenePackages[0];
         }
-        else
+
+        if (packageToSelect != null)
         {
-            DisplayCargoDetail(currentSelectedCargo);
+            DisplayCargoDetail(packageToSelect);
+        }
+    }
+
+    public void DisplayCargoDetail(PhysicalCargoPackage pkg)
+    {
+        currentSelectedPackage = pkg;
+        if (pkg == null)
+        {
+            if (detailCardRoot != null) detailCardRoot.SetActive(false);
+            return;
+        }
+
+        if (detailCardRoot != null) detailCardRoot.SetActive(true);
+
+        string tracking = pkg.cargoData != null && !string.IsNullOrEmpty(pkg.cargoData.trackingNumber)
+            ? pkg.cargoData.trackingNumber
+            : $"PKG-{pkg.targetPointId}";
+
+        string typeTag = "";
+        if (pkg.cargoType == CargoType.Fragile) typeTag = " <color=#FFAA44>(Kırılabilir)</color>";
+        else if (pkg.cargoType == CargoType.Express) typeTag = " <color=#33E0FF>(Ekspres)</color>";
+
+        if (trackingNumberText != null)
+        {
+            trackingNumberText.text = $"Takip No: <b>{tracking}</b>{typeTag}";
+        }
+
+        if (recipientNameText != null)
+        {
+            recipientNameText.text = $"Alıcı: <b>{pkg.recipientName}</b>  <color=#32FF64>(Ödül: ${pkg.deliveryReward} TL)</color>";
+        }
+
+        DeliveryPoint nearbyPoint = pkg.FindNearbyDeliveryPoint();
+        bool isAtDeliveryZone = nearbyPoint != null;
+        bool isBroken = pkg.isBroken;
+
+        if (targetAddressText != null)
+        {
+            string statusInfo;
+            if (isBroken)
+            {
+                statusInfo = $"<color=#FF4444>🔴 Durum: PAKET AĞIR HASAR ALDI VE KIRILDI! (Ceza: -${pkg.wrongPenalty * 2} TL)</color>";
+            }
+            else if (isAtDeliveryZone)
+            {
+                statusInfo = $"<color=#FFD700>🟡 Durum: Teslimat alanına bırakıldı ({nearbyPoint.addressName}).\nDoğruluğu mesai bitiminde (18:00 / Günü Bitir) onaylanacaktır.</color>";
+            }
+            else
+            {
+                statusInfo = $"<color=#64B5F6>⏳ Durum: Dağıtımda / Henüz teslimat alanına bırakılmadı.\nÖdül: +${pkg.deliveryReward} TL | Hatalı Teslimat Cezası: -${pkg.wrongPenalty} TL</color>";
+            }
+
+            targetAddressText.text = $"Hedef Adres: <b>{pkg.targetAddressName}</b> (Kapı #{pkg.targetPointId})\n{statusInfo}";
+        }
+
+        if (addressDescriptionText != null)
+        {
+            string desc = !string.IsNullOrEmpty(pkg.targetAddressDescription) ? pkg.targetAddressDescription : "Bu adres için özel görsel ipucu bulunmuyor.";
+            addressDescriptionText.text = $"<b>Adres İpucu ve Açıklaması:</b>\n\n\"{desc}\"";
         }
     }
 
@@ -387,6 +513,15 @@ public class CargoTabletUI : MonoBehaviour
         if (addressDescriptionText != null)
         {
             addressDescriptionText.text = $"<b>Adres İpucu ve Açıklaması:</b>\n\n\"{cargo.targetAddressDescription}\"";
+        }
+    }
+
+    public void OnEndShiftButtonClicked()
+    {
+        CloseTablet();
+        if (DayTimeManager.Instance != null)
+        {
+            DayTimeManager.Instance.EndShift();
         }
     }
 
@@ -668,7 +803,7 @@ public class CargoTabletUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Ensures tablet hierarchy is structured with a TopBar and ContentArea containing 3 separate views.
+    /// Binds UI references and button listeners from the scene hierarchy without overriding layout or transforms.
     /// </summary>
     public void EnsureTabletStructure()
     {
@@ -680,29 +815,14 @@ public class CargoTabletUI : MonoBehaviour
 
         if (tabletPanelRoot == null) return;
 
-        // Remove any old conflicting layout group directly on tabletPanelRoot
-        HorizontalLayoutGroup hlg = tabletPanelRoot.GetComponent<HorizontalLayoutGroup>();
-        if (hlg != null) DestroyImmediate(hlg);
-
-        VerticalLayoutGroup vlg = tabletPanelRoot.GetComponent<VerticalLayoutGroup>();
-        if (vlg != null) DestroyImmediate(vlg);
-
         // Find or locate TabletTopBar
         Transform topBarTransform = tabletPanelRoot.transform.Find("TabletTopBar");
         if (topBarTransform == null)
         {
-            // check legacy TabBar or TabletTabBar
             Transform oldBar = tabletPanelRoot.transform.Find("TabletTabBar");
             if (oldBar == null) oldBar = tabletPanelRoot.transform.Find("TabBar");
-            if (oldBar != null)
-            {
-                oldBar.name = "TabletTopBar";
-                topBarTransform = oldBar;
-            }
+            if (oldBar != null) topBarTransform = oldBar;
         }
-
-        // Find or locate TabletContentArea
-        Transform contentAreaTransform = tabletPanelRoot.transform.Find("TabletContentArea");
 
         // Hook up tab buttons if present in TopBar
         if (topBarTransform != null)
@@ -728,6 +848,12 @@ public class CargoTabletUI : MonoBehaviour
                 if (b != null) tabBranchButton = b.GetComponent<Button>();
             }
 
+            if (endShiftButton == null)
+            {
+                Transform b = topBarTransform.Find("EndShiftButton");
+                if (b != null) endShiftButton = b.GetComponent<Button>();
+            }
+
             if (closeTabletButton == null)
             {
                 Transform b = topBarTransform.Find("CloseButton");
@@ -736,6 +862,12 @@ public class CargoTabletUI : MonoBehaviour
         }
 
         // Bind button listeners safely
+        if (endShiftButton != null)
+        {
+            endShiftButton.onClick.RemoveAllListeners();
+            endShiftButton.onClick.AddListener(OnEndShiftButtonClicked);
+        }
+
         if (tabCargoButton != null)
         {
             tabCargoButton.onClick.RemoveAllListeners();

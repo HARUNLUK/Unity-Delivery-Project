@@ -84,6 +84,9 @@ public class SmoothFollowCamera : MonoBehaviour
 
     private void HandleMouseLookInput()
     {
+        if (Cursor.lockState != CursorLockMode.Locked || Cursor.visible) return;
+        if (CargoTabletUI.Instance != null && CargoTabletUI.Instance.IsTabletOpen) return;
+
         float mouseX = 0f;
         float mouseY = 0f;
 
