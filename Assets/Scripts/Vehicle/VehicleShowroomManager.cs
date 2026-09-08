@@ -107,7 +107,7 @@ public class VehicleShowroomManager : MonoBehaviour
             ResetAllVehiclePurchases();
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF5555>★ TÜM ARAÇ SATIN ALIMLARI SIFIRLANDI (F9) ★</color>");
+                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF5555>★ ALL VEHICLE PURCHASES RESET (F9) ★</color>");
             }
         }
     }
@@ -141,6 +141,6 @@ public class VehicleShowroomManager : MonoBehaviour
             if (v != null) v.ResetLockState();
         }
         OnShowroomUpdated?.Invoke();
-        Debug.Log("<color=#FF5555>[DEV] F9 tuşu: Tüm araç satın alımları sıfırlandı ve kilitler yeniden etkinleştirildi.</color>");
+        Debug.Log("<color=#FF5555>[DEV] F9 key: All vehicle purchases have been reset and locked.</color>");
     }
 }

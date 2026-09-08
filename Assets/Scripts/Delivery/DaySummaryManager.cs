@@ -94,7 +94,7 @@ public class DaySummaryManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        // 1. Sahnede bulunan tüm fiziksel kargo paketlerini topla
+        // 1. Gather all physical cargo packages in the scene
         PhysicalCargoPackage[] scenePackages = Object.FindObjectsByType<PhysicalCargoPackage>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
         List<CargoDeliveryResult> results = new List<CargoDeliveryResult>();
 
@@ -138,19 +138,19 @@ public class DaySummaryManager : MonoBehaviour
             }
         }
 
-        // 2. Günlük Dükkan Kirası Gideri
+        // 2. Daily Warehouse / Branch Rent Expense
         int dailyRent = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.GetDailyWarehouseRent() : 50;
         totalPenalty += dailyRent;
 
         int netProfit = totalReward - totalPenalty;
 
-        // 3. XP ve Seviyeyi Güncelle
+        // 3. Update XP and Player Level
         if (PlayerProgressionManager.Instance != null)
         {
             PlayerProgressionManager.Instance.AddXP(totalXP);
         }
 
-        // 4. Ekonomiyi güncelle ve kaydet
+        // 4. Update and persist economy
         if (PlayerEconomyManager.Instance != null)
         {
             PlayerEconomyManager.Instance.AddEarnings(totalReward);
@@ -160,7 +160,7 @@ public class DaySummaryManager : MonoBehaviour
 
         int totalVault = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.TotalSavedBalance : netProfit;
 
-        // 5. UI Metinlerini Doldur
+        // 5. Populate UI Text Elements
         if (totalDeliveredText != null) totalDeliveredText.text = $"Total Packages Today: {totalCount}";
         if (correctDeliveriesText != null) correctDeliveriesText.text = $"[+] Correct Deliveries: {correctCount} (+${totalReward})";
         

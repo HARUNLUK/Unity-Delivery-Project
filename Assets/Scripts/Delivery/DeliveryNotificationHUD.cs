@@ -6,12 +6,12 @@ public class DeliveryNotificationHUD : MonoBehaviour
 {
     public static DeliveryNotificationHUD Instance { get; private set; }
 
-    [Header("--- BİLDİRİM PANELİ ---")]
+    [Header("--- NOTIFICATION PANEL ---")]
     public GameObject notificationRoot;
     public TextMeshProUGUI notificationText;
     public Image notificationBackground;
 
-    [Header("--- CANLI SAYAÇ ---")]
+    [Header("--- LIVE COUNTER ---")]
     public TextMeshProUGUI remainingCargoCounterText;
 
     private float hideTimer = 0f;
@@ -62,8 +62,8 @@ public class DeliveryNotificationHUD : MonoBehaviour
         if (notificationBackground != null)
         {
             notificationBackground.color = isCorrect 
-                ? new Color(0.1f, 0.6f, 0.2f, 0.9f)  // Yeşil
-                : new Color(0.75f, 0.15f, 0.15f, 0.95f); // Kırmızı
+                ? new Color(0.1f, 0.6f, 0.2f, 0.9f)  // Green
+                : new Color(0.75f, 0.15f, 0.15f, 0.95f); // Red
         }
     }
 
@@ -71,7 +71,7 @@ public class DeliveryNotificationHUD : MonoBehaviour
     {
         if (remainingCargoCounterText != null && VanInventory.Instance != null)
         {
-            remainingCargoCounterText.text = $"📦 Kalan Kargo: {VanInventory.Instance.RemainingCargoCount} / 10";
+            remainingCargoCounterText.text = $"📦 Remaining: {VanInventory.Instance.RemainingCargoCount} / 10";
         }
     }
 }

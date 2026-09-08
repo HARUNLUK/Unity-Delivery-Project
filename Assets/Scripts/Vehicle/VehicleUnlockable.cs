@@ -13,7 +13,7 @@ public class VehicleUnlockable : MonoBehaviour
 
     [TextArea(2, 4)]
     [Tooltip("Short description of the vehicle")]
-    public string description = "Yüksek koli taşıma kapasitesine sahip ticari dağıtım aracı.";
+    public string description = "Commercial delivery vehicle with high parcel capacity.";
 
     [Header("--- ECONOMY & REQUIREMENTS ---")]
     [Tooltip("Purchase price in TL/USD")]
@@ -57,7 +57,7 @@ public class VehicleUnlockable : MonoBehaviour
         drivableVehicle = GetComponent<DrivableVehicle>();
         rb = GetComponent<Rigidbody>();
         
-        // Sadece kimlik boş bırakılmışsa otomatik doldur
+        // Only auto-fill if vehicleId is empty
         if (string.IsNullOrEmpty(vehicleId))
         {
             vehicleId = gameObject.name.ToLower().Replace(" ", "_");
@@ -70,7 +70,7 @@ public class VehicleUnlockable : MonoBehaviour
 
     private void Reset()
     {
-        // Editörde component ilk eklendiğinde akıllı varsayılanları ata
+        // Set smart defaults in editor
         drivableVehicle = GetComponent<DrivableVehicle>();
         string n = (gameObject.name + " " + (drivableVehicle != null ? drivableVehicle.vehicleName : "")).ToLower();
         
@@ -82,7 +82,7 @@ public class VehicleUnlockable : MonoBehaviour
             isUnlockedByDefault = true;
             cargoCapacity = 8;
             requiredPlayerLevel = 1;
-            description = "Başlangıç seviyesi çevik ve pratik kargo kamyoneti.";
+            description = "Agile and practical entry-level cargo pickup truck.";
         }
         else if (n.Contains("van"))
         {
@@ -92,7 +92,7 @@ public class VehicleUnlockable : MonoBehaviour
             isUnlockedByDefault = false;
             cargoCapacity = 16;
             requiredPlayerLevel = 1;
-            description = "Geniş kapalı bagaj hacmi ile yüksek kapasiteli teslimatlar için ideal kargo aracı.";
+            description = "High capacity enclosed delivery van ideal for large scale parcel runs.";
         }
     }
 
@@ -128,14 +128,14 @@ public class VehicleUnlockable : MonoBehaviour
         int currentLvl = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.PlayerLevel : 1;
         if (currentLvl < requiredPlayerLevel)
         {
-            Debug.LogWarning($"[VehicleUnlockable] Level yetersiz! Gereken: {requiredPlayerLevel}, Mevcut: {currentLvl}");
+            Debug.LogWarning($"[VehicleUnlockable] Insufficient level! Required: {requiredPlayerLevel}, Current: {currentLvl}");
             return false;
         }
 
         int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
         if (balance < purchasePrice)
         {
-            Debug.LogWarning($"[VehicleUnlockable] Bakiye yetersiz! Gereken: {purchasePrice}, Mevcut: {balance}");
+            Debug.LogWarning($"[VehicleUnlockable] Insufficient balance! Required: {purchasePrice}, Current: {balance}");
             return false;
         }
 
@@ -150,7 +150,7 @@ public class VehicleUnlockable : MonoBehaviour
         PlayerPrefs.Save();
 
         UpdateLockVisualsAndPhysics();
-        Debug.Log($"<color=#32FF64>★ TEBRİKLER! '{displayName}' başarıyla satın alındı ve kilidi açıldı! ★</color>");
+        Debug.Log($"<color=#32FF64>★ CONGRATULATIONS! '{displayName}' successfully purchased and unlocked! ★</color>");
 
         OnVehiclePurchased?.Invoke(this);
         return true;

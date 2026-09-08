@@ -60,6 +60,13 @@ public class InteractionPromptHUD : MonoBehaviour
     public Image fuelBarFill;
     public TextMeshProUGUI fuelValueText;
 
+    [Header("--- PROMPT TIMEOUT SETTINGS ---")]
+    [Tooltip("Ekrana gelen etkileşim ve ipucu yazılarının otomatik kaybolma süresi (Saniye)")]
+    public float defaultPromptDuration = 2.8f;
+
+    private float currentPromptTimer = 0f;
+    private CanvasGroup promptCanvasGroup;
+
     private void Awake()
     {
         Instance = this;
@@ -72,6 +79,25 @@ public class InteractionPromptHUD : MonoBehaviour
         HidePrompt();
         HideHeldCargoInfo();
         HideFuelHUD();
+    }
+
+    private void Update()
+    {
+        if (promptPanel != null && promptPanel.activeSelf)
+        {
+            if (currentPromptTimer > 0f)
+            {
+                currentPromptTimer -= Time.deltaTime;
+                if (currentPromptTimer <= 0.45f && promptCanvasGroup != null)
+                {
+                    promptCanvasGroup.alpha = Mathf.Clamp01(currentPromptTimer / 0.45f);
+                }
+                if (currentPromptTimer <= 0f)
+                {
+                    HidePrompt();
+                }
+            }
+        }
     }
 
     public void EnsureUI()
@@ -197,7 +223,7 @@ public class InteractionPromptHUD : MonoBehaviour
             GameObject headObj = new GameObject("Header");
             headObj.transform.SetParent(heldCargoPanel.transform, false);
             heldCargoHeaderText = headObj.AddComponent<TextMeshProUGUI>();
-            heldCargoHeaderText.text = "📦 ELDEKİ KARGO";
+            heldCargoHeaderText.text = "📦 HELD PACKAGE";
             heldCargoHeaderText.fontSize = 24;
             heldCargoHeaderText.fontStyle = FontStyles.Bold;
             heldCargoHeaderText.color = new Color(1f, 0.82f, 0.2f);
@@ -255,7 +281,7 @@ public class InteractionPromptHUD : MonoBehaviour
             GameObject clueTitleObj = new GameObject("ClueTitle");
             clueTitleObj.transform.SetParent(clueBoxObj.transform, false);
             TextMeshProUGUI clueTitle = clueTitleObj.AddComponent<TextMeshProUGUI>();
-            clueTitle.text = "📝 <b>HEDEF BİNA & GÖRSEL TARİF:</b>";
+            clueTitle.text = "📝 <b>DESTINATION & VISUAL CLUE:</b>";
             clueTitle.fontSize = 19;
             clueTitle.fontStyle = FontStyles.Bold;
             clueTitle.color = new Color(1f, 0.85f, 0.25f);
@@ -289,7 +315,7 @@ public class InteractionPromptHUD : MonoBehaviour
             GameObject hintObj = new GameObject("ActionHint");
             hintObj.transform.SetParent(heldCargoPanel.transform, false);
             heldCargoActionHintText = hintObj.AddComponent<TextMeshProUGUI>();
-            heldCargoActionHintText.text = "🎮 <b>[E]</b> Bırak  |  <b>Basılı Tut:</b> Fırlat";
+            heldCargoActionHintText.text = "🎮 <b>[E]</b> Drop  |  <b>Hold:</b> Throw";
             heldCargoActionHintText.fontSize = 18;
             heldCargoActionHintText.color = new Color(0.85f, 0.85f, 0.85f);
         }
@@ -372,17 +398,45 @@ public class InteractionPromptHUD : MonoBehaviour
         }
     }
 
-    public void ShowPrompt(string message)
+    public void ShowPrompt(string message, float duration = 2.8f)
     {
+        if (string.IsNullOrEmpty(message))
+        {
+            HidePrompt();
+            return;
+        }
+
+        if (promptPanel == null || promptText == null)
+        {
+            EnsureUI();
+        }
+
         if (promptPanel != null && promptText != null)
         {
             promptText.text = message;
             promptPanel.SetActive(true);
+            currentPromptTimer = duration > 0f ? duration : defaultPromptDuration;
+
+            if (promptCanvasGroup == null)
+            {
+                promptCanvasGroup = promptPanel.GetComponent<CanvasGroup>();
+                if (promptCanvasGroup == null) promptCanvasGroup = promptPanel.AddComponent<CanvasGroup>();
+            }
+
+            if (promptCanvasGroup != null)
+            {
+                promptCanvasGroup.alpha = 1f;
+            }
         }
     }
 
     public void HidePrompt()
     {
+        currentPromptTimer = 0f;
+        if (promptCanvasGroup != null)
+        {
+            promptCanvasGroup.alpha = 1f;
+        }
         if (promptPanel != null)
         {
             promptPanel.SetActive(false);
@@ -433,9 +487,9 @@ public class InteractionPromptHUD : MonoBehaviour
         if (heldCargoPanel == null || heldCargoAddressDescText == null) EnsureUI();
         if (heldCargoPanel != null) heldCargoPanel.SetActive(true);
 
-        if (heldCargoTrackingText != null) heldCargoTrackingText.text = $"📦 <b>Takip No:</b> #{pkg.targetPointId}";
-        if (heldCargoRecipientText != null) heldCargoRecipientText.text = $"👤 <b>Alıcı:</b> {pkg.recipientName}";
-        if (heldCargoAddressText != null) heldCargoAddressText.text = $"📍 <b>Adres:</b> {pkg.targetAddressName}";
+        if (heldCargoTrackingText != null) heldCargoTrackingText.text = $"📦 <b>Tracking #:</b> #{pkg.targetPointId}";
+        if (heldCargoRecipientText != null) heldCargoRecipientText.text = $"👤 <b>Recipient:</b> {pkg.recipientName}";
+        if (heldCargoAddressText != null) heldCargoAddressText.text = $"📍 <b>Address:</b> {pkg.targetAddressName}";
         
         if (heldCargoAddressDescText != null)
         {
@@ -446,12 +500,12 @@ public class InteractionPromptHUD : MonoBehaviour
             }
             else
             {
-                heldCargoAddressDescText.text = "\"(Adres görsel ipucu bulunamadı)\"";
+                heldCargoAddressDescText.text = "\"(No address visual clue available)\"";
             }
         }
 
-        if (heldCargoRewardText != null) heldCargoRewardText.text = $"💰 <b>Ödül:</b> +${pkg.deliveryReward} TL  <color=#32FFFF>(+{pkg.xpReward} XP)</color>";
-        if (heldCargoPenaltyText != null) heldCargoPenaltyText.text = $"⚠️ <b>Ceza:</b> -${pkg.wrongPenalty} TL";
+        if (heldCargoRewardText != null) heldCargoRewardText.text = $"💰 <b>Reward:</b> +${pkg.deliveryReward}  <color=#32FFFF>(+{pkg.xpReward} XP)</color>";
+        if (heldCargoPenaltyText != null) heldCargoPenaltyText.text = $"⚠️ <b>Penalty:</b> -${pkg.wrongPenalty}";
 
         if (heldCargoTypeText != null)
         {
@@ -459,14 +513,14 @@ public class InteractionPromptHUD : MonoBehaviour
             {
                 case CargoType.Fragile:
                     heldCargoTypeText.text = pkg.isBroken ?
-                        "<color=#FF4444>⚠️ TÜR: KIRILABİLİR (KIRILDI! - Ödül İptal)</color>" :
-                        $"<color=#FFAA33>⚠️ TÜR: KIRILABİLİR (Sağlık: %{pkg.health:F0})</color>";
+                        "<color=#FF4444>⚠️ TYPE: FRAGILE (BROKEN! - Reward Cancelled)</color>" :
+                        $"<color=#FFAA33>⚠️ TYPE: FRAGILE (Condition: %{pkg.health:F0})</color>";
                     break;
                 case CargoType.Express:
-                    heldCargoTypeText.text = $"<color=#32FFFF>⚡ TÜR: EKSPRES ({pkg.GetFormattedTargetDeliveryTime()} Öncesi +%40 Bonus)</color>";
+                    heldCargoTypeText.text = $"<color=#32FFFF>⚡ TYPE: EXPRESS (Before {pkg.GetFormattedTargetDeliveryTime()} +40% Bonus)</color>";
                     break;
                 default:
-                    heldCargoTypeText.text = "<color=#AAAAAA>📦 TÜR: STANDART KARGO</color>";
+                    heldCargoTypeText.text = "<color=#AAAAAA>📦 TYPE: STANDARD PARCEL</color>";
                     break;
             }
         }

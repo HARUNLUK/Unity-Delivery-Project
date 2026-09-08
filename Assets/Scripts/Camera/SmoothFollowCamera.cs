@@ -3,20 +3,20 @@ using UnityEngine.InputSystem;
 
 public class SmoothFollowCamera : MonoBehaviour
 {
-    [Header("--- TAKİP HEDEFİ ---")]
-    [Tooltip("Takip edilecek araç objesi")]
+    [Header("--- TARGET ---")]
+    [Tooltip("Target vehicle transform to follow")]
     public Transform target;
 
-    [Header("--- KAMERA MESAFE VE YÜKSEKLİK ---")]
+    [Header("--- CAMERA DISTANCE & HEIGHT ---")]
     public float distance = 6.0f;
     public float height = 2.4f;
     public float lookAtHeight = 1.3f;
 
-    [Header("--- TAKİP YUMUŞAKLIĞI ---")]
+    [Header("--- FOLLOW DAMPING ---")]
     public float heightDamping = 4.0f;
     public float rotationDamping = 5.0f;
 
-    [Header("--- FARE İLE ETRAFA BAKIŞ ---")]
+    [Header("--- MOUSE LOOK ---")]
     public float mouseSensitivity = 2.0f;
     public float maxHorizontalAngle = 75.0f;
     public float maxVerticalAngle = 25.0f;
@@ -29,7 +29,7 @@ public class SmoothFollowCamera : MonoBehaviour
 
     private void Awake()
     {
-        // Sahneye FPS karakteri eklendiyse 3. şahıs araba kamerasını otomatik kapat
+        // Disable standalone 3rd person vehicle camera if FPS character exists in the scene
         if (Object.FindAnyObjectByType<FPSPlayerController>() != null)
         {
             enabled = false;

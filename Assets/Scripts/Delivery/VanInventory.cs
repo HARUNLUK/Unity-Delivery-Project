@@ -127,21 +127,21 @@ public class VanInventory : MonoBehaviour
             if (string.Equals(item.targetPointId.Trim(), reachedPoint.pointId.Trim(), StringComparison.OrdinalIgnoreCase))
             {
                 isCorrect = true;
-                feedbackMessage = $"[+] SUCCESSFUL DELIVERY! (+{item.deliveryReward} $)";
+                feedbackMessage = $"[+] SUCCESSFUL DELIVERY! (+${item.deliveryReward})";
                 reachedPoint.IsFulfilled = true;
                 if (reachedPoint.visualMarker != null) reachedPoint.visualMarker.SetActive(false);
             }
             else
             {
                 isCorrect = false;
-                feedbackMessage = $"[-] WRONG ADDRESS! (-{item.wrongDeliveryPenalty} $ PENALTY)";
+                feedbackMessage = $"[-] WRONG ADDRESS! (-${item.wrongDeliveryPenalty} PENALTY)";
             }
         }
         else
         {
             item.deliveredToAddressName = "Street / Empty Area";
             isCorrect = false;
-            feedbackMessage = $"[-] DROPPED ON THE STREET! (-{item.wrongDeliveryPenalty} $ PENALTY)";
+            feedbackMessage = $"[-] DROPPED ON THE STREET! (-${item.wrongDeliveryPenalty} PENALTY)";
         }
 
         item.isDelivered = true;

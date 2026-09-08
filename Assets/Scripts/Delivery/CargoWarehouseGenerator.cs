@@ -15,77 +15,77 @@ public class CargoWarehouseGenerator : MonoBehaviour
     public int maxReward = 180;
     public int wrongPenalty = 40;
 
-    [Tooltip("Günün başında paketlerin otomatik üretilip üretilmeyeceği")]
+    [Tooltip("Whether packages automatically spawn at start of day")]
     public bool autoSpawnOnStart = true;
 
-    [Header("--- CARGO TYPE UNLOCK LEVELS & CHANCES (SEVİYE KİLİTLERİ) ---")]
-    [Tooltip("Standart kargonun aktif olduğu minimum oyuncu seviyesi")]
+    [Header("--- CARGO TYPE UNLOCK LEVELS & CHANCES ---")]
+    [Tooltip("Minimum player level required for Standard cargo")]
     public int standardRequiredLevel = 1;
-    [Range(0f, 100f), Tooltip("Standart kargo çıkma ağırlığı / şansı")]
+    [Range(0f, 100f), Tooltip("Standard cargo spawn weight / probability")]
     public float standardSpawnWeight = 50f;
 
-    [Tooltip("Kırılabilir (Fragile) kargonun aktif olduğu minimum oyuncu seviyesi")]
+    [Tooltip("Minimum player level required for Fragile cargo")]
     public int fragileRequiredLevel = 5;
-    [Range(0f, 100f), Tooltip("Kırılabilir kargo çıkma ağırlığı / şansı")]
+    [Range(0f, 100f), Tooltip("Fragile cargo spawn weight / probability")]
     public float fragileSpawnWeight = 30f;
 
-    [Tooltip("Zamanlı / Ekspres (Express) kargonun aktif olduğu minimum oyuncu seviyesi")]
+    [Tooltip("Minimum player level required for Express cargo")]
     public int expressRequiredLevel = 8;
-    [Range(0f, 100f), Tooltip("Zamanlı / Ekspres kargo çıkma ağırlığı / şansı")]
+    [Range(0f, 100f), Tooltip("Express cargo spawn weight / probability")]
     public float expressSpawnWeight = 20f;
 
-    [Header("--- EXPRESS CARGO TIME LIMIT (ZAMANLI TESLİMAT SINIRI) ---")]
-    [Tooltip("Ekspres kargolar için minimum teslimat saati (Örn: 10.0 = 10:00)")]
+    [Header("--- EXPRESS CARGO TIME LIMIT ---")]
+    [Tooltip("Minimum target delivery hour for Express cargo (e.g. 10.0 = 10:00)")]
     public float minExpressDeliveryHour = 10.0f;
 
-    [Tooltip("Ekspres kargolar için maksimum teslimat saati (Örn: 14.0 = 14:00)")]
+    [Tooltip("Maximum target delivery hour for Express cargo (e.g. 14.0 = 14:00)")]
     public float maxExpressDeliveryHour = 14.0f;
 
-    [Tooltip("Rastgele saat oluşturulurken dakika adımı (Örn: 15 = 10:00, 10:15, 10:30, 10:45... veya 30)")]
+    [Tooltip("Minute step when picking random express time (e.g. 15 = 10:00, 10:15, 10:30, 10:45...)")]
     [Range(5, 60)]
     public int expressMinuteInterval = 15;
 
-    [Header("--- FRAGILE CARGO TUNING (KIRILMA HASSASİYETİ) ---")]
-    [Tooltip("Hasar almak için gereken minimum çarpma hızı (m/s). Yere nazikçe koyma < 2.5 m/s, 1.5m elden düşüş ~5.0 m/s, yüksekten düşüş > 7.0 m/s. (Önerilen: 3.0 - 4.0)")]
+    [Header("--- FRAGILE CARGO TUNING ---")]
+    [Tooltip("Minimum impact speed to trigger damage (m/s). Gentle drop < 2.5 m/s, 1.5m drop ~5.0 m/s, high drop > 7.0 m/s.")]
     public float fragileMinDamageSpeedThreshold = 3.5f;
 
-    [Tooltip("Eşik hız aşıldığında hız başına alınan hasar çarpanı. (Önerilen: 14 - 20)")]
+    [Tooltip("Damage multiplier when speed threshold is exceeded.")]
     public float fragileDamageMultiplier = 16.0f;
 
-    [Tooltip("Kargolar birbirine çarptığında alınan hasar çarpanı (0.20 = %80 daha az hasar).")]
+    [Tooltip("Damage ratio when packages collide with each other (0.20 = 80% less damage).")]
     public float fragilePackageCollisionRatio = 0.20f;
 
-    [Tooltip("Paket ilk oluştuğunda kaç saniye boyunca hasar almaz.")]
+    [Tooltip("Spawn immunity duration (seconds).")]
     public float fragileSpawnImmunityDuration = 3.5f;
 
-    [Header("--- CUSTOM CARGO PACKAGE PREFABS (3D MODELLER / PREFABLAR) ---")]
-    [Tooltip("Standart kargo paketleri için özel 3D Prefab listesi. (Inspector'dan prefab sürükleyebilirsiniz. Boş bırakılırsa küp üretilir, birden fazla ise rastgele seçilir)")]
+    [Header("--- CUSTOM CARGO PACKAGE PREFABS ---")]
+    [Tooltip("Custom 3D Prefabs for standard packages (drag prefabs from project)")]
     public List<GameObject> packagePrefabs = new List<GameObject>();
 
-    [Tooltip("Kırılabilir (Fragile) kargolar için özel 3D Prefab listesi. (Boş bırakılırsa standart prefablar veya küp kullanılır)")]
+    [Tooltip("Custom 3D Prefabs for fragile packages")]
     public List<GameObject> fragilePackagePrefabs = new List<GameObject>();
 
-    [Tooltip("Zamanlı / Ekspres (Express) kargolar için özel 3D Prefab listesi. (Boş bırakılırsa standart prefablar veya küp kullanılır)")]
+    [Tooltip("Custom 3D Prefabs for express packages")]
     public List<GameObject> expressPackagePrefabs = new List<GameObject>();
 
-    [Header("--- PREFAB SCALE MULTIPLIER (BOYUT ÇARPANI & RANDOM) ---")]
-    [Tooltip("Prefabların orijinal boyutunu küçültmek/büyütmek için minimum çarpan (Örn: 0.35 = %35 boyut)")]
+    [Header("--- PREFAB SCALE MULTIPLIER ---")]
+    [Tooltip("Minimum scale multiplier for prefabs (e.g. 0.35 = 35% size)")]
     public float minPrefabScale = 0.35f;
 
-    [Tooltip("Prefabların orijinal boyutunu küçültmek/büyütmek için maksimum çarpan (Örn: 0.55 = %55 boyut)")]
+    [Tooltip("Maximum scale multiplier for prefabs (e.g. 0.55 = 55% size)")]
     public float maxPrefabScale = 0.55f;
 
-    [Tooltip("X, Y ve Z eksenlerini bağımsız rastgele mi çarpsın (Açık ise her eksen min-max arası farklı oranla ölçeklenir, kapalı ise orantılı/düzgün küçültür)")]
+    [Tooltip("Scale X, Y, Z axes independently with random multipliers")]
     public bool randomizeAxesIndependently = false;
 
     [Header("--- CARGO BOX MATERIALS (SKINS) ---")]
-    [Tooltip("Standart kargo paketleri için karton kaplama materyalleri (Inspector'dan materyal sürükleyebilirsiniz, birden fazla ise rastgele seçilir)")]
+    [Tooltip("Cardboard materials for standard packages")]
     public List<Material> cardboardMaterials = new List<Material>();
 
-    [Tooltip("Kırılabilir (Fragile) kargolar için özel materyaller (Boş bırakılırsa standart materyaller kullanılır)")]
+    [Tooltip("Materials for fragile packages")]
     public List<Material> fragileMaterials = new List<Material>();
 
-    [Tooltip("Zamanlı / Ekspres (Express) kargolar için özel materyaller (Boş bırakılırsa standart materyaller kullanılır)")]
+    [Tooltip("Materials for express packages")]
     public List<Material> expressMaterials = new List<Material>();
 
     [Header("--- CURRENT ACTIVE PACKAGES ---")]
@@ -238,7 +238,7 @@ public class CargoWarehouseGenerator : MonoBehaviour
     }
 
     /// <summary>
-    /// Ekspres kargolar için min ve max saat aralığında (15 dk veya 30 dk adımlarla) rastgele teslimat saati üretir.
+    /// Generates a random delivery cutoff hour for express shipments within min and max interval (steps of 15 or 30 mins).
     /// </summary>
     public float GenerateRandomExpressDeliveryHour()
     {
@@ -255,7 +255,7 @@ public class CargoWarehouseGenerator : MonoBehaviour
     }
 
     /// <summary>
-    /// Belirtilen kargo türüne uygun 3D Prefab modelini seçer. (Tanımlı değilse null döner, küp fallback yapılır)
+    /// Selects the 3D prefab model suitable for the given cargo type. (Falls back to cube if null)
     /// </summary>
     public GameObject GetPrefabForCargoType(CargoType type)
     {
@@ -280,7 +280,7 @@ public class CargoWarehouseGenerator : MonoBehaviour
     }
 
     /// <summary>
-    /// Belirtilen kargo türüne uygun karton materyalini seçer. (Tanımlı değilse varsayılan renk paletine düşer)
+    /// Selects the cardboard material suitable for the specified cargo type.
     /// </summary>
     public Material GetMaterialForCargoType(CargoType type)
     {
@@ -305,7 +305,7 @@ public class CargoWarehouseGenerator : MonoBehaviour
     }
 
     /// <summary>
-    /// Oyuncu seviyesine göre açık olan kargo türlerini ağırlıklı rastgele (weighted random) seçer.
+    /// Selects an unlocked cargo type using weighted random probability based on player level.
     /// </summary>
     public CargoType DetermineRandomCargoType(int playerLevel)
     {

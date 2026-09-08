@@ -39,22 +39,22 @@ public static class MapValleyBuilder
         // 2. Ana Zemin (Ground)
         CreateGround(envRoot);
 
-        // 3. Çevre Dağ Çemberi (Doğal Sınırlar)
+        // 3. Surrounding Mountain Ring (Natural Boundaries)
         BuildMountainRing(mountainRoot);
 
-        // 4. Yol Şebekesi
+        // 4. Road Network
         BuildRoadNetwork(roadsRoot);
 
-        // 5. Bölge 1: Şehir Merkezi (Downtown)
+        // 5. Zone 1: Downtown District
         BuildDowntownZone(cityRoot, deliveryPointsRoot);
 
-        // 6. Bölge 2: Müstakil Evler & Mahalle (Suburbs)
+        // 6. Zone 2: Suburbs & Residential Neighborhood
         BuildSuburbsZone(suburbsRoot, deliveryPointsRoot);
 
-        // 7. Bölge 3: Dağ Yamacı Köy Yeri (Mountain Village)
+        // 7. Zone 3: Mountain Village & Slopes
         BuildMountainVillageZone(villageRoot, deliveryPointsRoot);
 
-        // 8. Işıklandırma & Gökyüzü (Directional Light / Sun)
+        // 8. Lighting & Sky (Directional Light / Sun)
         GameObject sunObj = new GameObject("Sun_DirectionalLight");
         sunObj.transform.SetParent(envRoot.transform);
         Light sunLight = sunObj.AddComponent<Light>();
@@ -64,7 +64,7 @@ public static class MapValleyBuilder
         sunLight.shadows = LightShadows.Soft;
         sunObj.transform.rotation = Quaternion.Euler(35f, -30f, 0f);
 
-        // 9. Araç (DeliveryVan) Yerleşimi
+        // 9. Vehicle Placement (DeliveryVan)
         GameObject vanPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/DeliveryVan.prefab");
         GameObject carObj = null;
         if (vanPrefab != null)
@@ -76,7 +76,7 @@ public static class MapValleyBuilder
             carObj.name = "DeliveryVan";
         }
 
-        // 10. Kamera (SmoothFollowCamera)
+        // 10. Camera (SmoothFollowCamera)
         GameObject camObj = new GameObject("Main Camera");
         camObj.tag = "MainCamera";
         Camera cam = camObj.AddComponent<Camera>();
@@ -100,14 +100,14 @@ public static class MapValleyBuilder
 
         delivManager.AddComponent<PlayerEconomyManager>();
 
-        // 12. UI Arayüzünü İnşa Et
+        // 12. Build UI Interface
         DeliveryUIBuilder.BuildCleanDeliveryUI();
 
-        // 13. Sahneyi Kaydet ve Build Ayarlarına Ekle
+        // 13. Save Scene and Add to Build Settings
         EditorSceneManager.SaveScene(newScene, SCENE_PATH);
         AddSceneToBuildSettings(SCENE_PATH);
 
-        Debug.Log($"[MapValleyBuilder] Yeni Vadi Haritası başarıyla oluşturuldu ve kaydedildi: {SCENE_PATH}");
+        Debug.Log($"[MapValleyBuilder] New Valley Map successfully generated and saved: {SCENE_PATH}");
     }
 
     private static void CreateGround(GameObject parent)
@@ -230,21 +230,21 @@ public static class MapValleyBuilder
 
         string[] descriptions = new string[]
         {
-            "Mavi camlı yüksek şirket plazası, ana giriş kapısı.",
-            "Köşedeki 3 katlı ticari iş merkezi, tabela altı.",
-            "Şehir meydanındaki sarı cepheli motel, resepsiyon önü.",
-            "Gri betonarme finans merkezi, döner kapı önü.",
-            "Geniş otoparklı 2 katlı motel binası.",
-            "Büyük reklam panolu teknoloji plazası.",
-            "Köşe başındaki turuncu çizgili mağaza binası.",
-            "Çift girişli modern ofis kulesi.",
-            "Girişinde bayrak direkleri olan kurumsal şirket binası.",
-            "Şehir caddesi sonundaki butik otel girişi."
+            "Blue-tinted glass corporate skyscraper plaza, main entrance door.",
+            "Corner 3-story commercial business hub, under business signage.",
+            "Yellow-facade motel in city square, front reception entrance.",
+            "Gray concrete financial center, in front of revolving glass doors.",
+            "Two-story motel building with wide parking lot.",
+            "High-tech technology plaza with large rooftop advertising billboard.",
+            "Street-corner store building with orange stripe accents.",
+            "Modern office tower with double front entrances.",
+            "Corporate company headquarters with flagpole entrance.",
+            "Boutique hotel front entrance at the end of downtown boulevard."
         };
 
         int idCounter = 1;
 
-        // Doğu Tarafı Plazalar
+        // East Side Plazas
         for (int i = 0; i < 5; i++)
         {
             string pPath = companyPrefabs[i % companyPrefabs.Length];
@@ -256,14 +256,14 @@ public static class MapValleyBuilder
                 GameObject b = SpawnObject(prefab, parent, pos, Quaternion.Euler(0, -90, 0), Vector3.one * 1.2f);
                 AddBoxColliderIfMissing(b);
 
-                // Teslimat Noktası
+                // Delivery Point
                 Vector3 dropPos = pos + new Vector3(-12f, 0.2f, 0f);
-                CreateDeliveryPoint(pointsPool, $"SHR-{idCounter:D2}", $"Ataturk Bulvari Plaza No: {idCounter * 2}", descriptions[i], dropPos);
+                CreateDeliveryPoint(pointsPool, $"DT-{idCounter:D2}", $"Grand Boulevard Plaza No: {idCounter * 2}", descriptions[i], dropPos);
                 idCounter++;
             }
         }
 
-        // Batı Tarafı Ticari Binalar & Moteller
+        // West Side Commercial & Motels
         for (int i = 5; i < 10; i++)
         {
             string pPath = companyPrefabs[i % companyPrefabs.Length];
@@ -275,9 +275,9 @@ public static class MapValleyBuilder
                 GameObject b = SpawnObject(prefab, parent, pos, Quaternion.Euler(0, 90, 0), Vector3.one * 1.2f);
                 AddBoxColliderIfMissing(b);
 
-                // Teslimat Noktası
+                // Delivery Point
                 Vector3 dropPos = pos + new Vector3(12f, 0.2f, 0f);
-                CreateDeliveryPoint(pointsPool, $"SHR-{idCounter:D2}", $"Inonu Caddesi Is Merkezi No: {idCounter}", descriptions[i], dropPos);
+                CreateDeliveryPoint(pointsPool, $"DT-{idCounter:D2}", $"Central Avenue Commerce Center No: {idCounter}", descriptions[i], dropPos);
                 idCounter++;
             }
         }
@@ -295,7 +295,7 @@ public static class MapValleyBuilder
             "Assets/Pandazole_Ultimate_Pack/Pandazole City Town Pack/Prefabs/Env_ResidentBuilding_06.prefab"
         };
 
-        // 1. Sokak: Barış Manço Sokak (11 Ev)
+        // Street 1: Maple Street (11 Houses)
         for (int i = 1; i <= 11; i++)
         {
             string pPath = residentPrefabs[i % residentPrefabs.Length];
@@ -308,15 +308,15 @@ public static class MapValleyBuilder
                 AddBoxColliderIfMissing(house);
 
                 string desc = (i % 2 == 0) 
-                    ? $"Kirmizi catili, on bahcesinde citler olan {i} numarali villa." 
-                    : $"Beyaz sundurmali, onunde mavi cicekler acmis {i} numarali ev.";
+                    ? $"Red-roofed residential villa with front yard fencing, house No: {i}." 
+                    : $"White porch home with blooming blue flowerbeds, house No: {i}.";
 
                 Vector3 dropPos = pos + new Vector3(10f, 0.2f, 0f);
-                CreateDeliveryPoint(pointsPool, $"SUB-BM-{i:D2}", $"Cumhuriyet Mah. Baris Manco Sokak No: {i}", desc, dropPos);
+                CreateDeliveryPoint(pointsPool, $"SUB-M-{i:D2}", $"Maplewood Suburbs Maple St No: {i}", desc, dropPos);
             }
         }
 
-        // 2. Sokak: Aşık Veysel Sokak (11 Ev)
+        // Street 2: Oak Avenue (11 Houses)
         for (int i = 1; i <= 11; i++)
         {
             string pPath = residentPrefabs[(i + 2) % residentPrefabs.Length];
@@ -329,11 +329,11 @@ public static class MapValleyBuilder
                 AddBoxColliderIfMissing(house);
 
                 string desc = (i % 2 == 0) 
-                    ? $"Bahcesinde buyuk cam agaci olan, ahsap balkonlu {i} numarali mustakil ev." 
-                    : $"Gri tuglali, bahce kapisi yesil boyali {i} numarali bahceli ev.";
+                    ? $"Detached house with large front pine tree and wooden balcony No: {i}." 
+                    : $"Gray brick house with green garden gate No: {i}.";
 
                 Vector3 dropPos = pos + new Vector3(-10f, 0.2f, 0f);
-                CreateDeliveryPoint(pointsPool, $"SUB-AV-{i:D2}", $"Cumhuriyet Mah. Asik Veysel Sokak No: {i}", desc, dropPos);
+                CreateDeliveryPoint(pointsPool, $"SUB-O-{i:D2}", $"Maplewood Suburbs Oak Ave No: {i}", desc, dropPos);
             }
         }
     }
@@ -350,37 +350,37 @@ public static class MapValleyBuilder
         GameObject treePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Downtown Game Studio/Nature Pack - Low Polly Trees & Bushes/Prefabs/tree 1.prefab");
         if (treePrefab == null) treePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Downtown Game Studio/Nature Pack - Low Polly Trees & Bushes/Prefabs/Street Tree 1.prefab");
 
-        // Dağ Yamacı Köy Evleri (12 Ev)
+        // Mountain Slope Village Houses (12 Houses)
         string[] villageDescriptions = new string[]
         {
-            "Yokushun basindaki tas temelli koy evi, onunde odun yiginlari var.",
-            "Dag yamacinda buyuk cam agaclarinin arasindaki ahsap koy evi.",
-            "Tepedeki manzarali ciftlik evi, bahcesinde saman balyalari var.",
-            "Virajin ic kismindaki kirmizi kepenkli dağ kulubesi.",
-            "Dag yolunun en yuksek noktasindaki beyaz koy konagi.",
-            "Orman kenarindaki tek katli ahsap yayla evi.",
-            "Koy meydanindaki tas fırınlı eski tas ev.",
-            "Yamacta vadiden gorunen iki katli genis dag evi.",
-            "Sik agacliklar arasinda patika yolu olan koy evi.",
-            "Koyun girisindeki kucuk bahceli kulube.",
-            "Yamac virajindaki tahta citli ormanci kulubesi.",
-            "En ust zirveye yakin tepe villasi."
+            "Stone-foundation mountain home at the slope base with stacked firewood.",
+            "Timber mountain cabin nestled between tall pine trees on the hillside.",
+            "Scenic hilltop ranch house with hay bales in the front yard.",
+            "Alpine cabin with red wooden shutters nestled along the hairpin curve.",
+            "White mountain chalet located at the highest viewpoint of the ridge road.",
+            "Single-story rustic woodland lodge bordering the evergreen forest.",
+            "Historic stone cottage with exterior masonry oven in village square.",
+            "Spacious two-story chalet overlooking the entire lower valley.",
+            "Secluded countryside cabin with a dirt path between dense pine woods.",
+            "Cozy garden cottage near the entry arch of the mountain village.",
+            "Ranger cabin with timber fencing along the hillside switchback curve.",
+            "Upper peak ridge villa closest to the mountain summit."
         };
 
         for (int i = 0; i < 12; i++)
         {
             float zPos = 70f + (i * 15f);
             float xPos = (i % 2 == 0) ? -35f - (i * 2.5f) : 35f + (i * 2.5f);
-            float yPos = (zPos - 50f) * 0.12f; // Dağ yamacı yüksekliği
+            float yPos = (zPos - 50f) * 0.12f; // Mountain slope elevation
 
-            // Tepe Platformu (Toprak zemin yükseltisi)
+            // Plateau Mound
             GameObject mound = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             mound.name = $"Hill_Plateau_{i + 1}";
             mound.transform.SetParent(parent.transform);
             mound.transform.position = new Vector3(xPos, yPos - 0.5f, zPos);
             mound.transform.localScale = new Vector3(25f, 1f, 25f);
 
-            // Köy Evi
+            // Village House
             string pPath = villagePrefabs[i % villagePrefabs.Length];
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(pPath);
 
@@ -390,10 +390,10 @@ public static class MapValleyBuilder
                 AddBoxColliderIfMissing(house);
 
                 Vector3 dropPos = new Vector3(xPos + ((i % 2 == 0) ? 10f : -10f), yPos + 0.6f, zPos);
-                CreateDeliveryPoint(pointsPool, $"VIL-{i + 1:D2}", $"Yaylalar Koyu No: {i + 1}", villageDescriptions[i], dropPos);
+                CreateDeliveryPoint(pointsPool, $"MV-{i + 1:D2}", $"Mountain Valley Ridge No: {i + 1}", villageDescriptions[i], dropPos);
             }
 
-            // Çevresine Çam Ağaçları Ekle
+            // Add Pine Trees
             if (treePrefab != null)
             {
                 for (int t = 0; t < 3; t++)
@@ -413,14 +413,14 @@ public static class MapValleyBuilder
 
         SphereCollider col = pointObj.AddComponent<SphereCollider>();
         col.isTrigger = true;
-        col.radius = 4.0f; // 4m teslimat algılama yarıçapı
+        col.radius = 4.0f; // 4m delivery detection radius
 
         DeliveryPoint dp = pointObj.AddComponent<DeliveryPoint>();
         dp.pointId = id;
         dp.addressName = addressName;
         dp.addressDescription = description;
 
-        // Görsel Teslimat Alanı Çemberi (Yerde hafif yeşil/sarı parlayan disk)
+        // Visual Delivery Drop Marker (Glowing cylinder disc on ground)
         GameObject marker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         marker.name = "VisualMarker";
         marker.transform.SetParent(pointObj.transform);

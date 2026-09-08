@@ -42,18 +42,18 @@ public class PhysicalCargoPackage : MonoBehaviour
 
     [Header("--- FRAGILE & EXPRESS SPECS ---")]
     public float health = 100f;
-    public float targetDeliveryHour = 13.0f; // 13:00'e kadar teslimat bonusu
+    public float targetDeliveryHour = 13.0f; // Delivery bonus cutoff time (e.g. 13:00)
     public bool isBroken => health <= 0f;
     public bool hasBeenHandledByPlayer = false;
-    public bool isBeingCarried = false; // Elimizde taşırken duvara/kapıya sürtünme hasarlarını önler!
+    public bool isBeingCarried = false; // Prevents wall/door friction damage while held!
     
-    [Tooltip("Hasar almaya başlaması için gereken minimum çarpma hızı (m/s). Yere nazikçe koyma < 2.5 m/s, 1.5m elden düşüş ~5.0 m/s, yüksekten düşüş > 7.0 m/s.")]
+    [Tooltip("Minimum collision impact velocity (m/s) required to begin taking damage. Gentle placement < 2.5 m/s, 1.5m drop ~5.0 m/s, high drop > 7.0 m/s.")]
     public float minDamageSpeedThreshold = 3.5f;
 
-    [Tooltip("Eşik hız aşıldığında çarpma şiddetine göre hasar çarpanı.")]
+    [Tooltip("Damage multiplier per unit speed above the threshold.")]
     public float damageMultiplier = 16.0f;
 
-    [Tooltip("Kargolar birbirine çarptığında alınan hasar çarpanı (0.20 = %80 daha az hasar).")]
+    [Tooltip("Damage reduction ratio when colliding with other cargo packages (0.20 = 80% less damage).")]
     public float packageCollisionDamageRatio = 0.20f;
 
     public float spawnImmunityDuration = 3.5f;
@@ -183,7 +183,7 @@ public class PhysicalCargoPackage : MonoBehaviour
     private void OnCollisionEnter(Collision collision)
     {
         if (cargoType != CargoType.Fragile || isBroken) return;
-        if (isBeingCarried) return; // Elimizde taşırken duvara veya kapılara sürtününce asla hasar almaz!
+        if (isBeingCarried) return; // Never take damage while held by player!
         if (Time.time < spawnImmunityUntil) return; // Do not take damage during initial spawn settling (3.5s)
         if (Time.time - lastDamageTime < damageCooldown) return; // Cooldown to prevent multi-hit bounce/rolling frame spam
 
@@ -194,22 +194,22 @@ public class PhysicalCargoPackage : MonoBehaviour
             if (impulseSpeed > impactSpeed) impactSpeed = impulseSpeed;
         }
 
-        // Kargoların birbirine çarpmasını tespit et (karton-karton teması yumuşaktır)
+        // Detect package-to-package collisions (cardboard-to-cardboard contact is softer)
         bool hitOtherCargo = collision.gameObject.GetComponent<PhysicalCargoPackage>() != null || 
                              collision.transform.GetComponentInParent<PhysicalCargoPackage>() != null;
 
         float effectiveThreshold = hitOtherCargo ? (minDamageSpeedThreshold + 1.8f) : minDamageSpeedThreshold;
 
-        // Hasar eşiği kontrolü
+        // Damage threshold check
         if (impactSpeed > effectiveThreshold)
         {
             lastDamageTime = Time.time;
             float excessSpeed = impactSpeed - effectiveThreshold;
 
-            // Kinetik Enerji & Yükseklik Hasar Formülü:
+            // Kinetic Energy & Drop Height Damage Formula:
             float damage = (excessSpeed * damageMultiplier) + (excessSpeed * excessSpeed * 3.5f);
 
-            // Paket-paket çarpışmalarında hasarı %80 oranında azalt
+            // Reduce damage by 80% for package-on-package collisions
             if (hitOtherCargo)
             {
                 damage *= packageCollisionDamageRatio;
@@ -348,10 +348,10 @@ public class PhysicalCargoPackage : MonoBehaviour
         string shortAddress = TruncateWithEllipsis(targetAddressName, 18);
 
         string badge = "";
-        if (isBroken) badge = "<color=#FF2222>[BROKEN / HASARLI]</color>\n";
+        if (isBroken) badge = "<color=#FF2222>[BROKEN / DAMAGED]</color>\n";
         else if (cargoType == CargoType.Fragile)
         {
-            if (health < 100f) badge = $"<color=#FF5500>[FRAGILE %{Mathf.CeilToInt(health)}]</color>\n";
+            if (health < 100f) badge = $"<color=#FF5500>[FRAGILE {Mathf.CeilToInt(health)}%]</color>\n";
             else badge = "<color=#FF5500>[FRAGILE]</color>\n";
         }
         else if (cargoType == CargoType.Express) badge = $"<color=#0088FF>[EXPRESS - {GetFormattedTargetDeliveryTime()}]</color>\n";
@@ -422,7 +422,7 @@ public class PhysicalCargoPackage : MonoBehaviour
     }
 
     /// <summary>
-    /// Gün sonunda paketin konumunu, hasar durumunu ve ekspres zamanlamasını değerlendirir.
+    /// Evaluates the end-of-day package status (location, damage state, express timing).
     /// </summary>
     public CargoDeliveryResult EvaluateEndOfDayResult()
     {

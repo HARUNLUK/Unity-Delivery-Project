@@ -7,7 +7,7 @@ using UnityEngine.InputSystem;
 
 public class CarController : MonoBehaviour
 {
-    [Header("--- MOTOR & FREN AYARLARI ---")]
+    [Header("--- MOTOR & BRAKE SETTINGS ---")]
     public float motorForce = 16000f;
     public float reverseForce = 11000f;
     public float footBrakeForce = 100000f;
@@ -16,47 +16,47 @@ public class CarController : MonoBehaviour
     public float turnAssistTorque = 3.5f;
     public Vector3 centerOfMassOffset = new Vector3(0, -1.0f, 0);
 
-    [Header("--- EL FRENİ & DRİFT AYARLARI ---")]
+    [Header("--- HANDBRAKE & DRIFT SETTINGS ---")]
     public float driftSidewaysStiffness = 0.25f;
     public float driftYawBoost = 4.0f;
 
-    [Header("--- DRİFT TOPARLANMA DESTEĞİ ---")]
-    [Tooltip("Gaza basınca aracın yan kaymadan düz hatta toparlanma hızı")]
+    [Header("--- DRIFT RECOVERY ASSIST ---")]
+    [Tooltip("Recovery rate to straighten vehicle when accelerating after drift")]
     public float driftRecoveryRate = 8.0f;
 
-    [Header("--- WHEEL COLLIDERS (Fizik Tekerlekleri) ---")]
+    [Header("--- WHEEL COLLIDERS (Physics Wheels) ---")]
     public WheelCollider frontLeftCollider;
     public WheelCollider frontRightCollider;
     public WheelCollider rearLeftCollider;
     public WheelCollider rearRightCollider;
 
-    [Header("--- WHEEL MESHES (Görsel Tekerlek Modelleri) ---")]
+    [Header("--- WHEEL MESHES (Visual Wheel Models) ---")]
     public Transform frontLeftMesh;
     public Transform frontRightMesh;
     public Transform rearLeftMesh;
     public Transform rearRightMesh;
 
-    [Header("--- TEKERLEK MODEL AÇI VE POZİSYON AYARI ---")]
+    [Header("--- WHEEL MODEL ROTATION & POSITION OFFSET ---")]
     public Vector3 wheelMeshRotationOffset = new Vector3(-90f, 0f, 0f);
     public Vector3 wheelMeshPositionOffset = Vector3.zero;
 
-    [Header("--- DİREKSİYON & DÖNÜŞ YUMUŞATMA (SMOOTH STEERING) ---")]
-    [Tooltip("Sürüş sırasında dönecek direksiyon modeli objesi")]
+    [Header("--- STEERING WHEEL & SMOOTH STEERING ---")]
+    [Tooltip("Steering wheel visual model object to rotate while driving")]
     public Transform steeringWheel;
 
-    [Tooltip("Direksiyon dönme çarpanı")]
+    [Tooltip("Steering wheel rotation multiplier")]
     public float steeringWheelMultiplier = 3.5f;
 
-    [Tooltip("Direksiyon ve tekerleklerin dönüş yumuşatma hızı (Derece/Saniye)")]
+    [Tooltip("Steering angle interpolation speed (Degrees/Second)")]
     public float steerSpeed = 160f;
 
-    [Tooltip("Tuş bırakıldığında direksiyonun ve tekerleklerin merkeze toparlanma hızı (Derece/Saniye)")]
+    [Tooltip("Steering return-to-center speed when key is released (Degrees/Second)")]
     public float steerReturnSpeed = 220f;
 
-    [Tooltip("Eğer işaretlenirse, direksiyonun başlangıç rotasyonu aşağıdaki 'customInitialSteeringEuler' değerine zorlanır.")]
+    [Tooltip("If checked, forces initial steering wheel rotation to customInitialSteeringEuler")]
     public bool overrideInitialSteeringEuler = false;
 
-    [Tooltip("Özel başlangıç açısı (Örn: Pickup için X: 0, Y: -90, Z: 0)")]
+    [Tooltip("Custom initial Euler angles (e.g. for Pickup: X: 0, Y: -90, Z: 0)")]
     public Vector3 customInitialSteeringEuler = new Vector3(0f, -90f, 0f);
 
     private Vector3 baseSteeringEuler = Vector3.zero;
@@ -82,7 +82,7 @@ public class CarController : MonoBehaviour
     {
         EnsureBaseSteeringEuler();
 
-        // Araç üzerindeki tüm MeshCollider'ları otomatik Convex yap (Fizik motoru çakışmasını engelle)
+        // Ensure all child MeshColliders are convex to prevent physics engine conflicts
         MeshCollider[] meshColliders = GetComponentsInChildren<MeshCollider>();
         foreach (var mc in meshColliders)
         {
@@ -139,17 +139,17 @@ public class CarController : MonoBehaviour
         isHandbraking = false;
         currentSteerAngle = 0f;
 
-        // 1. Sıfır Gaz (Motor torkunu tüm tekerleklerde tamamen kes)
+        // 1. Zero Throttle (Cut motor torque across all wheels)
         if (frontLeftCollider != null) frontLeftCollider.motorTorque = 0f;
         if (frontRightCollider != null) frontRightCollider.motorTorque = 0f;
         if (rearLeftCollider != null) rearLeftCollider.motorTorque = 0f;
         if (rearRightCollider != null) rearRightCollider.motorTorque = 0f;
 
-        // 2. Direksiyonu Düzelt
+        // 2. Straighten steering
         if (frontLeftCollider != null) frontLeftCollider.steerAngle = 0f;
         if (frontRightCollider != null) frontRightCollider.steerAngle = 0f;
 
-        // 3. Doğal Yavaşlama Freni (Boşa çıkmış araç gibi akıcı yavaşlayarak durması için)
+        // 3. Natural Deceleration Brake (Smoothly halts vehicle like idling to park)
         float neutralBrake = 2000f;
         if (frontLeftCollider != null) frontLeftCollider.brakeTorque = neutralBrake;
         if (frontRightCollider != null) frontRightCollider.brakeTorque = neutralBrake;
@@ -383,7 +383,7 @@ public class CarController : MonoBehaviour
 
     private void ApplyMotorTorque(float force)
     {
-        // AWD Tork Dağılımı (Ön tekerlekler dönüş yönüne doğru aracı çeker, hantallığı bitirir)
+        // AWD Torque Distribution (Front wheels pull towards steering angle, preventing sluggishness)
         float frontForce = force * 0.35f;
         float rearForce = force * 0.65f;
 

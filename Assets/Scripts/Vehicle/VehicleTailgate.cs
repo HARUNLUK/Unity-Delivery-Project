@@ -9,37 +9,37 @@ public class VehicleTailgate : MonoBehaviour
         ExternalHierarchy   // Kapak başka bir mesh/kemik altında, kendi kendine döner
     }
 
-    [Header("--- ÇALIŞMA MODU ---")]
+    [Header("--- OPERATION MODE ---")]
     public DoorMode doorMode = DoorMode.ProceduralRotation;
 
-    [Header("--- PROSEDÜREL DÖNÜŞ AYARLARI ---")]
-    [Tooltip("Dönecek kapak objesi (Örn: Modelin kendi kapı/bagaj meshi)")]
+    [Header("--- PROCEDURAL ROTATION SETTINGS ---")]
+    [Tooltip("Door/tailgate transform to rotate")]
     public Transform doorTransform;
 
-    [Tooltip("Kod ile otomatik döndürsün mü? (Kapıyı sen/animasyon döndürüyorsa FALSE yap)")]
+    [Tooltip("Should code automatically rotate transform? (Set FALSE if using custom animator)")]
     public bool autoRotateTransform = true;
 
-    [Tooltip("Kapalıyken yerel açı (Euler)")]
+    [Tooltip("Local Euler rotation when closed")]
     public Vector3 closedRotation = Vector3.zero;
 
-    [Tooltip("Açıkken yerel açı (Euler) - Örn: X ekseninde 90 derece aşağı")]
+    [Tooltip("Local Euler rotation when open (e.g. 90 on X-axis)")]
     public Vector3 openRotation = new Vector3(90f, 0f, 0f);
 
-    [Tooltip("Açılma ve kapanma hızı")]
+    [Tooltip("Opening and closing speed")]
     public float transitionSpeed = 5.0f;
 
-    [Header("--- UNITY ANIMATOR AYARLARI (İsteğe Bağlı) ---")]
+    [Header("--- UNITY ANIMATOR SETTINGS (Optional) ---")]
     public Animator doorAnimator;
-    [Tooltip("Animator içindeki bool parametresi adı")]
+    [Tooltip("Bool parameter name inside Animator")]
     public string animatorBoolParam = "IsOpen";
 
-    [Header("--- EKRAN METİNLERİ & SES ---")]
+    [Header("--- PROMPT TEXTS & AUDIO ---")]
     public string openPromptText = "[E] Open Tailgate";
     public string closePromptText = "[E] Close Tailgate";
     public AudioClip openSound;
     public AudioClip closeSound;
 
-    [Header("--- DURUM ---")]
+    [Header("--- STATE ---")]
     public bool isOpen = false;
 
     private AudioSource audioSource;

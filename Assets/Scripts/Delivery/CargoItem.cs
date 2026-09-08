@@ -11,20 +11,20 @@ public enum CargoType
 [System.Serializable]
 public class CargoItem
 {
-    [Header("--- KARGO BİLGİLERİ ---")]
-    public string trackingNumber;          // Örn: "#KRG-1042"
-    public string recipientName;           // Örn: "Ahmet Yılmaz"
-    public string targetAddress;           // Örn: "Papatya Sokak No: 4"
-    public string targetAddressDescription;// Örn: "Kırmızı çatılı, bahçesinde mavi çiçekler olan ev"
-    public string targetPointId;           // Eşleşen DeliveryPoint ID'si
+    [Header("--- CARGO DATA ---")]
+    public string trackingNumber;          // e.g. "#CRG-1042"
+    public string recipientName;           // e.g. "John Smith"
+    public string targetAddress;           // e.g. "104 Maple Street"
+    public string targetAddressDescription;// e.g. "Red roof house with white fences"
+    public string targetPointId;           // Matching DeliveryPoint ID
     public CargoType cargoType = CargoType.Standard;
     
-    [Header("--- EKONOMİ ---")]
-    public int deliveryReward = 50;        // Doğru teslimat ödülü (TL)
-    public int wrongDeliveryPenalty = 100; // Hatalı teslimat cezası (TL)
+    [Header("--- ECONOMY ---")]
+    public int deliveryReward = 50;        // Reward for correct delivery ($)
+    public int wrongDeliveryPenalty = 100; // Penalty for incorrect delivery ($)
     public int bonusReward = 0;
 
-    [Header("--- DURUM ---")]
+    [Header("--- STATUS ---")]
     public bool isDelivered = false;
     public bool isDeliveredCorrectly = false;
     public string deliveredToAddressName = "";

@@ -16,7 +16,7 @@ public class PhysicsGrabber : MonoBehaviour
     public float maxGrabMass = 100f;
 
     [Header("--- HOLD ORIENTATION ---")]
-    [Tooltip("Kutu tutulduğunda yazılı üst yüzeyin oyuncuya bakması için rotasyon ofseti")]
+    [Tooltip("Rotation offset so that the package label tilts towards the player when held")]
     public Vector3 holdRotationOffset = new Vector3(-60f, 0f, 0f);
 
     [Header("--- CURRENT GRAB STATE ---")]

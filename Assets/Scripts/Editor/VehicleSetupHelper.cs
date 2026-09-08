@@ -299,7 +299,7 @@ public static class VehicleSetupHelper
         GameObject target = Selection.activeGameObject;
         if (target == null)
         {
-            EditorUtility.DisplayDialog("Select Vehicle", "Lütfen sahnedeki bir araç GameObject'ini seçin!", "Tamam");
+            EditorUtility.DisplayDialog("Select Vehicle", "Please select a vehicle GameObject in the scene!", "OK");
             return;
         }
 
@@ -338,7 +338,7 @@ public static class VehicleSetupHelper
         sm.AutoDetectVehicles();
 
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-        Debug.Log($"[VehicleSetupHelper] '{target.name}' başarıyla Kilitli/Showroom aracı olarak ayarlandı!");
+        Debug.Log($"[VehicleSetupHelper] '{target.name}' successfully configured as Lockable/Showroom vehicle!");
     }
 
     [MenuItem("Tools/Delivery Game/Create Warehouse Garage Spawn Point", false, 46)]
@@ -370,10 +370,10 @@ public static class VehicleSetupHelper
 
         Selection.activeGameObject = spawnObj;
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-        Debug.Log("[VehicleSetupHelper] Depo Garaj Spawn Noktası (Warehouse_Garage_SpawnPoint) oluşturuldu ve bağlandı!");
+        Debug.Log("[VehicleSetupHelper] Warehouse Garage Spawn Point (Warehouse_Garage_SpawnPoint) created and linked!");
     }
 
-    [MenuItem("Tools/Delivery Game/Create Fuel Station Pump Area (Benzinlik Pompası)", false, 47)]
+    [MenuItem("Tools/Delivery Game/Create Fuel Station Pump Area", false, 47)]
     public static void CreateFuelStationPumpArea()
     {
         if (!Directory.Exists(PREFAB_DIR)) Directory.CreateDirectory(PREFAB_DIR);
@@ -413,8 +413,8 @@ public static class VehicleSetupHelper
 
         // 3. Attach FuelStationPump Component
         FuelStationPump pumpScript = pumpRoot.AddComponent<FuelStationPump>();
-        pumpScript.stationName = "Petrol İstasyonu";
-        pumpScript.pricePerLiter = 35f;
+        pumpScript.stationName = "Gas Station";
+        pumpScript.pricePerLiter = 3.5f;
         pumpScript.refuelRateLitersPerSecond = 6.0f;
         pumpScript.pumpStatusLight = pLight;
 
@@ -428,7 +428,7 @@ public static class VehicleSetupHelper
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
-        Debug.Log($"[VehicleSetupHelper] Benzin Dolum İstasyonu başarıyla oluşturuldu ve Prefab olarak kaydedildi: '{prefabPath}'!");
+        Debug.Log($"[VehicleSetupHelper] Fuel Station Pump successfully created and saved as Prefab: '{prefabPath}'!");
     }
 }
 #endif

@@ -50,9 +50,9 @@ public class FPSPlayerController : MonoBehaviour
     public float tpsHeightDamping = 5.0f;
 
     [Header("--- CARGO THROW SETTINGS ---")]
-    [Tooltip("Maksimum fırlatma hızı")]
+    [Tooltip("Maximum throw velocity")]
     public float maxThrowForce = 11.0f;
-    [Tooltip("Tam güçte fırlatma için basılı tutma süresi (saniye)")]
+    [Tooltip("Hold duration in seconds for maximum throw power")]
     public float throwChargeDuration = 0.85f;
 
     private float vehicleYaw = 0f;
@@ -209,7 +209,7 @@ public class FPSPlayerController : MonoBehaviour
             }
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF5555>★ TÜM ARAÇ & ŞUBE GELİŞİMLERİ SIFIRLANDI (F9) ★</color>");
+                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF5555>★ ALL VEHICLE & BRANCH PROGRESSION RESET (F9) ★</color>");
             }
             if (CargoTabletUI.Instance != null && CargoTabletUI.Instance.IsTabletOpen)
             {
@@ -352,15 +352,15 @@ public class FPSPlayerController : MonoBehaviour
 
         Vector3 pivotPoint = pivotOrigin.position + Vector3.up * activeLookAtHeight;
 
-        // Küresel (Spherical) Pivot Hesaplaması:
-        // Varsayılan mesafe ve yükseklikten temel pitch açısı ve yarıçapı hesapla
+        // Spherical Pivot Calculation:
+        // Calculate base pitch angle and radius from default distance and height
         float baseRadius = Mathf.Sqrt((activeDistance * activeDistance) + (activeHeight * activeHeight));
         float basePitchAngle = Mathf.Atan2(activeHeight, Mathf.Max(0.1f, activeDistance)) * Mathf.Rad2Deg;
 
-        // Mouse yukarı/aşağı hareketi küresel yörüngede (pitch) pivot yapar
+        // Mouse vertical movement orbits around pitch axis
         float totalPitch = Mathf.Clamp(basePitchAngle + tpsPitchOffset, 2f, 78f);
 
-        // Mouse sağ/sol hareketi araç yönelimine eklenir (yaw)
+        // Mouse horizontal movement adds to vehicle yaw
         float targetYaw = currentVehicleTransform.eulerAngles.y + tpsYawOffset;
 
         float currentYaw = playerCamera.transform.eulerAngles.y;
@@ -370,7 +370,7 @@ public class FPSPlayerController : MonoBehaviour
 
         Vector3 targetPos = pivotPoint - (orbitRotation * Vector3.forward * baseRadius);
 
-        // Zemin altına girmeyi engelle
+        // Prevent clipping below ground
         float minAllowedHeight = currentVehicleTransform.position.y + 0.35f;
         if (targetPos.y < minAllowedHeight)
         {
@@ -494,7 +494,7 @@ public class FPSPlayerController : MonoBehaviour
             {
                 if (currentDropHoldTime >= 0.25f)
                 {
-                    // Şarjlı fırlatma
+                    // Charged throw
                     float charge = Mathf.Clamp01(currentDropHoldTime / throwChargeDuration);
                     float throwSpeed = Mathf.Lerp(4.5f, maxThrowForce, charge);
                     Vector3 throwVel = (playerCamera.transform.forward * throwSpeed) + (Vector3.up * 1.5f);
@@ -502,11 +502,15 @@ public class FPSPlayerController : MonoBehaviour
                 }
                 else
                 {
-                    // Nazikçe yere bırakma
+                    // Gently drop
                     grabber.ReleaseObject(Vector3.zero);
                 }
 
                 currentDropHoldTime = 0f;
+                if (InteractionPromptHUD.Instance != null)
+                {
+                    InteractionPromptHUD.Instance.HidePrompt();
+                }
             }
 
             return;
@@ -652,21 +656,21 @@ public class FPSPlayerController : MonoBehaviour
                     {
                         if (InteractionPromptHUD.Instance != null)
                         {
-                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF5555>🔒 [KİLİTLİ] {vehicle.vehicleName}</color> (Seviye {vehicle.requiredPlayerLevel} Gerekli - ${vehicle.purchasePrice} TL)");
+                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF5555>🔒 [LOCKED] {vehicle.vehicleName}</color> (Requires Level {vehicle.requiredPlayerLevel} - ${vehicle.purchasePrice})");
                         }
                     }
                     else if (currentBalance < vehicle.purchasePrice)
                     {
                         if (InteractionPromptHUD.Instance != null)
                         {
-                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#FFAA33>🔒 [KİLİTLİ] {vehicle.vehicleName}</color> (${vehicle.purchasePrice} TL - Bakiye: ${currentBalance} TL)");
+                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#FFAA33>🔒 [LOCKED] {vehicle.vehicleName}</color> (${vehicle.purchasePrice} - Balance: ${currentBalance})");
                         }
                     }
                     else
                     {
                         if (InteractionPromptHUD.Instance != null)
                         {
-                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Satın Al: {vehicle.vehicleName}</color> (${vehicle.purchasePrice} TL)");
+                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Purchase: {vehicle.vehicleName}</color> (${vehicle.purchasePrice})");
                         }
 
                         if (interactPressed)
@@ -674,7 +678,7 @@ public class FPSPlayerController : MonoBehaviour
                             bool bought = vehicle.TryPurchase();
                             if (bought && InteractionPromptHUD.Instance != null)
                             {
-                                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>★ {vehicle.vehicleName} Satın Alındı! ★</color>");
+                                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>★ {vehicle.vehicleName} Purchased! ★</color>");
                             }
                         }
                     }

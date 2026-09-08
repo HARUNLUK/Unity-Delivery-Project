@@ -336,7 +336,7 @@ public class CargoTabletUI : MonoBehaviour
             if (emptyListText != null)
             {
                 emptyListText.gameObject.SetActive(true);
-                emptyListText.text = "📦 Bugün için depoda veya sahada teslim edilecek paket bulunamadı.";
+                emptyListText.text = "📦 No delivery packages found in warehouse or field for today.";
             }
             if (detailCardRoot != null) detailCardRoot.SetActive(false);
             return;
@@ -381,17 +381,17 @@ public class CargoTabletUI : MonoBehaviour
             if (isBroken)
             {
                 cardBgColor = new Color(0.38f, 0.10f, 0.10f, 0.95f); // Red
-                statusBadge = "<color=#FF5555>🔴 KIRILDI / HASARLI</color>";
+                statusBadge = "<color=#FF5555>🔴 DAMAGED / BROKEN</color>";
             }
             else if (isAtDeliveryZone)
             {
                 cardBgColor = new Color(0.38f, 0.28f, 0.05f, 0.95f); // Amber / Yellow
-                statusBadge = "<color=#FFD700>🟡 TESLİMAT ALANINDA (Gün Sonu Doğrulanacak)</color>";
+                statusBadge = "<color=#FFD700>🟡 AT DROP-OFF ZONE (Pending Day End)</color>";
             }
             else
             {
                 cardBgColor = new Color(0.12f, 0.17f, 0.24f, 0.95f); // Slate Blue
-                statusBadge = "<color=#64B5F6>⏳ DAĞITIMDA / ARAÇTA</color>";
+                statusBadge = "<color=#64B5F6>⏳ IN TRANSIT / IN VEHICLE</color>";
             }
 
             if (cardImg != null)
@@ -400,8 +400,8 @@ public class CargoTabletUI : MonoBehaviour
             }
 
             string typeTag = "";
-            if (pkg.cargoType == CargoType.Fragile) typeTag = " <color=#FFAA44>[KIRILABİLİR]</color>";
-            else if (pkg.cargoType == CargoType.Express) typeTag = $" <color=#33E0FF>[EKSPRES {pkg.GetFormattedTargetDeliveryTime()}]</color>";
+            if (pkg.cargoType == CargoType.Fragile) typeTag = " <color=#FFAA44>[FRAGILE]</color>";
+            else if (pkg.cargoType == CargoType.Express) typeTag = $" <color=#33E0FF>[EXPRESS {pkg.GetFormattedTargetDeliveryTime()}]</color>";
 
             string tracking = pkg.cargoData != null && !string.IsNullOrEmpty(pkg.cargoData.trackingNumber)
                 ? pkg.cargoData.trackingNumber
@@ -458,17 +458,17 @@ public class CargoTabletUI : MonoBehaviour
             : $"PKG-{pkg.targetPointId}";
 
         string typeTag = "";
-        if (pkg.cargoType == CargoType.Fragile) typeTag = " <color=#FFAA44>(Kırılabilir)</color>";
-        else if (pkg.cargoType == CargoType.Express) typeTag = $" <color=#33E0FF>(Ekspres - {pkg.GetFormattedTargetDeliveryTime()} Öncesi +%40 Bonus)</color>";
+        if (pkg.cargoType == CargoType.Fragile) typeTag = " <color=#FFAA44>(Fragile)</color>";
+        else if (pkg.cargoType == CargoType.Express) typeTag = $" <color=#33E0FF>(Express - Before {pkg.GetFormattedTargetDeliveryTime()} +40% Bonus)</color>";
 
         if (trackingNumberText != null)
         {
-            trackingNumberText.text = $"Takip No: <b>{tracking}</b>{typeTag}";
+            trackingNumberText.text = $"Tracking #: <b>{tracking}</b>{typeTag}";
         }
 
         if (recipientNameText != null)
         {
-            recipientNameText.text = $"Alıcı: <b>{pkg.recipientName}</b>  <color=#32FF64>(Ödül: ${pkg.deliveryReward} TL)</color>";
+            recipientNameText.text = $"Recipient: <b>{pkg.recipientName}</b>  <color=#32FF64>(Reward: ${pkg.deliveryReward})</color>";
         }
 
         DeliveryPoint nearbyPoint = pkg.FindNearbyDeliveryPoint();
@@ -480,24 +480,24 @@ public class CargoTabletUI : MonoBehaviour
             string statusInfo;
             if (isBroken)
             {
-                statusInfo = $"<color=#FF4444>🔴 Durum: PAKET AĞIR HASAR ALDI VE KIRILDI! (Ceza: -${pkg.wrongPenalty * 2} TL)</color>";
+                statusInfo = $"<color=#FF4444>🔴 Status: PACKAGE SEVERELY DAMAGED & BROKEN! (Penalty: -${pkg.wrongPenalty * 2})</color>";
             }
             else if (isAtDeliveryZone)
             {
-                statusInfo = $"<color=#FFD700>🟡 Durum: Teslimat alanına bırakıldı ({nearbyPoint.addressName}).\nDoğruluğu mesai bitiminde (18:00 / Günü Bitir) onaylanacaktır.</color>";
+                statusInfo = $"<color=#FFD700>🟡 Status: Placed at drop-off zone ({nearbyPoint.addressName}).\nAccuracy will be verified at end of shift (18:00 / End Day).</color>";
             }
             else
             {
-                statusInfo = $"<color=#64B5F6>⏳ Durum: Dağıtımda / Henüz teslimat alanına bırakılmadı.\nÖdül: +${pkg.deliveryReward} TL | Hatalı Teslimat Cezası: -${pkg.wrongPenalty} TL</color>";
+                statusInfo = $"<color=#64B5F6>⏳ Status: In Transit / Not yet placed at destination.\nReward: +${pkg.deliveryReward} | Incorrect Penalty: -${pkg.wrongPenalty}</color>";
             }
 
-            targetAddressText.text = $"Hedef Adres: <b>{pkg.targetAddressName}</b> (Kapı #{pkg.targetPointId})\n{statusInfo}";
+            targetAddressText.text = $"Destination: <b>{pkg.targetAddressName}</b> (Door #{pkg.targetPointId})\n{statusInfo}";
         }
 
         if (addressDescriptionText != null)
         {
-            string desc = !string.IsNullOrEmpty(pkg.targetAddressDescription) ? pkg.targetAddressDescription : "Bu adres için özel görsel ipucu bulunmuyor.";
-            addressDescriptionText.text = $"<b>Adres İpucu ve Açıklaması:</b>\n\n\"{desc}\"";
+            string desc = !string.IsNullOrEmpty(pkg.targetAddressDescription) ? pkg.targetAddressDescription : "No specific visual clue available for this address.";
+            addressDescriptionText.text = $"<b>Address Hint & Description:</b>\n\n\"{desc}\"";
         }
     }
 
@@ -506,13 +506,13 @@ public class CargoTabletUI : MonoBehaviour
         currentSelectedCargo = cargo;
         if (detailCardRoot != null) detailCardRoot.SetActive(true);
 
-        if (trackingNumberText != null) trackingNumberText.text = $"Takip No: {cargo.trackingNumber}";
-        if (recipientNameText != null) recipientNameText.text = $"Alıcı: {cargo.recipientName}";
-        if (targetAddressText != null) targetAddressText.text = $"Adres: {cargo.targetAddress}";
+        if (trackingNumberText != null) trackingNumberText.text = $"Tracking #: {cargo.trackingNumber}";
+        if (recipientNameText != null) recipientNameText.text = $"Recipient: {cargo.recipientName}";
+        if (targetAddressText != null) targetAddressText.text = $"Address: {cargo.targetAddress}";
         
         if (addressDescriptionText != null)
         {
-            addressDescriptionText.text = $"<b>Adres İpucu ve Açıklaması:</b>\n\n\"{cargo.targetAddressDescription}\"";
+            addressDescriptionText.text = $"<b>Address Hint & Description:</b>\n\n\"{cargo.targetAddressDescription}\"";
         }
     }
 
@@ -578,7 +578,7 @@ public class CargoTabletUI : MonoBehaviour
             TextMeshProUGUI label = cardObj.GetComponentInChildren<TextMeshProUGUI>();
             if (label != null)
             {
-                string statusTag = v.IsUnlocked ? "<color=#32FF64>✓ SAHİP OLUNDU</color>" : $"<color=#FFAA33>${v.purchasePrice} TL</color> (Lvl {v.requiredPlayerLevel})";
+                string statusTag = v.IsUnlocked ? "<color=#32FF64>✓ OWNED</color>" : $"<color=#FFAA33>${v.purchasePrice}</color> (Lvl {v.requiredPlayerLevel})";
                 label.text = $"<b>{v.vehicleName}</b>\n{statusTag}";
                 label.raycastTarget = false;
             }
@@ -620,42 +620,42 @@ public class CargoTabletUI : MonoBehaviour
         int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
 
         if (vehicleNameText != null) vehicleNameText.text = v.vehicleName;
-        if (vehicleDescText != null) vehicleDescText.text = $"<b>Açıklama:</b>\n{v.description}";
-        if (vehicleCapacityText != null) vehicleCapacityText.text = $"📦 <b>Koli Kapasitesi:</b> {v.cargoCapacity} Paket";
+        if (vehicleDescText != null) vehicleDescText.text = $"<b>Description:</b>\n{v.description}";
+        if (vehicleCapacityText != null) vehicleCapacityText.text = $"📦 <b>Cargo Capacity:</b> {v.cargoCapacity} Packages";
         
         if (vehicleLevelReqText != null)
         {
             bool lvlOk = playerLvl >= v.requiredPlayerLevel;
             string lvlColor = lvlOk ? "#32FF64" : "#FF5555";
-            vehicleLevelReqText.text = $"🛡️ <b>Gereken Seviye:</b> <color={lvlColor}>Seviye {v.requiredPlayerLevel}</color> (Mevcut: Seviye {playerLvl})";
+            vehicleLevelReqText.text = $"🛡️ <b>Required Level:</b> <color={lvlColor}>Level {v.requiredPlayerLevel}</color> (Yours: Level {playerLvl})";
         }
 
         if (vehiclePriceText != null)
         {
             bool cashOk = balance >= v.purchasePrice;
             string cashColor = cashOk ? "#32FF64" : "#FF5555";
-            vehiclePriceText.text = $"💰 <b>Fiyat:</b> <color={cashColor}>${v.purchasePrice} TL</color> (Bakiye: ${balance} TL)";
+            vehiclePriceText.text = $"💰 <b>Price:</b> <color={cashColor}>${v.purchasePrice}</color> (Balance: ${balance})";
         }
 
         if (vehicleStatusText != null)
         {
             if (v.IsUnlocked)
             {
-                vehicleStatusText.text = "<color=#32FF64>★ Bu araca sahipsiniz. Dilediğinizde sürebilir veya şube garajına çağırabilirsiniz. ★</color>";
+                vehicleStatusText.text = "<color=#32FF64>★ You own this vehicle. Ready to drive or recall to warehouse garage. ★</color>";
             }
             else
             {
                 if (playerLvl < v.requiredPlayerLevel)
                 {
-                    vehicleStatusText.text = $"<color=#FF5555>🔒 KİLİTLİ: Satın almak için Seviye {v.requiredPlayerLevel} olmalısınız.</color>";
+                    vehicleStatusText.text = $"<color=#FF5555>🔒 LOCKED: Reach Level {v.requiredPlayerLevel} to purchase.</color>";
                 }
                 else if (balance < v.purchasePrice)
                 {
-                    vehicleStatusText.text = $"<color=#FFAA33>🔒 KİLİTLİ: Yetersiz bakiye! ${(v.purchasePrice - balance)} TL daha gerekli.</color>";
+                    vehicleStatusText.text = $"<color=#FFAA33>🔒 LOCKED: Insufficient funds! Need ${(v.purchasePrice - balance)} more.</color>";
                 }
                 else
                 {
-                    vehicleStatusText.text = "<color=#32FFFF>✓ SATIN ALINABİLİR: Aracı hemen satın alabilirsiniz!</color>";
+                    vehicleStatusText.text = "<color=#32FFFF>✓ AVAILABLE: Ready for immediate purchase!</color>";
                 }
             }
         }
@@ -678,7 +678,7 @@ public class CargoTabletUI : MonoBehaviour
 
                 if (vehicleBuyButtonText != null)
                 {
-                    vehicleBuyButtonText.text = canAfford ? $"🛒 ARACI SATIN AL (${v.purchasePrice} TL)" : $"YETERSİZ ŞARTLAR (${v.purchasePrice} TL)";
+                    vehicleBuyButtonText.text = canAfford ? $"🛒 PURCHASE VEHICLE (${v.purchasePrice})" : $"INSUFFICIENT FUNDS (${v.purchasePrice})";
                 }
 
                 vehicleBuyButton.onClick.RemoveAllListeners();
@@ -710,10 +710,10 @@ public class CargoTabletUI : MonoBehaviour
 
         if (current != null)
         {
-            if (currentBranchTitleText != null) currentBranchTitleText.text = $"<b>{current.tierName}</b> <color=#32FFFF>(Seviye {current.tierLevel})</color>";
+            if (currentBranchTitleText != null) currentBranchTitleText.text = $"<b>{current.tierName}</b> <color=#32FFFF>(Level {current.tierLevel})</color>";
             if (currentBranchDescText != null) currentBranchDescText.text = current.description;
-            if (currentBranchCapacityText != null) currentBranchCapacityText.text = $"📦 <b>Günlük Paket Kapasitesi:</b> {current.dailyPackageCapacity} Paket";
-            if (currentBranchRentText != null) currentBranchRentText.text = $"💸 <b>Günlük İşletme Kirası:</b> ${current.dailyRent} TL / gün";
+            if (currentBranchCapacityText != null) currentBranchCapacityText.text = $"📦 <b>Daily Package Limit:</b> {current.dailyPackageCapacity} Packages";
+            if (currentBranchRentText != null) currentBranchRentText.text = $"💸 <b>Daily Operational Rent:</b> ${current.dailyRent} / day";
         }
 
         if (next != null)
@@ -721,7 +721,7 @@ public class CargoTabletUI : MonoBehaviour
             if (nextBranchTitleText != null)
             {
                 nextBranchTitleText.gameObject.SetActive(true);
-                nextBranchTitleText.text = $"<b>{next.tierName}</b> <color=#32FF64>(Seviye {next.tierLevel})</color>";
+                nextBranchTitleText.text = $"<b>{next.tierName}</b> <color=#32FF64>(Level {next.tierLevel})</color>";
             }
             if (nextBranchDescText != null)
             {
@@ -731,12 +731,12 @@ public class CargoTabletUI : MonoBehaviour
             if (nextBranchCapacityText != null)
             {
                 nextBranchCapacityText.gameObject.SetActive(true);
-                nextBranchCapacityText.text = $"📦 <b>Yeni Paket Kotası:</b> {current.dailyPackageCapacity} ➔ <color=#32FF64>{next.dailyPackageCapacity} Paket</color> (+{next.dailyPackageCapacity - current.dailyPackageCapacity})";
+                nextBranchCapacityText.text = $"📦 <b>New Package Quota:</b> {current.dailyPackageCapacity} ➔ <color=#32FF64>{next.dailyPackageCapacity} Packages</color> (+{next.dailyPackageCapacity - current.dailyPackageCapacity})";
             }
             if (nextBranchRentText != null)
             {
                 nextBranchRentText.gameObject.SetActive(true);
-                nextBranchRentText.text = $"💸 <b>Yeni Kira Bedeli:</b> ${current.dailyRent} ➔ <color=#FFAA33>${next.dailyRent} TL</color>";
+                nextBranchRentText.text = $"💸 <b>New Rent Fee:</b> ${current.dailyRent} ➔ <color=#FFAA33>${next.dailyRent}</color>";
             }
 
             int playerLvl = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.PlayerLevel : 1;
@@ -746,7 +746,7 @@ public class CargoTabletUI : MonoBehaviour
             {
                 nextBranchLevelReqText.gameObject.SetActive(true);
                 string lvlTag = playerLvl >= next.requiredPlayerLevel ? "<color=#32FF64>" : "<color=#FF5555>";
-                nextBranchLevelReqText.text = $"👤 <b>Gerekli Seviye:</b> {lvlTag}Seviye {next.requiredPlayerLevel} (Senin: {playerLvl})</color>";
+                nextBranchLevelReqText.text = $"👤 <b>Required Level:</b> {lvlTag}Level {next.requiredPlayerLevel} (Yours: {playerLvl})</color>";
             }
 
             if (branchUpgradeButton != null)
@@ -765,9 +765,9 @@ public class CargoTabletUI : MonoBehaviour
 
                 if (branchUpgradeButtonText != null)
                 {
-                    if (!canLevel) branchUpgradeButtonText.text = $"🔒 SEVİYE {next.requiredPlayerLevel} GEREKLİ";
-                    else if (!canAfford) branchUpgradeButtonText.text = $"🔒 YETERSİZ BAKİYE (${next.upgradeCost} TL)";
-                    else branchUpgradeButtonText.text = $"🏢 ŞUBEYİ GELİŞTİR (${next.upgradeCost} TL)";
+                    if (!canLevel) branchUpgradeButtonText.text = $"🔒 REQUIRES LEVEL {next.requiredPlayerLevel}";
+                    else if (!canAfford) branchUpgradeButtonText.text = $"🔒 INSUFFICIENT FUNDS (${next.upgradeCost})";
+                    else branchUpgradeButtonText.text = $"🏢 UPGRADE BRANCH (${next.upgradeCost})";
                 }
             }
 
@@ -796,7 +796,7 @@ public class CargoTabletUI : MonoBehaviour
                 PopulateBranchInfo();
                 if (InteractionPromptHUD.Instance != null)
                 {
-                    InteractionPromptHUD.Instance.ShowPrompt("<color=#32FFFF>★ ŞUBE BAŞARIYLA GELİŞTİRİLDİ! ★</color>");
+                    InteractionPromptHUD.Instance.ShowPrompt("<color=#32FFFF>★ BRANCH SUCCESSFULLY UPGRADED! ★</color>");
                 }
             }
         }

@@ -86,8 +86,8 @@ public class BranchManager : MonoBehaviour
             new BranchTier
             {
                 tierLevel = 1,
-                tierName = "Küçük Dağıtım Kulübesi",
-                description = "Başlangıç seviyesi kargo ofisi. Temel paket hacmi ve düşük işletme kirası.",
+                tierName = "Starter Garage",
+                description = "Entry-level parcel warehouse and garage. Basic package volume and low operating rent.",
                 upgradeCost = 0,
                 requiredPlayerLevel = 1,
                 dailyPackageCapacity = 4,
@@ -96,8 +96,8 @@ public class BranchManager : MonoBehaviour
             new BranchTier
             {
                 tierLevel = 2,
-                tierName = "Lojistik Şubesi (Orta Ölçek)",
-                description = "Genişletilmiş depo alanı, artırılmış günlük paket kotası ve yüksek kazanç fırsatı.",
+                tierName = "Regional Hub",
+                description = "Expanded logistics hub with improved daily parcel limits and high earnings potential.",
                 upgradeCost = 1200,
                 requiredPlayerLevel = 2,
                 dailyPackageCapacity = 8,
@@ -106,8 +106,8 @@ public class BranchManager : MonoBehaviour
             new BranchTier
             {
                 tierLevel = 3,
-                tierName = "Bölge Dağıtım Merkezi",
-                description = "Büyük ölçekli lojistik operasyon merkezi. Ekspres ve kırılabilir kargo gönderiminde yüksek getiri.",
+                tierName = "District Distribution Center",
+                description = "Large scale logistics center with high yield for express and fragile shipments.",
                 upgradeCost = 3500,
                 requiredPlayerLevel = 4,
                 dailyPackageCapacity = 14,
@@ -116,8 +116,8 @@ public class BranchManager : MonoBehaviour
             new BranchTier
             {
                 tierLevel = 4,
-                tierName = "Mega Lojistik Kompleksi",
-                description = "En üst düzey filo yönetim ve tam kapasite dağıtım üssü. Maksimum kargo hacmi.",
+                tierName = "Mega Logistics Complex",
+                description = "Ultimate fleet management headquarters and maximum throughput capacity.",
                 upgradeCost = 8000,
                 requiredPlayerLevel = 6,
                 dailyPackageCapacity = 22,
@@ -214,7 +214,7 @@ public class BranchManager : MonoBehaviour
 
         if (balance < next.upgradeCost)
         {
-            Debug.LogWarning($"[BranchManager] Insufficient balance! Required: ${next.upgradeCost} TL, Balance: ${balance} TL");
+            Debug.LogWarning($"[BranchManager] Insufficient balance! Required: ${next.upgradeCost}, Balance: ${balance}");
             return false;
         }
 
@@ -230,7 +230,7 @@ public class BranchManager : MonoBehaviour
         // Update visuals without altering user-designed generator positions
         ApplyTierVisuals(false);
 
-        Debug.Log($"<color=#32FFFF>★ ŞUBE GELİŞTİRİLDİ: Seviye {currentBranchLevel} ({CurrentTier.tierName})! ★</color>");
+        Debug.Log($"<color=#32FFFF>★ BRANCH UPGRADED: Level {currentBranchLevel} ({CurrentTier.tierName})! ★</color>");
         OnBranchUpgraded?.Invoke(currentBranchLevel, CurrentTier);
 
         return true;
@@ -325,6 +325,6 @@ public class BranchManager : MonoBehaviour
         SaveBranchLevel();
         ApplyTierVisuals(false);
         OnBranchReset?.Invoke();
-        Debug.Log("<color=#FF3333>★★★ [DEV] ŞUBE GELİŞİMİ SEVİYE 1'E SIFIRLANDI! ★★★</color>");
+        Debug.Log("<color=#FF3333>★★★ [DEV] BRANCH PROGRESSION RESET TO LEVEL 1! ★★★</color>");
     }
 }

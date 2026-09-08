@@ -5,26 +5,26 @@ public class DayTimeManager : MonoBehaviour
 {
     public static DayTimeManager Instance { get; private set; }
 
-    [Header("--- ÇALIŞMA SAATLERİ ---")]
-    [Tooltip("Mesai başlangıç saati (Örn: 9)")]
+    [Header("--- WORKING HOURS ---")]
+    [Tooltip("Shift start hour (e.g. 9)")]
     public int startHour = 9;
     public int startMinute = 0;
 
-    [Tooltip("Mesai bitiş saati (Örn: 18)")]
+    [Tooltip("Shift end hour (e.g. 18)")]
     public int endHour = 18;
     public int endMinute = 0;
 
-    [Tooltip("Gerçek dünyada mesainin kaç dakika süreceği (Örn: 10 dakika)")]
+    [Tooltip("Real-time duration of the shift in minutes (e.g. 10 minutes)")]
     public float realTimeDurationInMinutes = 10f;
 
-    [Header("--- GÜNEŞ & IŞIK ---")]
-    [Tooltip("Sahnedeki Directional Light (Boş bırakılırsa otomatik bulunur)")]
+    [Header("--- SUN & LIGHTING ---")]
+    [Tooltip("Directional Light in the scene (Auto-located if left empty)")]
     public Light directionalSun;
 
-    [Tooltip("Sabah 09:00 güneş açısı")]
+    [Tooltip("Morning 09:00 sun rotation")]
     public Vector3 morningSunRotation = new Vector3(25f, -30f, 0f);
 
-    [Tooltip("Akşam 18:00 gün batımı açısı")]
+    [Tooltip("Evening 18:00 sunset rotation")]
     public Vector3 eveningSunRotation = new Vector3(175f, -30f, 0f);
 
     public float CurrentTimeInSeconds { get; private set; }
@@ -75,15 +75,15 @@ public class DayTimeManager : MonoBehaviour
         CurrentTimeInSeconds += Time.deltaTime;
         float progress = Mathf.Clamp01(CurrentTimeInSeconds / totalRealTimeSeconds);
 
-        // Oyun saati ve dakikasını hesapla
+        // Calculate game hour and minute
         float currentTotalInGameMinutes = (startHour * 60 + startMinute) + (progress * totalShiftInGameMinutes);
         CurrentHour = Mathf.FloorToInt(currentTotalInGameMinutes / 60f);
         CurrentMinute = Mathf.FloorToInt(currentTotalInGameMinutes % 60f);
 
-        // Güneş açısını lerp ile döndür
+        // Interpolate sun angle smoothly
         UpdateSunPosition(progress);
 
-        // 18:00 Mesai Bitiş Kontrolü
+        // 18:00 End of Shift Check
         if (progress >= 1.0f)
         {
             EndShift();
@@ -115,7 +115,7 @@ public class DayTimeManager : MonoBehaviour
         if (IsShiftEnded) return;
         IsShiftEnded = true;
 
-        Debug.Log("[DayTimeManager] Saat 18:00 oldu! Mesai bitti. Gün sonu raporu açılıyor...");
+        Debug.Log("[DayTimeManager] It's 18:00! Shift has ended. Opening Day Summary report...");
         OnShiftEnded?.Invoke();
 
         if (DaySummaryManager.Instance != null)

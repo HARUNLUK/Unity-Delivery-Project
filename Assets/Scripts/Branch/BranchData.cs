@@ -9,11 +9,11 @@ public class BranchTier
     public int tierLevel = 1;
 
     [Tooltip("Display name of the branch tier")]
-    public string tierName = "Küçük Dağıtım Kulübesi";
+    public string tierName = "Starter Garage";
 
     [TextArea(2, 4)]
     [Tooltip("Description of the branch tier and its perks")]
-    public string description = "Başlangıç seviyesi küçük kargo kabul ve dağıtım ofisi.";
+    public string description = "Entry-level parcel warehouse and dispatch office.";
 
     [Header("--- ECONOMY & REQUIREMENTS ---")]
     [Tooltip("Cost in TL to upgrade TO this tier (0 for starter level 1)")]

@@ -1,21 +1,21 @@
 using UnityEngine;
 
 /// <summary>
-/// Deniz / Su düzleminin altına veya içine yerleştirilen Trigger.
-/// Oyuncu veya Araç denize düştüğünde en yakın güvenli sahile veya şubeye geri ışınlar.
+/// Trigger placed under or in water surfaces.
+/// Teleports vehicles, player, or cargo back to the nearest safe shore or warehouse branch if they fall into water.
 /// </summary>
 public class WaterRespawnZone : MonoBehaviour
 {
     [Header("--- RESPAWN SETTINGS ---")]
-    [Tooltip("Aracın veya oyuncunun denize düştüğünde ışınlanacağı güvenli nokta (Boş bırakılırsa Şube veya Başlangıç pozisyonu alınır)")]
+    [Tooltip("Safe point to respawn vehicle/player if they fall into water (falls back to Branch if empty)")]
     public Transform safeRespawnPoint;
 
-    [Tooltip("Işınlanma sonrası aracın durdurulması")]
+    [Tooltip("Reset velocity on respawn")]
     public bool resetVehicleVelocity = true;
 
     private void OnTriggerEnter(Collider other)
     {
-        // 1. DrivableVehicle (Araç denize düşerse)
+        // 1. DrivableVehicle (If vehicle falls into water)
         DrivableVehicle vehicle = other.GetComponentInParent<DrivableVehicle>();
         if (vehicle != null)
         {
@@ -23,7 +23,7 @@ public class WaterRespawnZone : MonoBehaviour
             return;
         }
 
-        // 2. FPS Player (Oyuncu yürüyerek denize düşerse)
+        // 2. FPS Player (If player falls into water on foot)
         FPSPlayerController player = other.GetComponentInParent<FPSPlayerController>();
         if (player != null)
         {
@@ -31,7 +31,7 @@ public class WaterRespawnZone : MonoBehaviour
             return;
         }
 
-        // 3. Kargo paketi denize düşerse (Sahile veya şubeye geri al)
+        // 3. Cargo package (If package falls into water, rescue to shore/branch)
         PhysicalCargoPackage pkg = other.GetComponent<PhysicalCargoPackage>();
         if (pkg != null)
         {
@@ -75,7 +75,7 @@ public class WaterRespawnZone : MonoBehaviour
 
         if (InteractionPromptHUD.Instance != null)
         {
-            InteractionPromptHUD.Instance.ShowPrompt("<color=#44AAFF>🌊 Araç suya düştü ve güvenli yola çekildi!</color>");
+            InteractionPromptHUD.Instance.ShowPrompt("<color=#44AAFF>🌊 Vehicle recovered from water to safe road!</color>");
         }
 
         Debug.Log($"<color=#00AAFF>[WaterRespawnZone] Vehicle '{vehicle.name}' rescued from water to {targetPos}!</color>");
@@ -93,7 +93,7 @@ public class WaterRespawnZone : MonoBehaviour
 
         if (InteractionPromptHUD.Instance != null)
         {
-            InteractionPromptHUD.Instance.ShowPrompt("<color=#44AAFF>🌊 Sudan kurtarıldınız!</color>");
+            InteractionPromptHUD.Instance.ShowPrompt("<color=#44AAFF>🌊 Rescued from water!</color>");
         }
     }
 

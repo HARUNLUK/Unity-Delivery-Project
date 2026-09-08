@@ -252,7 +252,7 @@ public class MapSetupTool : MonoBehaviour
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         }
 
-        Debug.Log($"[MapSetupTool] Sahnede bulunan {replacedCount} adet teslimat noktası verileri (ID, Adres, İpucu, Konum) korunarak '{prefabAsset.name}' prefabı ile başarıyla güncellendi!");
+        Debug.Log($"[MapSetupTool] Successfully updated {replacedCount} delivery points in the scene with prefab '{prefabAsset.name}' while preserving data (ID, Address, Hint, Position)!");
     }
 
     private static GameObject FindDeliveryPointPrefab()

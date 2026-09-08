@@ -7,14 +7,14 @@ public class PlayerEconomyManager : MonoBehaviour
 
     private const string BALANCE_KEY = "CARGO_PLAYER_TOTAL_BALANCE";
 
-    [Header("--- KASA BİLGİLERİ ---")]
-    [Tooltip("Önceki günlerden biriken toplam para")]
+    [Header("--- VAULT / BALANCE DATA ---")]
+    [Tooltip("Accumulated total balance from previous shifts")]
     [SerializeField] private int totalSavedBalance = 0;
 
-    [Tooltip("Bugün kazanılan toplam ödül")]
+    [Tooltip("Total reward earned today")]
     [SerializeField] private int todayEarned = 0;
 
-    [Tooltip("Bugün kesilen toplam ceza")]
+    [Tooltip("Total penalties incurred today")]
     [SerializeField] private int todayPenalties = 0;
 
     public int TotalSavedBalance => totalSavedBalance;
@@ -96,10 +96,10 @@ public class PlayerEconomyManager : MonoBehaviour
 
     private void ShowResetFeedback()
     {
-        Debug.Log("<color=yellow>[PlayerEconomyManager] F7 Tuşuna Basıldı: Bakiye ($0 TL) ve Oyuncu Seviyesi (Seviye 1) sıfırlandı!</color>");
+        Debug.Log("<color=yellow>[PlayerEconomyManager] F7 Pressed: Balance ($0) and Player Level (Level 1) reset!</color>");
         if (InteractionPromptHUD.Instance != null)
         {
-            InteractionPromptHUD.Instance.ShowPrompt("<color=#FFAA33>★ Seviye 1 & Bakiye $0 TL Olarak Sıfırlandı! [F7] ★</color>");
+            InteractionPromptHUD.Instance.ShowPrompt("<color=#FFAA33>★ Reset to Level 1 & Balance $0! [F7] ★</color>");
         }
     }
 
@@ -107,18 +107,18 @@ public class PlayerEconomyManager : MonoBehaviour
     public void DeductCash(int amount) => AddPenalty(amount);
 
     /// <summary>
-    /// Gün bittiğinde günlük kazancı kalıcı olarak toplam kasaya aktarır ve kaydeder.
+    /// Finalizes daily earnings to persistent player vault and saves PlayerPrefs.
     /// </summary>
     public void FinalizeAndSaveDay()
     {
         totalSavedBalance += TodayNetProfit;
         PlayerPrefs.SetInt(BALANCE_KEY, totalSavedBalance);
         PlayerPrefs.Save();
-        Debug.Log($"[PlayerEconomyManager] Gün sonu kaydedildi! Yeni Toplam Kasa: {totalSavedBalance} TL");
+        Debug.Log($"[PlayerEconomyManager] End of day saved! New Total Vault: ${totalSavedBalance}");
     }
 
     /// <summary>
-    /// Test için bütçeyi ve seviyeyi sıfırlar.
+    /// Resets entire player balance and progression level for testing/debugging.
     /// </summary>
     [ContextMenu("Reset Entire Economy & Level (F7)")]
     public void ResetEntireEconomy()

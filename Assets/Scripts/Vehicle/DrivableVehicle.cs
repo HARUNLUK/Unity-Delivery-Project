@@ -14,7 +14,7 @@ public class DrivableVehicle : MonoBehaviour
 
     [TextArea(2, 4)]
     [Tooltip("Short description of vehicle capabilities")]
-    public string description = "Başlangıç seviyesi çevik ve pratik kargo aracı.";
+    public string description = "Agile and practical entry-level cargo vehicle.";
 
     [Header("--- ECONOMY & REQUIREMENTS ---")]
     [Tooltip("Purchase price in TL/USD. Set to 0 for free/starter vehicle")]
@@ -42,24 +42,24 @@ public class DrivableVehicle : MonoBehaviour
     [Tooltip("Fuel consumed per second while idling (Litres/sec)")]
     public float idleFuelBurnRate = 0.008f;
 
-    [Header("--- SPOTS & CAMERA ANCHORS (ARAÇ KAMERA NOKTALARI) ---")]
-    [Tooltip("Araç içi FPS sürücü kamera noktası (Transform). Boş bırakılırsa araç içinde DriverSeatPoint otomatik bulunur.")]
+    [Header("--- SPOTS & CAMERA ANCHORS ---")]
+    [Tooltip("In-vehicle FPS driver camera anchor point (Transform). If left empty, DriverSeatPoint is searched automatically inside the vehicle.")]
     public Transform driverSeatPoint;
 
-    [Tooltip("Araç içi FPS kamerası için ek yerel pozisyon ofseti (X=Sağ/Sol, Y=Yukarı/Aşağı, Z=İleri/Geri)")]
+    [Tooltip("Additional local position offset for in-vehicle FPS camera (X=Right/Left, Y=Up/Down, Z=Forward/Back)")]
     public Vector3 fpsCameraOffset = Vector3.zero;
 
-    [Header("--- TPS CHASE CAMERA (BU ARACA ÖZEL DIŞ TAKİP KAMERASI) ---")]
-    [Tooltip("Opsiyonel: Araç arkası TPS kameranın referans alacağı nokta (Boş ise araç merkezi kullanılır)")]
+    [Header("--- TPS CHASE CAMERA (VEHICLE-SPECIFIC THIRD PERSON CAMERA) ---")]
+    [Tooltip("Optional: Reference anchor point for the rear TPS camera (If empty, vehicle root is used)")]
     public Transform tpsCameraPoint;
 
-    [Tooltip("Bu araç için arkadan takip mesafesi (Örn: Küçük araçta 5.0, Kamyonette 6.5, Kamyonda 8.0)")]
+    [Tooltip("Chase follow distance for this vehicle (e.g. Small car: 5.0, Pickup: 6.5, Truck: 8.0)")]
     public float tpsDistance = 6.0f;
 
-    [Tooltip("Bu araç için kamera yüksekliği (Örn: 2.0)")]
+    [Tooltip("Camera height for this vehicle (e.g. 2.0)")]
     public float tpsHeight = 2.0f;
 
-    [Tooltip("Bu araç için kameranın odaklanacağı merkez/hedef yüksekliği (Örn: 1.2)")]
+    [Tooltip("Target look-at height / pivot for the camera (e.g. 1.2)")]
     public float tpsLookAtHeight = 1.2f;
 
     [Header("--- SPAWN & PARKING ANCHORS ---")]
@@ -263,7 +263,7 @@ public class DrivableVehicle : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>⛽ YAKIT BİTTİ! Motor durdu. İstasyon pompasından yakıt doldurun.</color>");
+                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>⛽ OUT OF FUEL! Engine stopped. Refuel at gas pump.</color>");
             }
         }
 
@@ -327,7 +327,7 @@ public class DrivableVehicle : MonoBehaviour
         PlayerPrefs.SetInt(SAVE_PREFIX + EffectiveVehicleId, 1);
         PlayerPrefs.Save();
 
-        Debug.Log($"<color=#32FF64>★ TEBRİKLER! '{vehicleName}' ({purchasePrice} TL) başarıyla satın alındı ve kilidi açıldı! ★</color>");
+        Debug.Log($"<color=#32FF64>★ CONGRATULATIONS! '{vehicleName}' ({purchasePrice} currency) was successfully purchased and unlocked! ★</color>");
 
         OnVehiclePurchased?.Invoke(this);
         return true;
@@ -380,7 +380,7 @@ public class DrivableVehicle : MonoBehaviour
         PlayerPrefs.Save();
 
         OnAnyVehicleReset?.Invoke();
-        Debug.Log("<color=#FF3333>★★★ [DEV] F9 TUŞUNA BASILDI: TÜM ARAÇ SATIN ALIMLARI VE YAKITLARI SIFIRLANDI! ★★★</color>");
+        Debug.Log("<color=#FF3333>★★★ [DEV] F9 PRESSED: ALL VEHICLE PURCHASES AND FUELS RESET! ★★★</color>");
     }
 
     /// <summary>
@@ -396,7 +396,7 @@ public class DrivableVehicle : MonoBehaviour
 
         if (targetAnchor == null)
         {
-            Debug.LogWarning($"[DrivableVehicle] '{vehicleName}' için tanımlı Garage veya Parking noktası bulunamadı!");
+            Debug.LogWarning($"[DrivableVehicle] No Garage or Parking anchor point defined for '{vehicleName}'!");
             return;
         }
 
@@ -420,7 +420,7 @@ public class DrivableVehicle : MonoBehaviour
             rb.angularVelocity = Vector3.zero;
         }
 
-        Debug.Log($"[DrivableVehicle] '{vehicleName}' garaj noktasına ({targetAnchor.name}) ışınlandı.");
+        Debug.Log($"[DrivableVehicle] '{vehicleName}' was teleported to garage anchor ({targetAnchor.name}).");
         OnVehicleRecalled?.Invoke(this);
     }
 
@@ -430,7 +430,7 @@ public class DrivableVehicle : MonoBehaviour
 
         if (!IsUnlocked)
         {
-            Debug.LogWarning($"[DrivableVehicle] '{vehicleName}' kilitli! Satın almadan binilemez.");
+            Debug.LogWarning($"[DrivableVehicle] '{vehicleName}' is locked! You must purchase it first.");
             return;
         }
 
@@ -458,7 +458,7 @@ public class DrivableVehicle : MonoBehaviour
 
         if (InteractionPromptHUD.Instance != null)
         {
-            InteractionPromptHUD.Instance.ShowPrompt("[E] In  |  [V] Kamera Değiştir");
+            InteractionPromptHUD.Instance.ShowPrompt("[E] Exit  |  [V] Change Camera");
             InteractionPromptHUD.Instance.UpdateFuelHUD(currentFuel, maxFuel, currentFuel < (maxFuel * 0.18f));
         }
 
@@ -507,7 +507,7 @@ public class DrivableVehicle : MonoBehaviour
 
     private void FixedUpdate()
     {
-        // Araçta kimse yokken boşa çıkmış gibi yumuşakça yavaşlayarak park eder
+        // Smoothly decelerate to parked state when vehicle is unoccupied
         if (!isPlayerInside && rb != null)
         {
             if (rb.linearVelocity.magnitude > 0.05f)

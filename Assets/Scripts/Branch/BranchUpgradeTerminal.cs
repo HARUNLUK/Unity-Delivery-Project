@@ -74,7 +74,7 @@ public class BranchUpgradeTerminal : MonoBehaviour
     {
         if (BranchManager.Instance == null)
         {
-            return "<color=#32FF64>[E] Şube Yönetim Terminali</color>";
+            return "<color=#32FF64>[E] Branch Terminal</color>";
         }
 
         BranchTier current = BranchManager.Instance.CurrentTier;
@@ -82,12 +82,12 @@ public class BranchUpgradeTerminal : MonoBehaviour
 
         if (next != null)
         {
-            return $"<color=#32FF64>[E] Şube Yönetim Terminalini Aç</color> ➔ Seviye {next.tierLevel}: {next.tierName} (${next.upgradeCost} TL)";
+            return $"<color=#32FF64>[E] Open Branch Terminal</color> ➔ Level {next.tierLevel}: {next.tierName} (${next.upgradeCost})";
         }
         else
         {
-            string tName = current != null ? current.tierName : "Maksimum";
-            return $"<color=#32FFFF>[E] Şube Yönetim Terminalini Aç</color> ★ {tName} (Maksimum Seviye) ★";
+            string tName = current != null ? current.tierName : "Maximum";
+            return $"<color=#32FFFF>[E] Open Branch Terminal</color> ★ {tName} (Max Level) ★";
         }
     }
 
@@ -103,7 +103,7 @@ public class BranchUpgradeTerminal : MonoBehaviour
             CargoTabletUI.Instance.SwitchTab(TabletTab.BranchOffice);
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt("<color=#32FFFF>★ ŞUBE YÖNETİM & GELİŞTİRME EKRANI AÇILDI ★</color>");
+                InteractionPromptHUD.Instance.ShowPrompt("<color=#32FFFF>★ BRANCH DASHBOARD OPENED ★</color>");
             }
         }
         else
@@ -131,7 +131,7 @@ public class BranchUpgradeTerminal : MonoBehaviour
         {
             if (screenText != null)
             {
-                screenText.text = "<b>ŞUBE YÖNETİMİ</b>\n<color=#32FFFF>Hazır...</color>";
+                screenText.text = "<b>BRANCH OFFICE</b>\n<color=#32FFFF>Ready...</color>";
             }
             return;
         }
@@ -143,11 +143,11 @@ public class BranchUpgradeTerminal : MonoBehaviour
         {
             if (current != null && next != null)
             {
-                screenText.text = $"<b>ŞUBE YÖNETİMİ</b>\n<color=#32FFFF>Mevcut: Seviye {current.tierLevel} ({current.tierName})</color>\n<size=75%>Sonraki: {next.tierName}\nFiyat: ${next.upgradeCost} TL (Seviye {next.requiredPlayerLevel})</size>";
+                screenText.text = $"<b>BRANCH OFFICE</b>\n<color=#32FFFF>Current: Level {current.tierLevel} ({current.tierName})</color>\n<size=75%>Next: {next.tierName}\nPrice: ${next.upgradeCost} (Level {next.requiredPlayerLevel})</size>";
             }
             else if (current != null)
             {
-                screenText.text = $"<b>ŞUBE YÖNETİMİ</b>\n<color=#32FF64>★ MAKSİMUM SEVİYE ★\n{current.tierName}</color>";
+                screenText.text = $"<b>BRANCH OFFICE</b>\n<color=#32FF64>★ MAXIMUM LEVEL ★\n{current.tierName}</color>";
             }
         }
 
