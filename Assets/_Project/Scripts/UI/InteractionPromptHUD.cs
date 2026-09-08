@@ -369,6 +369,7 @@ public class InteractionPromptHUD : MonoBehaviour
                 bFillRect.sizeDelta = Vector2.zero;
 
                 fuelBarFill = barFillObj.AddComponent<Image>();
+                fuelBarFill.sprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f));
                 fuelBarFill.color = new Color(0.2f, 0.85f, 0.4f, 1f);
                 fuelBarFill.type = Image.Type.Filled;
                 fuelBarFill.fillMethod = Image.FillMethod.Horizontal;
@@ -455,7 +456,22 @@ public class InteractionPromptHUD : MonoBehaviour
 
         if (fuelBarFill != null)
         {
+            if (fuelBarFill.sprite == null)
+            {
+                fuelBarFill.sprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f));
+            }
+
             fuelBarFill.fillAmount = pct;
+
+            // Direct RectTransform scaling guarantee
+            RectTransform fillRt = fuelBarFill.rectTransform;
+            if (fillRt != null)
+            {
+                fillRt.anchorMin = Vector2.zero;
+                fillRt.anchorMax = new Vector2(pct, 1f);
+                fillRt.sizeDelta = Vector2.zero;
+            }
+
             if (pct > 0.4f) fuelBarFill.color = new Color(0.2f, 0.85f, 0.4f);
             else if (pct > 0.15f) fuelBarFill.color = new Color(1f, 0.75f, 0.2f);
             else fuelBarFill.color = new Color(1f, 0.25f, 0.25f);

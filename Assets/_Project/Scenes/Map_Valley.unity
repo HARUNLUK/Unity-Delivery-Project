@@ -6828,7 +6828,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5331812964472642919, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: addressDescription
-      value: "market yan\u0131ndaki pembe apartman"
+      value: Pink apartment building right next to the central supermarket
       objectReference: {fileID: 0}
     - target: {fileID: 6665038347182407314, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: m_LocalPosition.x
@@ -7096,7 +7096,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5331812964472642919, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: addressDescription
-      value: "ye\u015Fil a\u011Fa\xE7l\u0131 ev"
+      value: Charming wooden cottage surrounded by tall lush pine trees
       objectReference: {fileID: 0}
     - target: {fileID: 6665038347182407314, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: m_LocalPosition.x
@@ -7227,7 +7227,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5331812964472642919, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: addressDescription
-      value: "M\xFCstakil yerle\u015Fim b\xF6lgesindeki atek apartman"
+      value: Standalone modern apartment building in the residential district
       objectReference: {fileID: 0}
     - target: {fileID: 6665038347182407314, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: m_LocalPosition.x
@@ -7591,7 +7591,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5331812964472642919, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: addressDescription
-      value: "stadyum yan\u0131ndaki mavi b\xFCfe"
+      value: Blue concession kiosk next to the grand sports stadium
       objectReference: {fileID: 0}
     - target: {fileID: 6665038347182407314, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: m_LocalPosition.x
@@ -9139,7 +9139,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5331812964472642919, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: addressDescription
-      value: "m\xFCzik d\xFCkkan\u0131 solundaki mavi apartman"
+      value: Blue apartment building located to the left of the music store
       objectReference: {fileID: 0}
     - target: {fileID: 6665038347182407314, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: m_LocalPosition.x
@@ -9394,7 +9394,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5331812964472642919, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: addressDescription
-      value: "Mantar kapl\u0131 ev"
+      value: Cozy forest cottage decorated with giant red and blue mushrooms
       objectReference: {fileID: 0}
     - target: {fileID: 6665038347182407314, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: m_LocalPosition.x
@@ -9654,7 +9654,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5331812964472642919, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: addressDescription
-      value: "m\xFCzik d\xFCkkan\u0131 yan\u0131ndaki kahverengi apartman"
+      value: Brown apartment building situated right next to the music store
       objectReference: {fileID: 0}
     - target: {fileID: 6665038347182407314, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: m_LocalPosition.x
@@ -10071,7 +10071,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5331812964472642919, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: addressDescription
-      value: "Restorant ve Fast Food aras\u0131ndaki apartman"
+      value: Apartment building nestled between the restaurant and fast food diner
       objectReference: {fileID: 0}
     - target: {fileID: 6665038347182407314, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: m_LocalPosition.x
@@ -11658,7 +11658,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5331812964472642919, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: addressDescription
-      value: "ayakkab\u0131 d\xFCkkan\u0131 arkas\u0131ndaki ye\u015Fil apartman"
+      value: Green apartment building located directly behind the shoe store
       objectReference: {fileID: 0}
     - target: {fileID: 6665038347182407314, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: m_LocalPosition.x
@@ -12329,7 +12329,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5331812964472642919, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: addressDescription
-      value: "K\u0131rm\u0131z\u0131 malikane"
+      value: Grand red mansion on the elevated hillside overview
       objectReference: {fileID: 0}
     - target: {fileID: 6665038347182407314, guid: 027530621db0a6e42b5c2ec111b4756a, type: 3}
       propertyPath: m_LocalPosition.x

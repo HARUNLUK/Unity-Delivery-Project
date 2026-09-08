@@ -134,6 +134,22 @@ public class AddressLocalizationManager : MonoBehaviour
                         {
                             addressMap[entry.id] = entry;
                         }
+
+                        // Also store numeric integer key if applicable (e.g. "DP-005" -> "5")
+                        string numOnly = System.Text.RegularExpressions.Regex.Replace(entry.id, @"[^\d]", "");
+                        if (!string.IsNullOrEmpty(numOnly) && int.TryParse(numOnly, out int parsedNum))
+                        {
+                            string simpleNumKey = parsedNum.ToString();
+                            if (!addressMap.ContainsKey(simpleNumKey))
+                            {
+                                addressMap[simpleNumKey] = entry;
+                            }
+                            string dpPaddedKey = $"DP-{parsedNum:D3}";
+                            if (!addressMap.ContainsKey(dpPaddedKey))
+                            {
+                                addressMap[dpPaddedKey] = entry;
+                            }
+                        }
                     }
                 }
             }

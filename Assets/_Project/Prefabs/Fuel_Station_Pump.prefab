@@ -67,6 +67,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FuelStationPump
   stationName: "Petrol \u0130stasyonu"
-  pricePerLiter: 35
+  pricePerLiter: 5
   refuelRateLitersPerSecond: 6
   pumpStatusLight: {fileID: 0}

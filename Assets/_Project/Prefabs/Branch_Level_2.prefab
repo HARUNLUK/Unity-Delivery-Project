@@ -2673,6 +2673,14 @@ PrefabInstance:
     m_TransformParent: {fileID: 4881731141845315533}
     m_Modifications:
     - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: maxReward
+      value: 400
+      objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: minReward
+      value: 200
+      objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
       propertyPath: packageCount
       value: 10
       objectReference: {fileID: 0}
