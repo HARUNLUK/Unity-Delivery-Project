@@ -61,8 +61,8 @@ public class InteractionPromptHUD : MonoBehaviour
     public TextMeshProUGUI fuelValueText;
 
     [Header("--- PROMPT TIMEOUT SETTINGS ---")]
-    [Tooltip("Ekrana gelen etkileşim ve ipucu yazılarının otomatik kaybolma süresi (Saniye)")]
-    public float defaultPromptDuration = 2.8f;
+    [Tooltip("Duration in seconds for on-screen interaction and hint prompts to automatically hide")]
+    public float defaultPromptDuration = 5.0f;
 
     private float currentPromptTimer = 0f;
     private CanvasGroup promptCanvasGroup;

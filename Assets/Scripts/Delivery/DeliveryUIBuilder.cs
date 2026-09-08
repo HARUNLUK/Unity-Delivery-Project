@@ -368,10 +368,11 @@ public static class DeliveryUIBuilder
         cvLayout.childForceExpandWidth = false;
         cvLayout.childForceExpandHeight = true;
 
-        // Left Column: Cargo List (Width: 420)
+        // Left Column: Cargo List (Fixed Width: 430)
         GameObject leftCargoCol = new GameObject("LeftColumn_List");
         leftCargoCol.transform.SetParent(cargoView.transform, false);
         LayoutElement lCargoElem = leftCargoCol.AddComponent<LayoutElement>();
+        lCargoElem.minWidth = 430;
         lCargoElem.preferredWidth = 430;
         lCargoElem.flexibleWidth = 0;
 
@@ -391,6 +392,14 @@ public static class DeliveryUIBuilder
         scrollObj.transform.SetParent(leftCargoCol.transform, false);
         scrollObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 590);
         scrollObj.AddComponent<Image>().color = new Color(0.05f, 0.07f, 0.1f, 0.85f);
+        LayoutElement scrollElem = scrollObj.AddComponent<LayoutElement>();
+        scrollElem.minWidth = 402;
+        scrollElem.preferredWidth = 402;
+        scrollElem.flexibleWidth = 1;
+        scrollElem.minHeight = 560;
+        scrollElem.preferredHeight = 590;
+        scrollElem.flexibleHeight = 1;
+
         ScrollRect scrollRect = scrollObj.AddComponent<ScrollRect>();
         scrollRect.horizontal = false;
         scrollRect.vertical = true;
@@ -429,6 +438,10 @@ public static class DeliveryUIBuilder
         cardTemplate.transform.SetParent(contentObj.transform, false);
         cardTemplate.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 84);
         cardTemplate.AddComponent<Image>().color = new Color(0.16f, 0.22f, 0.3f, 1f);
+        LayoutElement cardElem = cardTemplate.AddComponent<LayoutElement>();
+        cardElem.minHeight = 84;
+        cardElem.preferredHeight = 84;
+        cardElem.flexibleHeight = 0;
 
         Button cardBtn = cardTemplate.AddComponent<Button>();
         GameObject cardTextObj = new GameObject("Text");
@@ -436,7 +449,11 @@ public static class DeliveryUIBuilder
         RectTransform cardTextRect = cardTextObj.AddComponent<RectTransform>();
         cardTextRect.anchorMin = Vector2.zero; cardTextRect.anchorMax = Vector2.one; cardTextRect.sizeDelta = Vector2.zero;
         TextMeshProUGUI cardText = AddTextMeshPro(cardTextObj, "<b>PKG-1</b> - John Doe\n104 Maple Street\n<color=#64B5F6>IN TRANSIT</color>", 16, FontStyles.Normal, TextAlignmentOptions.MidlineLeft, Color.white);
-        if (cardText != null) cardText.margin = new Vector4(12, 0, 12, 0);
+        if (cardText != null)
+        {
+            cardText.margin = new Vector4(12, 0, 12, 0);
+            cardText.enableWordWrapping = true;
+        }
 
         // Empty list placeholder text
         GameObject emptyObj = new GameObject("EmptyListText");
@@ -449,6 +466,8 @@ public static class DeliveryUIBuilder
         GameObject rightCargoCol = new GameObject("RightColumn_Detail");
         rightCargoCol.transform.SetParent(cargoView.transform, false);
         LayoutElement rightCargoElem = rightCargoCol.AddComponent<LayoutElement>();
+        rightCargoElem.minWidth = 450;
+        rightCargoElem.preferredWidth = 600;
         rightCargoElem.flexibleWidth = 1;
 
         rightCargoCol.AddComponent<Image>().color = new Color(0.12f, 0.16f, 0.23f, 0.95f);
@@ -467,16 +486,19 @@ public static class DeliveryUIBuilder
         trackingObj.transform.SetParent(rightCargoCol.transform, false);
         trackingObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 26);
         TextMeshProUGUI trackingText = AddTextMeshPro(trackingObj, "Tracking #: #CRG-1001", 20, FontStyles.Bold, TextAlignmentOptions.Left, new Color(1f, 0.85f, 0.2f));
+        if (trackingText != null) trackingText.enableWordWrapping = true;
 
         GameObject recipientObj = new GameObject("RecipientNameText");
         recipientObj.transform.SetParent(rightCargoCol.transform, false);
         recipientObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 24);
         TextMeshProUGUI recipientText = AddTextMeshPro(recipientObj, "Recipient: John Smith", 19, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
+        if (recipientText != null) recipientText.enableWordWrapping = true;
 
         GameObject addressObj = new GameObject("TargetAddressText");
         addressObj.transform.SetParent(rightCargoCol.transform, false);
-        addressObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 24);
+        addressObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 48);
         TextMeshProUGUI addressText = AddTextMeshPro(addressObj, "Address: 104 Maple Street", 19, FontStyles.Normal, TextAlignmentOptions.Left, new Color(0.4f, 0.85f, 1f));
+        if (addressText != null) addressText.enableWordWrapping = true;
 
         GameObject descBoxObj = new GameObject("DescriptionBox");
         descBoxObj.transform.SetParent(rightCargoCol.transform, false);
@@ -491,6 +513,7 @@ public static class DeliveryUIBuilder
         GameObject descTextObj = new GameObject("AddressDescriptionText");
         descTextObj.transform.SetParent(descBoxObj.transform, false);
         TextMeshProUGUI descText = AddTextMeshPro(descTextObj, "<b>Address Hint & Note:</b>\n\n\"Red roof house with white fences...\"", 20, FontStyles.Normal, TextAlignmentOptions.TopLeft, new Color(1f, 0.95f, 0.75f));
+        if (descText != null) descText.enableWordWrapping = true;
 
         GameObject infoBoxObj = new GameObject("PhysicalDeliveryTipBox");
         infoBoxObj.transform.SetParent(rightCargoCol.transform, false);
@@ -522,6 +545,7 @@ public static class DeliveryUIBuilder
         GameObject leftVehCol = new GameObject("LeftColumn_Vehicles");
         leftVehCol.transform.SetParent(vehicleView.transform, false);
         LayoutElement lVehElem = leftVehCol.AddComponent<LayoutElement>();
+        lVehElem.minWidth = 430;
         lVehElem.preferredWidth = 430;
         lVehElem.flexibleWidth = 0;
 
@@ -541,6 +565,14 @@ public static class DeliveryUIBuilder
         vehScrollObj.transform.SetParent(leftVehCol.transform, false);
         vehScrollObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 640);
         vehScrollObj.AddComponent<Image>().color = new Color(0.05f, 0.07f, 0.1f, 0.85f);
+        LayoutElement scrollVehElem = vehScrollObj.AddComponent<LayoutElement>();
+        scrollVehElem.minWidth = 402;
+        scrollVehElem.preferredWidth = 402;
+        scrollVehElem.flexibleWidth = 1;
+        scrollVehElem.minHeight = 560;
+        scrollVehElem.preferredHeight = 640;
+        scrollVehElem.flexibleHeight = 1;
+
         ScrollRect vehScrollRect = vehScrollObj.AddComponent<ScrollRect>();
         vehScrollRect.horizontal = false; vehScrollRect.vertical = true; vehScrollRect.scrollSensitivity = 35f;
 
@@ -577,6 +609,10 @@ public static class DeliveryUIBuilder
         vehCardTemplate.transform.SetParent(vehContent.transform, false);
         vehCardTemplate.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 82);
         vehCardTemplate.AddComponent<Image>().color = new Color(0.16f, 0.22f, 0.3f, 1f);
+        LayoutElement vehCardElem = vehCardTemplate.AddComponent<LayoutElement>();
+        vehCardElem.minHeight = 82;
+        vehCardElem.preferredHeight = 82;
+        vehCardElem.flexibleHeight = 0;
         vehCardTemplate.AddComponent<Button>();
 
         GameObject vctObj = new GameObject("Text");
@@ -584,12 +620,18 @@ public static class DeliveryUIBuilder
         RectTransform vctRect = vctObj.AddComponent<RectTransform>();
         vctRect.anchorMin = Vector2.zero; vctRect.anchorMax = Vector2.one; vctRect.sizeDelta = Vector2.zero;
         TextMeshProUGUI vctTmp = AddTextMeshPro(vctObj, "<b>Heavy Cargo Van</b>\n$2,500 (Lvl 2)", 17, FontStyles.Normal, TextAlignmentOptions.MidlineLeft, Color.white);
-        if (vctTmp != null) vctTmp.margin = new Vector4(12, 0, 12, 0);
+        if (vctTmp != null)
+        {
+            vctTmp.margin = new Vector4(12, 0, 12, 0);
+            vctTmp.enableWordWrapping = true;
+        }
 
         // Right Column: Vehicle Details
         GameObject rightVehCol = new GameObject("RightColumn_VehicleDetail");
         rightVehCol.transform.SetParent(vehicleView.transform, false);
         LayoutElement rVehElem = rightVehCol.AddComponent<LayoutElement>();
+        rVehElem.minWidth = 450;
+        rVehElem.preferredWidth = 600;
         rVehElem.flexibleWidth = 1;
 
         rightVehCol.AddComponent<Image>().color = new Color(0.12f, 0.16f, 0.23f, 0.95f);

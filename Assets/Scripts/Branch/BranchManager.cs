@@ -46,6 +46,10 @@ public class BranchManager : MonoBehaviour
         {
             PopulateDefaultTiers();
         }
+        else
+        {
+            SanitizeTierNamesAndDescriptions();
+        }
 
         EnsureReferences();
         LoadBranchLevel();
@@ -63,6 +67,8 @@ public class BranchManager : MonoBehaviour
 
     public void EnsureReferences()
     {
+        SanitizeTierNamesAndDescriptions();
+
         if (buildingContainer == null)
         {
             buildingContainer = transform;
@@ -76,6 +82,47 @@ public class BranchManager : MonoBehaviour
         if (upgradeTerminal == null)
         {
             upgradeTerminal = UnityEngine.Object.FindAnyObjectByType<BranchUpgradeTerminal>();
+        }
+    }
+
+    public void SanitizeTierNamesAndDescriptions()
+    {
+        if (branchTiers == null || branchTiers.Count == 0) return;
+
+        foreach (var t in branchTiers)
+        {
+            if (t == null) continue;
+            switch (t.tierLevel)
+            {
+                case 1:
+                    if (string.IsNullOrEmpty(t.tierName) || t.tierName.Contains("Kul") || t.tierName.Contains("Dağ") || t.tierName.Contains("Başlangıç"))
+                    {
+                        t.tierName = "Starter Garage";
+                        t.description = "Entry-level parcel warehouse and garage. Basic package volume and low operating rent.";
+                    }
+                    break;
+                case 2:
+                    if (string.IsNullOrEmpty(t.tierName) || t.tierName.Contains("Şube") || t.tierName.Contains("Lojistik") || t.tierName.Contains("Orta"))
+                    {
+                        t.tierName = "Regional Hub";
+                        t.description = "Expanded logistics hub with improved daily parcel limits and high earnings potential.";
+                    }
+                    break;
+                case 3:
+                    if (string.IsNullOrEmpty(t.tierName) || t.tierName.Contains("Bölge") || t.tierName.Contains("Merkez") || t.tierName.Contains("Büyük"))
+                    {
+                        t.tierName = "District Distribution Center";
+                        t.description = "Large scale logistics center with high yield for express and fragile shipments.";
+                    }
+                    break;
+                case 4:
+                    if (string.IsNullOrEmpty(t.tierName) || t.tierName.Contains("Kompleks") || t.tierName.Contains("Filo") || t.tierName.Contains("Mega Lojistik"))
+                    {
+                        t.tierName = "Mega Logistics Complex";
+                        t.description = "Ultimate fleet management headquarters and maximum throughput capacity.";
+                    }
+                    break;
+            }
         }
     }
 

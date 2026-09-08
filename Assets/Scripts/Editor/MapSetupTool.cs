@@ -195,7 +195,7 @@ public class MapSetupTool : MonoBehaviour
         DeliveryPoint[] allExisting = Object.FindObjectsByType<DeliveryPoint>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         if (allExisting == null || allExisting.Length == 0)
         {
-            Debug.Log("[MapSetupTool] Sahnede değiştirilecek herhangi bir DeliveryPoint bulunamadı.");
+            Debug.Log("[MapSetupTool] No DeliveryPoint found in scene to replace.");
             return;
         }
 

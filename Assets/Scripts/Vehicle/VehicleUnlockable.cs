@@ -189,31 +189,21 @@ public class VehicleUnlockable : MonoBehaviour
         Transform targetAnchor = garageSpawnTransform != null ? garageSpawnTransform : parkingSpotTransform;
         if (targetAnchor == null)
         {
-            Debug.LogWarning($"[VehicleUnlockable] '{displayName}' için tanımlı Garage veya Parking noktası bulunamadı!");
+            Debug.LogWarning($"[VehicleUnlockable] No Garage or Parking point defined for '{displayName}'!");
             return;
         }
 
-        if (drivableVehicle != null && drivableVehicle.isPlayerInside)
-        {
-            drivableVehicle.ExitVehicle();
-        }
-
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-        }
-
-        transform.position = targetAnchor.position + Vector3.up * 0.35f;
+        transform.position = targetAnchor.position;
         transform.rotation = targetAnchor.rotation;
 
+        Rigidbody rb = GetComponent<Rigidbody>();
         if (rb != null)
         {
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
         }
 
-        Debug.Log($"[VehicleUnlockable] '{displayName}' garaj noktasına ({targetAnchor.name}) ışınlandı.");
+        Debug.Log($"[VehicleUnlockable] '{displayName}' teleported to garage anchor ({targetAnchor.name}).");
         OnVehicleRecalled?.Invoke(this);
     }
 }

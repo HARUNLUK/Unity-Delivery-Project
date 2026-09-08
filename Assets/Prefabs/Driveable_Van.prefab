@@ -607,7 +607,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DrivableVehicle
   vehicleId: pickup_truck
   vehicleName: Driveable_Van
-  description: "Ba\u015Flang\u0131\xE7 seviyesi \xE7evik ve pratik kargo arac\u0131."
+  description: "Entry-level agile and practical cargo delivery vehicle."
   purchasePrice: 2000
   requiredPlayerLevel: 1
   cargoCapacity: 8

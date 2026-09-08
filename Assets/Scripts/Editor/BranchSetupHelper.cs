@@ -41,7 +41,7 @@ public static class BranchSetupHelper
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         AssetDatabase.SaveAssets();
 
-        Debug.Log("<color=#32FF64>[BranchSetupHelper] Tertemiz Branch_Manager oluşturuldu. Kendi prefablarınızı Branch Tiers alanlarına atayabilirsiniz.</color>");
+        Debug.Log("<color=#32FF64>[BranchSetupHelper] Branch_Manager successfully created and configured.</color>");
     }
 }
 #endif
