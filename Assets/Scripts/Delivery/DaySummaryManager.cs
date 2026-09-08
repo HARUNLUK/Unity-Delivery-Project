@@ -181,7 +181,7 @@ public class DaySummaryManager : MonoBehaviour
             int pLvl = PlayerProgressionManager.Instance.PlayerLevel;
             int cXp = PlayerProgressionManager.Instance.CurrentXP;
             int nXp = PlayerProgressionManager.Instance.XPForNextLevel;
-            progressionInfoText.text = $"★ PLAYER LEVEL {pLvl} | XP: {cXp}/{nXp} (+{totalXP} XP Today)";
+            progressionInfoText.text = $"PLAYER LEVEL {pLvl} | XP: {cXp}/{nXp} (+{totalXP} XP Today)";
         }
 
         // 6. Detaylı Liste Satırlarını Oluştur

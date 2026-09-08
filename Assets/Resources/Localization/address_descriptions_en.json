@@ -1,0 +1,96 @@
+{
+  "language": "en",
+  "entries": [
+    {
+      "id": "1",
+      "district": "Maple Town",
+      "recipient": "Lucas Baker",
+      "addressName": "Maple Town",
+      "description": "The solitary dark green-roofed house located right at the neighborhood entrance."
+    },
+    {
+      "id": "2",
+      "district": "Maple Town",
+      "recipient": "Hannah Miller",
+      "addressName": "Maple Town",
+      "description": "Blue house with a blue car parked in the driveway."
+    },
+    {
+      "id": "3",
+      "district": "Maple Town",
+      "recipient": "Noah Campbell",
+      "addressName": "Maple Town",
+      "description": "Dark green-roofed house directly across from the blue house."
+    },
+    {
+      "id": "4",
+      "district": "Maple Town",
+      "recipient": "Bella Martinez",
+      "addressName": "Maple Town",
+      "description": "Red house with a white car parked at the entrance."
+    },
+    {
+      "id": "5",
+      "district": "Maple Town",
+      "recipient": "Ethan Carter",
+      "addressName": "Maple Town",
+      "description": "Enter the neighborhood near the green-roofed house and take the first right; the house on the corner as the road curves."
+    },
+    {
+      "id": "6",
+      "district": "Maple Town",
+      "recipient": "Mia Roberts",
+      "addressName": "Maple Town",
+      "description": "Enter the neighborhood near the red-roofed house and take the first left; the blue-roofed house on the left."
+    },
+    {
+      "id": "7",
+      "district": "Maple Town",
+      "recipient": "Grocer Ali",
+      "addressName": "Maple Town",
+      "description": "Enter the neighborhood near the red-roofed house and take the first left; the brown-roofed house on the right."
+    },
+    {
+      "id": "8",
+      "district": "Maple Town",
+      "recipient": "Lily Jenkins",
+      "addressName": "Maple Town",
+      "description": "The very first house encountered upon entering the neighborhood from the red-roofed house entrance."
+    },
+    {
+      "id": "9",
+      "district": "Maple Town",
+      "recipient": "William Davis",
+      "addressName": "Maple Town",
+      "description": "Blue-roofed house with a red car parked out front."
+    },
+    {
+      "id": "10",
+      "district": "Maple Town",
+      "recipient": "Rosemary Cooper",
+      "addressName": "Maple Town",
+      "description": "Purple-roofed house located in the cul-de-sac."
+    },
+    {
+      "id": "11",
+      "district": "Maple Town",
+      "recipient": "Teacher Mary",
+      "addressName": "Maple Town",
+      "description": "Enter the cul-de-sac past the blue-roofed house; the house located along the road's bend."
+    },
+    {
+      "id": "12",
+      "district": "Maple Town",
+      "recipient": "Gardener Thomas",
+      "addressName": "Maple Town",
+      "description": "Brown-roofed house with a purple car parked out front."
+    },
+    {
+      "id": "13",
+      "district": "Stadium District",
+      "recipient": "Oliver Queen",
+      "addressName": "Stadium District",
+      "description": "To be delivered to the local green grocery / produce shop in the Stadium District."
+    }
+  ]
+}

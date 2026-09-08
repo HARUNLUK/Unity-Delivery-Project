@@ -263,7 +263,7 @@ public class DrivableVehicle : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>⛽ OUT OF FUEL! Engine stopped. Refuel at gas pump.</color>");
+                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>[OUT OF FUEL] Engine stopped. Refuel at gas pump.</color>");
             }
         }
 
@@ -297,23 +297,24 @@ public class DrivableVehicle : MonoBehaviour
     }
 
     /// <summary>
-    /// Checks level and wallet balance, buys and permanently unlocks vehicle.
+    /// Attempts to purchase and unlock this vehicle using live player balance.
     /// </summary>
     public bool TryPurchase()
     {
         if (IsUnlocked) return true;
 
-        int currentLvl = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.PlayerLevel : 1;
-        if (currentLvl < requiredPlayerLevel)
+        int playerLevel = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.PlayerLevel : 1;
+        int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
+
+        if (playerLevel < requiredPlayerLevel)
         {
-            Debug.LogWarning($"[DrivableVehicle] Level yetersiz! Gereken: {requiredPlayerLevel}, Mevcut: {currentLvl}");
+            Debug.LogWarning($"[DrivableVehicle] Player Level {playerLevel} is too low. Required Level {requiredPlayerLevel}.");
             return false;
         }
 
-        int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
         if (balance < purchasePrice)
         {
-            Debug.LogWarning($"[DrivableVehicle] Bakiye yetersiz! Gereken: {purchasePrice}, Mevcut: {balance}");
+            Debug.LogWarning($"[DrivableVehicle] Insufficient funds (${balance}) to purchase '{vehicleName}' (${purchasePrice}).");
             return false;
         }
 
@@ -327,7 +328,7 @@ public class DrivableVehicle : MonoBehaviour
         PlayerPrefs.SetInt(SAVE_PREFIX + EffectiveVehicleId, 1);
         PlayerPrefs.Save();
 
-        Debug.Log($"<color=#32FF64>★ CONGRATULATIONS! '{vehicleName}' ({purchasePrice} currency) was successfully purchased and unlocked! ★</color>");
+        Debug.Log($"<color=#32FF64>[PURCHASE SUCCESS] '{vehicleName}' ({purchasePrice} currency) was successfully purchased and unlocked!</color>");
 
         OnVehiclePurchased?.Invoke(this);
         return true;
@@ -380,7 +381,7 @@ public class DrivableVehicle : MonoBehaviour
         PlayerPrefs.Save();
 
         OnAnyVehicleReset?.Invoke();
-        Debug.Log("<color=#FF3333>★★★ [DEV] F9 PRESSED: ALL VEHICLE PURCHASES AND FUELS RESET! ★★★</color>");
+        Debug.Log("<color=#FF3333>[DEV] F9 PRESSED: ALL VEHICLE PURCHASES AND FUELS RESET!</color>");
     }
 
     /// <summary>

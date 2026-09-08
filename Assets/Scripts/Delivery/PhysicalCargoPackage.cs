@@ -35,6 +35,10 @@ public class PhysicalCargoPackage : MonoBehaviour
     public string targetAddressName = "104 Maple Street";
     public string targetAddress => targetAddressName;
     public string targetAddressDescription = "";
+    public string EffectiveAddressDescription => AddressLocalizationManager.GetDescription(targetPointId, targetAddressDescription);
+    public string EffectiveAddressName => AddressLocalizationManager.GetAddressName(targetPointId, targetAddressName);
+    public string EffectiveRecipientName => AddressLocalizationManager.GetRecipient(targetPointId, recipientName);
+
     public int deliveryReward = 100;
     public int wrongPenalty = 30;
     public int wrongDeliveryPenalty => wrongPenalty;

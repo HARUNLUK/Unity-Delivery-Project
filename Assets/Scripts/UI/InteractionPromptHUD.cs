@@ -223,7 +223,7 @@ public class InteractionPromptHUD : MonoBehaviour
             GameObject headObj = new GameObject("Header");
             headObj.transform.SetParent(heldCargoPanel.transform, false);
             heldCargoHeaderText = headObj.AddComponent<TextMeshProUGUI>();
-            heldCargoHeaderText.text = "📦 HELD PACKAGE";
+            heldCargoHeaderText.text = "HELD PACKAGE";
             heldCargoHeaderText.fontSize = 24;
             heldCargoHeaderText.fontStyle = FontStyles.Bold;
             heldCargoHeaderText.color = new Color(1f, 0.82f, 0.2f);
@@ -281,7 +281,7 @@ public class InteractionPromptHUD : MonoBehaviour
             GameObject clueTitleObj = new GameObject("ClueTitle");
             clueTitleObj.transform.SetParent(clueBoxObj.transform, false);
             TextMeshProUGUI clueTitle = clueTitleObj.AddComponent<TextMeshProUGUI>();
-            clueTitle.text = "📝 <b>DESTINATION & VISUAL CLUE:</b>";
+            clueTitle.text = "<b>DESTINATION & VISUAL CLUE:</b>";
             clueTitle.fontSize = 19;
             clueTitle.fontStyle = FontStyles.Bold;
             clueTitle.color = new Color(1f, 0.85f, 0.25f);
@@ -315,7 +315,7 @@ public class InteractionPromptHUD : MonoBehaviour
             GameObject hintObj = new GameObject("ActionHint");
             hintObj.transform.SetParent(heldCargoPanel.transform, false);
             heldCargoActionHintText = hintObj.AddComponent<TextMeshProUGUI>();
-            heldCargoActionHintText.text = "🎮 <b>[E]</b> Drop  |  <b>Hold:</b> Throw";
+            heldCargoActionHintText.text = "<b>[E]</b> Drop  |  <b>Hold:</b> Throw";
             heldCargoActionHintText.fontSize = 18;
             heldCargoActionHintText.color = new Color(0.85f, 0.85f, 0.85f);
         }
@@ -386,7 +386,7 @@ public class InteractionPromptHUD : MonoBehaviour
                 tRect.sizeDelta = new Vector2(-24, 0);
 
                 fuelValueText = textObj.AddComponent<TextMeshProUGUI>();
-                fuelValueText.text = "⛽ 50.0 / 50.0 L (%100)";
+                fuelValueText.text = "FUEL: 50.0 / 50.0 L (100%)";
                 fuelValueText.fontSize = 19;
                 fuelValueText.fontStyle = FontStyles.Bold;
                 fuelValueText.alignment = TextAlignmentOptions.MidlineLeft;
@@ -464,7 +464,7 @@ public class InteractionPromptHUD : MonoBehaviour
         if (fuelValueText != null)
         {
             string colorTag = isLow ? "<color=#FF4444>" : "<color=#FFFFFF>";
-            fuelValueText.text = $"⛽ {colorTag}{currentFuel:F1} / {maxFuel:F1} L (%{(pct * 100):F0})</color>";
+            fuelValueText.text = $"FUEL: {colorTag}{currentFuel:F1} / {maxFuel:F1} L ({(pct * 100):F0}%)</color>";
         }
     }
 
@@ -487,13 +487,13 @@ public class InteractionPromptHUD : MonoBehaviour
         if (heldCargoPanel == null || heldCargoAddressDescText == null) EnsureUI();
         if (heldCargoPanel != null) heldCargoPanel.SetActive(true);
 
-        if (heldCargoTrackingText != null) heldCargoTrackingText.text = $"📦 <b>Tracking #:</b> #{pkg.targetPointId}";
-        if (heldCargoRecipientText != null) heldCargoRecipientText.text = $"👤 <b>Recipient:</b> {pkg.recipientName}";
-        if (heldCargoAddressText != null) heldCargoAddressText.text = $"📍 <b>Address:</b> {pkg.targetAddressName}";
+        if (heldCargoTrackingText != null) heldCargoTrackingText.text = $"<b>Tracking #:</b> #{pkg.targetPointId}";
+        if (heldCargoRecipientText != null) heldCargoRecipientText.text = $"<b>Recipient:</b> {pkg.EffectiveRecipientName}";
+        if (heldCargoAddressText != null) heldCargoAddressText.text = $"<b>Address:</b> {pkg.EffectiveAddressName}";
         
         if (heldCargoAddressDescText != null)
         {
-            string desc = !string.IsNullOrEmpty(pkg.targetAddressDescription) ? pkg.targetAddressDescription : (pkg.cargoData != null ? pkg.cargoData.targetAddressDescription : "");
+            string desc = pkg.EffectiveAddressDescription;
             if (!string.IsNullOrEmpty(desc))
             {
                 heldCargoAddressDescText.text = $"\"{desc}\"";
@@ -504,8 +504,8 @@ public class InteractionPromptHUD : MonoBehaviour
             }
         }
 
-        if (heldCargoRewardText != null) heldCargoRewardText.text = $"💰 <b>Reward:</b> +${pkg.deliveryReward}  <color=#32FFFF>(+{pkg.xpReward} XP)</color>";
-        if (heldCargoPenaltyText != null) heldCargoPenaltyText.text = $"⚠️ <b>Penalty:</b> -${pkg.wrongPenalty}";
+        if (heldCargoRewardText != null) heldCargoRewardText.text = $"<b>Reward:</b> +${pkg.deliveryReward}  <color=#32FFFF>(+{pkg.xpReward} XP)</color>";
+        if (heldCargoPenaltyText != null) heldCargoPenaltyText.text = $"<b>Penalty:</b> -${pkg.wrongPenalty}";
 
         if (heldCargoTypeText != null)
         {
@@ -513,14 +513,14 @@ public class InteractionPromptHUD : MonoBehaviour
             {
                 case CargoType.Fragile:
                     heldCargoTypeText.text = pkg.isBroken ?
-                        "<color=#FF4444>⚠️ TYPE: FRAGILE (BROKEN! - Reward Cancelled)</color>" :
-                        $"<color=#FFAA33>⚠️ TYPE: FRAGILE (Condition: %{pkg.health:F0})</color>";
+                        "<color=#FF4444>[FRAGILE] (BROKEN! - Reward Cancelled)</color>" :
+                        $"<color=#FFAA33>[FRAGILE] (Condition: {pkg.health:F0}%)</color>";
                     break;
                 case CargoType.Express:
-                    heldCargoTypeText.text = $"<color=#32FFFF>⚡ TYPE: EXPRESS (Before {pkg.GetFormattedTargetDeliveryTime()} +40% Bonus)</color>";
+                    heldCargoTypeText.text = $"<color=#32FFFF>[EXPRESS] (Before {pkg.GetFormattedTargetDeliveryTime()} +40% Bonus)</color>";
                     break;
                 default:
-                    heldCargoTypeText.text = "<color=#AAAAAA>📦 TYPE: STANDARD PARCEL</color>";
+                    heldCargoTypeText.text = "<color=#AAAAAA>[STANDARD PARCEL]</color>";
                     break;
             }
         }

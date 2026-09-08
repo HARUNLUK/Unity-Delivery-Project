@@ -32,7 +32,7 @@ public class SimpleRoadBuilderEditor : Editor
 
         if (builder.straightRoadPrefab == null)
         {
-            if (GUILayout.Button("🔄 Auto Find & Assign Pandazole Road Prefabs", GUILayout.Height(30)))
+            if (GUILayout.Button("Auto Find & Assign Pandazole Road Prefabs", GUILayout.Height(30)))
             {
                 builder.AutoAssignPrefabs();
                 EditorUtility.SetDirty(builder);
@@ -41,18 +41,18 @@ public class SimpleRoadBuilderEditor : Editor
         }
 
         EditorGUILayout.Space(15);
-        EditorGUILayout.LabelField("🚗 QUICK ROAD PLACEMENT (1-CLICK SNAP)", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("QUICK ROAD PLACEMENT (1-CLICK SNAP)", EditorStyles.boldLabel);
 
         // 1. DÜZ İLERİ & GERİ
         EditorGUILayout.BeginHorizontal();
         GUI.backgroundColor = new Color(0.3f, 0.8f, 0.4f);
-        if (GUILayout.Button("⬆️ Add Straight (Forward)", GUILayout.Height(38)))
+        if (GUILayout.Button("[+] Add Straight (Forward)", GUILayout.Height(38)))
         {
             PlaceRoadPiece(builder, builder.straightRoadPrefab, Vector3.forward, 0f);
         }
 
         GUI.backgroundColor = new Color(0.4f, 0.7f, 0.9f);
-        if (GUILayout.Button("⬇️ Add Straight (Backward)", GUILayout.Height(38)))
+        if (GUILayout.Button("[-] Add Straight (Backward)", GUILayout.Height(38)))
         {
             PlaceRoadPiece(builder, builder.straightRoadPrefab, Vector3.back, 0f);
         }
@@ -61,12 +61,12 @@ public class SimpleRoadBuilderEditor : Editor
         // 2. VİRAJLAR (SAĞ & SOL)
         EditorGUILayout.BeginHorizontal();
         GUI.backgroundColor = new Color(1f, 0.75f, 0.25f);
-        if (GUILayout.Button("↩️ Turn Left Corner", GUILayout.Height(34)))
+        if (GUILayout.Button("Turn Left Corner", GUILayout.Height(34)))
         {
             PlaceRoadPiece(builder, builder.cornerRoadPrefab, Vector3.forward, -90f);
         }
 
-        if (GUILayout.Button("↪️ Turn Right Corner", GUILayout.Height(34)))
+        if (GUILayout.Button("Turn Right Corner", GUILayout.Height(34)))
         {
             PlaceRoadPiece(builder, builder.cornerRoadPrefab, Vector3.forward, 0f);
         }
@@ -75,18 +75,18 @@ public class SimpleRoadBuilderEditor : Editor
         // 3. KAVŞAKLAR
         EditorGUILayout.BeginHorizontal();
         GUI.backgroundColor = new Color(0.85f, 0.45f, 0.95f);
-        if (GUILayout.Button("➕ 4-Way Cross", GUILayout.Height(32)))
+        if (GUILayout.Button("4-Way Cross", GUILayout.Height(32)))
         {
             PlaceRoadPiece(builder, builder.crossRoadPrefab, Vector3.forward, 0f);
         }
 
-        if (GUILayout.Button("🔀 T-Junction (Side)", GUILayout.Height(32)))
+        if (GUILayout.Button("T-Junction (Side)", GUILayout.Height(32)))
         {
             PlaceRoadPiece(builder, builder.sideRoadPrefab, Vector3.forward, 0f);
         }
 
         GUI.backgroundColor = new Color(0.95f, 0.35f, 0.35f);
-        if (GUILayout.Button("🛑 Dead End", GUILayout.Height(32)))
+        if (GUILayout.Button("Dead End", GUILayout.Height(32)))
         {
             PlaceRoadPiece(builder, builder.endRoadPrefab, Vector3.forward, 0f);
         }
@@ -94,7 +94,7 @@ public class SimpleRoadBuilderEditor : Editor
 
         GUI.backgroundColor = Color.white;
         EditorGUILayout.Space(15);
-        EditorGUILayout.LabelField("⚡ BATCH & UTILITY ACTIONS", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("BATCH & UTILITY ACTIONS", EditorStyles.boldLabel);
 
         // ÇOKLU DÜZ YOL
         EditorGUILayout.BeginHorizontal();
@@ -110,7 +110,7 @@ public class SimpleRoadBuilderEditor : Editor
 
         // ARAZİYE YAPIŞTIR
         EditorGUILayout.Space(5);
-        if (GUILayout.Button("🏔️ Snap All Placed Roads to Terrain Height", GUILayout.Height(28)))
+        if (GUILayout.Button("Snap All Placed Roads to Terrain Height", GUILayout.Height(28)))
         {
             SnapAllToTerrain(builder);
         }
@@ -118,7 +118,7 @@ public class SimpleRoadBuilderEditor : Editor
         // GERİ AL / SİL
         EditorGUILayout.Space(5);
         GUI.backgroundColor = new Color(1f, 0.3f, 0.3f);
-        if (GUILayout.Button("🗑️ Undo / Delete Last Placed Piece", GUILayout.Height(28)))
+        if (GUILayout.Button("Undo / Delete Last Placed Piece", GUILayout.Height(28)))
         {
             DeleteLastPiece(builder);
         }

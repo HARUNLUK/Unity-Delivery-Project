@@ -64,14 +64,18 @@ public class VanInventory : MonoBehaviour
         {
             DeliveryPoint p = pointPool[i];
 
-            string description = string.IsNullOrEmpty(p.addressDescription) 
-                ? "No address description provided." 
-                : p.addressDescription;
+            string description = !string.IsNullOrEmpty(p.EffectiveDescription) 
+                ? p.EffectiveDescription 
+                : "No address description provided.";
+
+            string recipient = !string.IsNullOrEmpty(p.EffectiveRecipient)
+                ? p.EffectiveRecipient
+                : englishNames[UnityEngine.Random.Range(0, englishNames.Length)];
 
             CargoItem cargo = new CargoItem(
                 $"#CRG-10{i + 1:D2}",
-                englishNames[UnityEngine.Random.Range(0, englishNames.Length)],
-                p.addressName,
+                recipient,
+                p.EffectiveAddressName,
                 description,
                 p.pointId
             );

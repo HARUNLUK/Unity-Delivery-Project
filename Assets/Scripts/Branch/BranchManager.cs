@@ -230,7 +230,7 @@ public class BranchManager : MonoBehaviour
         // Update visuals without altering user-designed generator positions
         ApplyTierVisuals(false);
 
-        Debug.Log($"<color=#32FFFF>★ BRANCH UPGRADED: Level {currentBranchLevel} ({CurrentTier.tierName})! ★</color>");
+        Debug.Log($"<color=#32FFFF>[BRANCH UPGRADED] Level {currentBranchLevel} ({CurrentTier.tierName})!</color>");
         OnBranchUpgraded?.Invoke(currentBranchLevel, CurrentTier);
 
         return true;
@@ -325,6 +325,6 @@ public class BranchManager : MonoBehaviour
         SaveBranchLevel();
         ApplyTierVisuals(false);
         OnBranchReset?.Invoke();
-        Debug.Log("<color=#FF3333>★★★ [DEV] BRANCH PROGRESSION RESET TO LEVEL 1! ★★★</color>");
+        Debug.Log("<color=#FF3333>[DEV] BRANCH PROGRESSION RESET TO LEVEL 1!</color>");
     }
 }

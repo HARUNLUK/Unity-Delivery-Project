@@ -26,22 +26,22 @@ public class SplineRoadBuilderEditor : Editor
     {
         SplineRoadBuilder builder = (SplineRoadBuilder)target;
 
-        EditorGUILayout.HelpBox("💡 DIRECT BRANCH DRAWING:\n1. Hold SHIFT + LEFT CLICK to place road points.\n2. To branch from an existing point: Hold SHIFT and click that waypoint, then click on the ground.\n3. Use presets below to instantly change road texture style.", MessageType.Info);
+        EditorGUILayout.HelpBox("DIRECT BRANCH DRAWING:\n1. Hold SHIFT + LEFT CLICK to place road points.\n2. To branch from an existing point: Hold SHIFT and click that waypoint, then click on the ground.\n3. Use presets below to instantly change road texture style.", MessageType.Info);
 
         EditorGUILayout.Space(10);
 
         // ROAD STYLE PRESETS
-        EditorGUILayout.LabelField("🎨 ROAD STYLE PRESETS (ONE-CLICK)", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("ROAD STYLE PRESETS (ONE-CLICK)", EditorStyles.boldLabel);
         EditorGUILayout.BeginHorizontal();
 
         GUI.backgroundColor = new Color(0.9f, 0.7f, 0.2f);
-        if (GUILayout.Button("🛣️ 2-Lane Striped\n(Highway / Main Road)", GUILayout.Height(36)))
+        if (GUILayout.Button("2-Lane Striped\n(Highway / Main Road)", GUILayout.Height(36)))
         {
             ApplyStylePreset(builder, "Mat_Road_2Lane_Striped.mat", 0.18f);
         }
 
         GUI.backgroundColor = new Color(0.3f, 0.8f, 0.9f);
-        if (GUILayout.Button("🏙️ City Sidewalks\n(Striped Avenue)", GUILayout.Height(36)))
+        if (GUILayout.Button("City Sidewalks\n(Striped Avenue)", GUILayout.Height(36)))
         {
             ApplyStylePreset(builder, "Mat_Road_City_Sidewalks.mat", 0.15f);
         }
@@ -50,13 +50,13 @@ public class SplineRoadBuilderEditor : Editor
         EditorGUILayout.BeginHorizontal();
 
         GUI.backgroundColor = new Color(0.2f, 0.9f, 0.7f);
-        if (GUILayout.Button("🏙️ Wide Sidewalk (Plain)\n(Downtown Street)", GUILayout.Height(36)))
+        if (GUILayout.Button("Wide Sidewalk (Plain)\n(Downtown Street)", GUILayout.Height(36)))
         {
             ApplyStylePreset(builder, "Mat_Road_City_Wide_Sidewalk.mat", 0.15f);
         }
 
         GUI.backgroundColor = new Color(0.7f, 0.5f, 0.3f);
-        if (GUILayout.Button("🏔️ Mountain Dirt\n(Village Trail)", GUILayout.Height(36)))
+        if (GUILayout.Button("Mountain Dirt\n(Village Trail)", GUILayout.Height(36)))
         {
             ApplyStylePreset(builder, "Mat_Road_Mountain_Dirt.mat", 0.20f);
         }
@@ -65,7 +65,7 @@ public class SplineRoadBuilderEditor : Editor
         EditorGUILayout.BeginHorizontal();
 
         GUI.backgroundColor = new Color(0.5f, 0.5f, 0.5f);
-        if (GUILayout.Button("⬛ Plain Asphalt\n(No Sidewalks)", GUILayout.Height(30)))
+        if (GUILayout.Button("Plain Asphalt\n(No Sidewalks)", GUILayout.Height(30)))
         {
             ApplyStylePreset(builder, "Road_Asphalt_Material.mat", 0.25f);
         }
@@ -78,7 +78,7 @@ public class SplineRoadBuilderEditor : Editor
         // ACTIVE BRANCH SELECTOR
         if (builder.branches.Count > 1)
         {
-            EditorGUILayout.LabelField("🛣️ ROAD NETWORK BRANCHES", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("ROAD NETWORK BRANCHES", EditorStyles.boldLabel);
             string[] branchNames = new string[builder.branches.Count];
             for (int i = 0; i < builder.branches.Count; i++)
             {
@@ -109,11 +109,11 @@ public class SplineRoadBuilderEditor : Editor
         RoadBranch activeBranch = builder.GetActiveBranch();
         if (builder.selectedPointIndex >= 0 && builder.selectedPointIndex < activeBranch.waypoints.Count)
         {
-            EditorGUILayout.LabelField($"📍 SELECTED: {activeBranch.branchName} ➔ Point {builder.selectedPointIndex + 1}", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField($"SELECTED: {activeBranch.branchName} -> Point {builder.selectedPointIndex + 1}", EditorStyles.boldLabel);
 
             EditorGUILayout.BeginHorizontal();
             GUI.backgroundColor = new Color(0.3f, 0.75f, 1f);
-            if (GUILayout.Button("➕ Insert Point After Selected", GUILayout.Height(28)))
+            if (GUILayout.Button("[+] Insert Point After Selected", GUILayout.Height(28)))
             {
                 Vector3 currentWorld = builder.transform.TransformPoint(activeBranch.waypoints[builder.selectedPointIndex]);
                 Vector3 insertWorld = currentWorld + (Vector3.forward * 4f);
@@ -121,7 +121,7 @@ public class SplineRoadBuilderEditor : Editor
             }
 
             GUI.backgroundColor = new Color(1f, 0.4f, 0.4f);
-            if (GUILayout.Button("🗑️ Delete Selected Point", GUILayout.Height(28)))
+            if (GUILayout.Button("Delete Selected Point", GUILayout.Height(28)))
             {
                 builder.DeletePoint(builder.activeBranchIndex, builder.selectedPointIndex);
             }
@@ -131,10 +131,10 @@ public class SplineRoadBuilderEditor : Editor
         }
 
         GUI.backgroundColor = Color.white;
-        EditorGUILayout.LabelField("🏔️ TERRAIN & ROAD ACTIONS", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("TERRAIN & ROAD ACTIONS", EditorStyles.boldLabel);
 
         GUI.backgroundColor = new Color(0.2f, 0.75f, 1f);
-        if (GUILayout.Button("🏔️ Snap & Deform Terrain Under Road", GUILayout.Height(32)))
+        if (GUILayout.Button("Snap & Deform Terrain Under Road", GUILayout.Height(32)))
         {
             Undo.RegisterCompleteObjectUndo(Terrain.activeTerrain.terrainData, "Deform Terrain Under Road");
             builder.DeformTerrainUnderRoad();
@@ -143,14 +143,14 @@ public class SplineRoadBuilderEditor : Editor
         EditorGUILayout.Space(5);
         EditorGUILayout.BeginHorizontal();
         GUI.backgroundColor = new Color(0.3f, 0.8f, 0.4f);
-        if (GUILayout.Button("🔄 Rebuild Mesh", GUILayout.Height(28)))
+        if (GUILayout.Button("Rebuild Mesh", GUILayout.Height(28)))
         {
             builder.RebuildRoadMesh();
             EditorUtility.SetDirty(builder);
         }
 
         GUI.backgroundColor = new Color(1f, 0.6f, 0.2f);
-        if (GUILayout.Button("↩️ Remove Last Point", GUILayout.Height(28)))
+        if (GUILayout.Button("Remove Last Point", GUILayout.Height(28)))
         {
             builder.RemoveLastPointFromActiveBranch();
             EditorUtility.SetDirty(builder);
@@ -159,7 +159,7 @@ public class SplineRoadBuilderEditor : Editor
 
         EditorGUILayout.Space(5);
         GUI.backgroundColor = new Color(1f, 0.3f, 0.3f);
-        if (GUILayout.Button("🗑️ Clear All Roads & Branches", GUILayout.Height(26)))
+        if (GUILayout.Button("Clear All Roads & Branches", GUILayout.Height(26)))
         {
             if (EditorUtility.DisplayDialog("Clear Spline Road", "Are you sure you want to clear all branches and waypoints?", "Yes", "No"))
             {
@@ -253,7 +253,7 @@ public class SplineRoadBuilderEditor : Editor
                     Handles.DrawWireDisc(wpWorld + (Vector3.up * 0.1f), Vector3.up, builder.roadWidth * 0.6f);
                     Handles.color = new Color(0.2f, 1f, 0.4f, 0.35f);
                     Handles.DrawSolidDisc(wpWorld + (Vector3.up * 0.1f), Vector3.up, builder.roadWidth * 0.6f);
-                    Handles.Label(wpWorld + (Vector3.up * 2f), $"🌿 CLICK TO BRANCH FROM HERE ({builder.branches[hoveredBranch].branchName} P{hoveredPoint + 1})");
+                    Handles.Label(wpWorld + (Vector3.up * 2f), $"CLICK TO BRANCH FROM HERE ({builder.branches[hoveredBranch].branchName} P{hoveredPoint + 1})");
                     HandleUtility.Repaint();
 
                     if (currentEvent.type == EventType.MouseDown && currentEvent.button == 0)

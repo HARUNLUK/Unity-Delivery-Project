@@ -336,7 +336,7 @@ public class CargoTabletUI : MonoBehaviour
             if (emptyListText != null)
             {
                 emptyListText.gameObject.SetActive(true);
-                emptyListText.text = "📦 No delivery packages found in warehouse or field for today.";
+                emptyListText.text = "No delivery packages found in warehouse or field for today.";
             }
             if (detailCardRoot != null) detailCardRoot.SetActive(false);
             return;
@@ -381,17 +381,17 @@ public class CargoTabletUI : MonoBehaviour
             if (isBroken)
             {
                 cardBgColor = new Color(0.38f, 0.10f, 0.10f, 0.95f); // Red
-                statusBadge = "<color=#FF5555>🔴 DAMAGED / BROKEN</color>";
+                statusBadge = "<color=#FF5555>[DAMAGED / BROKEN]</color>";
             }
             else if (isAtDeliveryZone)
             {
                 cardBgColor = new Color(0.38f, 0.28f, 0.05f, 0.95f); // Amber / Yellow
-                statusBadge = "<color=#FFD700>🟡 AT DROP-OFF ZONE (Pending Day End)</color>";
+                statusBadge = "<color=#FFD700>[AT DROP-OFF ZONE - Pending Day End]</color>";
             }
             else
             {
                 cardBgColor = new Color(0.12f, 0.17f, 0.24f, 0.95f); // Slate Blue
-                statusBadge = "<color=#64B5F6>⏳ IN TRANSIT / IN VEHICLE</color>";
+                statusBadge = "<color=#64B5F6>[IN TRANSIT / IN VEHICLE]</color>";
             }
 
             if (cardImg != null)
@@ -410,7 +410,7 @@ public class CargoTabletUI : MonoBehaviour
             TextMeshProUGUI label = cardObj.GetComponentInChildren<TextMeshProUGUI>();
             if (label != null)
             {
-                label.text = $"<b>{tracking}</b> - {pkg.recipientName}{typeTag}\n<size=85%>📍 {pkg.targetAddressName}</size>\n<size=80%>{statusBadge}</size>";
+                label.text = $"<b>{tracking}</b> - {pkg.recipientName}{typeTag}\n<size=85%>Address: {pkg.targetAddressName}</size>\n<size=80%>{statusBadge}</size>";
                 label.raycastTarget = false;
             }
 
@@ -468,7 +468,7 @@ public class CargoTabletUI : MonoBehaviour
 
         if (recipientNameText != null)
         {
-            recipientNameText.text = $"Recipient: <b>{pkg.recipientName}</b>  <color=#32FF64>(Reward: ${pkg.deliveryReward})</color>";
+            recipientNameText.text = $"Recipient: <b>{pkg.EffectiveRecipientName}</b>  <color=#32FF64>(Reward: ${pkg.deliveryReward})</color>";
         }
 
         DeliveryPoint nearbyPoint = pkg.FindNearbyDeliveryPoint();
@@ -480,23 +480,25 @@ public class CargoTabletUI : MonoBehaviour
             string statusInfo;
             if (isBroken)
             {
-                statusInfo = $"<color=#FF4444>🔴 Status: PACKAGE SEVERELY DAMAGED & BROKEN! (Penalty: -${pkg.wrongPenalty * 2})</color>";
+                statusInfo = $"<color=#FF4444>[Status: PACKAGE SEVERELY DAMAGED & BROKEN! (Penalty: -${pkg.wrongPenalty * 2})]</color>";
             }
             else if (isAtDeliveryZone)
             {
-                statusInfo = $"<color=#FFD700>🟡 Status: Placed at drop-off zone ({nearbyPoint.addressName}).\nAccuracy will be verified at end of shift (18:00 / End Day).</color>";
+                string zoneAddr = nearbyPoint.EffectiveAddressName;
+                statusInfo = $"<color=#FFD700>[Status: Placed at drop-off zone ({zoneAddr}).\nAccuracy will be verified at end of shift (18:00 / End Day).]</color>";
             }
             else
             {
-                statusInfo = $"<color=#64B5F6>⏳ Status: In Transit / Not yet placed at destination.\nReward: +${pkg.deliveryReward} | Incorrect Penalty: -${pkg.wrongPenalty}</color>";
+                statusInfo = $"<color=#64B5F6>[Status: In Transit / Not yet placed at destination.\nReward: +${pkg.deliveryReward} | Incorrect Penalty: -${pkg.wrongPenalty}]</color>";
             }
 
-            targetAddressText.text = $"Destination: <b>{pkg.targetAddressName}</b> (Door #{pkg.targetPointId})\n{statusInfo}";
+            targetAddressText.text = $"Destination: <b>{pkg.EffectiveAddressName}</b> (Door #{pkg.targetPointId})\n{statusInfo}";
         }
 
         if (addressDescriptionText != null)
         {
-            string desc = !string.IsNullOrEmpty(pkg.targetAddressDescription) ? pkg.targetAddressDescription : "No specific visual clue available for this address.";
+            string desc = pkg.EffectiveAddressDescription;
+            if (string.IsNullOrEmpty(desc)) desc = "No specific visual clue available for this address.";
             addressDescriptionText.text = $"<b>Address Hint & Description:</b>\n\n\"{desc}\"";
         }
     }
@@ -512,7 +514,8 @@ public class CargoTabletUI : MonoBehaviour
         
         if (addressDescriptionText != null)
         {
-            addressDescriptionText.text = $"<b>Address Hint & Description:</b>\n\n\"{cargo.targetAddressDescription}\"";
+            string desc = AddressLocalizationManager.GetDescription(cargo.targetPointId, cargo.targetAddressDescription);
+            addressDescriptionText.text = $"<b>Address Hint & Description:</b>\n\n\"{desc}\"";
         }
     }
 
@@ -578,7 +581,7 @@ public class CargoTabletUI : MonoBehaviour
             TextMeshProUGUI label = cardObj.GetComponentInChildren<TextMeshProUGUI>();
             if (label != null)
             {
-                string statusTag = v.IsUnlocked ? "<color=#32FF64>✓ OWNED</color>" : $"<color=#FFAA33>${v.purchasePrice}</color> (Lvl {v.requiredPlayerLevel})";
+                string statusTag = v.IsUnlocked ? "<color=#32FF64>[OWNED]</color>" : $"<color=#FFAA33>${v.purchasePrice}</color> (Lvl {v.requiredPlayerLevel})";
                 label.text = $"<b>{v.vehicleName}</b>\n{statusTag}";
                 label.raycastTarget = false;
             }
@@ -621,41 +624,41 @@ public class CargoTabletUI : MonoBehaviour
 
         if (vehicleNameText != null) vehicleNameText.text = v.vehicleName;
         if (vehicleDescText != null) vehicleDescText.text = $"<b>Description:</b>\n{v.description}";
-        if (vehicleCapacityText != null) vehicleCapacityText.text = $"📦 <b>Cargo Capacity:</b> {v.cargoCapacity} Packages";
+        if (vehicleCapacityText != null) vehicleCapacityText.text = $"<b>Cargo Capacity:</b> {v.cargoCapacity} Packages";
         
         if (vehicleLevelReqText != null)
         {
             bool lvlOk = playerLvl >= v.requiredPlayerLevel;
             string lvlColor = lvlOk ? "#32FF64" : "#FF5555";
-            vehicleLevelReqText.text = $"🛡️ <b>Required Level:</b> <color={lvlColor}>Level {v.requiredPlayerLevel}</color> (Yours: Level {playerLvl})";
+            vehicleLevelReqText.text = $"<b>Required Level:</b> <color={lvlColor}>Level {v.requiredPlayerLevel}</color> (Yours: Level {playerLvl})";
         }
 
         if (vehiclePriceText != null)
         {
             bool cashOk = balance >= v.purchasePrice;
             string cashColor = cashOk ? "#32FF64" : "#FF5555";
-            vehiclePriceText.text = $"💰 <b>Price:</b> <color={cashColor}>${v.purchasePrice}</color> (Balance: ${balance})";
+            vehiclePriceText.text = $"<b>Price:</b> <color={cashColor}>${v.purchasePrice}</color> (Balance: ${balance})";
         }
 
         if (vehicleStatusText != null)
         {
             if (v.IsUnlocked)
             {
-                vehicleStatusText.text = "<color=#32FF64>★ You own this vehicle. Ready to drive or recall to warehouse garage. ★</color>";
+                vehicleStatusText.text = "<color=#32FF64>[OWNED] Ready to drive or recall to warehouse garage.</color>";
             }
             else
             {
                 if (playerLvl < v.requiredPlayerLevel)
                 {
-                    vehicleStatusText.text = $"<color=#FF5555>🔒 LOCKED: Reach Level {v.requiredPlayerLevel} to purchase.</color>";
+                    vehicleStatusText.text = $"<color=#FF5555>[LOCKED] Reach Level {v.requiredPlayerLevel} to purchase.</color>";
                 }
                 else if (balance < v.purchasePrice)
                 {
-                    vehicleStatusText.text = $"<color=#FFAA33>🔒 LOCKED: Insufficient funds! Need ${(v.purchasePrice - balance)} more.</color>";
+                    vehicleStatusText.text = $"<color=#FFAA33>[LOCKED] Insufficient funds! Need ${(v.purchasePrice - balance)} more.</color>";
                 }
                 else
                 {
-                    vehicleStatusText.text = "<color=#32FFFF>✓ AVAILABLE: Ready for immediate purchase!</color>";
+                    vehicleStatusText.text = "<color=#32FFFF>[AVAILABLE] Ready for immediate purchase!</color>";
                 }
             }
         }
@@ -678,7 +681,7 @@ public class CargoTabletUI : MonoBehaviour
 
                 if (vehicleBuyButtonText != null)
                 {
-                    vehicleBuyButtonText.text = canAfford ? $"🛒 PURCHASE VEHICLE (${v.purchasePrice})" : $"INSUFFICIENT FUNDS (${v.purchasePrice})";
+                    vehicleBuyButtonText.text = canAfford ? $"PURCHASE VEHICLE (${v.purchasePrice})" : $"INSUFFICIENT FUNDS (${v.purchasePrice})";
                 }
 
                 vehicleBuyButton.onClick.RemoveAllListeners();
@@ -712,8 +715,8 @@ public class CargoTabletUI : MonoBehaviour
         {
             if (currentBranchTitleText != null) currentBranchTitleText.text = $"<b>{current.tierName}</b> <color=#32FFFF>(Level {current.tierLevel})</color>";
             if (currentBranchDescText != null) currentBranchDescText.text = current.description;
-            if (currentBranchCapacityText != null) currentBranchCapacityText.text = $"📦 <b>Daily Package Limit:</b> {current.dailyPackageCapacity} Packages";
-            if (currentBranchRentText != null) currentBranchRentText.text = $"💸 <b>Daily Operational Rent:</b> ${current.dailyRent} / day";
+            if (currentBranchCapacityText != null) currentBranchCapacityText.text = $"<b>Daily Package Limit:</b> {current.dailyPackageCapacity} Packages";
+            if (currentBranchRentText != null) currentBranchRentText.text = $"<b>Daily Operational Rent:</b> ${current.dailyRent} / day";
         }
 
         if (next != null)
@@ -731,12 +734,12 @@ public class CargoTabletUI : MonoBehaviour
             if (nextBranchCapacityText != null)
             {
                 nextBranchCapacityText.gameObject.SetActive(true);
-                nextBranchCapacityText.text = $"📦 <b>New Package Quota:</b> {current.dailyPackageCapacity} ➔ <color=#32FF64>{next.dailyPackageCapacity} Packages</color> (+{next.dailyPackageCapacity - current.dailyPackageCapacity})";
+                nextBranchCapacityText.text = $"<b>New Package Quota:</b> {current.dailyPackageCapacity} -> <color=#32FF64>{next.dailyPackageCapacity} Packages</color> (+{next.dailyPackageCapacity - current.dailyPackageCapacity})";
             }
             if (nextBranchRentText != null)
             {
                 nextBranchRentText.gameObject.SetActive(true);
-                nextBranchRentText.text = $"💸 <b>New Rent Fee:</b> ${current.dailyRent} ➔ <color=#FFAA33>${next.dailyRent}</color>";
+                nextBranchRentText.text = $"<b>New Rent Fee:</b> ${current.dailyRent} -> <color=#FFAA33>${next.dailyRent}</color>";
             }
 
             int playerLvl = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.PlayerLevel : 1;
@@ -746,7 +749,7 @@ public class CargoTabletUI : MonoBehaviour
             {
                 nextBranchLevelReqText.gameObject.SetActive(true);
                 string lvlTag = playerLvl >= next.requiredPlayerLevel ? "<color=#32FF64>" : "<color=#FF5555>";
-                nextBranchLevelReqText.text = $"👤 <b>Required Level:</b> {lvlTag}Level {next.requiredPlayerLevel} (Yours: {playerLvl})</color>";
+                nextBranchLevelReqText.text = $"<b>Required Level:</b> {lvlTag}Level {next.requiredPlayerLevel} (Yours: {playerLvl})</color>";
             }
 
             if (branchUpgradeButton != null)
@@ -765,9 +768,9 @@ public class CargoTabletUI : MonoBehaviour
 
                 if (branchUpgradeButtonText != null)
                 {
-                    if (!canLevel) branchUpgradeButtonText.text = $"🔒 REQUIRES LEVEL {next.requiredPlayerLevel}";
-                    else if (!canAfford) branchUpgradeButtonText.text = $"🔒 INSUFFICIENT FUNDS (${next.upgradeCost})";
-                    else branchUpgradeButtonText.text = $"🏢 UPGRADE BRANCH (${next.upgradeCost})";
+                    if (!canLevel) branchUpgradeButtonText.text = $"REQUIRES LEVEL {next.requiredPlayerLevel}";
+                    else if (!canAfford) branchUpgradeButtonText.text = $"INSUFFICIENT FUNDS (${next.upgradeCost})";
+                    else branchUpgradeButtonText.text = $"UPGRADE BRANCH (${next.upgradeCost})";
                 }
             }
 
@@ -796,7 +799,7 @@ public class CargoTabletUI : MonoBehaviour
                 PopulateBranchInfo();
                 if (InteractionPromptHUD.Instance != null)
                 {
-                    InteractionPromptHUD.Instance.ShowPrompt("<color=#32FFFF>★ BRANCH SUCCESSFULLY UPGRADED! ★</color>");
+                    InteractionPromptHUD.Instance.ShowPrompt("<color=#32FFFF>[BRANCH SUCCESSFULLY UPGRADED!]</color>");
                 }
             }
         }

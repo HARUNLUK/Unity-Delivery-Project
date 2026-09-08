@@ -230,7 +230,7 @@ public class CargoWarehouseGenerator : MonoBehaviour
                 expressHour = GenerateRandomExpressDeliveryHour();
             }
 
-            pkg.SetupPackage(targetPoint.pointId, targetPoint.addressName, targetPoint.recipientName, reward, wrongPenalty, chosenType, xp, targetPoint.addressDescription, chosenMaterial, isCustom, expressHour);
+            pkg.SetupPackage(targetPoint.pointId, targetPoint.EffectiveAddressName, targetPoint.EffectiveRecipient, reward, wrongPenalty, chosenType, xp, targetPoint.EffectiveDescription, chosenMaterial, isCustom, expressHour);
             currentPackages.Add(pkg);
         }
 

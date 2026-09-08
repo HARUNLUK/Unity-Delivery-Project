@@ -92,7 +92,7 @@ public class PlayerProgressionManager : MonoBehaviour
         while (currentXP >= GetXPRequiredForLevel(playerLevel + 1))
         {
             playerLevel++;
-            Debug.Log($"<color=#32FF64>★ LEVEL UP! You reached Player Level {playerLevel}! ★</color>");
+            Debug.Log($"<color=#32FF64>[LEVEL UP] You reached Player Level {playerLevel}!</color>");
             OnLevelUp?.Invoke(playerLevel);
         }
 
@@ -111,7 +111,7 @@ public class PlayerProgressionManager : MonoBehaviour
         {
             PlayerEconomyManager.Instance.DeductCash(upgradeCost);
             warehouseLevel++;
-            Debug.Log($"<color=#32FFFF>★ WAREHOUSE UPGRADED to Level {warehouseLevel}! ★</color>");
+            Debug.Log($"<color=#32FFFF>[WAREHOUSE UPGRADED] Reached Level {warehouseLevel}!</color>");
             OnWarehouseLevelUp?.Invoke(warehouseLevel);
             SaveProgression();
             return true;

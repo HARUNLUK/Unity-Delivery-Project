@@ -82,12 +82,12 @@ public class BranchUpgradeTerminal : MonoBehaviour
 
         if (next != null)
         {
-            return $"<color=#32FF64>[E] Open Branch Terminal</color> ➔ Level {next.tierLevel}: {next.tierName} (${next.upgradeCost})";
+            return $"<color=#32FF64>[E] Open Branch Terminal</color> -> Level {next.tierLevel}: {next.tierName} (${next.upgradeCost})";
         }
         else
         {
             string tName = current != null ? current.tierName : "Maximum";
-            return $"<color=#32FFFF>[E] Open Branch Terminal</color> ★ {tName} (Max Level) ★";
+            return $"<color=#32FFFF>[E] Open Branch Terminal</color> [{tName} - MAX LEVEL]";
         }
     }
 
@@ -103,7 +103,7 @@ public class BranchUpgradeTerminal : MonoBehaviour
             CargoTabletUI.Instance.SwitchTab(TabletTab.BranchOffice);
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt("<color=#32FFFF>★ BRANCH DASHBOARD OPENED ★</color>");
+                InteractionPromptHUD.Instance.ShowPrompt("<color=#32FFFF>[BRANCH DASHBOARD OPENED]</color>");
             }
         }
         else
@@ -147,7 +147,7 @@ public class BranchUpgradeTerminal : MonoBehaviour
             }
             else if (current != null)
             {
-                screenText.text = $"<b>BRANCH OFFICE</b>\n<color=#32FF64>★ MAXIMUM LEVEL ★\n{current.tierName}</color>";
+                screenText.text = $"<b>BRANCH OFFICE</b>\n<color=#32FF64>[MAXIMUM LEVEL]\n{current.tierName}</color>";
             }
         }
 

@@ -209,7 +209,7 @@ public class FPSPlayerController : MonoBehaviour
             }
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF5555>★ ALL VEHICLE & BRANCH PROGRESSION RESET (F9) ★</color>");
+                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF5555>[DEV RESET] ALL VEHICLE & BRANCH PROGRESSION RESET (F9)</color>");
             }
             if (CargoTabletUI.Instance != null && CargoTabletUI.Instance.IsTabletOpen)
             {
@@ -656,14 +656,14 @@ public class FPSPlayerController : MonoBehaviour
                     {
                         if (InteractionPromptHUD.Instance != null)
                         {
-                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF5555>🔒 [LOCKED] {vehicle.vehicleName}</color> (Requires Level {vehicle.requiredPlayerLevel} - ${vehicle.purchasePrice})");
+                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF5555>[LOCKED] {vehicle.vehicleName}</color> (Requires Level {vehicle.requiredPlayerLevel} - ${vehicle.purchasePrice})");
                         }
                     }
                     else if (currentBalance < vehicle.purchasePrice)
                     {
                         if (InteractionPromptHUD.Instance != null)
                         {
-                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#FFAA33>🔒 [LOCKED] {vehicle.vehicleName}</color> (${vehicle.purchasePrice} - Balance: ${currentBalance})");
+                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#FFAA33>[LOCKED] {vehicle.vehicleName}</color> (${vehicle.purchasePrice} - Balance: ${currentBalance})");
                         }
                     }
                     else
@@ -678,7 +678,7 @@ public class FPSPlayerController : MonoBehaviour
                             bool bought = vehicle.TryPurchase();
                             if (bought && InteractionPromptHUD.Instance != null)
                             {
-                                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>★ {vehicle.vehicleName} Purchased! ★</color>");
+                                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>[PURCHASED] {vehicle.vehicleName} Successfully Purchased!</color>");
                             }
                         }
                     }

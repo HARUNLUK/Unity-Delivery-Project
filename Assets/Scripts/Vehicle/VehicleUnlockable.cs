@@ -150,7 +150,7 @@ public class VehicleUnlockable : MonoBehaviour
         PlayerPrefs.Save();
 
         UpdateLockVisualsAndPhysics();
-        Debug.Log($"<color=#32FF64>★ CONGRATULATIONS! '{displayName}' successfully purchased and unlocked! ★</color>");
+        Debug.Log($"<color=#32FF64>[PURCHASE SUCCESS] '{displayName}' successfully purchased and unlocked!</color>");
 
         OnVehiclePurchased?.Invoke(this);
         return true;

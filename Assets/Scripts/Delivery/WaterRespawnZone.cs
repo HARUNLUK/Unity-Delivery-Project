@@ -75,7 +75,7 @@ public class WaterRespawnZone : MonoBehaviour
 
         if (InteractionPromptHUD.Instance != null)
         {
-            InteractionPromptHUD.Instance.ShowPrompt("<color=#44AAFF>🌊 Vehicle recovered from water to safe road!</color>");
+            InteractionPromptHUD.Instance.ShowPrompt("<color=#44AAFF>[WATER RESCUE] Vehicle recovered to safe road!</color>");
         }
 
         Debug.Log($"<color=#00AAFF>[WaterRespawnZone] Vehicle '{vehicle.name}' rescued from water to {targetPos}!</color>");
@@ -93,7 +93,7 @@ public class WaterRespawnZone : MonoBehaviour
 
         if (InteractionPromptHUD.Instance != null)
         {
-            InteractionPromptHUD.Instance.ShowPrompt("<color=#44AAFF>🌊 Rescued from water!</color>");
+            InteractionPromptHUD.Instance.ShowPrompt("<color=#44AAFF>[WATER RESCUE] Rescued from water!</color>");
         }
     }
 

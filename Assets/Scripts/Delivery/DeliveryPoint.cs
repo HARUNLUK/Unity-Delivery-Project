@@ -23,6 +23,10 @@ public class DeliveryPoint : MonoBehaviour
     [TextArea(2, 5)]
     public string addressDescription = "Two-story suburban house with front yard and wooden fence.";
 
+    public string EffectiveDescription => AddressLocalizationManager.GetDescription(pointId, addressDescription);
+    public string EffectiveAddressName => AddressLocalizationManager.GetAddressName(pointId, addressName);
+    public string EffectiveRecipient => AddressLocalizationManager.GetRecipient(pointId, recipientName);
+
     [Header("--- VISUAL MARKER ---")]
     public GameObject visualMarker;
 

@@ -71,7 +71,7 @@ public class DeliveryNotificationHUD : MonoBehaviour
     {
         if (remainingCargoCounterText != null && VanInventory.Instance != null)
         {
-            remainingCargoCounterText.text = $"📦 Remaining: {VanInventory.Instance.RemainingCargoCount} / 10";
+            remainingCargoCounterText.text = $"Remaining: {VanInventory.Instance.RemainingCargoCount} / 10";
         }
     }
 }

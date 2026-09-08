@@ -52,7 +52,7 @@ public class FuelStationPump : MonoBehaviour
         {
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>⛽ [TANK FULL]</color> ({vehicle.maxFuel:F1} / {vehicle.maxFuel:F1} L)");
+                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[TANK FULL]</color> ({vehicle.maxFuel:F1} / {vehicle.maxFuel:F1} L)");
             }
             SetPumpLightActive(false);
             return;
@@ -63,7 +63,7 @@ public class FuelStationPump : MonoBehaviour
         {
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF5555>⛽ [INSUFFICIENT FUNDS]</color> Need money to refuel (${pricePerLiter}/L)");
+                InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF5555>[INSUFFICIENT FUNDS]</color> Need money to refuel (${pricePerLiter}/L)");
             }
             SetPumpLightActive(false);
             return;
@@ -117,7 +117,7 @@ public class FuelStationPump : MonoBehaviour
             if (InteractionPromptHUD.Instance != null)
             {
                 float percent = (vehicle.currentFuel / vehicle.maxFuel) * 100f;
-                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>⛽ REFUELING...</color> {vehicle.currentFuel:F1} / {vehicle.maxFuel:F1} L ({percent:F0}%) - ${pricePerLiter}/L");
+                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>[REFUELING...]</color> {vehicle.currentFuel:F1} / {vehicle.maxFuel:F1} L ({percent:F0}%) - ${pricePerLiter}/L");
             }
         }
         else
@@ -127,7 +127,7 @@ public class FuelStationPump : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt($"<b>{stationName}</b>: Hold [F] ➔ <b>Refuel</b> (${pricePerLiter}/L)");
+                InteractionPromptHUD.Instance.ShowPrompt($"<b>{stationName}</b>: Hold [F] -> <b>Refuel</b> (${pricePerLiter}/L)");
             }
         }
     }

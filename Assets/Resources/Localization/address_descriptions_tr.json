@@ -1,0 +1,96 @@
+{
+  "language": "tr",
+  "entries": [
+    {
+      "id": "1",
+      "district": "Maple Town",
+      "recipient": "Lucas Baker",
+      "addressName": "Akçaağaç Kasabası",
+      "description": "Kasaba girişindeki koyu yeşil çatılı tek ev."
+    },
+    {
+      "id": "2",
+      "district": "Maple Town",
+      "recipient": "Hannah Miller",
+      "addressName": "Akçaağaç Kasabası",
+      "description": "Mavi boyalı ev. Girişinde mavi bir araba park halinde."
+    },
+    {
+      "id": "3",
+      "district": "Maple Town",
+      "recipient": "Noah Campbell",
+      "addressName": "Akçaağaç Kasabası",
+      "description": "Koyu yeşil çatılı ev. Tam karşısında mavi bir ev bulunuyor."
+    },
+    {
+      "id": "4",
+      "district": "Maple Town",
+      "recipient": "Bella Martinez",
+      "addressName": "Akçaağaç Kasabası",
+      "description": "Kırmızı ev. Girişinde beyaz bir araba park halinde."
+    },
+    {
+      "id": "5",
+      "district": "Maple Town",
+      "recipient": "Ethan Carter",
+      "addressName": "Akçaağaç Kasabası",
+      "description": "Mahalleye yeşil çatılı ev tarafından girince ilk sağa dönün; virajın köşesindeki ev."
+    },
+    {
+      "id": "6",
+      "district": "Maple Town",
+      "recipient": "Mia Roberts",
+      "addressName": "Akçaağaç Kasabası",
+      "description": "Mahalleye kırmızı çatılı ev tarafından girince ilk sola dönün; solda kalan mavi çatılı ev."
+    },
+    {
+      "id": "7",
+      "district": "Maple Town",
+      "recipient": "Ali Bakkal",
+      "addressName": "Akçaağaç Kasabası",
+      "description": "Mahalleye kırmızı çatılı ev tarafından girince ilk sola dönün; sağda kalan kahverengi çatılı ev."
+    },
+    {
+      "id": "8",
+      "district": "Maple Town",
+      "recipient": "Lily Jenkins",
+      "addressName": "Akçaağaç Kasabası",
+      "description": "Mahalleye kırmızı çatılı ev girişinden girince karşınıza çıkan ilk ev."
+    },
+    {
+      "id": "9",
+      "district": "Maple Town",
+      "recipient": "William Davis",
+      "addressName": "Akçaağaç Kasabası",
+      "description": "Mavi çatılı ev. Önünde kırmızı bir araba park halinde."
+    },
+    {
+      "id": "10",
+      "district": "Maple Town",
+      "recipient": "Rosemary Cooper",
+      "addressName": "Akçaağaç Kasabası",
+      "description": "Çıkmaz sokakta yer alan mor çatılı ev."
+    },
+    {
+      "id": "11",
+      "district": "Maple Town",
+      "recipient": "Meryem Öğretmen",
+      "addressName": "Akçaağaç Kasabası",
+      "description": "Mavi çatılı evin oradan çıkmaz sokağa girince, yolun kıvrıldığı tarafta kalan ev."
+    },
+    {
+      "id": "12",
+      "district": "Maple Town",
+      "recipient": "Bahçıvan Thomas",
+      "addressName": "Akçaağaç Kasabası",
+      "description": "Kahverengi çatılı ev. Önünde mor bir araba park halinde."
+    },
+    {
+      "id": "13",
+      "district": "Stadium District",
+      "recipient": "Oliver Queen",
+      "addressName": "Stadyum Bölgesi",
+      "description": "Stadyum bölgesindeki manava teslim edilecek."
+    }
+  ]
+}

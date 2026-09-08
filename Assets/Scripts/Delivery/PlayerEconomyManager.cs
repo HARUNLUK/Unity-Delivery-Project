@@ -99,7 +99,7 @@ public class PlayerEconomyManager : MonoBehaviour
         Debug.Log("<color=yellow>[PlayerEconomyManager] F7 Pressed: Balance ($0) and Player Level (Level 1) reset!</color>");
         if (InteractionPromptHUD.Instance != null)
         {
-            InteractionPromptHUD.Instance.ShowPrompt("<color=#FFAA33>★ Reset to Level 1 & Balance $0! [F7] ★</color>");
+            InteractionPromptHUD.Instance.ShowPrompt("<color=#FFAA33>[RESET] Level 1 & Balance $0! [F7]</color>");
         }
     }
 

@@ -233,29 +233,17 @@ public static class DeliveryUIBuilder
         Image tbHeaderImg = topBarHeaderObj.AddComponent<Image>();
         tbHeaderImg.color = new Color(0.11f, 0.15f, 0.22f, 1f);
 
-        // Title on the left of TopBar
-        GameObject titleBadgeObj = new GameObject("BrandTitle");
-        titleBadgeObj.transform.SetParent(topBarHeaderObj.transform, false);
-        RectTransform tbTitleRect = titleBadgeObj.AddComponent<RectTransform>();
-        tbTitleRect.anchorMin = new Vector2(0, 0);
-        tbTitleRect.anchorMax = new Vector2(0, 1);
-        tbTitleRect.pivot = new Vector2(0.5f, 0.5f);
-        tbTitleRect.anchoredPosition = new Vector2(16, 0);
-        tbTitleRect.sizeDelta = new Vector2(185, 0);
-        TextMeshProUGUI titleTmp = AddTextMeshPro(titleBadgeObj, "🚚 <b>LOGISTICS</b>", 18, FontStyles.Bold, TextAlignmentOptions.MidlineLeft, new Color(0.3f, 0.85f, 1f));
-        if (titleTmp != null) titleTmp.enableWordWrapping = false;
-
-        // Tab Buttons Container in the center
+        // Tab Buttons Container
         GameObject tabButtonsContainer = new GameObject("TabBar");
         tabButtonsContainer.transform.SetParent(topBarHeaderObj.transform, false);
         RectTransform tbcRect = tabButtonsContainer.AddComponent<RectTransform>();
         tbcRect.anchorMin = new Vector2(0, 0);
         tbcRect.anchorMax = new Vector2(1, 1);
-        tbcRect.offsetMin = new Vector2(210, 8);
+        tbcRect.offsetMin = new Vector2(16, 8);
         tbcRect.offsetMax = new Vector2(-268, -8);
 
         HorizontalLayoutGroup tbhLayout = tabButtonsContainer.AddComponent<HorizontalLayoutGroup>();
-        tbhLayout.spacing = 6;
+        tbhLayout.spacing = 8;
         tbhLayout.childControlWidth = true;
         tbhLayout.childControlHeight = true;
         tbhLayout.childForceExpandWidth = true;
@@ -272,7 +260,7 @@ public static class DeliveryUIBuilder
         t1TextObj.transform.SetParent(tab1BtnObj.transform, false);
         RectTransform t1Tr = t1TextObj.AddComponent<RectTransform>();
         t1Tr.anchorMin = Vector2.zero; t1Tr.anchorMax = Vector2.one; t1Tr.sizeDelta = Vector2.zero;
-        TextMeshProUGUI t1Tmp = AddTextMeshPro(t1TextObj, "📦 DELIVERIES", 14, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        TextMeshProUGUI t1Tmp = AddTextMeshPro(t1TextObj, "DELIVERIES", 14, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
         t1Tmp.raycastTarget = false;
         t1Tmp.enableWordWrapping = false;
 
@@ -287,7 +275,7 @@ public static class DeliveryUIBuilder
         t2TextObj.transform.SetParent(tab2BtnObj.transform, false);
         RectTransform t2Tr = t2TextObj.AddComponent<RectTransform>();
         t2Tr.anchorMin = Vector2.zero; t2Tr.anchorMax = Vector2.one; t2Tr.sizeDelta = Vector2.zero;
-        TextMeshProUGUI t2Tmp = AddTextMeshPro(t2TextObj, "🚚 VEHICLES", 14, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        TextMeshProUGUI t2Tmp = AddTextMeshPro(t2TextObj, "VEHICLES", 14, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
         t2Tmp.raycastTarget = false;
         t2Tmp.enableWordWrapping = false;
 
@@ -302,7 +290,7 @@ public static class DeliveryUIBuilder
         t3TextObj.transform.SetParent(tab3BtnObj.transform, false);
         RectTransform t3Tr = t3TextObj.AddComponent<RectTransform>();
         t3Tr.anchorMin = Vector2.zero; t3Tr.anchorMax = Vector2.one; t3Tr.sizeDelta = Vector2.zero;
-        TextMeshProUGUI t3Tmp = AddTextMeshPro(t3TextObj, "🏢 BRANCH", 14, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        TextMeshProUGUI t3Tmp = AddTextMeshPro(t3TextObj, "BRANCH", 14, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
         t3Tmp.raycastTarget = false;
         t3Tmp.enableWordWrapping = false;
 
@@ -324,7 +312,7 @@ public static class DeliveryUIBuilder
         endShiftTextObj.transform.SetParent(endShiftBtnObj.transform, false);
         RectTransform esTr = endShiftTextObj.AddComponent<RectTransform>();
         esTr.anchorMin = Vector2.zero; esTr.anchorMax = Vector2.one; esTr.sizeDelta = Vector2.zero;
-        TextMeshProUGUI esTmp = AddTextMeshPro(endShiftTextObj, "⏰ END SHIFT", 14, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        TextMeshProUGUI esTmp = AddTextMeshPro(endShiftTextObj, "END SHIFT", 14, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
         esTmp.raycastTarget = false;
         esTmp.enableWordWrapping = false;
 
@@ -346,7 +334,7 @@ public static class DeliveryUIBuilder
         closeTextObj.transform.SetParent(closeBtnObj.transform, false);
         RectTransform clTr = closeTextObj.AddComponent<RectTransform>();
         clTr.anchorMin = Vector2.zero; clTr.anchorMax = Vector2.one; clTr.sizeDelta = Vector2.zero;
-        TextMeshProUGUI clTmp = AddTextMeshPro(closeTextObj, "✖ CLOSE", 14, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        TextMeshProUGUI clTmp = AddTextMeshPro(closeTextObj, "CLOSE", 14, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
         clTmp.raycastTarget = false;
         clTmp.enableWordWrapping = false;
 
@@ -397,7 +385,7 @@ public static class DeliveryUIBuilder
         GameObject listTitleObj = new GameObject("ListTitle");
         listTitleObj.transform.SetParent(leftCargoCol.transform, false);
         listTitleObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 36);
-        AddTextMeshPro(listTitleObj, "📦 CARGO IN VEHICLE", 22, FontStyles.Bold, TextAlignmentOptions.Center, new Color(1f, 0.85f, 0.2f));
+        AddTextMeshPro(listTitleObj, "CARGO IN VEHICLE", 22, FontStyles.Bold, TextAlignmentOptions.Center, new Color(1f, 0.85f, 0.2f));
 
         GameObject scrollObj = new GameObject("CargoScrollView");
         scrollObj.transform.SetParent(leftCargoCol.transform, false);
@@ -447,14 +435,14 @@ public static class DeliveryUIBuilder
         cardTextObj.transform.SetParent(cardTemplate.transform, false);
         RectTransform cardTextRect = cardTextObj.AddComponent<RectTransform>();
         cardTextRect.anchorMin = Vector2.zero; cardTextRect.anchorMax = Vector2.one; cardTextRect.sizeDelta = Vector2.zero;
-        TextMeshProUGUI cardText = AddTextMeshPro(cardTextObj, "<b>PKG-1</b> - John Doe\n📍 104 Maple Street\n<color=#64B5F6>⏳ IN TRANSIT</color>", 16, FontStyles.Normal, TextAlignmentOptions.MidlineLeft, Color.white);
+        TextMeshProUGUI cardText = AddTextMeshPro(cardTextObj, "<b>PKG-1</b> - John Doe\n104 Maple Street\n<color=#64B5F6>IN TRANSIT</color>", 16, FontStyles.Normal, TextAlignmentOptions.MidlineLeft, Color.white);
         if (cardText != null) cardText.margin = new Vector4(12, 0, 12, 0);
 
         // Empty list placeholder text
         GameObject emptyObj = new GameObject("EmptyListText");
         emptyObj.transform.SetParent(leftCargoCol.transform, false);
         emptyObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 60);
-        TextMeshProUGUI emptyTmp = AddTextMeshPro(emptyObj, "📦 No packages in vehicle to deliver.\nLoad new packages from the warehouse.", 16, FontStyles.Italic, TextAlignmentOptions.Center, new Color(0.7f, 0.7f, 0.75f));
+        TextMeshProUGUI emptyTmp = AddTextMeshPro(emptyObj, "No packages in vehicle to deliver.\nLoad new packages from the warehouse.", 16, FontStyles.Italic, TextAlignmentOptions.Center, new Color(0.7f, 0.7f, 0.75f));
         emptyObj.SetActive(false);
 
         // Right Column: Detail & Drop (Flexible)
@@ -473,7 +461,7 @@ public static class DeliveryUIBuilder
         GameObject detailHeader = new GameObject("Header");
         detailHeader.transform.SetParent(rightCargoCol.transform, false);
         detailHeader.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 32);
-        AddTextMeshPro(detailHeader, "📋 DELIVERY DETAILS & HINT", 22, FontStyles.Bold, TextAlignmentOptions.Left, new Color(0.3f, 0.85f, 1f));
+        AddTextMeshPro(detailHeader, "DELIVERY DETAILS & HINT", 22, FontStyles.Bold, TextAlignmentOptions.Left, new Color(0.3f, 0.85f, 1f));
 
         GameObject trackingObj = new GameObject("TrackingNumberText");
         trackingObj.transform.SetParent(rightCargoCol.transform, false);
@@ -513,7 +501,7 @@ public static class DeliveryUIBuilder
         infoTextObj.transform.SetParent(infoBoxObj.transform, false);
         RectTransform infoTextRect = infoTextObj.AddComponent<RectTransform>();
         infoTextRect.anchorMin = Vector2.zero; infoTextRect.anchorMax = Vector2.one; infoTextRect.sizeDelta = new Vector2(-20, 0);
-        AddTextMeshPro(infoTextObj, "🚚 <b>Physical Delivery:</b> Pick up package with <b>[E]</b> and drop in delivery zone.", 18, FontStyles.Bold, TextAlignmentOptions.Center, new Color(0.35f, 1f, 0.6f));
+        AddTextMeshPro(infoTextObj, "<b>Physical Delivery:</b> Pick up package with <b>[E]</b> and drop in delivery zone.", 18, FontStyles.Bold, TextAlignmentOptions.Center, new Color(0.35f, 1f, 0.6f));
 
         // ==========================================
         // SUBVIEW 2: VEHICLE DEALERSHIP VIEW
@@ -547,7 +535,7 @@ public static class DeliveryUIBuilder
         GameObject vehListTitle = new GameObject("Title");
         vehListTitle.transform.SetParent(leftVehCol.transform, false);
         vehListTitle.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 36);
-        AddTextMeshPro(vehListTitle, "🚚 VEHICLE FLEET & DEALERSHIP", 22, FontStyles.Bold, TextAlignmentOptions.Center, new Color(1f, 0.85f, 0.2f));
+        AddTextMeshPro(vehListTitle, "VEHICLE FLEET & DEALERSHIP", 22, FontStyles.Bold, TextAlignmentOptions.Center, new Color(1f, 0.85f, 0.2f));
 
         GameObject vehScrollObj = new GameObject("VehicleScrollView");
         vehScrollObj.transform.SetParent(leftVehCol.transform, false);
@@ -619,17 +607,17 @@ public static class DeliveryUIBuilder
         GameObject vCapObj = new GameObject("CapacityText");
         vCapObj.transform.SetParent(rightVehCol.transform, false);
         vCapObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 25);
-        TextMeshProUGUI vCapTmp = AddTextMeshPro(vCapObj, "📦 <b>Cargo Capacity:</b> 12 Packages", 19, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
+        TextMeshProUGUI vCapTmp = AddTextMeshPro(vCapObj, "<b>Cargo Capacity:</b> 12 Packages", 19, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
 
         GameObject vLvlObj = new GameObject("LevelReqText");
         vLvlObj.transform.SetParent(rightVehCol.transform, false);
         vLvlObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 25);
-        TextMeshProUGUI vLvlTmp = AddTextMeshPro(vLvlObj, "🛡️ <b>Required Level:</b> Level 2", 19, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
+        TextMeshProUGUI vLvlTmp = AddTextMeshPro(vLvlObj, "<b>Required Level:</b> Level 2", 19, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
 
         GameObject vPriceObj = new GameObject("PriceText");
         vPriceObj.transform.SetParent(rightVehCol.transform, false);
         vPriceObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 25);
-        TextMeshProUGUI vPriceTmp = AddTextMeshPro(vPriceObj, "💰 <b>Price:</b> $2,500", 19, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
+        TextMeshProUGUI vPriceTmp = AddTextMeshPro(vPriceObj, "<b>Price:</b> $2,500", 19, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
 
         GameObject vDescBox = new GameObject("DescBox");
         vDescBox.transform.SetParent(rightVehCol.transform, false);
@@ -645,7 +633,7 @@ public static class DeliveryUIBuilder
         GameObject vStObj = new GameObject("StatusText");
         vStObj.transform.SetParent(rightVehCol.transform, false);
         vStObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 28);
-        TextMeshProUGUI vStTmp = AddTextMeshPro(vStObj, "✓ AVAILABLE FOR PURCHASE", 19, FontStyles.Bold, TextAlignmentOptions.Left, new Color(0.2f, 1f, 0.4f));
+        TextMeshProUGUI vStTmp = AddTextMeshPro(vStObj, "[AVAILABLE FOR PURCHASE]", 19, FontStyles.Bold, TextAlignmentOptions.Left, new Color(0.2f, 1f, 0.4f));
 
         GameObject vBuyBtnObj = new GameObject("BuyButton");
         vBuyBtnObj.transform.SetParent(rightVehCol.transform, false);
@@ -658,7 +646,7 @@ public static class DeliveryUIBuilder
         vbbtObj.transform.SetParent(vBuyBtnObj.transform, false);
         RectTransform vbbtRect = vbbtObj.AddComponent<RectTransform>();
         vbbtRect.anchorMin = Vector2.zero; vbbtRect.anchorMax = Vector2.one; vbbtRect.sizeDelta = Vector2.zero;
-        TextMeshProUGUI vBuyTxt = AddTextMeshPro(vbbtObj, "🛒 PURCHASE VEHICLE ($2,500)", 21, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        TextMeshProUGUI vBuyTxt = AddTextMeshPro(vbbtObj, "PURCHASE VEHICLE ($2,500)", 21, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
 
         // ==========================================
         // SUBVIEW 3: BRANCH OFFICE UPGRADE VIEW
@@ -691,7 +679,7 @@ public static class DeliveryUIBuilder
         GameObject lbHeader = new GameObject("Header");
         lbHeader.transform.SetParent(leftBranchCol.transform, false);
         lbHeader.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 32);
-        AddTextMeshPro(lbHeader, "🏢 CURRENT BRANCH / WAREHOUSE", 22, FontStyles.Bold, TextAlignmentOptions.Left, new Color(0.3f, 0.85f, 1f));
+        AddTextMeshPro(lbHeader, "CURRENT BRANCH / WAREHOUSE", 22, FontStyles.Bold, TextAlignmentOptions.Left, new Color(0.3f, 0.85f, 1f));
 
         GameObject bTitleObj = new GameObject("BranchTitle");
         bTitleObj.transform.SetParent(leftBranchCol.transform, false);
@@ -712,12 +700,12 @@ public static class DeliveryUIBuilder
         GameObject bCapObj = new GameObject("CapText");
         bCapObj.transform.SetParent(leftBranchCol.transform, false);
         bCapObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 26);
-        TextMeshProUGUI curBranchCap = AddTextMeshPro(bCapObj, "📦 <b>Daily Parcel Limit:</b> 4 Packages / Day", 19, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
+        TextMeshProUGUI curBranchCap = AddTextMeshPro(bCapObj, "<b>Daily Parcel Limit:</b> 4 Packages / Day", 19, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
 
         GameObject bRentObj = new GameObject("RentText");
         bRentObj.transform.SetParent(leftBranchCol.transform, false);
         bRentObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 26);
-        TextMeshProUGUI curBranchRent = AddTextMeshPro(bRentObj, "💸 <b>Daily Rent:</b> $50 / Day", 19, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
+        TextMeshProUGUI curBranchRent = AddTextMeshPro(bRentObj, "<b>Daily Rent:</b> $50 / Day", 19, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
 
         // Right Column: Next Tier / Upgrade
         GameObject rightBranchCol = new GameObject("RightColumn_NextTier");
@@ -735,7 +723,7 @@ public static class DeliveryUIBuilder
         GameObject rbHeader = new GameObject("Header");
         rbHeader.transform.SetParent(rightBranchCol.transform, false);
         rbHeader.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 32);
-        AddTextMeshPro(rbHeader, "🚀 BRANCH UPGRADE & NEXT TIER", 22, FontStyles.Bold, TextAlignmentOptions.Left, new Color(0.3f, 1f, 0.5f));
+        AddTextMeshPro(rbHeader, "BRANCH UPGRADE & NEXT TIER", 22, FontStyles.Bold, TextAlignmentOptions.Left, new Color(0.3f, 1f, 0.5f));
 
         GameObject nTitleObj = new GameObject("NextTitle");
         nTitleObj.transform.SetParent(rightBranchCol.transform, false);
@@ -756,17 +744,17 @@ public static class DeliveryUIBuilder
         GameObject nCapObj = new GameObject("NextCapText");
         nCapObj.transform.SetParent(rightBranchCol.transform, false);
         nCapObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 25);
-        TextMeshProUGUI nextBranchCap = AddTextMeshPro(nCapObj, "📦 <b>New Parcel Limit:</b> 4 ➔ <color=#32FF64>8 Packages (+4)</color>", 18, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
+        TextMeshProUGUI nextBranchCap = AddTextMeshPro(nCapObj, "<b>New Parcel Limit:</b> 4 -> <color=#32FF64>8 Packages (+4)</color>", 18, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
 
         GameObject nRentObj = new GameObject("NextRentText");
         nRentObj.transform.SetParent(rightBranchCol.transform, false);
         nRentObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 25);
-        TextMeshProUGUI nextBranchRent = AddTextMeshPro(nRentObj, "💸 <b>New Daily Rent:</b> $50 ➔ <color=#FFAA33>$120</color>", 18, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
+        TextMeshProUGUI nextBranchRent = AddTextMeshPro(nRentObj, "<b>New Daily Rent:</b> $50 -> <color=#FFAA33>$120</color>", 18, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
 
         GameObject nReqObj = new GameObject("NextReqText");
         nReqObj.transform.SetParent(rightBranchCol.transform, false);
         nReqObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 25);
-        TextMeshProUGUI nextBranchReq = AddTextMeshPro(nReqObj, "👤 <b>Required Level:</b> Level 2 (Current: 1)", 18, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
+        TextMeshProUGUI nextBranchReq = AddTextMeshPro(nReqObj, "<b>Required Level:</b> Level 2 (Current: 1)", 18, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
 
         GameObject bUpBtnObj = new GameObject("UpgradeButton");
         bUpBtnObj.transform.SetParent(rightBranchCol.transform, false);
@@ -779,12 +767,12 @@ public static class DeliveryUIBuilder
         bubtObj.transform.SetParent(bUpBtnObj.transform, false);
         RectTransform bubtRect = bubtObj.AddComponent<RectTransform>();
         bubtRect.anchorMin = Vector2.zero; bubtRect.anchorMax = Vector2.one; bubtRect.sizeDelta = Vector2.zero;
-        TextMeshProUGUI bUpTxt = AddTextMeshPro(bubtObj, "🏢 UPGRADE BRANCH ($1,200)", 21, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        TextMeshProUGUI bUpTxt = AddTextMeshPro(bubtObj, "UPGRADE BRANCH ($1,200)", 21, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
 
         GameObject maxBadgeObj = new GameObject("MaxLevelBadge");
         maxBadgeObj.transform.SetParent(rightBranchCol.transform, false);
         maxBadgeObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 45);
-        TextMeshProUGUI maxBadgeTxt = AddTextMeshPro(maxBadgeObj, "★ BRANCH AT MAXIMUM LEVEL ★", 21, FontStyles.Bold, TextAlignmentOptions.Center, new Color(0.3f, 1f, 0.6f));
+        TextMeshProUGUI maxBadgeTxt = AddTextMeshPro(maxBadgeObj, "[MAXIMUM TIER REACHED]", 21, FontStyles.Bold, TextAlignmentOptions.Center, new Color(0.3f, 1f, 0.6f));
         maxBadgeObj.SetActive(false);
 
         // Bind all references to CargoTabletUI component

@@ -58,7 +58,7 @@ public class DeliverySelectionUI : MonoBehaviour
 
         if (addressTitleText != null)
         {
-            addressTitleText.text = $"📍 DELIVERY DESTINATION: {zone.addressName}";
+            addressTitleText.text = $"DELIVERY DESTINATION: {zone.addressName}";
         }
 
         if (feedbackText != null)
@@ -118,7 +118,7 @@ public class DeliverySelectionUI : MonoBehaviour
             TextMeshProUGUI label = cardObj.GetComponentInChildren<TextMeshProUGUI>();
             if (label != null)
             {
-                label.text = $"{cargo.trackingNumber} | {cargo.recipientName}\n🎯 Address: {cargo.targetAddress}";
+                label.text = $"{cargo.trackingNumber} | {cargo.recipientName}\nAddress: {cargo.targetAddress}";
                 label.raycastTarget = false;
             }
 
