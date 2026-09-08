@@ -150,7 +150,7 @@ Assets/_Project/
 2. Open **Unity Hub** and select **Add project from disk**.
 3. Choose the `Unity Car Project` directory.
 4. Ensure the editor version is set to **Unity 6 (6000.5.x)** or compatible.
-5. Open `Assets/_Project/Scenes/MainScene.unity` (or the primary demo scene) and press **Play**.
+5. Open `Assets/_Project/Scenes/Main_Scene.unity` (or `Level_01.unity`) and press **Play**.
 
 ---
 
@@ -171,11 +171,11 @@ Assets/_Project/
 
 ## 👤 Author & Portfolio
 
-**Harun**
+**Harun Serli**
 - **GitHub:** [@HARUNLUK](https://github.com/HARUNLUK)
-- **LinkedIn:** [Your LinkedIn Profile](https://linkedin.com/in/YOUR_LINKEDIN)
-- **Portfolio / Itch.io:** [Your Portfolio Link](https://yourportfolio.com)
-- **Email:** `your.email@example.com`
+- **LinkedIn:** [linkedin.com/in/harunluk](https://www.linkedin.com/in/harunluk/)
+- **Itch.io:** [harunluk.itch.io](https://harunluk.itch.io)
+- **Email:** [harunserlibusiness@gmail.com](mailto:harunserlibusiness@gmail.com)
 
 ---
 
