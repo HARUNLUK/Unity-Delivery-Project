@@ -66,6 +66,25 @@ public class InteractionPromptHUD : MonoBehaviour
 
     private float currentPromptTimer = 0f;
     private CanvasGroup promptCanvasGroup;
+    private PhysicalCargoPackage currentHeldPackage;
+
+    private void OnEnable()
+    {
+        AddressLocalizationManager.OnLanguageChanged += HandleLanguageChanged;
+    }
+
+    private void OnDisable()
+    {
+        AddressLocalizationManager.OnLanguageChanged -= HandleLanguageChanged;
+    }
+
+    private void HandleLanguageChanged(string newLang)
+    {
+        if (currentHeldPackage != null && heldCargoPanel != null && heldCargoPanel.activeSelf)
+        {
+            ShowHeldCargoInfo(currentHeldPackage);
+        }
+    }
 
     private void Awake()
     {
@@ -100,7 +119,7 @@ public class InteractionPromptHUD : MonoBehaviour
         }
     }
 
-    public void EnsureUI()
+    public void EnsureUI(bool forceRecreate = false)
     {
         Canvas canvas = GetComponentInParent<Canvas>();
         if (canvas == null) canvas = UnityEngine.Object.FindAnyObjectByType<Canvas>();
@@ -120,9 +139,21 @@ public class InteractionPromptHUD : MonoBehaviour
         transform.SetParent(canvas.transform, false);
 
         // 1. Center Crosshair Dot
+        if (forceRecreate && crosshairDot != null)
+        {
+            DestroyImmediate(crosshairDot);
+            crosshairDot = null;
+        }
+
         if (crosshairDot == null)
         {
             Transform existingDot = canvas.transform.Find("CenterCrosshair");
+            if (existingDot != null && forceRecreate)
+            {
+                DestroyImmediate(existingDot.gameObject);
+                existingDot = null;
+            }
+
             if (existingDot != null)
             {
                 crosshairDot = existingDot.gameObject;
@@ -143,9 +174,22 @@ public class InteractionPromptHUD : MonoBehaviour
         }
 
         // 2. Center Interaction Prompt Box (Large & Clean)
+        if (forceRecreate && promptPanel != null)
+        {
+            DestroyImmediate(promptPanel);
+            promptPanel = null;
+            promptText = null;
+        }
+
         if (promptPanel == null || promptText == null)
         {
             Transform existingPrompt = canvas.transform.Find("InteractionPromptBox");
+            if (existingPrompt != null && forceRecreate)
+            {
+                DestroyImmediate(existingPrompt.gameObject);
+                existingPrompt = null;
+            }
+
             if (existingPrompt != null)
             {
                 promptPanel = existingPrompt.gameObject;
@@ -182,18 +226,32 @@ public class InteractionPromptHUD : MonoBehaviour
             }
         }
 
-        // 3. Held Cargo Side Details Panel (Always verify AddressDescription exists)
+        // 3. Held Cargo Side Details Panel
         Transform existingSide = canvas.transform.Find("HeldCargoSideCard");
-        if (existingSide != null && (heldCargoAddressDescText == null || existingSide.Find("ClueBox") == null))
+        if (existingSide != null && forceRecreate)
         {
             DestroyImmediate(existingSide.gameObject);
+            existingSide = null;
             heldCargoPanel = null;
-            heldCargoAddressDescText = null;
         }
 
-        if (heldCargoPanel == null || heldCargoAddressDescText == null)
+        if (existingSide != null)
         {
-            if (existingSide != null && heldCargoPanel == null)
+            heldCargoPanel = existingSide.gameObject;
+            heldCargoHeaderText = existingSide.Find("Header")?.GetComponent<TextMeshProUGUI>();
+            heldCargoTrackingText = existingSide.Find("Tracking")?.GetComponent<TextMeshProUGUI>();
+            heldCargoTypeText = existingSide.Find("Type")?.GetComponent<TextMeshProUGUI>();
+            heldCargoRecipientText = existingSide.Find("Recipient")?.GetComponent<TextMeshProUGUI>();
+            heldCargoAddressText = existingSide.Find("Address")?.GetComponent<TextMeshProUGUI>();
+            heldCargoAddressDescText = existingSide.Find("ClueBox/AddressDescription")?.GetComponent<TextMeshProUGUI>();
+            heldCargoRewardText = existingSide.Find("Reward")?.GetComponent<TextMeshProUGUI>();
+            heldCargoPenaltyText = existingSide.Find("Penalty")?.GetComponent<TextMeshProUGUI>();
+            heldCargoActionHintText = existingSide.Find("ActionHint")?.GetComponent<TextMeshProUGUI>();
+        }
+
+        if (heldCargoPanel == null || heldCargoTrackingText == null || heldCargoRecipientText == null || heldCargoAddressText == null || heldCargoAddressDescText == null)
+        {
+            if (existingSide != null)
             {
                 DestroyImmediate(existingSide.gameObject);
             }
@@ -220,46 +278,19 @@ public class InteractionPromptHUD : MonoBehaviour
             vLayout.childForceExpandHeight = false;
 
             // Header
-            GameObject headObj = new GameObject("Header");
-            headObj.transform.SetParent(heldCargoPanel.transform, false);
-            heldCargoHeaderText = headObj.AddComponent<TextMeshProUGUI>();
-            heldCargoHeaderText.text = "HELD PACKAGE";
-            heldCargoHeaderText.fontSize = 24;
-            heldCargoHeaderText.fontStyle = FontStyles.Bold;
-            heldCargoHeaderText.color = new Color(1f, 0.82f, 0.2f);
-            heldCargoHeaderText.alignment = TextAlignmentOptions.Left;
+            heldCargoHeaderText = CreateTMPChild(heldCargoPanel, "Header", "HELD PACKAGE", 24, FontStyles.Bold, new Color(1f, 0.82f, 0.2f), TextAlignmentOptions.Left);
 
-            // Tracking & Type Row
-            GameObject trackObj = new GameObject("Tracking");
-            trackObj.transform.SetParent(heldCargoPanel.transform, false);
-            heldCargoTrackingText = trackObj.AddComponent<TextMeshProUGUI>();
-            heldCargoTrackingText.fontSize = 20;
-            heldCargoTrackingText.fontStyle = FontStyles.Bold;
-            heldCargoTrackingText.color = Color.white;
+            // Tracking
+            heldCargoTrackingText = CreateTMPChild(heldCargoPanel, "Tracking", "Tracking #: #1", 20, FontStyles.Bold, Color.white, TextAlignmentOptions.Left);
 
             // Type
-            GameObject typeObj = new GameObject("Type");
-            typeObj.transform.SetParent(heldCargoPanel.transform, false);
-            heldCargoTypeText = typeObj.AddComponent<TextMeshProUGUI>();
-            heldCargoTypeText.fontSize = 19;
-            heldCargoTypeText.fontStyle = FontStyles.Bold;
-            heldCargoTypeText.color = new Color(1f, 0.6f, 0.2f);
+            heldCargoTypeText = CreateTMPChild(heldCargoPanel, "Type", "[STANDARD PARCEL]", 19, FontStyles.Bold, new Color(1f, 0.6f, 0.2f), TextAlignmentOptions.Left);
 
             // Recipient Name
-            GameObject recObj = new GameObject("Recipient");
-            recObj.transform.SetParent(heldCargoPanel.transform, false);
-            heldCargoRecipientText = recObj.AddComponent<TextMeshProUGUI>();
-            heldCargoRecipientText.fontSize = 20;
-            heldCargoRecipientText.fontStyle = FontStyles.Bold;
-            heldCargoRecipientText.color = new Color(0.95f, 0.85f, 0.45f);
+            heldCargoRecipientText = CreateTMPChild(heldCargoPanel, "Recipient", "Recipient: Resident", 20, FontStyles.Bold, new Color(0.95f, 0.85f, 0.45f), TextAlignmentOptions.Left);
 
             // Destination Address
-            GameObject addrObj = new GameObject("Address");
-            addrObj.transform.SetParent(heldCargoPanel.transform, false);
-            heldCargoAddressText = addrObj.AddComponent<TextMeshProUGUI>();
-            heldCargoAddressText.fontSize = 21;
-            heldCargoAddressText.fontStyle = FontStyles.Bold;
-            heldCargoAddressText.color = new Color(0.35f, 0.88f, 1f);
+            heldCargoAddressText = CreateTMPChild(heldCargoPanel, "Address", "Address: Main Street", 21, FontStyles.Bold, new Color(0.35f, 0.88f, 1f), TextAlignmentOptions.Left);
 
             // --- PROMINENT LARGE ADDRESS CLUE & DESCRIPTION BOX ---
             GameObject clueBoxObj = new GameObject("ClueBox");
@@ -278,46 +309,23 @@ public class InteractionPromptHUD : MonoBehaviour
             cbLayout.childControlHeight = true;
             cbLayout.childForceExpandHeight = false;
 
-            GameObject clueTitleObj = new GameObject("ClueTitle");
-            clueTitleObj.transform.SetParent(clueBoxObj.transform, false);
-            TextMeshProUGUI clueTitle = clueTitleObj.AddComponent<TextMeshProUGUI>();
-            clueTitle.text = "<b>DESTINATION & VISUAL CLUE:</b>";
-            clueTitle.fontSize = 19;
-            clueTitle.fontStyle = FontStyles.Bold;
-            clueTitle.color = new Color(1f, 0.85f, 0.25f);
+            CreateTMPChild(clueBoxObj, "ClueTitle", "<b>DESTINATION & VISUAL CLUE:</b>", 19, FontStyles.Bold, new Color(1f, 0.85f, 0.25f), TextAlignmentOptions.Left);
 
-            GameObject descObj = new GameObject("AddressDescription");
-            descObj.transform.SetParent(clueBoxObj.transform, false);
-            heldCargoAddressDescText = descObj.AddComponent<TextMeshProUGUI>();
-            heldCargoAddressDescText.fontSize = 24; // Large & prominent!
-            heldCargoAddressDescText.fontStyle = FontStyles.Bold;
-            heldCargoAddressDescText.color = new Color(1f, 0.96f, 0.78f); // High-contrast warm cream
-            heldCargoAddressDescText.enableWordWrapping = true;
-            heldCargoAddressDescText.lineSpacing = 1.25f;
+            heldCargoAddressDescText = CreateTMPChild(clueBoxObj, "AddressDescription", "\"Look for the house at the corner...\"", 24, FontStyles.Bold, new Color(1f, 0.96f, 0.78f), TextAlignmentOptions.Left);
+            if (heldCargoAddressDescText != null)
+            {
+                heldCargoAddressDescText.enableWordWrapping = true;
+                heldCargoAddressDescText.lineSpacing = 1.25f;
+            }
 
             // Reward Line
-            GameObject rewardObj = new GameObject("Reward");
-            rewardObj.transform.SetParent(heldCargoPanel.transform, false);
-            heldCargoRewardText = rewardObj.AddComponent<TextMeshProUGUI>();
-            heldCargoRewardText.fontSize = 20;
-            heldCargoRewardText.fontStyle = FontStyles.Bold;
-            heldCargoRewardText.color = new Color(0.3f, 1f, 0.4f);
+            heldCargoRewardText = CreateTMPChild(heldCargoPanel, "Reward", "Reward: +$100 (+80 XP)", 20, FontStyles.Bold, new Color(0.3f, 1f, 0.4f), TextAlignmentOptions.Left);
 
             // Penalty Line
-            GameObject penObj = new GameObject("Penalty");
-            penObj.transform.SetParent(heldCargoPanel.transform, false);
-            heldCargoPenaltyText = penObj.AddComponent<TextMeshProUGUI>();
-            heldCargoPenaltyText.fontSize = 19;
-            heldCargoPenaltyText.fontStyle = FontStyles.Bold;
-            heldCargoPenaltyText.color = new Color(1f, 0.4f, 0.4f);
+            heldCargoPenaltyText = CreateTMPChild(heldCargoPanel, "Penalty", "Penalty: -$30", 19, FontStyles.Bold, new Color(1f, 0.4f, 0.4f), TextAlignmentOptions.Left);
 
             // Action Hint
-            GameObject hintObj = new GameObject("ActionHint");
-            hintObj.transform.SetParent(heldCargoPanel.transform, false);
-            heldCargoActionHintText = hintObj.AddComponent<TextMeshProUGUI>();
-            heldCargoActionHintText.text = "<b>[E]</b> Drop  |  <b>Hold:</b> Throw";
-            heldCargoActionHintText.fontSize = 18;
-            heldCargoActionHintText.color = new Color(0.85f, 0.85f, 0.85f);
+            heldCargoActionHintText = CreateTMPChild(heldCargoPanel, "ActionHint", "<b>[E]</b> Drop  |  <b>Hold:</b> Throw", 18, FontStyles.Normal, new Color(0.85f, 0.85f, 0.85f), TextAlignmentOptions.Left);
         }
 
         // 4. In-Vehicle Fuel Gauge Panel (Bottom Right)
@@ -492,36 +500,97 @@ public class InteractionPromptHUD : MonoBehaviour
         }
     }
 
+    private TextMeshProUGUI CreateTMPChild(GameObject parent, string childName, string defaultText, float fontSize, FontStyles style, Color color, TextAlignmentOptions alignment = TextAlignmentOptions.Left)
+    {
+        if (parent == null) return null;
+        GameObject obj = new GameObject(childName);
+        obj.transform.SetParent(parent.transform, false);
+
+        if (obj.GetComponent<CanvasRenderer>() == null) obj.AddComponent<CanvasRenderer>();
+        TextMeshProUGUI tmp = obj.AddComponent<TextMeshProUGUI>();
+        tmp.text = defaultText;
+        tmp.fontSize = fontSize;
+        tmp.fontStyle = style;
+        tmp.color = color;
+        tmp.alignment = alignment;
+        tmp.raycastTarget = false;
+        return tmp;
+    }
+
     public void ShowHeldCargoInfo(PhysicalCargoPackage pkg)
     {
+        currentHeldPackage = pkg;
         if (pkg == null)
         {
             HideHeldCargoInfo();
             return;
         }
 
-        if (heldCargoPanel == null || heldCargoAddressDescText == null) EnsureUI();
-        if (heldCargoPanel != null) heldCargoPanel.SetActive(true);
+        if (heldCargoPanel == null || heldCargoTrackingText == null || heldCargoAddressText == null || heldCargoAddressDescText == null)
+        {
+            EnsureUI();
+        }
 
-        if (heldCargoTrackingText != null) heldCargoTrackingText.text = $"<b>Tracking #:</b> #{pkg.targetPointId}";
-        if (heldCargoRecipientText != null) heldCargoRecipientText.text = $"<b>Recipient:</b> {pkg.EffectiveRecipientName}";
-        if (heldCargoAddressText != null) heldCargoAddressText.text = $"<b>Address:</b> {pkg.EffectiveAddressName}";
+        if (heldCargoPanel != null)
+        {
+            heldCargoPanel.SetActive(true);
+
+            // Re-bind fallbacks if any field is still unassigned
+            if (heldCargoTrackingText == null) heldCargoTrackingText = heldCargoPanel.transform.Find("Tracking")?.GetComponent<TextMeshProUGUI>();
+            if (heldCargoRecipientText == null) heldCargoRecipientText = heldCargoPanel.transform.Find("Recipient")?.GetComponent<TextMeshProUGUI>();
+            if (heldCargoAddressText == null) heldCargoAddressText = heldCargoPanel.transform.Find("Address")?.GetComponent<TextMeshProUGUI>();
+            if (heldCargoAddressDescText == null) heldCargoAddressDescText = heldCargoPanel.transform.Find("ClueBox/AddressDescription")?.GetComponent<TextMeshProUGUI>();
+            if (heldCargoRewardText == null) heldCargoRewardText = heldCargoPanel.transform.Find("Reward")?.GetComponent<TextMeshProUGUI>();
+            if (heldCargoPenaltyText == null) heldCargoPenaltyText = heldCargoPanel.transform.Find("Penalty")?.GetComponent<TextMeshProUGUI>();
+            if (heldCargoTypeText == null) heldCargoTypeText = heldCargoPanel.transform.Find("Type")?.GetComponent<TextMeshProUGUI>();
+            if (heldCargoActionHintText == null) heldCargoActionHintText = heldCargoPanel.transform.Find("ActionHint")?.GetComponent<TextMeshProUGUI>();
+        }
+
+        string recipient = !string.IsNullOrEmpty(pkg.EffectiveRecipientName) ? pkg.EffectiveRecipientName : pkg.recipientName;
+        string address = !string.IsNullOrEmpty(pkg.EffectiveAddressName) ? pkg.EffectiveAddressName : pkg.targetAddressName;
+        string desc = !string.IsNullOrEmpty(pkg.EffectiveAddressDescription) ? pkg.EffectiveAddressDescription : pkg.targetAddressDescription;
+
+        if (heldCargoTrackingText != null)
+        {
+            heldCargoTrackingText.text = $"<b>Tracking #:</b> #{pkg.targetPointId}";
+            heldCargoTrackingText.SetVerticesDirty();
+            heldCargoTrackingText.SetLayoutDirty();
+        }
+
+        if (heldCargoRecipientText != null)
+        {
+            heldCargoRecipientText.text = $"<b>Recipient:</b> {recipient}";
+            heldCargoRecipientText.SetVerticesDirty();
+            heldCargoRecipientText.SetLayoutDirty();
+        }
+
+        if (heldCargoAddressText != null)
+        {
+            heldCargoAddressText.text = $"<b>Address:</b> {address}";
+            heldCargoAddressText.SetVerticesDirty();
+            heldCargoAddressText.SetLayoutDirty();
+        }
         
         if (heldCargoAddressDescText != null)
         {
-            string desc = pkg.EffectiveAddressDescription;
-            if (!string.IsNullOrEmpty(desc))
-            {
-                heldCargoAddressDescText.text = $"\"{desc}\"";
-            }
-            else
-            {
-                heldCargoAddressDescText.text = "\"(No address visual clue available)\"";
-            }
+            heldCargoAddressDescText.text = !string.IsNullOrEmpty(desc) ? $"\"{desc}\"" : "\"(No address visual clue available)\"";
+            heldCargoAddressDescText.SetVerticesDirty();
+            heldCargoAddressDescText.SetLayoutDirty();
         }
 
-        if (heldCargoRewardText != null) heldCargoRewardText.text = $"<b>Reward:</b> +${pkg.deliveryReward}  <color=#32FFFF>(+{pkg.xpReward} XP)</color>";
-        if (heldCargoPenaltyText != null) heldCargoPenaltyText.text = $"<b>Penalty:</b> -${pkg.wrongPenalty}";
+        if (heldCargoRewardText != null)
+        {
+            heldCargoRewardText.text = $"<b>Reward:</b> +${pkg.deliveryReward}  <color=#32FFFF>(+{pkg.xpReward} XP)</color>";
+            heldCargoRewardText.SetVerticesDirty();
+            heldCargoRewardText.SetLayoutDirty();
+        }
+
+        if (heldCargoPenaltyText != null)
+        {
+            heldCargoPenaltyText.text = $"<b>Penalty:</b> -${pkg.wrongPenalty}";
+            heldCargoPenaltyText.SetVerticesDirty();
+            heldCargoPenaltyText.SetLayoutDirty();
+        }
 
         if (heldCargoTypeText != null)
         {
@@ -539,11 +608,14 @@ public class InteractionPromptHUD : MonoBehaviour
                     heldCargoTypeText.text = "<color=#AAAAAA>[STANDARD PARCEL]</color>";
                     break;
             }
+            heldCargoTypeText.SetVerticesDirty();
+            heldCargoTypeText.SetLayoutDirty();
         }
     }
 
     public void HideHeldCargoInfo()
     {
+        currentHeldPackage = null;
         if (heldCargoPanel != null)
         {
             heldCargoPanel.SetActive(false);
@@ -572,8 +644,10 @@ public class InteractionPromptHUD : MonoBehaviour
         {
             hud = canvas.gameObject.AddComponent<InteractionPromptHUD>();
         }
-        hud.EnsureUI();
+        hud.EnsureUI(true);
+        EditorUtility.SetDirty(canvas.gameObject);
         EditorUtility.SetDirty(hud.gameObject);
+        Debug.Log("<color=#32FF64>[InteractionPromptHUD] Interaction HUD & Held Cargo Card successfully created and refreshed!</color>");
     }
 #endif
 }

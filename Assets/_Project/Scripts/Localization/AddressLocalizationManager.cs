@@ -140,15 +140,13 @@ public class AddressLocalizationManager : MonoBehaviour
                         if (!string.IsNullOrEmpty(numOnly) && int.TryParse(numOnly, out int parsedNum))
                         {
                             string simpleNumKey = parsedNum.ToString();
-                            if (!addressMap.ContainsKey(simpleNumKey))
-                            {
-                                addressMap[simpleNumKey] = entry;
-                            }
-                            string dpPaddedKey = $"DP-{parsedNum:D3}";
-                            if (!addressMap.ContainsKey(dpPaddedKey))
-                            {
-                                addressMap[dpPaddedKey] = entry;
-                            }
+                            addressMap[simpleNumKey] = entry;
+                            addressMap[$"DP-{parsedNum:D3}"] = entry;
+                            addressMap[$"DP-{parsedNum:D2}"] = entry;
+                            addressMap[$"DP-{parsedNum}"] = entry;
+                            addressMap[$"DELIVERYPOINT-{parsedNum}"] = entry;
+                            addressMap[$"DELIVERYPOINT_{parsedNum}"] = entry;
+                            addressMap[$"POINT{parsedNum}"] = entry;
                         }
                     }
                 }
@@ -184,6 +182,12 @@ public class AddressLocalizationManager : MonoBehaviour
             return entry.description;
         }
 
+        string numOnly = System.Text.RegularExpressions.Regex.Replace(pointId, @"[^\d]", "");
+        if (!string.IsNullOrEmpty(numOnly) && addressMap.TryGetValue(numOnly, out entry) && !string.IsNullOrEmpty(entry.description))
+        {
+            return entry.description;
+        }
+
         return fallback;
     }
 
@@ -202,6 +206,12 @@ public class AddressLocalizationManager : MonoBehaviour
         }
 
         if (addressMap.TryGetValue(pointId, out entry) && !string.IsNullOrEmpty(entry.addressName))
+        {
+            return entry.addressName;
+        }
+
+        string numOnly = System.Text.RegularExpressions.Regex.Replace(pointId, @"[^\d]", "");
+        if (!string.IsNullOrEmpty(numOnly) && addressMap.TryGetValue(numOnly, out entry) && !string.IsNullOrEmpty(entry.addressName))
         {
             return entry.addressName;
         }
@@ -228,6 +238,12 @@ public class AddressLocalizationManager : MonoBehaviour
             return entry.recipient;
         }
 
+        string numOnly = System.Text.RegularExpressions.Regex.Replace(pointId, @"[^\d]", "");
+        if (!string.IsNullOrEmpty(numOnly) && addressMap.TryGetValue(numOnly, out entry) && !string.IsNullOrEmpty(entry.recipient))
+        {
+            return entry.recipient;
+        }
+
         return fallback;
     }
 
@@ -246,6 +262,12 @@ public class AddressLocalizationManager : MonoBehaviour
         }
 
         if (addressMap.TryGetValue(pointId, out entry))
+        {
+            return entry;
+        }
+
+        string numOnly = System.Text.RegularExpressions.Regex.Replace(pointId, @"[^\d]", "");
+        if (!string.IsNullOrEmpty(numOnly) && addressMap.TryGetValue(numOnly, out entry))
         {
             return entry;
         }

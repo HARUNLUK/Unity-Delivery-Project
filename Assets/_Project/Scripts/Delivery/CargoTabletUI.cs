@@ -122,6 +122,7 @@ public class CargoTabletUI : MonoBehaviour
         DrivableVehicle.OnAnyVehicleReset += HandleAnyVehicleReset;
         BranchManager.OnBranchUpgraded += HandleBranchUpgraded;
         BranchManager.OnBranchReset += HandleBranchReset;
+        AddressLocalizationManager.OnLanguageChanged += HandleLanguageChanged;
     }
 
     private void OnDisable()
@@ -132,6 +133,23 @@ public class CargoTabletUI : MonoBehaviour
         DrivableVehicle.OnAnyVehicleReset -= HandleAnyVehicleReset;
         BranchManager.OnBranchUpgraded -= HandleBranchUpgraded;
         BranchManager.OnBranchReset -= HandleBranchReset;
+        AddressLocalizationManager.OnLanguageChanged -= HandleLanguageChanged;
+    }
+
+    private void HandleLanguageChanged(string newLang)
+    {
+        if (isTabletOpen && currentTab == TabletTab.CargoInventory)
+        {
+            RefreshUI();
+            if (currentSelectedPackage != null)
+            {
+                DisplayCargoDetail(currentSelectedPackage);
+            }
+            else if (currentSelectedCargo != null)
+            {
+                DisplayCargoDetail(currentSelectedCargo);
+            }
+        }
     }
 
     private void HandleBranchUpgraded(int lvl, BranchTier tier)

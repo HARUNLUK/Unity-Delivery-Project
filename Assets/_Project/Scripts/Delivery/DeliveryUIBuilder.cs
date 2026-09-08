@@ -36,6 +36,9 @@ public static class DeliveryUIBuilder
             deliveryManager.AddComponent<BranchManager>();
         }
 
+        // Ensure active address language is initialized to English (EN)
+        AddressLocalizationManager.SetLanguage("en");
+
         // 1. Find or Create Canvas
         Canvas canvas = Object.FindAnyObjectByType<Canvas>();
         if (canvas == null)
@@ -96,6 +99,12 @@ public static class DeliveryUIBuilder
 
         Transform oldHud = canvas.transform.Find("DeliveryHUD");
         if (oldHud != null) Object.DestroyImmediate(oldHud.gameObject);
+
+        Transform oldSide = canvas.transform.Find("HeldCargoSideCard");
+        if (oldSide != null) Object.DestroyImmediate(oldSide.gameObject);
+
+        Transform oldPrompt = canvas.transform.Find("InteractionPromptBox");
+        if (oldPrompt != null) Object.DestroyImmediate(oldPrompt.gameObject);
 
         // ==========================================
         // 0. MAIN TOP STATUS BAR (PERMANENT HUD)

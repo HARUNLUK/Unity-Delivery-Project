@@ -62,6 +62,7 @@ public class PhysicsGrabber : MonoBehaviour
         // Show side UI card with held cargo details
         PhysicalCargoPackage pkg = targetRb.GetComponent<PhysicalCargoPackage>();
         if (pkg == null) pkg = targetRb.GetComponentInParent<PhysicalCargoPackage>();
+        if (pkg == null) pkg = targetRb.GetComponentInChildren<PhysicalCargoPackage>();
         if (pkg != null)
         {
             pkg.hasBeenHandledByPlayer = true;
@@ -79,6 +80,7 @@ public class PhysicsGrabber : MonoBehaviour
 
         PhysicalCargoPackage pkg = grabbedRb.GetComponent<PhysicalCargoPackage>();
         if (pkg == null) pkg = grabbedRb.GetComponentInParent<PhysicalCargoPackage>();
+        if (pkg == null) pkg = grabbedRb.GetComponentInChildren<PhysicalCargoPackage>();
         if (pkg != null)
         {
             pkg.isBeingCarried = false;
