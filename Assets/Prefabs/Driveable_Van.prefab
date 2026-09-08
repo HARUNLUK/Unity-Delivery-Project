@@ -585,8 +585,11 @@ MonoBehaviour:
   wheelMeshRotationOffset: {x: -90, y: 0, z: 0}
   wheelMeshPositionOffset: {x: 0, y: 0, z: 0}
   steeringWheel: {fileID: 0}
-  steeringWheelMultiplier: 4
-  steeringWheelRotationAxis: {x: 0, y: 0, z: 1}
+  steeringWheelMultiplier: 3.5
+  steerSpeed: 160
+  steerReturnSpeed: 220
+  overrideInitialSteeringEuler: 0
+  customInitialSteeringEuler: {x: 0, y: 0, z: 0}
   horizontalInput: 0
   verticalInput: 0
   isHandbraking: 0

@@ -401,7 +401,7 @@ public class CargoTabletUI : MonoBehaviour
 
             string typeTag = "";
             if (pkg.cargoType == CargoType.Fragile) typeTag = " <color=#FFAA44>[KIRILABİLİR]</color>";
-            else if (pkg.cargoType == CargoType.Express) typeTag = " <color=#33E0FF>[EKSPRES]</color>";
+            else if (pkg.cargoType == CargoType.Express) typeTag = $" <color=#33E0FF>[EKSPRES {pkg.GetFormattedTargetDeliveryTime()}]</color>";
 
             string tracking = pkg.cargoData != null && !string.IsNullOrEmpty(pkg.cargoData.trackingNumber)
                 ? pkg.cargoData.trackingNumber
@@ -459,7 +459,7 @@ public class CargoTabletUI : MonoBehaviour
 
         string typeTag = "";
         if (pkg.cargoType == CargoType.Fragile) typeTag = " <color=#FFAA44>(Kırılabilir)</color>";
-        else if (pkg.cargoType == CargoType.Express) typeTag = " <color=#33E0FF>(Ekspres)</color>";
+        else if (pkg.cargoType == CargoType.Express) typeTag = $" <color=#33E0FF>(Ekspres - {pkg.GetFormattedTargetDeliveryTime()} Öncesi +%40 Bonus)</color>";
 
         if (trackingNumberText != null)
         {

@@ -1,0 +1,23 @@
+{
+    "asset": "53afcbb942e09c7498ff47e32590dc2e",
+    "fileName": "01a07fb2-6456-7389-a5be-38a5a49dfdf2.glb",
+    "prompt": "i want very basic steering wheel low poly",
+    "negativePrompt": "",
+    "model": "model3d-tripo-p1",
+    "modelName": "Tripo P1",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "promptImageReferenceGuid": "a5a4f37fec82f884dac906db93af5c15",
+    "modelReferenceGuid": "",
+    "multiviewFrontGuid": "",
+    "multiviewBackGuid": "",
+    "multiviewLeftGuid": "",
+    "multiviewRightGuid": "",
+    "multiviewTopGuid": "",
+    "multiviewBottomGuid": "",
+    "multiviewLeftFrontGuid": "",
+    "multiviewRightFrontGuid": "",
+    "faceLimit": -1
+}

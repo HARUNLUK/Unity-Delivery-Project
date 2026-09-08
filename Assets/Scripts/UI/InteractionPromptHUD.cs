@@ -463,7 +463,7 @@ public class InteractionPromptHUD : MonoBehaviour
                         $"<color=#FFAA33>⚠️ TÜR: KIRILABİLİR (Sağlık: %{pkg.health:F0})</color>";
                     break;
                 case CargoType.Express:
-                    heldCargoTypeText.text = "<color=#32FFFF>⚡ TÜR: EKSPRES (13:00 Öncesi +%40 Bonus)</color>";
+                    heldCargoTypeText.text = $"<color=#32FFFF>⚡ TÜR: EKSPRES ({pkg.GetFormattedTargetDeliveryTime()} Öncesi +%40 Bonus)</color>";
                     break;
                 default:
                     heldCargoTypeText.text = "<color=#AAAAAA>📦 TÜR: STANDART KARGO</color>";

@@ -211,7 +211,8 @@ public class DaySummaryManager : MonoBehaviour
             if (rowText != null)
             {
                 string statusLabel = "";
-                string typeBadge = res.cargoType == CargoType.Standard ? "" : $" [{res.cargoType.ToString().ToUpper()}]";
+                string typeBadge = res.cargoType == CargoType.Standard ? "" : 
+                    (res.cargoType == CargoType.Express && res.package != null ? $" [EXPRESS {res.package.GetFormattedTargetDeliveryTime()}]" : $" [{res.cargoType.ToString().ToUpper()}]");
 
                 if (res.status == CargoDeliveryStatus.Correct)
                 {

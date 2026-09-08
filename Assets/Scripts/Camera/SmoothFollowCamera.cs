@@ -100,9 +100,12 @@ public class SmoothFollowCamera : MonoBehaviour
         if (Mathf.Abs(mouseX) > 0.01f || Mathf.Abs(mouseY) > 0.01f)
         {
             currentYawOffset += mouseX;
-            currentPitchOffset -= mouseY;
+            if (currentYawOffset > 360f || currentYawOffset < -360f)
+            {
+                currentYawOffset %= 360f;
+            }
 
-            currentYawOffset = Mathf.Clamp(currentYawOffset, -maxHorizontalAngle, maxHorizontalAngle);
+            currentPitchOffset -= mouseY;
             currentPitchOffset = Mathf.Clamp(currentPitchOffset, -maxVerticalAngle, maxVerticalAngle);
 
             lastMouseActivityTime = Time.time;

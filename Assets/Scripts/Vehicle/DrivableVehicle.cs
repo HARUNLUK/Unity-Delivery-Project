@@ -42,10 +42,27 @@ public class DrivableVehicle : MonoBehaviour
     [Tooltip("Fuel consumed per second while idling (Litres/sec)")]
     public float idleFuelBurnRate = 0.008f;
 
-    [Header("--- SPOTS & ANCHORS ---")]
-    [Tooltip("Camera position & view when driving inside the cabin")]
+    [Header("--- SPOTS & CAMERA ANCHORS (ARAÇ KAMERA NOKTALARI) ---")]
+    [Tooltip("Araç içi FPS sürücü kamera noktası (Transform). Boş bırakılırsa araç içinde DriverSeatPoint otomatik bulunur.")]
     public Transform driverSeatPoint;
 
+    [Tooltip("Araç içi FPS kamerası için ek yerel pozisyon ofseti (X=Sağ/Sol, Y=Yukarı/Aşağı, Z=İleri/Geri)")]
+    public Vector3 fpsCameraOffset = Vector3.zero;
+
+    [Header("--- TPS CHASE CAMERA (BU ARACA ÖZEL DIŞ TAKİP KAMERASI) ---")]
+    [Tooltip("Opsiyonel: Araç arkası TPS kameranın referans alacağı nokta (Boş ise araç merkezi kullanılır)")]
+    public Transform tpsCameraPoint;
+
+    [Tooltip("Bu araç için arkadan takip mesafesi (Örn: Küçük araçta 5.0, Kamyonette 6.5, Kamyonda 8.0)")]
+    public float tpsDistance = 6.0f;
+
+    [Tooltip("Bu araç için kamera yüksekliği (Örn: 2.0)")]
+    public float tpsHeight = 2.0f;
+
+    [Tooltip("Bu araç için kameranın odaklanacağı merkez/hedef yüksekliği (Örn: 1.2)")]
+    public float tpsLookAtHeight = 1.2f;
+
+    [Header("--- SPAWN & PARKING ANCHORS ---")]
     [Tooltip("Spawn point outside the driver door when getting out")]
     public Transform exitPoint;
 
@@ -425,12 +442,13 @@ public class DrivableVehicle : MonoBehaviour
         player.SetOnFootActive(false);
 
         // 2. Parent player object to driver seat so it travels with the car
-        player.transform.SetParent(driverSeatPoint);
+        Transform seatAnchor = driverSeatPoint != null ? driverSeatPoint : transform;
+        player.transform.SetParent(seatAnchor);
         player.transform.localPosition = Vector3.zero;
         player.transform.localRotation = Quaternion.identity;
 
         // 3. Attach player camera to driver seat
-        player.AttachCameraToSeat(driverSeatPoint);
+        player.AttachCameraToSeat(seatAnchor);
 
         // 4. Enable vehicle controls only if has fuel
         if (carController != null)
@@ -498,5 +516,28 @@ public class DrivableVehicle : MonoBehaviour
                 rb.angularVelocity = Vector3.MoveTowards(rb.angularVelocity, Vector3.zero, Time.fixedDeltaTime * 4.0f);
             }
         }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        // 1. Driver Seat / FPS Camera Anchor
+        if (driverSeatPoint != null)
+        {
+            Vector3 fpsPos = driverSeatPoint.TransformPoint(fpsCameraOffset);
+            Gizmos.color = new Color(0.2f, 0.9f, 1f, 0.85f);
+            Gizmos.DrawWireSphere(fpsPos, 0.18f);
+            Gizmos.DrawRay(fpsPos, driverSeatPoint.forward * 0.5f);
+        }
+
+        // 2. TPS Pivot & Chase Camera Anchor
+        Transform pivotOrigin = tpsCameraPoint != null ? tpsCameraPoint : transform;
+        Vector3 pivotPos = pivotOrigin.position + Vector3.up * tpsLookAtHeight;
+        Gizmos.color = new Color(1f, 0.85f, 0.2f, 0.9f);
+        Gizmos.DrawWireSphere(pivotPos, 0.25f);
+
+        Vector3 defaultTpsPos = pivotPos - (transform.forward * tpsDistance) + (Vector3.up * tpsHeight * 0.4f);
+        Gizmos.color = new Color(0.3f, 1f, 0.4f, 0.7f);
+        Gizmos.DrawLine(pivotPos, defaultTpsPos);
+        Gizmos.DrawWireSphere(defaultTpsPos, 0.35f);
     }
 }

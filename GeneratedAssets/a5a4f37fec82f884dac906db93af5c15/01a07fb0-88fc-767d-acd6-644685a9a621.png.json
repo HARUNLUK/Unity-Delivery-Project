@@ -1,0 +1,31 @@
+{
+  "asset": "a5a4f37fec82f884dac906db93af5c15",
+  "fileName": "01a07fb0-88fc-767d-acd6-644685a9a621.png",
+  "prompt": "i want very basic steering wheel low poly",
+  "negativePrompt": "",
+  "model": "flux-2-dev",
+  "modelName": "Flux 2 (Dev)",
+  "customSeed": -1,
+  "w3CTraceId": "",
+  "feedback": 1,
+  "refinementMode": "Generation",
+  "pixelateTargetSize": 0,
+  "pixelateKeepImageSize": false,
+  "pixelatePixelBlockSize": 0,
+  "pixelatePixelGridSize": 0,
+  "pixelateMode": 0,
+  "pixelateOutlineThickness": 0,
+  "doodles": {
+    "m_Items": []
+  },
+  "upscaleFactor": 0,
+  "dimensions": {
+    "width": 1024,
+    "height": 1024
+  },
+  "spriteSheet": false,
+  "duration": 0.0,
+  "dynamicParams": {
+    "serializedData": []
+  }
+}

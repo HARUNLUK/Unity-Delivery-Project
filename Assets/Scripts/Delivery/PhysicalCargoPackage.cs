@@ -110,9 +110,18 @@ public class PhysicalCargoPackage : MonoBehaviour
         }
     }
 
-    public void SetupPackage(string pointId, string address, string recipient, int reward, int penalty, CargoType type = CargoType.Standard, int xp = 80, string addressDescription = "", Material customMaterial = null, bool customPrefab = false)
+    public string GetFormattedTargetDeliveryTime()
+    {
+        int totalMins = Mathf.RoundToInt(targetDeliveryHour * 60f);
+        int h = totalMins / 60;
+        int m = totalMins % 60;
+        return $"{h:D2}:{m:D2}";
+    }
+
+    public void SetupPackage(string pointId, string address, string recipient, int reward, int penalty, CargoType type = CargoType.Standard, int xp = 80, string addressDescription = "", Material customMaterial = null, bool customPrefab = false, float expressHour = 13.0f)
     {
         isCustomPrefab = customPrefab;
+        targetDeliveryHour = expressHour;
         EnsurePhysicsComponents();
 
         targetPointId = pointId;
@@ -345,7 +354,7 @@ public class PhysicalCargoPackage : MonoBehaviour
             if (health < 100f) badge = $"<color=#FF5500>[FRAGILE %{Mathf.CeilToInt(health)}]</color>\n";
             else badge = "<color=#FF5500>[FRAGILE]</color>\n";
         }
-        else if (cargoType == CargoType.Express) badge = "<color=#0088FF>[EXPRESS]</color>\n";
+        else if (cargoType == CargoType.Express) badge = $"<color=#0088FF>[EXPRESS - {GetFormattedTargetDeliveryTime()}]</color>\n";
 
         labelText.text = $"{badge}{shortRecipient}\n<size=85%>{shortAddress}</size>";
     }
@@ -450,15 +459,19 @@ public class PhysicalCargoPackage : MonoBehaviour
                     result.moneyChange = deliveryReward;
                     result.xpAwarded = xpReward;
 
-                    // Check Express timing bonus (before 13:00)
+                    // Check Express timing bonus (before targetDeliveryHour)
                     if (cargoType == CargoType.Express)
                     {
-                        if (DayTimeManager.Instance != null && DayTimeManager.Instance.CurrentHour < targetDeliveryHour)
+                        if (DayTimeManager.Instance != null)
                         {
-                            int bonus = Mathf.RoundToInt(deliveryReward * 0.4f);
-                            result.moneyChange += bonus;
-                            result.xpAwarded += 50;
-                            result.isExpressBonus = true;
+                            float currentDecHour = DayTimeManager.Instance.CurrentHour + (DayTimeManager.Instance.CurrentMinute / 60f);
+                            if (currentDecHour <= targetDeliveryHour)
+                            {
+                                int bonus = Mathf.RoundToInt(deliveryReward * 0.4f);
+                                result.moneyChange += bonus;
+                                result.xpAwarded += 50;
+                                result.isExpressBonus = true;
+                            }
                         }
                     }
                 }

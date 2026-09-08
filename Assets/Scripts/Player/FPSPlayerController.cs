@@ -60,6 +60,7 @@ public class FPSPlayerController : MonoBehaviour
     private float tpsYawOffset = 0f;
     private float tpsPitchOffset = 0f;
     public Transform currentSeatPoint;
+    public DrivableVehicle currentVehicle;
     public Transform currentVehicleTransform;
 
     private float currentDropHoldTime = 0f;
@@ -268,7 +269,8 @@ public class FPSPlayerController : MonoBehaviour
             if (currentSeatPoint != null && playerCamera != null)
             {
                 playerCamera.transform.SetParent(currentSeatPoint);
-                playerCamera.transform.localPosition = Vector3.zero;
+                Vector3 offset = currentVehicle != null ? currentVehicle.fpsCameraOffset : Vector3.zero;
+                playerCamera.transform.localPosition = offset;
                 playerCamera.transform.localRotation = Quaternion.identity;
                 vehicleYaw = 0f;
                 vehiclePitch = 0f;
@@ -279,6 +281,7 @@ public class FPSPlayerController : MonoBehaviour
     private void HandleInVehicleLook()
     {
         if (playerCamera == null) return;
+        if (IsUIBlockingInput()) return;
 
         float mouseX = 0f;
         float mouseY = 0f;
@@ -290,9 +293,14 @@ public class FPSPlayerController : MonoBehaviour
             mouseY = delta.y;
         }
 
+        // 360 Derece Serbest Yatay Bakış
         vehicleYaw += mouseX;
-        vehicleYaw = Mathf.Clamp(vehicleYaw, -inVehicleMaxYaw, inVehicleMaxYaw);
+        if (vehicleYaw > 360f || vehicleYaw < -360f)
+        {
+            vehicleYaw %= 360f;
+        }
 
+        // Sadece Düşey (Yukarı / Aşağı) Bakışta Açı Sınırı
         vehiclePitch -= mouseY;
         vehiclePitch = Mathf.Clamp(vehiclePitch, inVehicleMinPitch, inVehicleMaxPitch);
 
@@ -301,6 +309,8 @@ public class FPSPlayerController : MonoBehaviour
 
     private void HandleTPSOrbitInput()
     {
+        if (IsUIBlockingInput()) return;
+
         float mouseX = 0f;
         float mouseY = 0f;
 
@@ -311,17 +321,16 @@ public class FPSPlayerController : MonoBehaviour
             mouseY = delta.y;
         }
 
+        // 360 Derece Serbest Yatay Bakış (TPS Orbit Yaw)
         tpsYawOffset += mouseX;
-        tpsYawOffset = Mathf.Clamp(tpsYawOffset, -90f, 90f);
-
-        tpsPitchOffset -= mouseY;
-        tpsPitchOffset = Mathf.Clamp(tpsPitchOffset, -20f, 35f);
-
-        // Fare bırakıldığında arkaya doğru yumuşak toparlanma
-        if (Mathf.Abs(mouseX) < 0.01f)
+        if (tpsYawOffset > 360f || tpsYawOffset < -360f)
         {
-            tpsYawOffset = Mathf.MoveTowards(tpsYawOffset, 0f, Time.deltaTime * 35f);
+            tpsYawOffset %= 360f;
         }
+
+        // Düşey Bakış Açı Değişimi (TPS Orbit Pitch - Küresel Pivot)
+        tpsPitchOffset -= mouseY;
+        tpsPitchOffset = Mathf.Clamp(tpsPitchOffset, -40f, 60f);
     }
 
     private void UpdateTPSCameraPosition()
@@ -333,22 +342,43 @@ public class FPSPlayerController : MonoBehaviour
             playerCamera.transform.SetParent(null);
         }
 
-        float wantedRotationAngle = currentVehicleTransform.eulerAngles.y + tpsYawOffset;
-        float wantedHeight = currentVehicleTransform.position.y + tpsHeight;
+        Transform pivotOrigin = (currentVehicle != null && currentVehicle.tpsCameraPoint != null)
+            ? currentVehicle.tpsCameraPoint
+            : currentVehicleTransform;
 
-        float currentRotationAngle = playerCamera.transform.eulerAngles.y;
-        float currentHeight = playerCamera.transform.position.y;
+        float activeDistance = currentVehicle != null ? currentVehicle.tpsDistance : tpsDistance;
+        float activeHeight = currentVehicle != null ? currentVehicle.tpsHeight : tpsHeight;
+        float activeLookAtHeight = currentVehicle != null ? currentVehicle.tpsLookAtHeight : tpsLookAtHeight;
 
-        currentRotationAngle = Mathf.LerpAngle(currentRotationAngle, wantedRotationAngle, tpsRotationDamping * Time.deltaTime);
-        currentHeight = Mathf.Lerp(currentHeight, wantedHeight, tpsHeightDamping * Time.deltaTime);
+        Vector3 pivotPoint = pivotOrigin.position + Vector3.up * activeLookAtHeight;
 
-        Quaternion currentRotation = Quaternion.Euler(tpsPitchOffset, currentRotationAngle, 0f);
+        // Küresel (Spherical) Pivot Hesaplaması:
+        // Varsayılan mesafe ve yükseklikten temel pitch açısı ve yarıçapı hesapla
+        float baseRadius = Mathf.Sqrt((activeDistance * activeDistance) + (activeHeight * activeHeight));
+        float basePitchAngle = Mathf.Atan2(activeHeight, Mathf.Max(0.1f, activeDistance)) * Mathf.Rad2Deg;
 
-        Vector3 targetPos = currentVehicleTransform.position - (currentRotation * Vector3.forward * tpsDistance);
-        targetPos.y = currentHeight;
+        // Mouse yukarı/aşağı hareketi küresel yörüngede (pitch) pivot yapar
+        float totalPitch = Mathf.Clamp(basePitchAngle + tpsPitchOffset, 2f, 78f);
+
+        // Mouse sağ/sol hareketi araç yönelimine eklenir (yaw)
+        float targetYaw = currentVehicleTransform.eulerAngles.y + tpsYawOffset;
+
+        float currentYaw = playerCamera.transform.eulerAngles.y;
+        float smoothedYaw = Mathf.LerpAngle(currentYaw, targetYaw, tpsRotationDamping * Time.deltaTime);
+
+        Quaternion orbitRotation = Quaternion.Euler(totalPitch, smoothedYaw, 0f);
+
+        Vector3 targetPos = pivotPoint - (orbitRotation * Vector3.forward * baseRadius);
+
+        // Zemin altına girmeyi engelle
+        float minAllowedHeight = currentVehicleTransform.position.y + 0.35f;
+        if (targetPos.y < minAllowedHeight)
+        {
+            targetPos.y = minAllowedHeight;
+        }
 
         playerCamera.transform.position = targetPos;
-        playerCamera.transform.LookAt(currentVehicleTransform.position + Vector3.up * tpsLookAtHeight);
+        playerCamera.transform.LookAt(pivotPoint);
     }
 
     private void HandleMouseLook()
@@ -704,8 +734,8 @@ public class FPSPlayerController : MonoBehaviour
         if (playerCamera == null || seatPoint == null) return;
 
         currentSeatPoint = seatPoint;
-        DrivableVehicle vehicle = seatPoint.GetComponentInParent<DrivableVehicle>();
-        currentVehicleTransform = vehicle != null ? vehicle.transform : seatPoint.root;
+        currentVehicle = seatPoint.GetComponentInParent<DrivableVehicle>();
+        currentVehicleTransform = currentVehicle != null ? currentVehicle.transform : seatPoint.root;
 
         vehicleCameraMode = VehicleCameraMode.FirstPerson;
         vehicleYaw = 0f;
@@ -714,7 +744,8 @@ public class FPSPlayerController : MonoBehaviour
         tpsPitchOffset = 0f;
 
         playerCamera.transform.SetParent(seatPoint);
-        playerCamera.transform.localPosition = Vector3.zero;
+        Vector3 offset = currentVehicle != null ? currentVehicle.fpsCameraOffset : Vector3.zero;
+        playerCamera.transform.localPosition = offset;
         playerCamera.transform.localRotation = Quaternion.identity;
     }
 
@@ -724,6 +755,7 @@ public class FPSPlayerController : MonoBehaviour
 
         vehicleCameraMode = VehicleCameraMode.FirstPerson;
         currentSeatPoint = null;
+        currentVehicle = null;
         currentVehicleTransform = null;
         vehicleYaw = 0f;
         vehiclePitch = 0f;

@@ -40,17 +40,27 @@ public class CarController : MonoBehaviour
     public Vector3 wheelMeshRotationOffset = new Vector3(-90f, 0f, 0f);
     public Vector3 wheelMeshPositionOffset = Vector3.zero;
 
-    [Header("--- DİREKSİYON (STEERING WHEEL) ---")]
+    [Header("--- DİREKSİYON & DÖNÜŞ YUMUŞATMA (SMOOTH STEERING) ---")]
     [Tooltip("Sürüş sırasında dönecek direksiyon modeli objesi")]
     public Transform steeringWheel;
 
     [Tooltip("Direksiyon dönme çarpanı")]
-    public float steeringWheelMultiplier = 4.0f;
+    public float steeringWheelMultiplier = 3.5f;
 
-    [Tooltip("Direksiyonun kendi etrafında döneceği yerel eksen")]
-    public Vector3 steeringWheelRotationAxis = Vector3.forward;
+    [Tooltip("Direksiyon ve tekerleklerin dönüş yumuşatma hızı (Derece/Saniye)")]
+    public float steerSpeed = 160f;
 
-    private Quaternion initialSteeringWheelRotation;
+    [Tooltip("Tuş bırakıldığında direksiyonun ve tekerleklerin merkeze toparlanma hızı (Derece/Saniye)")]
+    public float steerReturnSpeed = 220f;
+
+    [Tooltip("Eğer işaretlenirse, direksiyonun başlangıç rotasyonu aşağıdaki 'customInitialSteeringEuler' değerine zorlanır.")]
+    public bool overrideInitialSteeringEuler = false;
+
+    [Tooltip("Özel başlangıç açısı (Örn: Pickup için X: 0, Y: -90, Z: 0)")]
+    public Vector3 customInitialSteeringEuler = new Vector3(0f, -90f, 0f);
+
+    private Vector3 baseSteeringEuler = Vector3.zero;
+    private bool isBaseEulerCaptured = false;
 
     private Rigidbody rb;
     private float currentSteerAngle;
@@ -70,6 +80,8 @@ public class CarController : MonoBehaviour
 
     private void Awake()
     {
+        EnsureBaseSteeringEuler();
+
         // Araç üzerindeki tüm MeshCollider'ları otomatik Convex yap (Fizik motoru çakışmasını engelle)
         MeshCollider[] meshColliders = GetComponentsInChildren<MeshCollider>();
         foreach (var mc in meshColliders)
@@ -80,6 +92,8 @@ public class CarController : MonoBehaviour
 
     private void Start()
     {
+        EnsureBaseSteeringEuler();
+
         rb = GetComponent<Rigidbody>();
         if (rb != null)
         {
@@ -93,11 +107,24 @@ public class CarController : MonoBehaviour
             driftRearSidewaysFriction = rearLeftCollider.sidewaysFriction;
             currentRearStiffness = normalRearSidewaysFriction.stiffness;
         }
+    }
 
-        if (steeringWheel != null)
+    public void EnsureBaseSteeringEuler()
+    {
+        if (isBaseEulerCaptured || steeringWheel == null) return;
+
+        if (overrideInitialSteeringEuler)
         {
-            initialSteeringWheelRotation = steeringWheel.localRotation;
+            baseSteeringEuler = customInitialSteeringEuler;
+            steeringWheel.localEulerAngles = baseSteeringEuler;
         }
+        else
+        {
+            baseSteeringEuler = steeringWheel.localEulerAngles;
+            customInitialSteeringEuler = baseSteeringEuler;
+        }
+
+        isBaseEulerCaptured = true;
     }
 
     private void OnDisable()
@@ -129,9 +156,9 @@ public class CarController : MonoBehaviour
         if (rearLeftCollider != null) rearLeftCollider.brakeTorque = neutralBrake;
         if (rearRightCollider != null) rearRightCollider.brakeTorque = neutralBrake;
 
-        if (steeringWheel != null)
+        if (steeringWheel != null && isBaseEulerCaptured)
         {
-            steeringWheel.localRotation = initialSteeringWheelRotation;
+            steeringWheel.localEulerAngles = baseSteeringEuler;
         }
     }
 
@@ -187,15 +214,18 @@ public class CarController : MonoBehaviour
 
     private void HandleSteering()
     {
-        currentSteerAngle = maxSteerAngle * horizontalInput;
+        // 1. Smooth Steering Interpolation (Tekerleklerin ve direksiyonun kademeli, yumuşak dönmesi)
+        float targetSteerAngle = maxSteerAngle * horizontalInput;
+        float speed = Mathf.Abs(horizontalInput) > 0.05f ? steerSpeed : steerReturnSpeed;
+        currentSteerAngle = Mathf.MoveTowards(currentSteerAngle, targetSteerAngle, speed * Time.fixedDeltaTime);
 
-        // Ackermann Steering Angle Differential (İç tekerlek daha geniş döner, tekerlek kasması sıfırlanır)
-        if (horizontalInput > 0.05f)
+        // 2. Ackermann Steering Angle Differential (İç tekerlek daha geniş döner, tekerlek kasması sıfırlanır)
+        if (currentSteerAngle > 0.05f)
         {
             if (frontLeftCollider != null) frontLeftCollider.steerAngle = currentSteerAngle * 0.85f;
             if (frontRightCollider != null) frontRightCollider.steerAngle = currentSteerAngle * 1.05f;
         }
-        else if (horizontalInput < -0.05f)
+        else if (currentSteerAngle < -0.05f)
         {
             if (frontLeftCollider != null) frontLeftCollider.steerAngle = currentSteerAngle * 1.05f;
             if (frontRightCollider != null) frontRightCollider.steerAngle = currentSteerAngle * 0.85f;
@@ -206,17 +236,21 @@ public class CarController : MonoBehaviour
             if (frontRightCollider != null) frontRightCollider.steerAngle = 0f;
         }
 
-        // Agile Yaw Torque Assist (Dönüşlerde araca çeviklik desteği vererek ağırlık hissini ortadan kaldırır)
-        if (rb != null && Mathf.Abs(horizontalInput) > 0.05f && rb.linearVelocity.magnitude > 0.5f)
+        // 3. Agile Yaw Torque Assist (Dönüşlerde araca çeviklik desteği)
+        if (rb != null && Mathf.Abs(currentSteerAngle) > 0.5f && rb.linearVelocity.magnitude > 0.5f)
         {
             float directionSign = ForwardSpeed >= -0.2f ? 1f : -1f;
-            rb.AddTorque(transform.up * (horizontalInput * turnAssistTorque * directionSign), ForceMode.Acceleration);
+            float steerRatio = currentSteerAngle / maxSteerAngle;
+            rb.AddTorque(transform.up * (steerRatio * turnAssistTorque * directionSign), ForceMode.Acceleration);
         }
 
+        // 4. Direksiyon Modeli Rotasyonu (SADECE X açısını değiştirir; Y ve Z açıları daima korunur)
         if (steeringWheel != null)
         {
+            EnsureBaseSteeringEuler();
             float steerRot = currentSteerAngle * steeringWheelMultiplier;
-            steeringWheel.localRotation = initialSteeringWheelRotation * Quaternion.AngleAxis(-steerRot, steeringWheelRotationAxis);
+            float targetX = baseSteeringEuler.x - steerRot;
+            steeringWheel.localEulerAngles = new Vector3(targetX, baseSteeringEuler.y, baseSteeringEuler.z);
         }
     }
 

@@ -34,6 +34,17 @@ public class CargoWarehouseGenerator : MonoBehaviour
     [Range(0f, 100f), Tooltip("Zamanlı / Ekspres kargo çıkma ağırlığı / şansı")]
     public float expressSpawnWeight = 20f;
 
+    [Header("--- EXPRESS CARGO TIME LIMIT (ZAMANLI TESLİMAT SINIRI) ---")]
+    [Tooltip("Ekspres kargolar için minimum teslimat saati (Örn: 10.0 = 10:00)")]
+    public float minExpressDeliveryHour = 10.0f;
+
+    [Tooltip("Ekspres kargolar için maksimum teslimat saati (Örn: 14.0 = 14:00)")]
+    public float maxExpressDeliveryHour = 14.0f;
+
+    [Tooltip("Rastgele saat oluşturulurken dakika adımı (Örn: 15 = 10:00, 10:15, 10:30, 10:45... veya 30)")]
+    [Range(5, 60)]
+    public int expressMinuteInterval = 15;
+
     [Header("--- FRAGILE CARGO TUNING (KIRILMA HASSASİYETİ) ---")]
     [Tooltip("Hasar almak için gereken minimum çarpma hızı (m/s). Yere nazikçe koyma < 2.5 m/s, 1.5m elden düşüş ~5.0 m/s, yüksekten düşüş > 7.0 m/s. (Önerilen: 3.0 - 4.0)")]
     public float fragileMinDamageSpeedThreshold = 3.5f;
@@ -212,11 +223,35 @@ public class CargoWarehouseGenerator : MonoBehaviour
             pkg.spawnImmunityDuration = fragileSpawnImmunityDuration;
             
             Material chosenMaterial = GetMaterialForCargoType(chosenType);
-            pkg.SetupPackage(targetPoint.pointId, targetPoint.addressName, targetPoint.recipientName, reward, wrongPenalty, chosenType, xp, targetPoint.addressDescription, chosenMaterial, isCustom);
+
+            float expressHour = 13.0f;
+            if (chosenType == CargoType.Express)
+            {
+                expressHour = GenerateRandomExpressDeliveryHour();
+            }
+
+            pkg.SetupPackage(targetPoint.pointId, targetPoint.addressName, targetPoint.recipientName, reward, wrongPenalty, chosenType, xp, targetPoint.addressDescription, chosenMaterial, isCustom, expressHour);
             currentPackages.Add(pkg);
         }
 
         Debug.Log($"<color=#32FF64>[CargoWarehouseGenerator] Spawned {currentPackages.Count} packages safely at {transform.position} for Player Level {playerLevel}!</color>");
+    }
+
+    /// <summary>
+    /// Ekspres kargolar için min ve max saat aralığında (15 dk veya 30 dk adımlarla) rastgele teslimat saati üretir.
+    /// </summary>
+    public float GenerateRandomExpressDeliveryHour()
+    {
+        int minTotalMins = Mathf.RoundToInt(Mathf.Min(minExpressDeliveryHour, maxExpressDeliveryHour) * 60f);
+        int maxTotalMins = Mathf.RoundToInt(Mathf.Max(minExpressDeliveryHour, maxExpressDeliveryHour) * 60f);
+        int step = Mathf.Max(5, expressMinuteInterval);
+
+        int stepsCount = Mathf.Max(1, (maxTotalMins - minTotalMins) / step);
+        int chosenStep = Random.Range(0, stepsCount + 1);
+        int chosenTotalMins = minTotalMins + (chosenStep * step);
+        chosenTotalMins = Mathf.Clamp(chosenTotalMins, minTotalMins, maxTotalMins);
+
+        return chosenTotalMins / 60f;
     }
 
     /// <summary>

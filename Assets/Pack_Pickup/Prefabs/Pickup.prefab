@@ -26,13 +26,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 365045273514190426}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -1.0644662, y: 2.9178767, z: 1.1055524}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8474960979613475457}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
 --- !u!33 &5635357547010901228
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -214,8 +214,11 @@ MonoBehaviour:
   wheelMeshRotationOffset: {x: -90, y: 0, z: 0}
   wheelMeshPositionOffset: {x: 0, y: 0, z: 0}
   steeringWheel: {fileID: 4943056517401807039}
-  steeringWheelMultiplier: 4
-  steeringWheelRotationAxis: {x: 0, y: 0, z: 1}
+  steeringWheelMultiplier: 3.5
+  steerSpeed: 160
+  steerReturnSpeed: 220
+  overrideInitialSteeringEuler: 1
+  customInitialSteeringEuler: {x: 0, y: -90, z: 0}
 --- !u!114 &4027793834991877202
 MonoBehaviour:
   m_ObjectHideFlags: 0
