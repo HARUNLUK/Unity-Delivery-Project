@@ -62,8 +62,12 @@ public class VehicleShowroomManager : MonoBehaviour
     {
         if (warehouseGarageSpawnPoint == null)
         {
-            // Depo önünde otomatik spawn noktası ara veya oluştur
             GameObject existingSpawn = GameObject.Find("Warehouse_Garage_SpawnPoint");
+            if (existingSpawn == null) existingSpawn = GameObject.Find("GarageSpawnPoint");
+            if (existingSpawn == null) existingSpawn = GameObject.Find("Warehouse_SpawnPoint");
+            if (existingSpawn == null) existingSpawn = GameObject.Find("DeliveryPoint_1");
+            if (existingSpawn == null) existingSpawn = GameObject.Find("Warehouse");
+
             if (existingSpawn != null)
             {
                 warehouseGarageSpawnPoint = existingSpawn.transform;

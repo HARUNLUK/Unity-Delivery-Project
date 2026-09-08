@@ -646,7 +646,7 @@ public static class DeliveryUIBuilder
         rightVehCol.AddComponent<Image>().color = new Color(0.12f, 0.16f, 0.23f, 0.95f);
         VerticalLayoutGroup rvLayout = rightVehCol.AddComponent<VerticalLayoutGroup>();
         rvLayout.padding = new RectOffset(22, 22, 20, 20);
-        rvLayout.spacing = 12;
+        rvLayout.spacing = 10;
         rvLayout.childControlWidth = true;
         rvLayout.childControlHeight = false;
 
@@ -657,22 +657,27 @@ public static class DeliveryUIBuilder
 
         GameObject vCapObj = new GameObject("CapacityText");
         vCapObj.transform.SetParent(rightVehCol.transform, false);
-        vCapObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 25);
+        vCapObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 24);
         TextMeshProUGUI vCapTmp = AddTextMeshPro(vCapObj, "<b>Cargo Capacity:</b> 12 Packages", 19, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
+
+        GameObject vFuelObj = new GameObject("FuelStatusText");
+        vFuelObj.transform.SetParent(rightVehCol.transform, false);
+        vFuelObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 24);
+        TextMeshProUGUI vFuelTmp = AddTextMeshPro(vFuelObj, "<b>Fuel Tank:</b> <color=#32FF64>50.0 / 50.0 L (100%)</color>  [FUEL LEVEL NORMAL]", 18, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
 
         GameObject vLvlObj = new GameObject("LevelReqText");
         vLvlObj.transform.SetParent(rightVehCol.transform, false);
-        vLvlObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 25);
+        vLvlObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 24);
         TextMeshProUGUI vLvlTmp = AddTextMeshPro(vLvlObj, "<b>Required Level:</b> Level 2", 19, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
 
         GameObject vPriceObj = new GameObject("PriceText");
         vPriceObj.transform.SetParent(rightVehCol.transform, false);
-        vPriceObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 25);
+        vPriceObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 24);
         TextMeshProUGUI vPriceTmp = AddTextMeshPro(vPriceObj, "<b>Price:</b> $2,500", 19, FontStyles.Normal, TextAlignmentOptions.Left, Color.white);
 
         GameObject vDescBox = new GameObject("DescBox");
         vDescBox.transform.SetParent(rightVehCol.transform, false);
-        vDescBox.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 220);
+        vDescBox.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 140);
         vDescBox.AddComponent<Image>().color = new Color(0.05f, 0.07f, 0.1f, 0.98f);
         VerticalLayoutGroup vdLayout = vDescBox.AddComponent<VerticalLayoutGroup>();
         vdLayout.padding = new RectOffset(14, 14, 14, 14);
@@ -686,9 +691,10 @@ public static class DeliveryUIBuilder
         vStObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 28);
         TextMeshProUGUI vStTmp = AddTextMeshPro(vStObj, "[AVAILABLE FOR PURCHASE]", 19, FontStyles.Bold, TextAlignmentOptions.Left, new Color(0.2f, 1f, 0.4f));
 
+        // Buy Button
         GameObject vBuyBtnObj = new GameObject("BuyButton");
         vBuyBtnObj.transform.SetParent(rightVehCol.transform, false);
-        vBuyBtnObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 56);
+        vBuyBtnObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 50);
         Image vBuyImg = vBuyBtnObj.AddComponent<Image>();
         vBuyImg.color = new Color(0.1f, 0.7f, 0.35f);
         Button vBuyBtn = vBuyBtnObj.AddComponent<Button>();
@@ -697,7 +703,35 @@ public static class DeliveryUIBuilder
         vbbtObj.transform.SetParent(vBuyBtnObj.transform, false);
         RectTransform vbbtRect = vbbtObj.AddComponent<RectTransform>();
         vbbtRect.anchorMin = Vector2.zero; vbbtRect.anchorMax = Vector2.one; vbbtRect.sizeDelta = Vector2.zero;
-        TextMeshProUGUI vBuyTxt = AddTextMeshPro(vbbtObj, "PURCHASE VEHICLE ($2,500)", 21, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        TextMeshProUGUI vBuyTxt = AddTextMeshPro(vbbtObj, "PURCHASE VEHICLE ($2,500)", 20, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+
+        // Emergency Roadside Refuel Button
+        GameObject vRefuelBtnObj = new GameObject("RefuelButton");
+        vRefuelBtnObj.transform.SetParent(rightVehCol.transform, false);
+        vRefuelBtnObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 50);
+        Image vRefuelImg = vRefuelBtnObj.AddComponent<Image>();
+        vRefuelImg.color = new Color(0.12f, 0.65f, 0.35f);
+        Button vRefuelBtn = vRefuelBtnObj.AddComponent<Button>();
+
+        GameObject vrbtObj = new GameObject("Text");
+        vrbtObj.transform.SetParent(vRefuelBtnObj.transform, false);
+        RectTransform vrbtRect = vrbtObj.AddComponent<RectTransform>();
+        vrbtRect.anchorMin = Vector2.zero; vrbtRect.anchorMax = Vector2.one; vrbtRect.sizeDelta = Vector2.zero;
+        TextMeshProUGUI vRefuelTxt = AddTextMeshPro(vrbtObj, "ORDER EMERGENCY REFUEL (+15L / $45)", 20, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+
+        // Warehouse Garage Recall Button
+        GameObject vRecallBtnObj = new GameObject("RecallButton");
+        vRecallBtnObj.transform.SetParent(rightVehCol.transform, false);
+        vRecallBtnObj.AddComponent<RectTransform>().sizeDelta = new Vector2(0, 50);
+        Image vRecallImg = vRecallBtnObj.AddComponent<Image>();
+        vRecallImg.color = new Color(0.15f, 0.45f, 0.75f);
+        Button vRecallBtn = vRecallBtnObj.AddComponent<Button>();
+
+        GameObject vrcbtObj = new GameObject("Text");
+        vrcbtObj.transform.SetParent(vRecallBtnObj.transform, false);
+        RectTransform vrcbtRect = vrcbtObj.AddComponent<RectTransform>();
+        vrcbtRect.anchorMin = Vector2.zero; vrcbtRect.anchorMax = Vector2.one; vrcbtRect.sizeDelta = Vector2.zero;
+        TextMeshProUGUI vRecallTxt = AddTextMeshPro(vrcbtObj, "RECALL TO WAREHOUSE GARAGE", 20, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
 
         // ==========================================
         // SUBVIEW 3: BRANCH OFFICE UPGRADE VIEW
@@ -855,13 +889,16 @@ public static class DeliveryUIBuilder
         tabletScript.vehicleNameText = vNameTmp;
         tabletScript.vehicleDescText = vDescTmp;
         tabletScript.vehicleCapacityText = vCapTmp;
+        tabletScript.vehicleFuelStatusText = vFuelTmp;
         tabletScript.vehicleLevelReqText = vLvlTmp;
         tabletScript.vehiclePriceText = vPriceTmp;
         tabletScript.vehicleStatusText = vStTmp;
         tabletScript.vehicleBuyButton = vBuyBtn;
         tabletScript.vehicleBuyButtonText = vBuyTxt;
-        tabletScript.vehicleRecallButton = null;
-        tabletScript.vehicleRecallButtonText = null;
+        tabletScript.vehicleRefuelButton = vRefuelBtn;
+        tabletScript.vehicleRefuelButtonText = vRefuelTxt;
+        tabletScript.vehicleRecallButton = vRecallBtn;
+        tabletScript.vehicleRecallButtonText = vRecallTxt;
 
         tabletScript.branchViewRoot = branchView;
         tabletScript.currentBranchTitleText = curBranchTitle;

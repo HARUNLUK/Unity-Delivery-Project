@@ -47,8 +47,11 @@ public class CargoTabletUI : MonoBehaviour
     public TextMeshProUGUI vehicleLevelReqText;
     public TextMeshProUGUI vehiclePriceText;
     public TextMeshProUGUI vehicleStatusText;
+    public TextMeshProUGUI vehicleFuelStatusText;
     public Button vehicleBuyButton;
     public TextMeshProUGUI vehicleBuyButtonText;
+    public Button vehicleRefuelButton;
+    public TextMeshProUGUI vehicleRefuelButtonText;
     public Button vehicleRecallButton;
     public TextMeshProUGUI vehicleRecallButtonText;
 
@@ -599,8 +602,16 @@ public class CargoTabletUI : MonoBehaviour
             TextMeshProUGUI label = cardObj.GetComponentInChildren<TextMeshProUGUI>();
             if (label != null)
             {
-                string statusTag = v.IsUnlocked ? "<color=#32FF64>[OWNED]</color>" : $"<color=#FFAA33>${v.purchasePrice}</color> (Lvl {v.requiredPlayerLevel})";
-                label.text = $"<b>{v.vehicleName}</b>\n{statusTag}";
+                if (v.IsUnlocked)
+                {
+                    float fuelPct = v.maxFuel > 0 ? (v.currentFuel / v.maxFuel) * 100f : 0f;
+                    string fuelTag = v.currentFuel <= 0.05f ? "<color=#FF4444>[EMPTY]</color>" : (fuelPct < 25f ? "<color=#FFAA33>[LOW]</color>" : "<color=#32FF64>[OK]</color>");
+                    label.text = $"<b>{v.vehicleName}</b>\n<color=#32FF64>[OWNED]</color> • Fuel: {fuelPct:F0}% {fuelTag}";
+                }
+                else
+                {
+                    label.text = $"<b>{v.vehicleName}</b>\n<color=#FFAA33>${v.purchasePrice}</color> (Lvl {v.requiredPlayerLevel})";
+                }
                 label.raycastTarget = false;
             }
 
@@ -616,13 +627,21 @@ public class CargoTabletUI : MonoBehaviour
             });
         }
 
+        DrivableVehicle playerInsideVeh = vehicles.Find(v => v != null && v.isPlayerInside);
         if (currentSelectedVehicle == null || !vehicles.Contains(currentSelectedVehicle))
         {
-            DisplayVehicleDetail(vehicles[0]);
+            DisplayVehicleDetail(playerInsideVeh != null ? playerInsideVeh : vehicles[0]);
         }
         else
         {
-            DisplayVehicleDetail(currentSelectedVehicle);
+            if (playerInsideVeh != null && currentSelectedVehicle != playerInsideVeh)
+            {
+                DisplayVehicleDetail(playerInsideVeh);
+            }
+            else
+            {
+                DisplayVehicleDetail(currentSelectedVehicle);
+            }
         }
     }
 
@@ -643,26 +662,61 @@ public class CargoTabletUI : MonoBehaviour
         if (vehicleNameText != null) vehicleNameText.text = v.vehicleName;
         if (vehicleDescText != null) vehicleDescText.text = $"<b>Description:</b>\n{v.description}";
         if (vehicleCapacityText != null) vehicleCapacityText.text = $"<b>Cargo Capacity:</b> {v.cargoCapacity} Packages";
+
+        float fuelPct = v.maxFuel > 0 ? (v.currentFuel / v.maxFuel) * 100f : 0f;
+        string fuelColor = v.currentFuel <= 0.05f ? "#FF4444" : (fuelPct < 25f ? "#FFAA33" : "#32FF64");
+
+        if (vehicleFuelStatusText != null)
+        {
+            vehicleFuelStatusText.gameObject.SetActive(true);
+            string fuelTag = v.currentFuel <= 0.05f ? "<color=#FF4444>[OUT OF FUEL - Refuel Needed]</color>" : (fuelPct < 25f ? "<color=#FFAA33>[LOW FUEL LEVEL]</color>" : "<color=#32FF64>[FUEL LEVEL NORMAL]</color>");
+            vehicleFuelStatusText.text = $"<b>Fuel Tank:</b> <color={fuelColor}>{v.currentFuel:F1} / {v.maxFuel:F1} L ({fuelPct:F0}%)</color>  {fuelTag}";
+        }
         
         if (vehicleLevelReqText != null)
         {
-            bool lvlOk = playerLvl >= v.requiredPlayerLevel;
-            string lvlColor = lvlOk ? "#32FF64" : "#FF5555";
-            vehicleLevelReqText.text = $"<b>Required Level:</b> <color={lvlColor}>Level {v.requiredPlayerLevel}</color> (Yours: Level {playerLvl})";
+            if (v.IsUnlocked)
+            {
+                vehicleLevelReqText.text = "<b>Fleet Status:</b> <color=#32FF64>PURCHASED & REGISTERED TO FLEET</color>";
+            }
+            else
+            {
+                bool lvlOk = playerLvl >= v.requiredPlayerLevel;
+                string lvlColor = lvlOk ? "#32FF64" : "#FF5555";
+                vehicleLevelReqText.text = $"<b>Required Level:</b> <color={lvlColor}>Level {v.requiredPlayerLevel}</color> (Yours: Level {playerLvl})";
+            }
         }
 
         if (vehiclePriceText != null)
         {
-            bool cashOk = balance >= v.purchasePrice;
-            string cashColor = cashOk ? "#32FF64" : "#FF5555";
-            vehiclePriceText.text = $"<b>Price:</b> <color={cashColor}>${v.purchasePrice}</color> (Balance: ${balance})";
+            if (v.IsUnlocked)
+            {
+                vehiclePriceText.text = $"<b>Fuel Status:</b> <color={fuelColor}>{v.currentFuel:F1} / {v.maxFuel:F1} Liters ({fuelPct:F0}%)</color>";
+            }
+            else
+            {
+                bool cashOk = balance >= v.purchasePrice;
+                string cashColor = cashOk ? "#32FF64" : "#FF5555";
+                vehiclePriceText.text = $"<b>Purchase Price:</b> <color={cashColor}>${v.purchasePrice}</color> (Balance: ${balance})";
+            }
         }
 
         if (vehicleStatusText != null)
         {
             if (v.IsUnlocked)
             {
-                vehicleStatusText.text = "<color=#32FF64>[OWNED] Ready to drive or recall to warehouse garage.</color>";
+                if (v.currentFuel <= 0.05f)
+                {
+                    vehicleStatusText.text = "<color=#FF4444>[OUT OF FUEL] Vehicle cannot start! Use Emergency Refuel button below to add gas.</color>";
+                }
+                else if (fuelPct < 25f)
+                {
+                    vehicleStatusText.text = "<color=#FFAA33>[LOW FUEL] Tank is almost empty. Refuel at a gas station or order emergency fuel.</color>";
+                }
+                else
+                {
+                    vehicleStatusText.text = "<color=#32FF64>[OWNED] Ready to drive or recall to warehouse garage.</color>";
+                }
             }
             else
             {
@@ -681,7 +735,7 @@ public class CargoTabletUI : MonoBehaviour
             }
         }
 
-        // Buy & Recall Button states
+        // Buy Button
         if (vehicleBuyButton != null)
         {
             if (v.IsUnlocked)
@@ -713,9 +767,99 @@ public class CargoTabletUI : MonoBehaviour
             }
         }
 
+        // Emergency Roadside Refuel Button
+        if (vehicleRefuelButton != null)
+        {
+            if (!v.IsUnlocked)
+            {
+                vehicleRefuelButton.gameObject.SetActive(false);
+            }
+            else
+            {
+                vehicleRefuelButton.gameObject.SetActive(true);
+                float fuelToAdd = Mathf.Min(15f, v.maxFuel - v.currentFuel);
+                int fuelCost = Mathf.RoundToInt(fuelToAdd * 3f); // $3 per liter roadside delivery
+
+                if (fuelToAdd <= 0.2f)
+                {
+                    vehicleRefuelButton.interactable = false;
+                    Image rImg = vehicleRefuelButton.GetComponent<Image>();
+                    if (rImg != null) rImg.color = new Color(0.25f, 0.25f, 0.3f);
+
+                    if (vehicleRefuelButtonText != null)
+                    {
+                        vehicleRefuelButtonText.text = "FUEL TANK FULL (100%)";
+                    }
+                }
+                else
+                {
+                    bool canAffordFuel = balance >= fuelCost;
+                    vehicleRefuelButton.interactable = canAffordFuel;
+
+                    Image rImg = vehicleRefuelButton.GetComponent<Image>();
+                    if (rImg != null) rImg.color = canAffordFuel ? new Color(0.12f, 0.65f, 0.35f) : new Color(0.45f, 0.25f, 0.25f);
+
+                    if (vehicleRefuelButtonText != null)
+                    {
+                        vehicleRefuelButtonText.text = canAffordFuel ?
+                            $"ORDER EMERGENCY REFUEL (+{fuelToAdd:F0}L / ${fuelCost})" :
+                            $"INSUFFICIENT FUNDS (+{fuelToAdd:F0}L / ${fuelCost})";
+                    }
+
+                    vehicleRefuelButton.onClick.RemoveAllListeners();
+                    vehicleRefuelButton.onClick.AddListener(() => {
+                        if (PlayerEconomyManager.Instance != null && PlayerEconomyManager.Instance.SpendMoney(fuelCost))
+                        {
+                            v.Refuel(fuelToAdd);
+                            DisplayVehicleDetail(v);
+                            PopulateVehicleList();
+                            if (InteractionPromptHUD.Instance != null)
+                            {
+                                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[EMERGENCY FUEL] +{fuelToAdd:F0}L Roadside Fuel Delivered to {v.vehicleName}! (-${fuelCost})</color>");
+                            }
+                        }
+                        else
+                        {
+                            if (InteractionPromptHUD.Instance != null)
+                            {
+                                InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF5555>[INSUFFICIENT FUNDS] Need ${fuelCost} for emergency fuel delivery!</color>");
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        // Warehouse Garage Recall Button
         if (vehicleRecallButton != null)
         {
-            vehicleRecallButton.gameObject.SetActive(false);
+            if (!v.IsUnlocked)
+            {
+                vehicleRecallButton.gameObject.SetActive(false);
+            }
+            else
+            {
+                vehicleRecallButton.gameObject.SetActive(true);
+                vehicleRecallButton.interactable = true;
+
+                Image recImg = vehicleRecallButton.GetComponent<Image>();
+                if (recImg != null) recImg.color = new Color(0.15f, 0.45f, 0.75f);
+
+                if (vehicleRecallButtonText != null)
+                {
+                    vehicleRecallButtonText.text = "RECALL TO WAREHOUSE GARAGE";
+                }
+
+                vehicleRecallButton.onClick.RemoveAllListeners();
+                vehicleRecallButton.onClick.AddListener(() => {
+                    v.RecallToGarage();
+                    CloseTablet();
+                    if (InteractionPromptHUD.Instance != null)
+                    {
+                        InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>[GARAGE RECALL] {v.vehicleName} recovered to warehouse garage!</color>");
+                    }
+                });
+            }
         }
     }
 
@@ -927,6 +1071,64 @@ public class CargoTabletUI : MonoBehaviour
             if (v == null) v = tabletPanelRoot.transform.Find("VehicleDealershipView");
             if (v == null) v = tabletPanelRoot.transform.Find("VehicleViewRoot");
             if (v != null) vehicleViewRoot = v.gameObject;
+        }
+
+        if (vehicleViewRoot != null)
+        {
+            if (vehicleListContent == null)
+            {
+                Transform c = vehicleViewRoot.transform.Find("LeftColumn_Vehicles/VehicleScrollView/Viewport/Content");
+                if (c != null) vehicleListContent = c;
+            }
+
+            if (vehicleCardTemplate == null && vehicleListContent != null)
+            {
+                Transform ct = vehicleListContent.Find("VehicleCardTemplate");
+                if (ct != null) vehicleCardTemplate = ct.gameObject;
+            }
+
+            Transform detailCol = vehicleViewRoot.transform.Find("RightColumn_VehicleDetail");
+            if (detailCol != null)
+            {
+                if (vehicleDetailRoot == null) vehicleDetailRoot = detailCol.gameObject;
+                if (vehicleNameText == null) vehicleNameText = detailCol.Find("VehicleName")?.GetComponent<TextMeshProUGUI>();
+                if (vehicleCapacityText == null) vehicleCapacityText = detailCol.Find("CapacityText")?.GetComponent<TextMeshProUGUI>();
+                if (vehicleFuelStatusText == null) vehicleFuelStatusText = detailCol.Find("FuelStatusText")?.GetComponent<TextMeshProUGUI>();
+                if (vehicleLevelReqText == null) vehicleLevelReqText = detailCol.Find("LevelReqText")?.GetComponent<TextMeshProUGUI>();
+                if (vehiclePriceText == null) vehiclePriceText = detailCol.Find("PriceText")?.GetComponent<TextMeshProUGUI>();
+                if (vehicleDescText == null) vehicleDescText = detailCol.Find("DescBox/DescText")?.GetComponent<TextMeshProUGUI>();
+                if (vehicleStatusText == null) vehicleStatusText = detailCol.Find("StatusText")?.GetComponent<TextMeshProUGUI>();
+
+                if (vehicleBuyButton == null)
+                {
+                    Transform b = detailCol.Find("BuyButton");
+                    if (b != null)
+                    {
+                        vehicleBuyButton = b.GetComponent<Button>();
+                        vehicleBuyButtonText = b.GetComponentInChildren<TextMeshProUGUI>();
+                    }
+                }
+
+                if (vehicleRefuelButton == null)
+                {
+                    Transform b = detailCol.Find("RefuelButton");
+                    if (b != null)
+                    {
+                        vehicleRefuelButton = b.GetComponent<Button>();
+                        vehicleRefuelButtonText = b.GetComponentInChildren<TextMeshProUGUI>();
+                    }
+                }
+
+                if (vehicleRecallButton == null)
+                {
+                    Transform b = detailCol.Find("RecallButton");
+                    if (b != null)
+                    {
+                        vehicleRecallButton = b.GetComponent<Button>();
+                        vehicleRecallButtonText = b.GetComponentInChildren<TextMeshProUGUI>();
+                    }
+                }
+            }
         }
 
         if (branchViewRoot == null)

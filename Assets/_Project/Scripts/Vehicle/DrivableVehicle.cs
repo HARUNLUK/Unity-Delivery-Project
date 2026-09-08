@@ -263,7 +263,7 @@ public class DrivableVehicle : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>[OUT OF FUEL] Engine stopped. Refuel at gas pump.</color>");
+                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>[OUT OF FUEL] Engine stopped! Open Tablet [TAB] -> VEHICLES to refuel or visit a gas pump.</color>");
             }
         }
 
@@ -389,6 +389,7 @@ public class DrivableVehicle : MonoBehaviour
     /// </summary>
     public void RecallToGarage()
     {
+        // 1. Resolve Target Anchor Point with thorough fallbacks
         Transform targetAnchor = garageSpawnTransform != null ? garageSpawnTransform : parkingSpotTransform;
         if (targetAnchor == null && VehicleShowroomManager.Instance != null)
         {
@@ -397,32 +398,77 @@ public class DrivableVehicle : MonoBehaviour
 
         if (targetAnchor == null)
         {
-            Debug.LogWarning($"[DrivableVehicle] No Garage or Parking anchor point defined for '{vehicleName}'!");
-            return;
+            GameObject g = GameObject.Find("Warehouse_Garage_SpawnPoint");
+            if (g == null) g = GameObject.Find("GarageSpawnPoint");
+            if (g == null) g = GameObject.Find("Warehouse_SpawnPoint");
+            if (g == null) g = GameObject.Find("DeliveryPoint_1");
+            if (g == null) g = GameObject.Find("Warehouse");
+            if (g != null) targetAnchor = g.transform;
         }
 
+        Vector3 targetPos = targetAnchor != null ? targetAnchor.position + Vector3.up * 0.45f : transform.position + Vector3.up * 0.2f;
+        Quaternion targetRot = targetAnchor != null ? targetAnchor.rotation : transform.rotation;
+
+        // 2. Cut engine torque & disable controller temporarily
+        if (carController != null)
+        {
+            carController.ClearAllForces();
+            carController.enabled = false;
+        }
+
+        // 3. Reset physics velocity
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.position = targetPos;
+            rb.rotation = targetRot;
+        }
+
+        transform.position = targetPos;
+        transform.rotation = targetRot;
+
+        // 4. Reset wheel colliders to avoid lingering spring tension or spinning
+        if (carController != null)
+        {
+            ResetWheelCollider(carController.frontLeftCollider);
+            ResetWheelCollider(carController.frontRightCollider);
+            ResetWheelCollider(carController.rearLeftCollider);
+            ResetWheelCollider(carController.rearRightCollider);
+        }
+
+        Physics.SyncTransforms();
+
+        // 5. If player was inside the vehicle, safely exit player AT THE NEW GARAGE POSITION
         if (isPlayerInside)
         {
             ExitVehicle();
         }
 
+        // 6. Zero out velocities again after placement
         if (rb != null)
         {
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
         }
 
-        transform.position = targetAnchor.position + Vector3.up * 0.35f;
-        transform.rotation = targetAnchor.rotation;
+        string anchorName = targetAnchor != null ? targetAnchor.name : "Default Position";
+        Debug.Log($"<color=#32FFFF>[DrivableVehicle] '{vehicleName}' recalled to garage anchor ({anchorName}) at {targetPos}.</color>");
 
-        if (rb != null)
+        if (InteractionPromptHUD.Instance != null)
         {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
+            InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>[GARAGE RECALL] {vehicleName} recovered to warehouse garage!</color>");
         }
 
-        Debug.Log($"[DrivableVehicle] '{vehicleName}' was teleported to garage anchor ({targetAnchor.name}).");
         OnVehicleRecalled?.Invoke(this);
+    }
+
+    private void ResetWheelCollider(WheelCollider col)
+    {
+        if (col == null) return;
+        col.motorTorque = 0f;
+        col.brakeTorque = 2500f;
+        col.steerAngle = 0f;
     }
 
     public void EnterVehicle(FPSPlayerController player)

@@ -106,6 +106,18 @@ public class PlayerEconomyManager : MonoBehaviour
     public void AddCash(int amount) => AddEarnings(amount);
     public void DeductCash(int amount) => AddPenalty(amount);
 
+    public bool SpendMoney(int amount)
+    {
+        if (CurrentLiveBalance >= amount)
+        {
+            DeductCash(amount);
+            return true;
+        }
+        return false;
+    }
+
+    public bool TrySpendMoney(int amount) => SpendMoney(amount);
+
     /// <summary>
     /// Finalizes daily earnings to persistent player vault and saves PlayerPrefs.
     /// </summary>
