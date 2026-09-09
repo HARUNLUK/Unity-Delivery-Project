@@ -8,8 +8,12 @@ public static class RoadTextureGenerator
     // Obsolete menu item removed (materials are generated on-demand by presets)
     public static void GenerateRoadMaterials()
     {
-        string dir = "Assets/Materials/RoadStyles";
-        if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+        string dir = "Assets/_Project/Materials/RoadStyles";
+        if (!Directory.Exists(dir))
+        {
+            dir = "Assets/Materials/RoadStyles";
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+        }
 
         // 1. 2-LANE STRIPED ASPHALT
         Texture2D texStriped = CreateStripedRoadTexture();
@@ -38,7 +42,7 @@ public static class RoadTextureGenerator
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
-        Debug.Log("[RoadTextureGenerator] Generated ready-to-use road materials in 'Assets/Materials/RoadStyles'!");
+        Debug.Log($"[RoadTextureGenerator] Generated ready-to-use road materials in '{dir}'!");
     }
 
     private static Texture2D CreateStripedRoadTexture()

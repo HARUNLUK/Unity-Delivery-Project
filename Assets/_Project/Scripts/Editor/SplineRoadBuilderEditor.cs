@@ -73,7 +73,56 @@ public class SplineRoadBuilderEditor : Editor
         EditorGUILayout.EndHorizontal();
         GUI.backgroundColor = Color.white;
 
-        EditorGUILayout.Space(12);
+        EditorGUILayout.Space(10);
+
+        // SELECTED WAYPOINT ACTIONS & ROUND CAP TOGGLE
+        RoadBranch activeBranch = builder.GetActiveBranch();
+        if (builder.selectedPointIndex >= 0 && builder.selectedPointIndex < activeBranch.waypoints.Count)
+        {
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField($"SELECTED POINT: {activeBranch.branchName} ➔ Point {builder.selectedPointIndex + 1}", EditorStyles.boldLabel);
+
+            bool isRound = activeBranch.IsPointRoundCapped(builder.selectedPointIndex);
+            
+            GUI.backgroundColor = isRound ? new Color(0.3f, 1.0f, 0.4f) : new Color(0.88f, 0.88f, 0.88f);
+            string btnLabel = isRound 
+                ? "⭕ BU POINT ROUND (AKTİF / KAVİSLİ)\n[ Düz / Açık Yapmak İçin Tıkla ]" 
+                : "⚪ BU POINT DÜZ (PASİF)\n[ Bu Point'i Round Yapmak İçin Tıkla ]";
+
+            if (GUILayout.Button(btnLabel, GUILayout.Height(42)))
+            {
+                Undo.RecordObject(builder, "Toggle Point Round Cap");
+                activeBranch.SetPointRoundCapped(builder.selectedPointIndex, !isRound);
+                builder.UpdateRoadAndTerrain();
+                EditorUtility.SetDirty(builder);
+            }
+            GUI.backgroundColor = Color.white;
+
+            EditorGUILayout.Space(6);
+            EditorGUILayout.BeginHorizontal();
+            GUI.backgroundColor = new Color(0.3f, 0.75f, 1f);
+            if (GUILayout.Button("[+] Insert Point After", GUILayout.Height(26)))
+            {
+                Vector3 currentWorld = builder.transform.TransformPoint(activeBranch.waypoints[builder.selectedPointIndex]);
+                Vector3 insertWorld = currentWorld + (Vector3.forward * 4f);
+                builder.InsertPoint(builder.activeBranchIndex, builder.selectedPointIndex + 1, insertWorld);
+            }
+
+            GUI.backgroundColor = new Color(1f, 0.4f, 0.4f);
+            if (GUILayout.Button("Delete Point", GUILayout.Height(26)))
+            {
+                builder.DeletePoint(builder.activeBranchIndex, builder.selectedPointIndex);
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.Space(10);
+        }
+        else
+        {
+            EditorGUILayout.HelpBox("💡 Bir waypoint seçerek 'Bu Point'i Round Yap' butonuna basabilirsiniz.", MessageType.None);
+            EditorGUILayout.Space(6);
+        }
 
         // ACTIVE BRANCH SELECTOR
         if (builder.branches.Count > 1)
@@ -104,31 +153,6 @@ public class SplineRoadBuilderEditor : Editor
         }
 
         EditorGUILayout.Space(10);
-
-        // SELECTED WAYPOINT ACTIONS
-        RoadBranch activeBranch = builder.GetActiveBranch();
-        if (builder.selectedPointIndex >= 0 && builder.selectedPointIndex < activeBranch.waypoints.Count)
-        {
-            EditorGUILayout.LabelField($"SELECTED: {activeBranch.branchName} -> Point {builder.selectedPointIndex + 1}", EditorStyles.boldLabel);
-
-            EditorGUILayout.BeginHorizontal();
-            GUI.backgroundColor = new Color(0.3f, 0.75f, 1f);
-            if (GUILayout.Button("[+] Insert Point After Selected", GUILayout.Height(28)))
-            {
-                Vector3 currentWorld = builder.transform.TransformPoint(activeBranch.waypoints[builder.selectedPointIndex]);
-                Vector3 insertWorld = currentWorld + (Vector3.forward * 4f);
-                builder.InsertPoint(builder.activeBranchIndex, builder.selectedPointIndex + 1, insertWorld);
-            }
-
-            GUI.backgroundColor = new Color(1f, 0.4f, 0.4f);
-            if (GUILayout.Button("Delete Selected Point", GUILayout.Height(28)))
-            {
-                builder.DeletePoint(builder.activeBranchIndex, builder.selectedPointIndex);
-            }
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.Space(10);
-        }
 
         GUI.backgroundColor = Color.white;
         EditorGUILayout.LabelField("TERRAIN & ROAD ACTIONS", EditorStyles.boldLabel);
@@ -172,8 +196,18 @@ public class SplineRoadBuilderEditor : Editor
 
     private void ApplyStylePreset(SplineRoadBuilder builder, string matFileName, float uvTile)
     {
-        string path = $"Assets/Materials/RoadStyles/{matFileName}";
+        string path = $"Assets/_Project/Materials/RoadStyles/{matFileName}";
         Material mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (mat == null)
+        {
+            path = $"Assets/Materials/RoadStyles/{matFileName}";
+            mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+        }
+        if (mat == null)
+        {
+            path = $"Assets/_Project/Materials/{matFileName}";
+            mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+        }
         if (mat == null)
         {
             path = $"Assets/Materials/{matFileName}";
@@ -183,8 +217,13 @@ public class SplineRoadBuilderEditor : Editor
         if (mat == null)
         {
             RoadTextureGenerator.GenerateRoadMaterials();
-            path = $"Assets/Materials/RoadStyles/{matFileName}";
+            path = $"Assets/_Project/Materials/RoadStyles/{matFileName}";
             mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat == null)
+            {
+                path = $"Assets/Materials/RoadStyles/{matFileName}";
+                mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            }
         }
 
         if (mat != null)
@@ -303,10 +342,19 @@ public class SplineRoadBuilderEditor : Editor
             {
                 Vector3 worldPos = builder.transform.TransformPoint(branch.waypoints[i]);
                 bool isSelected = (isActiveBranch && i == builder.selectedPointIndex);
+                bool isRound = branch.IsPointRoundCapped(i);
+
+                if (isRound)
+                {
+                    Handles.color = new Color(0.2f, 1f, 0.4f, 0.9f);
+                    Handles.DrawWireDisc(worldPos + (Vector3.up * 0.15f), Vector3.up, builder.roadWidth * 0.5f);
+                    Handles.color = new Color(0.2f, 1f, 0.4f, 0.2f);
+                    Handles.DrawSolidDisc(worldPos + (Vector3.up * 0.15f), Vector3.up, builder.roadWidth * 0.5f);
+                }
 
                 Handles.color = isSelected 
                     ? new Color(0.2f, 1f, 0.4f) 
-                    : (isActiveBranch ? new Color(0.3f, 0.75f, 1f) : new Color(0.7f, 0.7f, 0.7f, 0.6f));
+                    : (isRound ? new Color(0.2f, 1f, 0.6f) : (isActiveBranch ? new Color(0.3f, 0.75f, 1f) : new Color(0.7f, 0.7f, 0.7f, 0.6f)));
 
                 if (Handles.Button(worldPos + (Vector3.up * 0.5f), Quaternion.identity, 0.8f, 1.2f, Handles.SphereHandleCap))
                 {
@@ -315,7 +363,8 @@ public class SplineRoadBuilderEditor : Editor
                     Repaint();
                 }
 
-                Handles.Label(worldPos + (Vector3.up * 1.6f), $"{branch.branchName} P{i + 1}" + (isSelected ? " [SELECTED]" : ""));
+                string roundSuffix = isRound ? " [⭕ ROUND]" : "";
+                Handles.Label(worldPos + (Vector3.up * 1.6f), $"{branch.branchName} P{i + 1}" + (isSelected ? " [SELECTED]" : "") + roundSuffix);
 
                 if (isActiveBranch)
                 {

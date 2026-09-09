@@ -4,16 +4,46 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
+public enum RoadEndCapStyle
+{
+    RoundedCap,   // Smooth 180-degree half-circle with seamless sidewalk & curb wrap
+    SquareCap,    // Flat perpendicular closed border with sidewalk & curb
+    FlatOpen      // Cut flat with no end cap
+}
+
 [System.Serializable]
 public class RoadBranch
 {
     public string branchName = "Main Road";
     public List<Vector3> waypoints = new List<Vector3>();
 
+    // Indices of waypoints that have Round End Cap explicitly enabled by user
+    [SerializeField] public List<int> roundCappedPointIndices = new List<int>();
+
     public RoadBranch(string name)
     {
         branchName = name;
         waypoints = new List<Vector3>();
+        roundCappedPointIndices = new List<int>();
+    }
+
+    public bool IsPointRoundCapped(int pointIndex)
+    {
+        if (roundCappedPointIndices == null) roundCappedPointIndices = new List<int>();
+        return roundCappedPointIndices.Contains(pointIndex);
+    }
+
+    public void SetPointRoundCapped(int pointIndex, bool capped)
+    {
+        if (roundCappedPointIndices == null) roundCappedPointIndices = new List<int>();
+        if (capped && !roundCappedPointIndices.Contains(pointIndex))
+        {
+            roundCappedPointIndices.Add(pointIndex);
+        }
+        else if (!capped && roundCappedPointIndices.Contains(pointIndex))
+        {
+            roundCappedPointIndices.Remove(pointIndex);
+        }
     }
 }
 
@@ -39,6 +69,14 @@ public class SplineRoadBuilder : MonoBehaviour
 
     [Tooltip("UV Texture tiling")]
     public float uvTiling = 0.25f;
+
+    [Header("--- ROAD END CAPS (Kaldırım & Uç Kapatma Ayarları) ---")]
+    [Tooltip("End cap shape style applied to points marked as Round: RoundedCap (Yarım Daire), SquareCap (Kare)")]
+    public RoadEndCapStyle endCapStyle = RoadEndCapStyle.RoundedCap;
+
+    [Tooltip("Number of radial segments for curved half-circle end caps")]
+    [Range(8, 36)]
+    public int capSegments = 20;
 
     [Header("--- TERRAIN SCULPTING (ORGANIC SMOOTH & ZERO LAG) ---")]
     [Tooltip("Automatically sculpt and pull the terrain up/down to match all branches")]
@@ -101,6 +139,14 @@ public class SplineRoadBuilder : MonoBehaviour
             branches.Add(mainBranch);
             activeBranchIndex = 0;
         }
+
+        foreach (var b in branches)
+        {
+            if (b.roundCappedPointIndices == null)
+            {
+                b.roundCappedPointIndices = new List<int>();
+            }
+        }
     }
 
     private void InitComponents()
@@ -113,7 +159,11 @@ public class SplineRoadBuilder : MonoBehaviour
         if (roadMaterial == null)
         {
 #if UNITY_EDITOR
-            roadMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/RoadStyles/Mat_Road_2Lane_Striped.mat");
+            roadMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Project/Materials/RoadStyles/Mat_Road_City_Sidewalks.mat");
+            if (roadMaterial == null)
+                roadMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Project/Materials/RoadStyles/Mat_Road_2Lane_Striped.mat");
+            if (roadMaterial == null)
+                roadMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/RoadStyles/Mat_Road_2Lane_Striped.mat");
             if (roadMaterial == null)
                 roadMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Road_Asphalt_Material.mat");
 #endif
@@ -202,8 +252,20 @@ public class SplineRoadBuilder : MonoBehaviour
         if (pointIdx >= 0 && pointIdx <= branch.waypoints.Count)
         {
             branch.waypoints.Insert(pointIdx, localPt);
-            selectedPointIndex = pointIdx;
 
+            // Shift cap indices
+            if (branch.roundCappedPointIndices != null)
+            {
+                for (int i = 0; i < branch.roundCappedPointIndices.Count; i++)
+                {
+                    if (branch.roundCappedPointIndices[i] >= pointIdx)
+                    {
+                        branch.roundCappedPointIndices[i]++;
+                    }
+                }
+            }
+
+            selectedPointIndex = pointIdx;
             UpdateRoadAndTerrain();
         }
     }
@@ -216,8 +278,21 @@ public class SplineRoadBuilder : MonoBehaviour
         if (pointIdx >= 0 && pointIdx < branch.waypoints.Count)
         {
             branch.waypoints.RemoveAt(pointIdx);
-            selectedPointIndex = Mathf.Clamp(pointIdx - 1, 0, branch.waypoints.Count - 1);
 
+            // Remove/shift cap indices
+            if (branch.roundCappedPointIndices != null)
+            {
+                branch.roundCappedPointIndices.Remove(pointIdx);
+                for (int i = 0; i < branch.roundCappedPointIndices.Count; i++)
+                {
+                    if (branch.roundCappedPointIndices[i] > pointIdx)
+                    {
+                        branch.roundCappedPointIndices[i]--;
+                    }
+                }
+            }
+
+            selectedPointIndex = Mathf.Clamp(pointIdx - 1, 0, branch.waypoints.Count - 1);
             UpdateRoadAndTerrain();
         }
     }
@@ -227,7 +302,9 @@ public class SplineRoadBuilder : MonoBehaviour
         RoadBranch branch = GetActiveBranch();
         if (branch.waypoints.Count > 0)
         {
-            branch.waypoints.RemoveAt(branch.waypoints.Count - 1);
+            int lastIdx = branch.waypoints.Count - 1;
+            if (branch.roundCappedPointIndices != null) branch.roundCappedPointIndices.Remove(lastIdx);
+            branch.waypoints.RemoveAt(lastIdx);
             selectedPointIndex = branch.waypoints.Count - 1;
 
             UpdateRoadAndTerrain();
@@ -245,7 +322,7 @@ public class SplineRoadBuilder : MonoBehaviour
     }
 
     /// <summary>
-    /// Rebuilds the road mesh ribbon with surface snapping.
+    /// Rebuilds the road mesh ribbon and caps endpoints that have Round Cap enabled.
     /// </summary>
     [ContextMenu("Rebuild Road Mesh")]
     public void RebuildRoadMesh()
@@ -264,13 +341,25 @@ public class SplineRoadBuilder : MonoBehaviour
 
         if (meshCollider != null) meshCollider.enabled = false;
 
-        foreach (var branch in branches)
+        for (int b = 0; b < branches.Count; b++)
         {
+            var branch = branches[b];
             if (branch.waypoints.Count < 2) continue;
 
             List<Vector3> samplePoints = GenerateSplineSamples(branch.waypoints, resolution);
             if (samplePoints.Count < 2) continue;
 
+            bool isStartRound = branch.IsPointRoundCapped(0);
+            bool isEndRound = branch.IsPointRoundCapped(branch.waypoints.Count - 1);
+
+            // 1. START CAP (If start point is marked as Round)
+            if (isStartRound && endCapStyle != RoadEndCapStyle.FlatOpen)
+            {
+                Vector3 forwardStart = (samplePoints[1] - samplePoints[0]).normalized;
+                BuildCapGeometry(samplePoints[0], -forwardStart, 0f, true, allVertices, allNormals, allUvs, allTriangles, activeTerrain);
+            }
+
+            // 2. MAIN ROAD RIBBON
             int branchVertexOffset = allVertices.Count;
             float currentLength = 0f;
 
@@ -336,6 +425,13 @@ public class SplineRoadBuilder : MonoBehaviour
                     allTriangles.Add(r1 + 1);
                 }
             }
+
+            // 3. END CAP (If end point is marked as Round)
+            if (isEndRound && endCapStyle != RoadEndCapStyle.FlatOpen)
+            {
+                Vector3 forwardEnd = (samplePoints[samplePoints.Count - 1] - samplePoints[samplePoints.Count - 2]).normalized;
+                BuildCapGeometry(samplePoints[samplePoints.Count - 1], forwardEnd, currentLength, false, allVertices, allNormals, allUvs, allTriangles, activeTerrain);
+            }
         }
 
         Mesh roadMesh = new Mesh();
@@ -362,6 +458,253 @@ public class SplineRoadBuilder : MonoBehaviour
     }
 
     /// <summary>
+    /// Builds procedural 180-degree half-circle end cap geometry with continuous sidewalk and curb wrap.
+    /// Uses a clean UV seam at the apex to guarantee zero gap/hole where the two sidewalks meet.
+    /// </summary>
+    private void BuildCapGeometry(
+        Vector3 centerPt,
+        Vector3 forwardDir,
+        float baseLength,
+        bool isStartCap,
+        List<Vector3> allVertices,
+        List<Vector3> allNormals,
+        List<Vector2> allUvs,
+        List<int> allTriangles,
+        Terrain activeTerrain)
+    {
+        Vector3 rightDir = Vector3.Cross(Vector3.up, forwardDir).normalized;
+        float halfWidth = roadWidth * 0.5f;
+        float priorityOffset = renderPriority * 0.02f;
+
+        // Sidewalk and curb thickness fractions
+        float swFrac = 0.14f;
+        float curbFrac = 0.16f;
+
+        if (roadMaterial != null)
+        {
+            string matName = roadMaterial.name.ToLower();
+            if (matName.Contains("wide"))
+            {
+                swFrac = 0.22f;
+                curbFrac = 0.245f;
+            }
+            else if (matName.Contains("dirt"))
+            {
+                swFrac = 0.10f;
+                curbFrac = 0.15f;
+            }
+            else if (matName.Contains("striped"))
+            {
+                swFrac = 0.06f;
+                curbFrac = 0.08f;
+            }
+        }
+
+        // =========================================================================
+        // STYLE A: 180° HALF-CIRCLE ROUND CAP (Yarım Daire - Uçta Sıfır Boşluk)
+        // =========================================================================
+        if (endCapStyle == RoadEndCapStyle.RoundedCap)
+        {
+            float R = halfWidth;
+            float swWidth = roadWidth * swFrac;
+            float curbWidth = roadWidth * curbFrac;
+
+            float r0 = R;                                     // Outer Sidewalk edge
+            float r1 = Mathf.Max(0.2f, R - swWidth);         // Sidewalk / Curb boundary
+            float r2 = Mathf.Max(0.1f, R - curbWidth);       // Curb / Asphalt boundary
+
+            float[] radii = new float[] { r0, r1, r2 };
+            float[] leftUOffsets = new float[] { 0.0f, swFrac, curbFrac };
+            float[] rightUOffsets = new float[] { 1.0f, 1.0f - swFrac, 1.0f - curbFrac };
+
+            int halfSegments = Mathf.Max(6, capSegments / 2);
+            int ringCount = radii.Length;
+
+            int AddCapVertex(Vector3 localP, float u, float v)
+            {
+                Vector3 worldP = transform.TransformPoint(localP);
+                float splineY = transform.TransformPoint(centerPt).y + terrainOffset + priorityOffset;
+                if (activeTerrain != null)
+                {
+                    float groundY = activeTerrain.SampleHeight(worldP) + activeTerrain.transform.position.y;
+                    worldP.y = Mathf.Max(splineY, groundY + priorityOffset) + 0.04f;
+                }
+                else
+                {
+                    worldP.y = splineY + 0.04f;
+                }
+
+                int idx = allVertices.Count;
+                allVertices.Add(transform.InverseTransformPoint(worldP));
+                allNormals.Add(Vector3.up);
+                allUvs.Add(new Vector2(u, v));
+                return idx;
+            }
+
+            // Center vertex (Ring 3 - Asphalt center)
+            int centerVIdx = AddCapVertex(centerPt, 0.5f, baseLength * uvTiling);
+
+            // 1. LEFT HALF: Sweeps from -90° (left road edge) to 0° (front apex)
+            int[,] leftVertIndices = new int[halfSegments + 1, ringCount];
+            for (int s = 0; s <= halfSegments; s++)
+            {
+                float t = (float)s / halfSegments;
+                float angle = -Mathf.PI * 0.5f + (t * Mathf.PI * 0.5f); // -90 deg to 0 deg
+                Vector3 radialDir = (Mathf.Sin(angle) * rightDir + Mathf.Cos(angle) * forwardDir).normalized;
+
+                for (int k = 0; k < ringCount; k++)
+                {
+                    Vector3 localP = centerPt + (radialDir * radii[k]);
+                    float vOffset = Mathf.Cos(angle) * radii[k];
+                    float vCoord = (isStartCap ? (-vOffset) : (baseLength + vOffset)) * uvTiling;
+
+                    leftVertIndices[s, k] = AddCapVertex(localP, leftUOffsets[k], vCoord);
+                }
+            }
+
+            // Generate Triangles for Left Half
+            for (int s = 0; s < halfSegments; s++)
+            {
+                for (int k = 0; k < ringCount - 1; k++)
+                {
+                    int p_s_k = leftVertIndices[s, k];
+                    int p_next_k = leftVertIndices[s + 1, k];
+                    int p_s_nextK = leftVertIndices[s, k + 1];
+                    int p_next_nextK = leftVertIndices[s + 1, k + 1];
+
+                    allTriangles.Add(p_s_k);
+                    allTriangles.Add(p_next_k);
+                    allTriangles.Add(p_s_nextK);
+
+                    allTriangles.Add(p_s_nextK);
+                    allTriangles.Add(p_next_k);
+                    allTriangles.Add(p_next_nextK);
+                }
+
+                int inner_s = leftVertIndices[s, ringCount - 1];
+                int inner_next = leftVertIndices[s + 1, ringCount - 1];
+                allTriangles.Add(inner_s);
+                allTriangles.Add(inner_next);
+                allTriangles.Add(centerVIdx);
+            }
+
+            // 2. RIGHT HALF: Sweeps from 0° (front apex) to +90° (right road edge)
+            int[,] rightVertIndices = new int[halfSegments + 1, ringCount];
+            for (int s = 0; s <= halfSegments; s++)
+            {
+                float t = (float)s / halfSegments;
+                float angle = 0f + (t * Mathf.PI * 0.5f); // 0 deg to +90 deg
+                Vector3 radialDir = (Mathf.Sin(angle) * rightDir + Mathf.Cos(angle) * forwardDir).normalized;
+
+                for (int k = 0; k < ringCount; k++)
+                {
+                    Vector3 localP = centerPt + (radialDir * radii[k]);
+                    float vOffset = Mathf.Cos(angle) * radii[k];
+                    float vCoord = (isStartCap ? (-vOffset) : (baseLength + vOffset)) * uvTiling;
+
+                    rightVertIndices[s, k] = AddCapVertex(localP, rightUOffsets[k], vCoord);
+                }
+            }
+
+            // Generate Triangles for Right Half
+            for (int s = 0; s < halfSegments; s++)
+            {
+                for (int k = 0; k < ringCount - 1; k++)
+                {
+                    int p_s_k = rightVertIndices[s, k];
+                    int p_next_k = rightVertIndices[s + 1, k];
+                    int p_s_nextK = rightVertIndices[s, k + 1];
+                    int p_next_nextK = rightVertIndices[s + 1, k + 1];
+
+                    allTriangles.Add(p_s_k);
+                    allTriangles.Add(p_next_k);
+                    allTriangles.Add(p_s_nextK);
+
+                    allTriangles.Add(p_s_nextK);
+                    allTriangles.Add(p_next_k);
+                    allTriangles.Add(p_next_nextK);
+                }
+
+                int inner_s = rightVertIndices[s, ringCount - 1];
+                int inner_next = rightVertIndices[s + 1, ringCount - 1];
+                allTriangles.Add(inner_s);
+                allTriangles.Add(inner_next);
+                allTriangles.Add(centerVIdx);
+            }
+        }
+        // ==========================================
+        // STYLE B: SQUARE CAP (Düz Perpendicular Kapama)
+        // ==========================================
+        else if (endCapStyle == RoadEndCapStyle.SquareCap)
+        {
+            float swWidth = roadWidth * swFrac;
+            float curbWidth = roadWidth * curbFrac;
+            float extDepth = Mathf.Max(swWidth * 1.5f, 1.2f);
+
+            // Corner positions in local space
+            Vector3 leftBack = centerPt - (rightDir * halfWidth);
+            Vector3 rightBack = centerPt + (rightDir * halfWidth);
+            Vector3 leftFront = leftBack + (forwardDir * extDepth);
+            Vector3 rightFront = rightBack + (forwardDir * extDepth);
+
+            Vector3 leftBackInner = centerPt - (rightDir * (halfWidth - curbWidth));
+            Vector3 rightBackInner = centerPt + (rightDir * (halfWidth - curbWidth));
+            Vector3 leftFrontInner = leftBackInner + (forwardDir * (extDepth - curbWidth));
+            Vector3 rightFrontInner = rightBackInner + (forwardDir * (extDepth - curbWidth));
+
+            int AddCapVertex(Vector3 localPos, float u, float v)
+            {
+                Vector3 worldP = transform.TransformPoint(localPos);
+                float splineY = transform.TransformPoint(centerPt).y + terrainOffset + priorityOffset;
+                if (activeTerrain != null)
+                {
+                    float groundY = activeTerrain.SampleHeight(worldP) + activeTerrain.transform.position.y;
+                    worldP.y = Mathf.Max(splineY, groundY + priorityOffset) + 0.04f;
+                }
+                else
+                {
+                    worldP.y = splineY + 0.04f;
+                }
+                int idx = allVertices.Count;
+                allVertices.Add(transform.InverseTransformPoint(worldP));
+                allNormals.Add(Vector3.up);
+                allUvs.Add(new Vector2(u, v));
+                return idx;
+            }
+
+            float vBase = baseLength * uvTiling;
+            float vExt = (isStartCap ? (-extDepth) : (baseLength + extDepth)) * uvTiling;
+            float vExtInner = (isStartCap ? (-extDepth + curbWidth) : (baseLength + extDepth - curbWidth)) * uvTiling;
+
+            int vLB = AddCapVertex(leftBack, 0.0f, vBase);
+            int vRB = AddCapVertex(rightBack, 1.0f, vBase);
+            int vLF = AddCapVertex(leftFront, 0.0f, vExt);
+            int vRF = AddCapVertex(rightFront, 1.0f, vExt);
+
+            int vLBI = AddCapVertex(leftBackInner, curbFrac, vBase);
+            int vRBI = AddCapVertex(rightBackInner, 1.0f - curbFrac, vBase);
+            int vLFI = AddCapVertex(leftFrontInner, curbFrac, vExtInner);
+            int vRFI = AddCapVertex(rightFrontInner, 1.0f - curbFrac, vExtInner);
+
+            // Left sidewalk border
+            allTriangles.Add(vLB); allTriangles.Add(vLF); allTriangles.Add(vLBI);
+            allTriangles.Add(vLBI); allTriangles.Add(vLF); allTriangles.Add(vLFI);
+
+            // Front sidewalk border
+            allTriangles.Add(vLF); allTriangles.Add(vRF); allTriangles.Add(vLFI);
+            allTriangles.Add(vLFI); allTriangles.Add(vRF); allTriangles.Add(vRFI);
+
+            // Right sidewalk border
+            allTriangles.Add(vRFI); allTriangles.Add(vRF); allTriangles.Add(vRBI);
+            allTriangles.Add(vRBI); allTriangles.Add(vRF); allTriangles.Add(vRB);
+
+            // Center Asphalt Interior
+            allTriangles.Add(vLBI); allTriangles.Add(vLFI); allTriangles.Add(vRBI);
+            allTriangles.Add(vRBI); allTriangles.Add(vLFI); allTriangles.Add(vRFI);
+        }
+    }
+
+    /// <summary>
     /// Segment-Bounded Distance Buffer + 5th-Order SmootherStep:
     /// Keskin hatları sıfırlayan, kasma ve donma yapmayan ultra hızlı (1-2 ms) pürüzsüz arazi deformasyonu.
     /// </summary>
@@ -384,11 +727,20 @@ public class SplineRoadBuilder : MonoBehaviour
         float minWX = float.MaxValue, maxWX = float.MinValue;
         float minWZ = float.MaxValue, maxWZ = float.MinValue;
 
-        foreach (var branch in branches)
+        for (int b = 0; b < branches.Count; b++)
         {
+            var branch = branches[b];
             if (branch.waypoints.Count < 2) continue;
             List<Vector3> samples = GenerateSplineSamples(branch.waypoints, 1.0f);
             List<Vector3> worldPts = new List<Vector3>();
+
+            // Include Start Cap in terrain deformation if marked as Round
+            if (branch.IsPointRoundCapped(0) && endCapStyle != RoadEndCapStyle.FlatOpen && samples.Count >= 2)
+            {
+                Vector3 fwd = (samples[1] - samples[0]).normalized;
+                Vector3 startCapLocal = samples[0] - (fwd * (roadWidth * 0.5f));
+                worldPts.Add(transform.TransformPoint(startCapLocal));
+            }
 
             foreach (var s in samples)
             {
@@ -399,6 +751,20 @@ public class SplineRoadBuilder : MonoBehaviour
                 if (w.z < minWZ) minWZ = w.z;
                 if (w.z > maxWZ) maxWZ = w.z;
             }
+
+            // Include End Cap in terrain deformation if marked as Round
+            if (branch.IsPointRoundCapped(branch.waypoints.Count - 1) && endCapStyle != RoadEndCapStyle.FlatOpen && samples.Count >= 2)
+            {
+                Vector3 fwd = (samples[samples.Count - 1] - samples[samples.Count - 2]).normalized;
+                Vector3 endCapLocal = samples[samples.Count - 1] + (fwd * (roadWidth * 0.5f));
+                Vector3 w = transform.TransformPoint(endCapLocal);
+                worldPts.Add(w);
+                if (w.x < minWX) minWX = w.x;
+                if (w.x > maxWX) maxWX = w.x;
+                if (w.z < minWZ) minWZ = w.z;
+                if (w.z > maxWZ) maxWZ = w.z;
+            }
+
             branchSamples.Add(worldPts);
         }
 
