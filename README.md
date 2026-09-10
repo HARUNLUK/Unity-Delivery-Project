@@ -88,11 +88,11 @@ graph TD
   - *Tier 4:* 18 Daily Parcels ($550 Daily Rent)
 - **Comprehensive Daily Ledger (`DaySummaryManager.cs`):** Itemized breakdown of base delivery earnings, speed bonuses, damaged cargo fees, lost package penalties, and operating rent.
 
-### 5. 🚗 Autonomous AI Traffic & Spline Roads ([Full Documentation](Docs/Traffic_and_Road_System.md))
+### 5. 🚗 Autonomous AI Traffic & Spline Roads ([Full Documentation](../Docs/07_Spline_Yol_ve_AI_Trafik_Sistemi.md))
 - **Spline Road & Sidewalk Generator (`SplineRoadBuilder.cs`):** Multi-branch procedural spline roads with Catmull-Rom smoothing, seamless cross-width UV tiling (`tileAcrossWidth`), and customizable road caps (RoundedCap / SquareCap / Open).
 - **Dynamic AI Traffic Manager (`SplineTrafficManager.cs`):** High-performance proximity bubble spawning (35m–280m), automated junction linking, and zero-allocation object pooling.
 - **Multi-Point Laser Raycast Collision Grid (`AITrafficVehicle.cs`):** 10-point forward laser array with a 3.8m hard physical safety barrier to guarantee zero vehicle clipping/interpenetration.
-- **Cubic Bézier Junction Turning & Cul-de-Sac Arcs:** Early turn anticipation (4.5m–8.5m in advance) with cubic ease-in-out steering and 180° forward U-turn loops at dead ends.
+- **Constant Speed & Bézier Junction Turning:** Steady cruising speed (`cruiseSpeed`) across waypoints, turns, and roads with early turn anticipation (4.5m–8.5m in advance) and 180° forward U-turn loops at dead ends.
 - **Anti-Jam Recovery:** Motionless 10-second auto-despawn with player character and drivable vehicle immunity.
 
 ### 6. 🛠️ Custom Unity Editor Tooling (`Tools ➔ Delivery Game`)

@@ -2005,7 +2005,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
       propertyPath: explosiveRequiredLevel
-      value: 1
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
       propertyPath: packagePrefabs.Array.size

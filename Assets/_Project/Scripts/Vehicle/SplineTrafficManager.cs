@@ -526,7 +526,7 @@ public class SplineTrafficManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Checks for leading vehicles on the same lane or directly ahead in physical space
+    /// Checks for leading vehicles on the same lane along the spline curve
     /// to guarantee collision-free following without tailgating or overlapping.
     /// </summary>
     public float GetDistanceToLeadingVehicle(
@@ -537,57 +537,20 @@ public class SplineTrafficManager : MonoBehaviour
         float maxScanDistance)
     {
         float closestDist = maxScanDistance;
-        if (queryingVehicle == null) return closestDist;
-
-        Vector3 queryingPos = queryingVehicle.transform.position;
-        Vector3 queryingForward = queryingVehicle.transform.forward;
+        if (queryingVehicle == null || branch == null) return closestDist;
 
         for (int i = 0; i < activeVehicles.Count; i++)
         {
             var other = activeVehicles[i];
             if (other == null || other == queryingVehicle) continue;
 
-            // 1. Same branch and same lane check (accurate along curved spline)
+            // Same branch and same lane check (accurate metric distance along curved spline)
             if (other.CurrentBranch == branch && other.isReverseLane == isReverse)
             {
                 float distAlong = other.currentDistanceAlongPath - currentDist;
                 if (distAlong > 0.05f && distAlong < closestDist)
                 {
                     closestDist = distAlong;
-                }
-            }
-            else if (other.CurrentBranch != branch)
-            {
-                // 2. Physical 3D distance check ONLY for vehicles on DIFFERENT branches (crossroads/junctions)
-                Vector3 toOther = other.transform.position - queryingPos;
-                float sqrDist = toOther.sqrMagnitude;
-                if (sqrDist < maxScanDistance * maxScanDistance && sqrDist > 0.01f)
-                {
-                    // Check if other vehicle is in front (forward cone ~50 degrees)
-                    if (Vector3.Dot(toOther.normalized, queryingForward) > 0.65f)
-                    {
-                        float d = Mathf.Sqrt(sqrDist);
-                        if (d < closestDist)
-                        {
-                            closestDist = d;
-                        }
-                    }
-                }
-            }
-        }
-
-        // 3. Player Proximity Check
-        Vector3 playerPos = GetPlayerOrCameraPosition();
-        Vector3 toPlayer = playerPos - queryingPos;
-        float sqrPlayerDist = toPlayer.sqrMagnitude;
-        if (sqrPlayerDist < maxScanDistance * maxScanDistance && sqrPlayerDist > 0.01f)
-        {
-            if (Vector3.Dot(toPlayer.normalized, queryingForward) > 0.35f)
-            {
-                float d = Mathf.Sqrt(sqrPlayerDist);
-                if (d < closestDist)
-                {
-                    closestDist = d;
                 }
             }
         }

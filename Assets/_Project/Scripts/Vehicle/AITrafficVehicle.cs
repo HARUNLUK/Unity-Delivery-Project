@@ -191,7 +191,8 @@ public class AITrafficVehicle : MonoBehaviour
         currentDistanceAlongPath = startDistance;
         isReverseLane = reverse;
         cruiseSpeed = speed;
-        currentSpeed = speed * 0.8f; // Start with good initial cruising speed
+        currentSpeed = speed; // Constant cruising speed immediately upon spawn
+        targetSpeed = speed;
         activeBranchName = branch != null ? branch.branchName : "";
         isStunnedByCollision = false;
         stunTimer = 0f;
@@ -432,6 +433,8 @@ public class AITrafficVehicle : MonoBehaviour
             isReverseLane = targetIsReverse;
             laneOffset = targetLaneOffset;
             activeBranchName = targetBranch.branchName;
+            currentSpeed = cruiseSpeed;
+            targetSpeed = cruiseSpeed;
             return;
         }
 
@@ -451,11 +454,11 @@ public class AITrafficVehicle : MonoBehaviour
         bezierP1 = bezierP0 + (startForward * handleLen);
         bezierP2 = bezierP3 - (endForward * handleLen);
 
-        // Smoothly decelerate into the turn in advance
-        float turnSpeed = Mathf.Clamp(currentSpeed * 0.65f, 3.2f, 5.2f);
-        float approxCurveLen = Mathf.Max(3.0f, chordLen * 1.15f);
+        // Maintain constant cruising speed without artificial slowdown during path/point transitions
+        float turnSpeed = cruiseSpeed;
+        float approxCurveLen = Mathf.Max(2.0f, chordLen * 1.15f);
 
-        junctionTransitionDuration = Mathf.Max(0.7f, approxCurveLen / turnSpeed);
+        junctionTransitionDuration = Mathf.Max(0.2f, approxCurveLen / Mathf.Max(1.0f, turnSpeed));
         junctionTransitionProgress = 0f;
         isTransitioningJunction = true;
 
@@ -463,7 +466,7 @@ public class AITrafficVehicle : MonoBehaviour
         pendingBranchDistance = entryDist;
         pendingIsReverse = targetIsReverse;
         currentSpeed = turnSpeed;
-        targetSpeed = turnSpeed;
+        targetSpeed = cruiseSpeed;
         activeBranchName = $"➔ {targetBranch.branchName}";
     }
 
@@ -472,8 +475,8 @@ public class AITrafficVehicle : MonoBehaviour
         junctionTransitionProgress += Time.deltaTime;
         float t = Mathf.Clamp01(junctionTransitionProgress / Mathf.Max(0.1f, junctionTransitionDuration));
 
-        // Smooth cubic ease-in-out for natural cornering curvature
-        float smoothT = t * t * (3f - 2f * t);
+        // Uniform linear progress (no ease-in/ease-out slowdown at waypoint/junction points!)
+        float smoothT = t;
 
         // Cubic Bezier interpolation
         Vector3 p01 = Vector3.Lerp(bezierP0, bezierP1, smoothT);
@@ -505,7 +508,8 @@ public class AITrafficVehicle : MonoBehaviour
             isReverseLane = pendingIsReverse;
             laneOffset = currentBranch.roadWidth * 0.25f;
             activeBranchName = currentBranch.branchName;
-            targetSpeed = cruiseSpeed; // Accelerate smoothly back to cruising speed
+            currentSpeed = cruiseSpeed;
+            targetSpeed = cruiseSpeed; // Maintain constant cruising speed
         }
     }
 
@@ -520,6 +524,8 @@ public class AITrafficVehicle : MonoBehaviour
             isReverseLane = !isReverseLane;
             currentDistanceAlongPath = 0.5f;
             isPerformingUTurn = false;
+            currentSpeed = cruiseSpeed;
+            targetSpeed = cruiseSpeed;
             return;
         }
 
@@ -538,13 +544,13 @@ public class AITrafficVehicle : MonoBehaviour
         uTurnRight = Vector3.Cross(Vector3.up, uTurnForward).normalized;
         uTurnRadius = Mathf.Max(1.5f, laneOffset);
         uTurnLength = Mathf.PI * uTurnRadius;
-        currentSpeed = Mathf.Min(currentSpeed, 3.5f);
-        targetSpeed = 3.5f;
+        currentSpeed = cruiseSpeed;
+        targetSpeed = cruiseSpeed;
     }
 
     private void UpdateCulDeSacUTurn()
     {
-        float arcSpeed = Mathf.Max(1.5f, currentSpeed);
+        float arcSpeed = cruiseSpeed;
         uTurnProgress += (arcSpeed * Time.deltaTime) / Mathf.Max(1.0f, uTurnLength);
 
         float theta = Mathf.Clamp01(uTurnProgress) * Mathf.PI; // 0 to 180 degrees
@@ -583,7 +589,8 @@ public class AITrafficVehicle : MonoBehaviour
             isPerformingUTurn = false;
             isReverseLane = uTurnIsAtEnd ? true : false;
             currentDistanceAlongPath = 0.5f;
-            currentSpeed = 3.5f;
+            currentSpeed = cruiseSpeed;
+            targetSpeed = cruiseSpeed;
         }
     }
 
@@ -640,7 +647,7 @@ public class AITrafficVehicle : MonoBehaviour
             var r = rays[i];
             if (Physics.Raycast(r.origin, r.direction, out RaycastHit hit, r.maxDistance, obstacleLayers, QueryTriggerInteraction.Ignore))
             {
-                if (IsOwnCollider(hit.collider) || IsRoadOrTerrainCollider(hit.collider) || IsOppositeLaneVehicle(hit.collider)) continue;
+                if (!IsValidObstacleHit(hit)) continue;
 
                 hitObstacle = true;
                 if (hit.distance < closestDist)
@@ -657,7 +664,7 @@ public class AITrafficVehicle : MonoBehaviour
             }
         }
 
-        // 2. DIRECT SPLINE SAFE FOLLOWING DISTANCE (Maintains accurate distance along spline curvature)
+        // 2. DIRECT SPLINE SAFE FOLLOWING DISTANCE (Maintains accurate distance along spline curvature in same lane)
         if (trafficManager != null)
         {
             float leadingVehicleDist = trafficManager.GetDistanceToLeadingVehicle(this, currentBranch, isReverseLane, currentDistanceAlongPath, sensorDistance);
@@ -750,7 +757,7 @@ public class AITrafficVehicle : MonoBehaviour
         isObstacleDetected = hitObstacle;
         isPlayerInFront = hitPlayer;
 
-        // 5. SPEED CONTROL & ABSOLUTE ANTI-CLIPPING CLAMP
+        // 6. SPEED CONTROL & ABSOLUTE ANTI-CLIPPING CLAMP
         if (hitObstacle)
         {
             if (closestDist <= hardStopDistance)
@@ -766,17 +773,56 @@ public class AITrafficVehicle : MonoBehaviour
             else if (closestDist <= slowDistance)
             {
                 float t = Mathf.Clamp01((closestDist - stopDistance) / (slowDistance - stopDistance));
-                targetSpeed = Mathf.Lerp(0f, cruiseSpeed * 0.65f, t * t); // Progressive deceleration
+                targetSpeed = Mathf.Lerp(0f, cruiseSpeed * 0.7f, t); // Progressive deceleration
             }
             else
             {
-                targetSpeed = cruiseSpeed * 0.85f;
+                targetSpeed = cruiseSpeed;
             }
         }
         else
         {
+            // Pure constant cruising speed along roads and waypoint paths
             targetSpeed = cruiseSpeed;
         }
+    }
+
+    /// <summary>
+    /// Validates if a raycast hit represents an actual obstacle in the driving lane.
+    /// Excludes road meshes, terrain, sidewalks, curbs, and roadside scenery so cars maintain constant speed.
+    /// </summary>
+    private bool IsValidObstacleHit(RaycastHit hit)
+    {
+        Collider col = hit.collider;
+        if (col == null) return false;
+
+        // 1. Ignore own vehicle colliders
+        if (IsOwnCollider(col)) return false;
+
+        // 2. Ignore terrain, road, ground, sidewalk surface or slope
+        if (IsRoadOrTerrainCollider(col, hit.normal)) return false;
+
+        // 3. Ignore vehicles in the opposite lane traveling normally
+        if (IsOppositeLaneVehicle(col)) return false;
+
+        // 4. Vehicles & Player are always real obstacles
+        if (col.GetComponentInParent<AITrafficVehicle>() != null) return true;
+        if (col.GetComponentInParent<FPSPlayerController>() != null || col.CompareTag("Player")) return true;
+        if (col.GetComponentInParent<DrivableVehicle>() != null || col.GetComponentInParent<CarController>() != null) return true;
+
+        // 5. Movable dynamic physics objects
+        Rigidbody rb = col.GetComponentInParent<Rigidbody>();
+        if (rb != null && !rb.isKinematic) return true;
+
+        // 6. Explicit obstacle names
+        string colName = col.gameObject.name.ToLower();
+        if (colName.Contains("obstacle") || colName.Contains("barrier") || colName.Contains("blockade") || colName.Contains("trafficcone"))
+        {
+            return true;
+        }
+
+        // Static roadside environment objects (buildings, trees, lamp posts, fences, rocks) are not obstacles
+        return false;
     }
 
     private bool IsOppositeLaneVehicle(Collider col)
@@ -794,12 +840,26 @@ public class AITrafficVehicle : MonoBehaviour
         return false;
     }
 
-    private bool IsRoadOrTerrainCollider(Collider col)
+    private bool IsRoadOrTerrainCollider(Collider col, Vector3 hitNormal)
     {
         if (col == null) return true;
+
+        // If ray hits horizontal or inclined ground/road surface (slope normal pointing upward), ignore it
+        if (Vector3.Dot(hitNormal, Vector3.up) > 0.45f) return true;
+
         if (col.GetComponentInParent<SplineRoadBuilder>() != null) return true;
         if (col.GetComponent<TerrainCollider>() != null) return true;
-        if (col is MeshCollider meshCol && meshCol.sharedMesh != null && meshCol.sharedMesh.name.Contains("Road")) return true;
+        if (col.GetComponent<Terrain>() != null) return true;
+
+        string colName = col.gameObject.name.ToLower();
+        if (colName.Contains("road") || colName.Contains("terrain") || colName.Contains("ground") || colName.Contains("sidewalk") || colName.Contains("yol") || colName.Contains("asphalt") || colName.Contains("kaldirim") || colName.Contains("curb")) return true;
+
+        if (col is MeshCollider meshCol && meshCol.sharedMesh != null)
+        {
+            string meshName = meshCol.sharedMesh.name.ToLower();
+            if (meshName.Contains("road") || meshName.Contains("terrain") || meshName.Contains("ground") || meshName.Contains("sidewalk") || meshName.Contains("yol") || meshName.Contains("asphalt")) return true;
+        }
+
         return false;
     }
 
@@ -903,7 +963,7 @@ public class AITrafficVehicle : MonoBehaviour
             var r = rays[i];
             if (Physics.Raycast(r.origin, r.direction, out RaycastHit hit, r.maxDistance, obstacleLayers, QueryTriggerInteraction.Ignore))
             {
-                if (!IsOwnCollider(hit.collider) && !IsRoadOrTerrainCollider(hit.collider) && !IsOppositeLaneVehicle(hit.collider))
+                if (IsValidObstacleHit(hit))
                 {
                     Gizmos.color = Color.red;
                     Gizmos.DrawLine(r.origin, hit.point);
