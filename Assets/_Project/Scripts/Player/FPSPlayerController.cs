@@ -1066,6 +1066,36 @@ public class FPSPlayerController : MonoBehaviour
         if (cameraHolder != null) cameraHolder.localRotation = Quaternion.identity;
     }
 
+    /// <summary>
+    /// Called when an explosive cargo detonates near the player. Drops held items, shows emergency notification and triggers hospital day end.
+    /// </summary>
+    public void TriggerExplosionCasualty(Vector3 explosionOrigin)
+    {
+        if (grabber != null && grabber.IsHoldingObject)
+        {
+            grabber.ReleaseObject(Vector3.up * 3f + (transform.position - explosionOrigin).normalized * 5f);
+        }
+
+        if (InteractionPromptHUD.Instance != null)
+        {
+            InteractionPromptHUD.Instance.ShowPrompt("<color=#FF2222>💥 PATLAMA! Ağır yaralandınız ve acilen hastaneye kaldırıldınız...</color>", 6.0f);
+        }
+
+        if (DaySummaryManager.Instance != null)
+        {
+            DaySummaryManager.Instance.emergencyHospitalReason = "Kargo patlaması nedeniyle ağır yaralanma (Hastaneye Kaldırıldı)";
+        }
+
+        if (DayTimeManager.Instance != null)
+        {
+            DayTimeManager.Instance.EndShift();
+        }
+        else if (DaySummaryManager.Instance != null)
+        {
+            DaySummaryManager.Instance.ShowDaySummary();
+        }
+    }
+
     public static void LockCursor(bool locked)
     {
         Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;

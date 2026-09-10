@@ -19,6 +19,9 @@ public class DaySummaryManager : MonoBehaviour
     public GameObject historyItemTemplate;
     public Button restartDayButton;
 
+    [Header("--- EMERGENCY / HOSPITAL STATUS ---")]
+    public string emergencyHospitalReason = "";
+
     private bool isDayFinalized = false;
 
     private void Awake()
@@ -164,7 +167,17 @@ public class DaySummaryManager : MonoBehaviour
         int totalVault = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.TotalSavedBalance : netProfit;
 
         // 5. Populate UI Text Elements
-        if (totalDeliveredText != null) totalDeliveredText.text = $"Total Packages Today: {totalCount}";
+        if (totalDeliveredText != null)
+        {
+            if (!string.IsNullOrEmpty(emergencyHospitalReason))
+            {
+                totalDeliveredText.text = $"<color=#FF3333>🚨 ACİL DURUM:</color> {emergencyHospitalReason}\nTotal Packages Today: {totalCount}";
+            }
+            else
+            {
+                totalDeliveredText.text = $"Total Packages Today: {totalCount}";
+            }
+        }
         
         string correctText = $"[+] Correct Deliveries: {correctCount} (+${totalReward - passiveIncome})";
         if (passiveIncome > 0)
@@ -227,7 +240,8 @@ public class DaySummaryManager : MonoBehaviour
             {
                 string statusLabel = "";
                 string typeBadge = res.cargoType == CargoType.Standard ? "" : 
-                    (res.cargoType == CargoType.Express && res.package != null ? $" [EXPRESS {res.package.GetFormattedTargetDeliveryTime()}]" : $" [{res.cargoType.ToString().ToUpper()}]");
+                    (res.cargoType == CargoType.Express && res.package != null ? $" [EXPRESS {res.package.GetFormattedTargetDeliveryTime()}]" : 
+                    (res.cargoType == CargoType.Explosive ? " [EXPLOSIVE 🔥]" : $" [{res.cargoType.ToString().ToUpper()}]"));
 
                 if (res.status == CargoDeliveryStatus.Correct)
                 {
@@ -237,7 +251,9 @@ public class DaySummaryManager : MonoBehaviour
                 }
                 else if (res.status == CargoDeliveryStatus.Broken)
                 {
-                    statusLabel = "<color=#FF2222>[BROKEN FRAGILE]</color>";
+                    statusLabel = res.cargoType == CargoType.Explosive 
+                        ? "<color=#FF2222>[EXPLODED HAZARD]</color>" 
+                        : "<color=#FF2222>[BROKEN FRAGILE]</color>";
                 }
                 else if (res.status == CargoDeliveryStatus.WrongAddress)
                 {

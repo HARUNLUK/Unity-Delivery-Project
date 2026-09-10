@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
@@ -47,7 +48,8 @@ public class PhysicalCargoPackage : MonoBehaviour
     [Header("--- FRAGILE & EXPRESS SPECS ---")]
     public float health = 100f;
     public float targetDeliveryHour = 13.0f; // Delivery bonus cutoff time (e.g. 13:00)
-    public bool isBroken => health <= 0f;
+    public bool isExploded = false;
+    public bool isBroken => health <= 0f || isExploded;
     public bool hasBeenHandledByPlayer = false;
     public bool isBeingCarried = false; // Prevents wall/door friction damage while held!
     
@@ -65,10 +67,12 @@ public class PhysicalCargoPackage : MonoBehaviour
     private float spawnImmunityUntil = 0f;
     private float lastDamageTime = 0f;
 
-    [Header("--- VISUAL COMPONENTS ---")]
+    [Header("--- VISUAL COMPONENTS & VFX ---")]
     public MeshRenderer boxRenderer;
     public TextMeshPro labelText;
     public GameObject shippingLabel;
+    [Tooltip("Custom explosion particle effect prefab (drag particle prefab from Asset Store or Project, or leave empty for procedural effect)")]
+    public GameObject explosionVfxPrefab;
 
     private Rigidbody rb;
     private BoxCollider col;
@@ -112,6 +116,11 @@ public class PhysicalCargoPackage : MonoBehaviour
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             rb.interpolation = RigidbodyInterpolation.Interpolate;
         }
+
+        if (isCustomPrefab)
+        {
+            FitColliderToMeshBounds();
+        }
     }
 
     public string GetFormattedTargetDeliveryTime()
@@ -151,6 +160,12 @@ public class PhysicalCargoPackage : MonoBehaviour
             deliveryReward = Mathf.RoundToInt(deliveryReward * 1.8f);
             xpReward = Mathf.RoundToInt(xpReward * 1.6f);
         }
+        else if (cargoType == CargoType.Explosive)
+        {
+            deliveryReward = Mathf.RoundToInt(deliveryReward * 2.8f); // Very high reward
+            wrongPenalty = Mathf.Max(10, Mathf.RoundToInt(wrongPenalty * 0.25f)); // Very low penalty for unfulfilled explosive
+            xpReward = Mathf.RoundToInt(xpReward * 2.5f);
+        }
 
         if (cargoData == null)
         {
@@ -176,9 +191,13 @@ public class PhysicalCargoPackage : MonoBehaviour
         {
             ApplyRandomDimensionsAndColor(customMaterial);
         }
-        else if (customMaterial != null && boxRenderer != null)
+        else
         {
-            boxRenderer.material = customMaterial;
+            if (customMaterial != null && boxRenderer != null)
+            {
+                boxRenderer.material = customMaterial;
+            }
+            FitColliderToMeshBounds();
         }
 
         BuildShippingLabel();
@@ -186,7 +205,7 @@ public class PhysicalCargoPackage : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (cargoType != CargoType.Fragile || isBroken) return;
+        if ((cargoType != CargoType.Fragile && cargoType != CargoType.Explosive) || isBroken || isExploded) return;
         if (isBeingCarried) return; // Never take damage while held by player!
         if (Time.time < spawnImmunityUntil) return; // Do not take damage during initial spawn settling (3.5s)
         if (Time.time - lastDamageTime < damageCooldown) return; // Cooldown to prevent multi-hit bounce/rolling frame spam
@@ -224,13 +243,152 @@ public class PhysicalCargoPackage : MonoBehaviour
 
             if (isBroken)
             {
-                Debug.LogWarning($"<color=#FF4444>[PhysicalCargoPackage] FRAGILE CARGO BROKEN! Hit: '{collision.gameObject.name}', Impact: {impactSpeed:F1} m/s (Damage: -{damage:F0} HP)</color>");
+                if (cargoType == CargoType.Explosive)
+                {
+                    Explode();
+                }
+                else
+                {
+                    Debug.LogWarning($"<color=#FF4444>[PhysicalCargoPackage] FRAGILE CARGO BROKEN! Hit: '{collision.gameObject.name}', Impact: {impactSpeed:F1} m/s (Damage: -{damage:F0} HP)</color>");
+                }
             }
             else
             {
-                Debug.Log($"<color=#FFAA00>[PhysicalCargoPackage] Fragile Cargo Damaged! Hit: '{collision.gameObject.name}', Impact: {impactSpeed:F1} m/s, Damage: -{damage:F0} HP (Health: {health:F0}/100)</color>");
+                string tag = cargoType == CargoType.Explosive ? "EXPLOSIVE STABILITY COMPROMISED!" : "Fragile Cargo Damaged!";
+                Debug.Log($"<color=#FFAA00>[PhysicalCargoPackage] {tag} Hit: '{collision.gameObject.name}', Impact: {impactSpeed:F1} m/s, Damage: -{damage:F0} HP (Health: {health:F0}/100)</color>");
             }
         }
+    }
+
+    [ContextMenu("Trigger Explosion (Dev)")]
+    public void Explode()
+    {
+        if (isExploded) return;
+        isExploded = true;
+        health = 0f;
+
+        Vector3 explosionPos = transform.position;
+        float blastRadius = 8.0f;
+        float explosionForce = 20000f;
+
+        Debug.LogWarning($"<color=#FF2222>💥💥 [PhysicalCargoPackage] EXPLOSION DETONATED at {explosionPos}! 💥💥</color>");
+
+        // 1. Release from player grabber if currently held
+        PhysicsGrabber grabber = Object.FindAnyObjectByType<PhysicsGrabber>();
+        if (grabber != null && (grabber.grabbedRb == rb || isBeingCarried))
+        {
+            grabber.ReleaseObject();
+        }
+
+        // 2. Spawn visual explosion effect & light flash
+        if (explosionVfxPrefab != null)
+        {
+            GameObject vfx = Instantiate(explosionVfxPrefab, explosionPos, Quaternion.identity);
+            Destroy(vfx, 5.0f);
+        }
+        else
+        {
+            CreateExplosionVFX(explosionPos);
+        }
+
+        // 3. Blast Physics on Rigidbodies
+        Collider[] colliders = Physics.OverlapSphere(explosionPos, blastRadius);
+        HashSet<DrivableVehicle> hitVehicles = new HashSet<DrivableVehicle>();
+
+        foreach (var hit in colliders)
+        {
+            if (hit == null || hit.gameObject == gameObject) continue;
+
+            Rigidbody targetRb = hit.attachedRigidbody;
+            if (targetRb != null && targetRb != rb)
+            {
+                targetRb.AddExplosionForce(explosionForce, explosionPos, blastRadius, 1.2f, ForceMode.Impulse);
+            }
+
+            // Check if vehicle was hit
+            DrivableVehicle v = hit.GetComponentInParent<DrivableVehicle>();
+            if (v != null && !hitVehicles.Contains(v))
+            {
+                hitVehicles.Add(v);
+            }
+        }
+
+        // 4. Vehicle catastrophic zero-condition damage
+        foreach (var v in hitVehicles)
+        {
+            v.ApplyExplosionDirectHit(explosionPos, explosionForce, blastRadius);
+        }
+
+        // 5. Player Damage / Casualty Check (if in radius 6.5m or was holding)
+        FPSPlayerController player = FPSPlayerController.Instance != null ? FPSPlayerController.Instance : Object.FindAnyObjectByType<FPSPlayerController>();
+        if (player != null)
+        {
+            float distToPlayer = Vector3.Distance(player.transform.position, explosionPos);
+            Camera playerCam = player.playerCamera != null ? player.playerCamera : Camera.main;
+            if (playerCam != null)
+            {
+                float camDist = Vector3.Distance(playerCam.transform.position, explosionPos);
+                if (camDist < distToPlayer) distToPlayer = camDist;
+            }
+
+            if (isBeingCarried || distToPlayer <= 6.5f)
+            {
+                player.TriggerExplosionCasualty(explosionPos);
+            }
+        }
+
+        // 6. Disable visual mesh and collider of this cargo
+        if (boxRenderer != null) boxRenderer.enabled = false;
+        if (col != null) col.enabled = false;
+        if (shippingLabel != null) shippingLabel.SetActive(false);
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+            rb.linearVelocity = Vector3.zero;
+        }
+
+        if (InteractionPromptHUD.Instance != null)
+        {
+            InteractionPromptHUD.Instance.HideHeldCargoInfo();
+        }
+    }
+
+    private void CreateExplosionVFX(Vector3 pos)
+    {
+        // Point light flash
+        GameObject lightObj = new GameObject("ExplosionLight");
+        lightObj.transform.position = pos;
+        Light expLight = lightObj.AddComponent<Light>();
+        expLight.type = LightType.Point;
+        expLight.color = new Color(1.0f, 0.45f, 0.1f);
+        expLight.range = 18f;
+        expLight.intensity = 10f;
+        Destroy(lightObj, 0.5f);
+
+        // Expanding Fiery Shockwave Sphere
+        GameObject shockwave = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        shockwave.name = "ExplosionShockwave";
+        shockwave.transform.position = pos;
+        shockwave.transform.localScale = Vector3.one * 0.5f;
+
+        Collider sc = shockwave.GetComponent<Collider>();
+        if (sc != null) Destroy(sc);
+
+        Renderer sRen = shockwave.GetComponent<Renderer>();
+        if (sRen != null)
+        {
+            Material fireMat = CreateLitMaterial(new Color(1f, 0.35f, 0.05f, 0.85f), 0.9f);
+            if (fireMat.HasProperty("_EmissionColor"))
+            {
+                fireMat.EnableKeyword("_EMISSION");
+                fireMat.SetColor("_EmissionColor", new Color(1f, 0.4f, 0.1f) * 2f);
+            }
+            sRen.material = fireMat;
+        }
+
+        ExplosionShockwaveAnim anim = shockwave.AddComponent<ExplosionShockwaveAnim>();
+        anim.maxRadius = 6.5f;
+        anim.duration = 0.55f;
     }
 
     private void ApplyRandomDimensionsAndColor(Material customMaterial = null)
@@ -252,7 +410,11 @@ public class PhysicalCargoPackage : MonoBehaviour
         chosenSize.z *= Random.Range(0.92f, 1.08f);
 
         transform.localScale = chosenSize;
-        if (col != null) col.size = Vector3.one;
+        if (col != null)
+        {
+            col.center = Vector3.zero;
+            col.size = Vector3.one;
+        }
 
         // 2. Realistic Color or Custom Material
         if (boxRenderer != null)
@@ -269,34 +431,171 @@ public class PhysicalCargoPackage : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Computes the exact combined bounding box of all meshes in this object and its children,
+    /// and configures BoxCollider.center and BoxCollider.size to perfectly wrap the 3D crate model.
+    /// </summary>
+    [ContextMenu("Fit Collider To Mesh Bounds")]
+    public void FitColliderToMeshBounds()
+    {
+        if (col == null) col = GetComponent<BoxCollider>();
+        if (col == null) col = gameObject.AddComponent<BoxCollider>();
+
+        Renderer[] allRenderers = GetComponentsInChildren<Renderer>(true);
+        List<Renderer> validRenderers = new List<Renderer>();
+
+        foreach (var r in allRenderers)
+        {
+            if (r == null || !r.enabled) continue;
+            if (r is ParticleSystemRenderer || r is TrailRenderer || r is LineRenderer) continue;
+            if (shippingLabel != null && (r.transform == shippingLabel.transform || r.transform.IsChildOf(shippingLabel.transform))) continue;
+            if (r.name.Contains("Label") || r.name.Contains("Sticker") || r.name.Contains("Shockwave")) continue;
+            validRenderers.Add(r);
+        }
+
+        if (validRenderers.Count > 0)
+        {
+            Bounds localBounds = CalculateAccurateLocalBounds(validRenderers);
+            col.center = localBounds.center;
+            col.size = new Vector3(
+                Mathf.Max(0.1f, localBounds.size.x),
+                Mathf.Max(0.1f, localBounds.size.y),
+                Mathf.Max(0.1f, localBounds.size.z)
+            );
+        }
+        else
+        {
+            col.center = Vector3.zero;
+            col.size = Vector3.one;
+        }
+    }
+
+    private Bounds CalculateAccurateLocalBounds(List<Renderer> renderers)
+    {
+        bool initialized = false;
+        Vector3 min = Vector3.zero;
+        Vector3 max = Vector3.zero;
+
+        foreach (var r in renderers)
+        {
+            MeshFilter mf = r.GetComponent<MeshFilter>();
+            if (mf != null && mf.sharedMesh != null)
+            {
+                Mesh m = mf.sharedMesh;
+                Bounds mb = m.bounds;
+                Transform t = r.transform;
+
+                Vector3[] localCorners = new Vector3[]
+                {
+                    new Vector3(mb.min.x, mb.min.y, mb.min.z),
+                    new Vector3(mb.max.x, mb.min.y, mb.min.z),
+                    new Vector3(mb.min.x, mb.max.y, mb.min.z),
+                    new Vector3(mb.max.x, mb.max.y, mb.min.z),
+                    new Vector3(mb.min.x, mb.min.y, mb.max.z),
+                    new Vector3(mb.max.x, mb.min.y, mb.max.z),
+                    new Vector3(mb.min.x, mb.max.y, mb.max.z),
+                    new Vector3(mb.max.x, mb.max.y, mb.max.z)
+                };
+
+                foreach (var c in localCorners)
+                {
+                    Vector3 worldPoint = t.TransformPoint(c);
+                    Vector3 rootLocalPoint = transform.InverseTransformPoint(worldPoint);
+
+                    if (!initialized)
+                    {
+                        min = rootLocalPoint;
+                        max = rootLocalPoint;
+                        initialized = true;
+                    }
+                    else
+                    {
+                        min = Vector3.Min(min, rootLocalPoint);
+                        max = Vector3.Max(max, rootLocalPoint);
+                    }
+                }
+            }
+            else
+            {
+                Bounds rb = r.bounds;
+                Vector3 worldMin = rb.min;
+                Vector3 worldMax = rb.max;
+
+                Vector3[] worldCorners = new Vector3[]
+                {
+                    new Vector3(worldMin.x, worldMin.y, worldMin.z),
+                    new Vector3(worldMax.x, worldMin.y, worldMin.z),
+                    new Vector3(worldMin.x, worldMax.y, worldMin.z),
+                    new Vector3(worldMax.x, worldMax.y, worldMin.z),
+                    new Vector3(worldMin.x, worldMin.y, worldMax.z),
+                    new Vector3(worldMax.x, worldMin.y, worldMax.z),
+                    new Vector3(worldMin.x, worldMax.y, worldMax.z),
+                    new Vector3(worldMax.x, worldMax.y, worldMax.z)
+                };
+
+                foreach (var c in worldCorners)
+                {
+                    Vector3 rootLocalPoint = transform.InverseTransformPoint(c);
+                    if (!initialized)
+                    {
+                        min = rootLocalPoint;
+                        max = rootLocalPoint;
+                        initialized = true;
+                    }
+                    else
+                    {
+                        min = Vector3.Min(min, rootLocalPoint);
+                        max = Vector3.Max(max, rootLocalPoint);
+                    }
+                }
+            }
+        }
+
+        if (!initialized)
+        {
+            return new Bounds(Vector3.zero, Vector3.one);
+        }
+
+        Vector3 center = (min + max) * 0.5f;
+        Vector3 size = max - min;
+        return new Bounds(center, size);
+    }
+
     private void BuildShippingLabel()
     {
         if (shippingLabel != null) Destroy(shippingLabel);
 
         // Dynamically compute the top surface position and dimensions
         float topY = 0.505f;
+        float posX = 0f;
+        float posZ = 0f;
         float labelScaleX = 0.85f;
         float labelScaleZ = 0.75f;
 
         if (col != null)
         {
+            posX = col.center.x;
+            posZ = col.center.z;
             topY = col.center.y + (col.size.y * 0.5f) + 0.005f;
-            labelScaleX = Mathf.Clamp(col.size.x * 0.75f, 0.25f, 1.2f);
-            labelScaleZ = Mathf.Clamp(col.size.z * 0.65f, 0.25f, 1.2f);
+            labelScaleX = Mathf.Clamp(col.size.x * 0.75f, 0.15f, 2.5f);
+            labelScaleZ = Mathf.Clamp(col.size.z * 0.65f, 0.15f, 2.5f);
         }
         else if (boxRenderer != null)
         {
             Vector3 topWorld = boxRenderer.bounds.center + new Vector3(0f, boxRenderer.bounds.extents.y + 0.005f, 0f);
-            topY = transform.InverseTransformPoint(topWorld).y;
+            Vector3 localTop = transform.InverseTransformPoint(topWorld);
+            posX = localTop.x;
+            topY = localTop.y;
+            posZ = localTop.z;
             Vector3 localExtents = transform.InverseTransformVector(boxRenderer.bounds.extents);
-            labelScaleX = Mathf.Clamp(Mathf.Abs(localExtents.x) * 1.5f, 0.25f, 1.2f);
-            labelScaleZ = Mathf.Clamp(Mathf.Abs(localExtents.z) * 1.3f, 0.25f, 1.2f);
+            labelScaleX = Mathf.Clamp(Mathf.Abs(localExtents.x) * 1.5f, 0.15f, 2.5f);
+            labelScaleZ = Mathf.Clamp(Mathf.Abs(localExtents.z) * 1.3f, 0.15f, 2.5f);
         }
 
         // White shipping label sticker on top of the box
         shippingLabel = new GameObject("ShippingLabel");
         shippingLabel.transform.SetParent(transform, false);
-        shippingLabel.transform.localPosition = new Vector3(0f, topY, 0f);
+        shippingLabel.transform.localPosition = new Vector3(posX, topY, posZ);
         shippingLabel.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
         shippingLabel.transform.localScale = new Vector3(labelScaleX, labelScaleZ, 1f);
 
@@ -316,6 +615,7 @@ public class PhysicalCargoPackage : MonoBehaviour
             Color labelBgColor = new Color(0.96f, 0.96f, 0.94f);
             if (cargoType == CargoType.Fragile) labelBgColor = new Color(1.0f, 0.92f, 0.88f); // Soft peach/red tint
             else if (cargoType == CargoType.Express) labelBgColor = new Color(0.88f, 0.96f, 1.0f); // Soft cyan tint
+            else if (cargoType == CargoType.Explosive) labelBgColor = new Color(1.0f, 0.82f, 0.62f); // Warning hazard orange tint
 
             quadRenderer.material = CreateLitMaterial(labelBgColor, 0.05f);
         }
@@ -352,13 +652,19 @@ public class PhysicalCargoPackage : MonoBehaviour
         string shortAddress = TruncateWithEllipsis(targetAddressName, 18);
 
         string badge = "";
-        if (isBroken) badge = "<color=#FF2222>[BROKEN / DAMAGED]</color>\n";
+        if (isExploded) badge = "<color=#FF0000>[💥 EXPLODED / DESTROYED]</color>\n";
+        else if (isBroken) badge = "<color=#FF2222>[BROKEN / DAMAGED]</color>\n";
         else if (cargoType == CargoType.Fragile)
         {
             if (health < 100f) badge = $"<color=#FF5500>[FRAGILE {Mathf.CeilToInt(health)}%]</color>\n";
             else badge = "<color=#FF5500>[FRAGILE]</color>\n";
         }
         else if (cargoType == CargoType.Express) badge = $"<color=#0088FF>[EXPRESS - {GetFormattedTargetDeliveryTime()}]</color>\n";
+        else if (cargoType == CargoType.Explosive)
+        {
+            if (health < 100f) badge = $"<color=#FF3300>[EXPLOSIVE 🔥 STABILITY {Mathf.CeilToInt(health)}%]</color>\n";
+            else badge = "<color=#FF3300>[EXPLOSIVE - DANGER 🔥]</color>\n";
+        }
 
         labelText.text = $"{badge}{shortRecipient}\n<size=85%>{shortAddress}</size>";
     }
@@ -451,11 +757,11 @@ public class PhysicalCargoPackage : MonoBehaviour
 
             if (isMatch)
             {
-                if (isBroken)
+                if (isBroken || isExploded)
                 {
                     result.status = CargoDeliveryStatus.Broken;
                     float fragileMult = InsuranceAgencyManager.Instance != null ? InsuranceAgencyManager.Instance.GetFragilePenaltyMultiplier() : 1.0f;
-                    result.moneyChange = -Mathf.RoundToInt(wrongPenalty * 2 * fragileMult); // Broken fragile penalty with insurance discount
+                    result.moneyChange = -Mathf.RoundToInt(wrongPenalty * fragileMult);
                     result.xpAwarded = 0;
                 }
                 else
@@ -491,12 +797,47 @@ public class PhysicalCargoPackage : MonoBehaviour
         }
         else
         {
-            result.actualAddress = "Undelivered (Vehicle / Street)";
-            result.status = CargoDeliveryStatus.Undelivered;
+            result.actualAddress = isExploded ? "Exploded & Destroyed" : "Undelivered (Vehicle / Street)";
+            result.status = isExploded ? CargoDeliveryStatus.Broken : CargoDeliveryStatus.Undelivered;
             result.moneyChange = -wrongPenalty;
             result.xpAwarded = 0;
         }
 
         return result;
+    }
+}
+
+public class ExplosionShockwaveAnim : MonoBehaviour
+{
+    public float maxRadius = 6.5f;
+    public float duration = 0.55f;
+    private float elapsed = 0f;
+    private Renderer rend;
+    private Material mat;
+
+    private void Awake()
+    {
+        rend = GetComponent<Renderer>();
+        if (rend != null) mat = rend.material;
+    }
+
+    private void Update()
+    {
+        elapsed += Time.deltaTime;
+        float t = Mathf.Clamp01(elapsed / duration);
+        float currentScale = Mathf.Lerp(0.5f, maxRadius, Mathf.Sin(t * Mathf.PI * 0.5f));
+        transform.localScale = Vector3.one * currentScale;
+
+        if (mat != null)
+        {
+            Color c = mat.color;
+            c.a = Mathf.Lerp(0.85f, 0f, t);
+            mat.color = c;
+        }
+
+        if (t >= 1f)
+        {
+            Destroy(gameObject);
+        }
     }
 }

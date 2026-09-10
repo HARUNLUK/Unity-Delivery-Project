@@ -5,7 +5,8 @@ public enum CargoType
 {
     Standard,
     Fragile,
-    Express
+    Express,
+    Explosive
 }
 
 [System.Serializable]

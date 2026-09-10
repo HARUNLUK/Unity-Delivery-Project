@@ -773,6 +773,11 @@ public class InteractionPromptHUD : MonoBehaviour
                 case CargoType.Express:
                     heldCargoTypeText.text = $"<color=#32FFFF>[EXPRESS] (Before {pkg.GetFormattedTargetDeliveryTime()} +40% Bonus)</color>";
                     break;
+                case CargoType.Explosive:
+                    heldCargoTypeText.text = pkg.isBroken ?
+                        "<color=#FF2222>💥 [EXPLOSIVE] (DETONATED / DESTROYED)</color>" :
+                        $"<color=#FF5500>🔥 [EXPLOSIVE HAZARD] (Stability: {pkg.health:F0}%)</color>";
+                    break;
                 default:
                     heldCargoTypeText.text = "<color=#AAAAAA>[STANDARD PARCEL]</color>";
                     break;

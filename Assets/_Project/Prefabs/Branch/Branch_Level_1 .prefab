@@ -1980,6 +1980,34 @@ PrefabInstance:
       value: 1.62
       objectReference: {fileID: 0}
     - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: explosiveMaxScale
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: explosiveMinScale
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: explosionVfxPrefab
+      value: 
+      objectReference: {fileID: 1685874166552172, guid: 2dc5347a44240ea4597cafb2d1d7c160, type: 3}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: explosiveFixedScale
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: explosiveRandomScale
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: explosiveSpawnWeight
+      value: 53.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: explosiveRequiredLevel
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
       propertyPath: packagePrefabs.Array.size
       value: 2
       objectReference: {fileID: 0}
@@ -2027,6 +2055,14 @@ PrefabInstance:
       propertyPath: fragilePackagePrefabs.Array.size
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: explosivePackagePrefabs.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 338979060814389765, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
+      propertyPath: 'explosivePackagePrefabs.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2312464536136728569, guid: 99368022048a8304ca1f6f31f3dac4c5, type: 3}
     - target: {fileID: 1540539102297366380, guid: 02c0ba12a30e14f4c95913a7e17dde4a, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.03

@@ -433,6 +433,39 @@ public class DrivableVehicle : MonoBehaviour
     }
 
     /// <summary>
+    /// Applies catastrophic explosion damage to vehicle: zeroes condition completely and puts engine into Limp Mode.
+    /// </summary>
+    public void ApplyExplosionDirectHit(Vector3 explosionOrigin, float explosionForce = 12000f, float explosionRadius = 8f)
+    {
+        currentCondition = 0f;
+
+        if (carController != null)
+        {
+            carController.SetConditionRatio(0f);
+        }
+
+        PlayerPrefs.SetFloat(CONDITION_SAVE_PREFIX + EffectiveVehicleId, 0f);
+        PlayerPrefs.Save();
+
+        if (rb != null)
+        {
+            rb.AddExplosionForce(explosionForce, explosionOrigin, explosionRadius, 1.2f, ForceMode.Impulse);
+        }
+
+        if (InteractionPromptHUD.Instance != null)
+        {
+            if (isPlayerInside)
+            {
+                bool isLow = currentFuel < (maxFuel * 0.18f);
+                InteractionPromptHUD.Instance.UpdateVehicleHUD(currentFuel, maxFuel, isLow, currentCondition, maxCondition);
+            }
+            InteractionPromptHUD.Instance.ShowPrompt("<color=#FF2222>💥 [PATLAMA HASARI] Araç ağır hasar aldı! Motor kondisyonu %0. Oto serviste tamir ettirin!</color>", 4.5f);
+        }
+
+        Debug.LogWarning($"<color=#FF2222>[DrivableVehicle] EXPLOSION HIT! Vehicle '{EffectiveVehicleId}' condition set to 0%.</color>");
+    }
+
+    /// <summary>
     /// Adds fuel to tank and saves state.
     /// </summary>
     public void Refuel(float liters)

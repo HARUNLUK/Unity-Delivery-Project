@@ -34,6 +34,11 @@ public class CargoWarehouseGenerator : MonoBehaviour
     [Range(0f, 100f), Tooltip("Express cargo spawn weight / probability")]
     public float expressSpawnWeight = 20f;
 
+    [Tooltip("Minimum player level required for Explosive cargo")]
+    public int explosiveRequiredLevel = 3;
+    [Range(0f, 100f), Tooltip("Explosive cargo spawn weight / probability")]
+    public float explosiveSpawnWeight = 20f;
+
     [Header("--- EXPRESS CARGO TIME LIMIT ---")]
     [Tooltip("Minimum target delivery hour for Express cargo (e.g. 10.0 = 10:00)")]
     public float minExpressDeliveryHour = 10.0f;
@@ -58,7 +63,10 @@ public class CargoWarehouseGenerator : MonoBehaviour
     [Tooltip("Spawn immunity duration (seconds).")]
     public float fragileSpawnImmunityDuration = 3.5f;
 
-    [Header("--- CUSTOM CARGO PACKAGE PREFABS ---")]
+    [Header("--- DEFAULT & CUSTOM CARGO PACKAGE PREFABS ---")]
+    [Tooltip("Primary default cargo box prefab (Fallback used if specific lists are empty)")]
+    public GameObject cargoPackagePrefab;
+
     [Tooltip("Custom 3D Prefabs for standard packages (drag prefabs from project)")]
     public List<GameObject> packagePrefabs = new List<GameObject>();
 
@@ -68,15 +76,63 @@ public class CargoWarehouseGenerator : MonoBehaviour
     [Tooltip("Custom 3D Prefabs for express packages")]
     public List<GameObject> expressPackagePrefabs = new List<GameObject>();
 
-    [Header("--- PREFAB SCALE MULTIPLIER ---")]
-    [Tooltip("Minimum scale multiplier for prefabs (e.g. 0.35 = 35% size)")]
-    public float minPrefabScale = 0.35f;
+    [Tooltip("Custom 3D Prefabs for explosive packages")]
+    public List<GameObject> explosivePackagePrefabs = new List<GameObject>();
 
-    [Tooltip("Maximum scale multiplier for prefabs (e.g. 0.55 = 55% size)")]
-    public float maxPrefabScale = 0.55f;
+    [Header("--- EXPLOSION VFX PREFAB ---")]
+    [Tooltip("Custom explosion particle effect prefab (drag prefab from project or leave empty for procedural effect)")]
+    public GameObject explosionVfxPrefab;
+
+    [Header("--- PREFAB SCALE MULTIPLIER PER CARGO TYPE ---")]
+    [Tooltip("Apply scale multiplier to custom 3D prefabs")]
+    public bool enablePrefabScaling = true;
 
     [Tooltip("Scale X, Y, Z axes independently with random multipliers")]
     public bool randomizeAxesIndependently = false;
+
+    [Header("Standard Cargo Scale")]
+    [Tooltip("If true, scales randomly between standardMinScale and standardMaxScale. If false, uses standardFixedScale.")]
+    public bool standardRandomScale = true;
+    [Range(0.05f, 2.5f), Tooltip("Fixed scale multiplier used when random scaling is disabled")]
+    public float standardFixedScale = 0.45f;
+    [Range(0.05f, 2.5f), Tooltip("Standard package minimum random scale multiplier")]
+    public float standardMinScale = 0.35f;
+    [Range(0.05f, 2.5f), Tooltip("Standard package maximum random scale multiplier")]
+    public float standardMaxScale = 0.55f;
+
+    [Header("Fragile Cargo Scale")]
+    [Tooltip("If true, scales randomly between fragileMinScale and fragileMaxScale. If false, uses fragileFixedScale.")]
+    public bool fragileRandomScale = true;
+    [Range(0.05f, 2.5f), Tooltip("Fixed scale multiplier used when random scaling is disabled")]
+    public float fragileFixedScale = 0.40f;
+    [Range(0.05f, 2.5f), Tooltip("Fragile package minimum random scale multiplier")]
+    public float fragileMinScale = 0.35f;
+    [Range(0.05f, 2.5f), Tooltip("Fragile package maximum random scale multiplier")]
+    public float fragileMaxScale = 0.50f;
+
+    [Header("Express Cargo Scale")]
+    [Tooltip("If true, scales randomly between expressMinScale and expressMaxScale. If false, uses expressFixedScale.")]
+    public bool expressRandomScale = true;
+    [Range(0.05f, 2.5f), Tooltip("Fixed scale multiplier used when random scaling is disabled")]
+    public float expressFixedScale = 0.35f;
+    [Range(0.05f, 2.5f), Tooltip("Express package minimum random scale multiplier")]
+    public float expressMinScale = 0.30f;
+    [Range(0.05f, 2.5f), Tooltip("Express package maximum random scale multiplier")]
+    public float expressMaxScale = 0.45f;
+
+    [Header("Explosive Cargo Scale")]
+    [Tooltip("If true, scales randomly between explosiveMinScale and explosiveMaxScale. If false, uses explosiveFixedScale.")]
+    public bool explosiveRandomScale = true;
+    [Range(0.05f, 2.5f), Tooltip("Fixed scale multiplier used when random scaling is disabled")]
+    public float explosiveFixedScale = 0.50f;
+    [Range(0.05f, 2.5f), Tooltip("Explosive package minimum random scale multiplier")]
+    public float explosiveMinScale = 0.40f;
+    [Range(0.05f, 2.5f), Tooltip("Explosive package maximum random scale multiplier")]
+    public float explosiveMaxScale = 0.60f;
+
+    // Backward compatibility properties
+    public float minPrefabScale { get => standardMinScale; set => standardMinScale = value; }
+    public float maxPrefabScale { get => standardMaxScale; set => standardMaxScale = value; }
 
     [Header("--- CARGO BOX MATERIALS (SKINS) ---")]
     [Tooltip("Cardboard materials for standard packages")]
@@ -87,6 +143,9 @@ public class CargoWarehouseGenerator : MonoBehaviour
 
     [Tooltip("Materials for express packages")]
     public List<Material> expressMaterials = new List<Material>();
+
+    [Tooltip("Materials for explosive packages")]
+    public List<Material> explosiveMaterials = new List<Material>();
 
     [Header("--- CURRENT ACTIVE PACKAGES ---")]
     public List<PhysicalCargoPackage> currentPackages = new List<PhysicalCargoPackage>();
@@ -178,25 +237,38 @@ public class CargoWarehouseGenerator : MonoBehaviour
                 boxObj = Instantiate(chosenPrefab, spawnPos, spawnRot);
                 isCustom = true;
 
-                // Scale multiplier applied to original prefab localScale
-                if (minPrefabScale > 0f && maxPrefabScale > 0f)
+                // Scale multiplier applied to original prefab localScale based on cargo type
+                if (enablePrefabScaling)
                 {
-                    float minS = Mathf.Min(minPrefabScale, maxPrefabScale);
-                    float maxS = Mathf.Max(minPrefabScale, maxPrefabScale);
+                    var (isRandom, fixedS, minS_raw, maxS_raw) = GetScaleSettingsForCargoType(chosenType);
                     Vector3 origScale = chosenPrefab.transform.localScale;
                     if (origScale == Vector3.zero) origScale = Vector3.one;
 
-                    if (randomizeAxesIndependently)
+                    if (isRandom)
                     {
-                        float rx = Random.Range(minS, maxS);
-                        float ry = Random.Range(minS, maxS);
-                        float rz = Random.Range(minS, maxS);
-                        boxObj.transform.localScale = new Vector3(origScale.x * rx, origScale.y * ry, origScale.z * rz);
+                        float minS = Mathf.Min(minS_raw, maxS_raw);
+                        float maxS = Mathf.Max(minS_raw, maxS_raw);
+
+                        if (minS > 0f && maxS > 0f)
+                        {
+                            if (randomizeAxesIndependently)
+                            {
+                                float rx = Random.Range(minS, maxS);
+                                float ry = Random.Range(minS, maxS);
+                                float rz = Random.Range(minS, maxS);
+                                boxObj.transform.localScale = new Vector3(origScale.x * rx, origScale.y * ry, origScale.z * rz);
+                            }
+                            else
+                            {
+                                float uniformScale = Random.Range(minS, maxS);
+                                boxObj.transform.localScale = origScale * uniformScale;
+                            }
+                        }
                     }
                     else
                     {
-                        float uniformScale = Random.Range(minS, maxS);
-                        boxObj.transform.localScale = origScale * uniformScale;
+                        float targetScale = fixedS > 0f ? fixedS : 1.0f;
+                        boxObj.transform.localScale = origScale * targetScale;
                     }
                 }
             }
@@ -221,6 +293,7 @@ public class CargoWarehouseGenerator : MonoBehaviour
             pkg.damageMultiplier = fragileDamageMultiplier;
             pkg.packageCollisionDamageRatio = fragilePackageCollisionRatio;
             pkg.spawnImmunityDuration = fragileSpawnImmunityDuration;
+            pkg.explosionVfxPrefab = explosionVfxPrefab;
             
             Material chosenMaterial = GetMaterialForCargoType(chosenType);
 
@@ -235,6 +308,34 @@ public class CargoWarehouseGenerator : MonoBehaviour
         }
 
         Debug.Log($"<color=#32FF64>[CargoWarehouseGenerator] Spawned {currentPackages.Count} packages safely at {transform.position} for Branch Level {branchLevel}!</color>");
+    }
+
+    /// <summary>
+    /// Returns scale settings (isRandom, fixedScale, minScale, maxScale) for the specified cargo type.
+    /// </summary>
+    public (bool isRandom, float fixedScale, float minScale, float maxScale) GetScaleSettingsForCargoType(CargoType type)
+    {
+        switch (type)
+        {
+            case CargoType.Fragile:
+                return (fragileRandomScale, fragileFixedScale, fragileMinScale, fragileMaxScale);
+            case CargoType.Express:
+                return (expressRandomScale, expressFixedScale, expressMinScale, expressMaxScale);
+            case CargoType.Explosive:
+                return (explosiveRandomScale, explosiveFixedScale, explosiveMinScale, explosiveMaxScale);
+            case CargoType.Standard:
+            default:
+                return (standardRandomScale, standardFixedScale, standardMinScale, standardMaxScale);
+        }
+    }
+
+    /// <summary>
+    /// Returns the scale multiplier min/max range for the specified cargo type. (Legacy helper)
+    /// </summary>
+    public (float minScale, float maxScale) GetScaleRangeForCargoType(CargoType type)
+    {
+        var settings = GetScaleSettingsForCargoType(type);
+        return (settings.minScale, settings.maxScale);
     }
 
     /// <summary>
@@ -269,11 +370,21 @@ public class CargoWarehouseGenerator : MonoBehaviour
             var valid = expressPackagePrefabs.FindAll(p => p != null);
             if (valid.Count > 0) return valid[Random.Range(0, valid.Count)];
         }
+        else if (type == CargoType.Explosive && explosivePackagePrefabs != null && explosivePackagePrefabs.Count > 0)
+        {
+            var valid = explosivePackagePrefabs.FindAll(p => p != null);
+            if (valid.Count > 0) return valid[Random.Range(0, valid.Count)];
+        }
 
         if (packagePrefabs != null && packagePrefabs.Count > 0)
         {
             var valid = packagePrefabs.FindAll(p => p != null);
             if (valid.Count > 0) return valid[Random.Range(0, valid.Count)];
+        }
+
+        if (cargoPackagePrefab != null)
+        {
+            return cargoPackagePrefab;
         }
 
         return null;
@@ -292,6 +403,11 @@ public class CargoWarehouseGenerator : MonoBehaviour
         else if (type == CargoType.Express && expressMaterials != null && expressMaterials.Count > 0)
         {
             var valid = expressMaterials.FindAll(m => m != null);
+            if (valid.Count > 0) return valid[Random.Range(0, valid.Count)];
+        }
+        else if (type == CargoType.Explosive && explosiveMaterials != null && explosiveMaterials.Count > 0)
+        {
+            var valid = explosiveMaterials.FindAll(m => m != null);
             if (valid.Count > 0) return valid[Random.Range(0, valid.Count)];
         }
 
@@ -324,6 +440,11 @@ public class CargoWarehouseGenerator : MonoBehaviour
         if (branchLevel >= expressRequiredLevel && expressSpawnWeight > 0f)
         {
             available.Add((CargoType.Express, expressSpawnWeight));
+        }
+
+        if (branchLevel >= explosiveRequiredLevel && explosiveSpawnWeight > 0f)
+        {
+            available.Add((CargoType.Explosive, explosiveSpawnWeight));
         }
 
         if (available.Count == 0)

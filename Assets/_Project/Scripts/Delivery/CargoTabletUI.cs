@@ -425,6 +425,7 @@ public class CargoTabletUI : MonoBehaviour
             string typeTag = "";
             if (pkg.cargoType == CargoType.Fragile) typeTag = " <color=#FFAA44>[FRAGILE]</color>";
             else if (pkg.cargoType == CargoType.Express) typeTag = $" <color=#33E0FF>[EXPRESS {pkg.GetFormattedTargetDeliveryTime()}]</color>";
+            else if (pkg.cargoType == CargoType.Explosive) typeTag = " <color=#FF3300>[EXPLOSIVE 🔥]</color>";
 
             string tracking = pkg.cargoData != null && !string.IsNullOrEmpty(pkg.cargoData.trackingNumber)
                 ? pkg.cargoData.trackingNumber
@@ -483,6 +484,7 @@ public class CargoTabletUI : MonoBehaviour
         string typeTag = "";
         if (pkg.cargoType == CargoType.Fragile) typeTag = " <color=#FFAA44>(Fragile)</color>";
         else if (pkg.cargoType == CargoType.Express) typeTag = $" <color=#33E0FF>(Express - Before {pkg.GetFormattedTargetDeliveryTime()} +40% Bonus)</color>";
+        else if (pkg.cargoType == CargoType.Explosive) typeTag = " <color=#FF3300>(Explosive - Extreme Danger & Huge Reward)</color>";
 
         if (trackingNumberText != null)
         {
