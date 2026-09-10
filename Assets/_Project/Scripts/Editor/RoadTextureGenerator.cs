@@ -5,7 +5,25 @@ using UnityEngine;
 
 public static class RoadTextureGenerator
 {
-    // Obsolete menu item removed (materials are generated on-demand by presets)
+    [MenuItem("Tools/Delivery Game/Regenerate Pure Sidewalk Texture", false, 65)]
+    public static void RegeneratePureSidewalkTexture()
+    {
+        string dir = "Assets/_Project/Materials/RoadStyles";
+        if (!Directory.Exists(dir))
+        {
+            dir = "Assets/Materials/RoadStyles";
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+        }
+
+        Texture2D texPureSidewalk = CreatePureSidewalkTexture();
+        SaveTexture(texPureSidewalk, $"{dir}/Tex_Road_Pure_Sidewalk.png");
+        AssetDatabase.Refresh();
+        CreateURPLitMaterial($"{dir}/Tex_Road_Pure_Sidewalk.png", $"{dir}/Mat_Road_Pure_Sidewalk.mat");
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        Debug.Log("[RoadTextureGenerator] Seamless Pure Sidewalk texture generated successfully!");
+    }
+
     public static void GenerateRoadMaterials()
     {
         string dir = "Assets/_Project/Materials/RoadStyles";
@@ -31,6 +49,10 @@ public static class RoadTextureGenerator
         Texture2D texDirt = CreateDirtRoadTexture();
         SaveTexture(texDirt, $"{dir}/Tex_Road_Mountain_Dirt.png");
 
+        // 5. PURE SIDEWALK / PEDESTRIAN WALKWAY (SADECE KALDIRIM)
+        Texture2D texPureSidewalk = CreatePureSidewalkTexture();
+        SaveTexture(texPureSidewalk, $"{dir}/Tex_Road_Pure_Sidewalk.png");
+
         AssetDatabase.Refresh();
 
         // Create Materials
@@ -38,6 +60,7 @@ public static class RoadTextureGenerator
         CreateURPLitMaterial($"{dir}/Tex_Road_City_Sidewalks.png", $"{dir}/Mat_Road_City_Sidewalks.mat");
         CreateURPLitMaterial($"{dir}/Tex_Road_City_Wide_Sidewalk.png", $"{dir}/Mat_Road_City_Wide_Sidewalk.mat");
         CreateURPLitMaterial($"{dir}/Tex_Road_Mountain_Dirt.png", $"{dir}/Mat_Road_Mountain_Dirt.mat");
+        CreateURPLitMaterial($"{dir}/Tex_Road_Pure_Sidewalk.png", $"{dir}/Mat_Road_Pure_Sidewalk.mat");
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
@@ -237,6 +260,69 @@ public static class RoadTextureGenerator
         return tex;
     }
 
+    /// <summary>
+    /// Pure Pedestrian Sidewalk / Walkway / Plaza (Sadece Kaldırım - 100% Sonsuz Dönen Kilitli Parke Taşı).
+    /// Generates a 100% seamless running-bond architectural paving tile texture that repeats infinitely across any road width without stretching.
+    /// </summary>
+    private static Texture2D CreatePureSidewalkTexture()
+    {
+        int width = 512;
+        int height = 512;
+        Texture2D tex = new Texture2D(width, height, TextureFormat.RGBA32, true);
+
+        Color concreteLight = new Color(0.79f, 0.80f, 0.81f, 1f);
+        Color concreteDark = new Color(0.69f, 0.70f, 0.71f, 1f);
+        Color jointColor = new Color(0.30f, 0.31f, 0.32f, 1f);
+
+        float numRowsY = 8f; // 8 rows high
+        float numColsX = 8f; // 8 cols wide
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                float u = (float)x / width;
+                float v = (float)y / height;
+
+                int rowIdx = Mathf.FloorToInt(v * numRowsY);
+                float xOffset = (rowIdx % 2 == 1) ? 0.5f : 0.0f; // Staggered running bond brick pattern
+
+                float tileX = Mathf.Repeat((u * numColsX) + xOffset, 1f);
+                float tileY = Mathf.Repeat(v * numRowsY, 1f);
+
+                int colIdx = Mathf.FloorToInt((u * numColsX) + xOffset);
+
+                // Deep joint grooves with bevel edge
+                bool isJoint = (tileX < 0.06f || tileY < 0.06f);
+
+                // Unique per-stone subtle shade variation
+                float stoneHash = (Mathf.Sin((rowIdx * 12.9898f) + (colIdx * 78.233f)) * 43758.5453f);
+                float stoneVariation = stoneHash - Mathf.Floor(stoneHash);
+                Color slabBase = Color.Lerp(concreteLight, concreteDark, stoneVariation * 0.45f);
+
+                // Subtle edge bevel shading
+                float edgeDistX = Mathf.Min(tileX, 1f - tileX);
+                float edgeDistY = Mathf.Min(tileY, 1f - tileY);
+                float minEdge = Mathf.Min(edgeDistX, edgeDistY);
+                if (minEdge < 0.12f && !isJoint)
+                {
+                    float bevel = Mathf.Clamp01((minEdge - 0.06f) / 0.06f);
+                    slabBase = Color.Lerp(slabBase * 0.82f, slabBase, bevel);
+                }
+
+                // Fine surface concrete grain
+                float grain = Mathf.PerlinNoise(x * 0.25f, y * 0.25f) * 0.05f;
+                slabBase = Color.Lerp(slabBase, slabBase * 0.90f, grain);
+
+                Color col = isJoint ? jointColor : slabBase;
+                tex.SetPixel(x, y, col);
+            }
+        }
+
+        tex.Apply();
+        return tex;
+    }
+
     private static void SaveTexture(Texture2D tex, string path)
     {
         byte[] bytes = tex.EncodeToPNG();
@@ -245,7 +331,10 @@ public static class RoadTextureGenerator
 
     private static void CreateURPLitMaterial(string texPath, string matPath)
     {
+        if (File.Exists(matPath)) return;
+
         Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+        if (shader == null) shader = Shader.Find("URP/Lit");
         if (shader == null) shader = Shader.Find("Standard");
 
         Material mat = new Material(shader);
@@ -259,7 +348,7 @@ public static class RoadTextureGenerator
         mat.SetFloat("_Smoothness", 0.15f);
         mat.SetFloat("_Metallic", 0.0f);
         mat.SetFloat("_Cull", 0f); // Two sided
-        mat.renderQueue = 2005;
+        mat.renderQueue = 2000;
 
         AssetDatabase.CreateAsset(mat, matPath);
     }

@@ -67,8 +67,16 @@ public class SplineRoadBuilder : MonoBehaviour
     [Range(0, 10)]
     public int renderPriority = 0;
 
-    [Tooltip("UV Texture tiling")]
+    [Header("--- TEXTURE & UV MAPPING ---")]
+    [Tooltip("UV Texture tiling along length (repeats per meter)")]
     public float uvTiling = 0.25f;
+
+    [Tooltip("If enabled, repeats the texture across the road width based on world meters, preventing stretching on wide roads/plazas/sidewalks.")]
+    public bool tileAcrossWidth = false;
+
+    [Tooltip("UV tiling multiplier across road width (1.0 = square 1:1 aspect ratio with length tiling)")]
+    [Range(0.1f, 5.0f)]
+    public float widthUvScale = 1.0f;
 
     [Header("--- ROAD END CAPS (Kaldırım & Uç Kapatma Ayarları) ---")]
     [Tooltip("End cap shape style applied to points marked as Round: RoundedCap (Yarım Daire), SquareCap (Kare)")]
@@ -363,6 +371,18 @@ public class SplineRoadBuilder : MonoBehaviour
             int branchVertexOffset = allVertices.Count;
             float currentLength = 0f;
 
+            bool shouldTileWidth = tileAcrossWidth;
+            if (!shouldTileWidth && roadMaterial != null)
+            {
+                string matName = roadMaterial.name.ToLower();
+                if (matName.Contains("pure_sidewalk") || matName.Contains("sidewalk_only") || matName.Contains("plaza") || matName.Contains("paver"))
+                {
+                    shouldTileWidth = true;
+                }
+            }
+
+            float uMax = shouldTileWidth ? (roadWidth * uvTiling * widthUvScale) : 1.0f;
+
             for (int i = 0; i < samplePoints.Count; i++)
             {
                 Vector3 pt = samplePoints[i];
@@ -409,7 +429,7 @@ public class SplineRoadBuilder : MonoBehaviour
 
                 float vCoord = currentLength * uvTiling;
                 allUvs.Add(new Vector2(0f, vCoord));
-                allUvs.Add(new Vector2(1f, vCoord));
+                allUvs.Add(new Vector2(uMax, vCoord));
 
                 if (i < samplePoints.Count - 1)
                 {
@@ -476,32 +496,106 @@ public class SplineRoadBuilder : MonoBehaviour
         float halfWidth = roadWidth * 0.5f;
         float priorityOffset = renderPriority * 0.02f;
 
-        // Sidewalk and curb thickness fractions
-        float swFrac = 0.14f;
-        float curbFrac = 0.16f;
-
-        if (roadMaterial != null)
+        bool shouldTileWidth = tileAcrossWidth;
+        if (!shouldTileWidth && roadMaterial != null)
         {
             string matName = roadMaterial.name.ToLower();
-            if (matName.Contains("wide"))
+            if (matName.Contains("pure_sidewalk") || matName.Contains("sidewalk_only") || matName.Contains("plaza") || matName.Contains("paver"))
             {
-                swFrac = 0.22f;
-                curbFrac = 0.245f;
+                shouldTileWidth = true;
             }
-            else if (matName.Contains("dirt"))
+        }
+
+        float swFrac = 0.14f;
+        float curbFrac = 0.16f;
+        if (roadMaterial != null && roadMaterial.name.Contains("Wide"))
+        {
+            swFrac = 0.22f;
+            curbFrac = 0.245f;
+        }
+
+        int AddCapVertex(Vector3 localP, float u, float v)
+        {
+            Vector3 worldP = transform.TransformPoint(localP);
+            float splineY = transform.TransformPoint(centerPt).y + terrainOffset + priorityOffset;
+            if (activeTerrain != null)
             {
-                swFrac = 0.10f;
-                curbFrac = 0.15f;
+                float groundY = activeTerrain.SampleHeight(worldP) + activeTerrain.transform.position.y;
+                worldP.y = Mathf.Max(splineY, groundY + priorityOffset) + 0.04f;
             }
-            else if (matName.Contains("striped"))
+            else
             {
-                swFrac = 0.06f;
-                curbFrac = 0.08f;
+                worldP.y = splineY + 0.04f;
+            }
+
+            int idx = allVertices.Count;
+            allVertices.Add(transform.InverseTransformPoint(worldP));
+            allNormals.Add(Vector3.up);
+
+            if (shouldTileWidth)
+            {
+                float uProj = (Vector3.Dot(localP - centerPt, rightDir) + halfWidth) * uvTiling * widthUvScale;
+                float vDist = Vector3.Dot(localP - centerPt, forwardDir);
+                float vProj = (isStartCap ? (baseLength - vDist) : (baseLength + vDist)) * uvTiling;
+                allUvs.Add(new Vector2(uProj, vProj));
+            }
+            else
+            {
+                allUvs.Add(new Vector2(u, v));
+            }
+            return idx;
+        }
+
+        // =========================================================================
+        // SPECIAL MODE: PURE SIDEWALK / PLAZA (100% Borderless Paving Surface)
+        // =========================================================================
+        if (shouldTileWidth)
+        {
+            if (endCapStyle == RoadEndCapStyle.RoundedCap)
+            {
+                float R = halfWidth;
+                int totalSegs = Mathf.Max(12, capSegments);
+                int centerVIdx = AddCapVertex(centerPt, halfWidth * uvTiling * widthUvScale, baseLength * uvTiling);
+
+                int[] rimVerts = new int[totalSegs + 1];
+                for (int s = 0; s <= totalSegs; s++)
+                {
+                    float t = (float)s / totalSegs;
+                    float angle = -Mathf.PI * 0.5f + (t * Mathf.PI); // -90 to +90 deg
+                    Vector3 radialDir = (Mathf.Sin(angle) * rightDir + Mathf.Cos(angle) * forwardDir).normalized;
+                    Vector3 localP = centerPt + (radialDir * R);
+                    rimVerts[s] = AddCapVertex(localP, 0, 0);
+                }
+
+                for (int s = 0; s < totalSegs; s++)
+                {
+                    allTriangles.Add(centerVIdx);
+                    allTriangles.Add(rimVerts[s]);
+                    allTriangles.Add(rimVerts[s + 1]);
+                }
+                return;
+            }
+            else if (endCapStyle == RoadEndCapStyle.SquareCap)
+            {
+                float extDepth = Mathf.Max(2.0f, resolution);
+                Vector3 leftBack = centerPt - (rightDir * halfWidth);
+                Vector3 rightBack = centerPt + (rightDir * halfWidth);
+                Vector3 leftFront = leftBack + (forwardDir * extDepth);
+                Vector3 rightFront = rightBack + (forwardDir * extDepth);
+
+                int vLB = AddCapVertex(leftBack, 0, 0);
+                int vRB = AddCapVertex(rightBack, 0, 0);
+                int vLF = AddCapVertex(leftFront, 0, 0);
+                int vRF = AddCapVertex(rightFront, 0, 0);
+
+                allTriangles.Add(vLB); allTriangles.Add(vLF); allTriangles.Add(vRB);
+                allTriangles.Add(vRB); allTriangles.Add(vLF); allTriangles.Add(vRF);
+                return;
             }
         }
 
         // =========================================================================
-        // STYLE A: 180° HALF-CIRCLE ROUND CAP (Yarım Daire - Uçta Sıfır Boşluk)
+        // STANDARD ROAD END CAPS (Asphalt + Sidewalk + Curb Rings)
         // =========================================================================
         if (endCapStyle == RoadEndCapStyle.RoundedCap)
         {
@@ -519,27 +613,6 @@ public class SplineRoadBuilder : MonoBehaviour
 
             int halfSegments = Mathf.Max(6, capSegments / 2);
             int ringCount = radii.Length;
-
-            int AddCapVertex(Vector3 localP, float u, float v)
-            {
-                Vector3 worldP = transform.TransformPoint(localP);
-                float splineY = transform.TransformPoint(centerPt).y + terrainOffset + priorityOffset;
-                if (activeTerrain != null)
-                {
-                    float groundY = activeTerrain.SampleHeight(worldP) + activeTerrain.transform.position.y;
-                    worldP.y = Mathf.Max(splineY, groundY + priorityOffset) + 0.04f;
-                }
-                else
-                {
-                    worldP.y = splineY + 0.04f;
-                }
-
-                int idx = allVertices.Count;
-                allVertices.Add(transform.InverseTransformPoint(worldP));
-                allNormals.Add(Vector3.up);
-                allUvs.Add(new Vector2(u, v));
-                return idx;
-            }
 
             // Center vertex (Ring 3 - Asphalt center)
             int centerVIdx = AddCapVertex(centerPt, 0.5f, baseLength * uvTiling);
@@ -651,26 +724,6 @@ public class SplineRoadBuilder : MonoBehaviour
             Vector3 rightBackInner = centerPt + (rightDir * (halfWidth - curbWidth));
             Vector3 leftFrontInner = leftBackInner + (forwardDir * (extDepth - curbWidth));
             Vector3 rightFrontInner = rightBackInner + (forwardDir * (extDepth - curbWidth));
-
-            int AddCapVertex(Vector3 localPos, float u, float v)
-            {
-                Vector3 worldP = transform.TransformPoint(localPos);
-                float splineY = transform.TransformPoint(centerPt).y + terrainOffset + priorityOffset;
-                if (activeTerrain != null)
-                {
-                    float groundY = activeTerrain.SampleHeight(worldP) + activeTerrain.transform.position.y;
-                    worldP.y = Mathf.Max(splineY, groundY + priorityOffset) + 0.04f;
-                }
-                else
-                {
-                    worldP.y = splineY + 0.04f;
-                }
-                int idx = allVertices.Count;
-                allVertices.Add(transform.InverseTransformPoint(worldP));
-                allNormals.Add(Vector3.up);
-                allUvs.Add(new Vector2(u, v));
-                return idx;
-            }
 
             float vBase = baseLength * uvTiling;
             float vExt = (isStartCap ? (-extDepth) : (baseLength + extDepth)) * uvTiling;

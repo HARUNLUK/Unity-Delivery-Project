@@ -65,9 +65,15 @@ public class SplineRoadBuilderEditor : Editor
         EditorGUILayout.BeginHorizontal();
 
         GUI.backgroundColor = new Color(0.5f, 0.5f, 0.5f);
-        if (GUILayout.Button("Plain Asphalt\n(No Sidewalks)", GUILayout.Height(30)))
+        if (GUILayout.Button("Plain Asphalt\n(No Sidewalks)", GUILayout.Height(34)))
         {
             ApplyStylePreset(builder, "Road_Asphalt_Material.mat", 0.25f);
+        }
+
+        GUI.backgroundColor = new Color(0.35f, 0.95f, 0.65f);
+        if (GUILayout.Button("🚶 Sadece Kaldırım\n(Pure Sidewalk / Walkway)", GUILayout.Height(34)))
+        {
+            ApplyStylePreset(builder, "Mat_Road_Pure_Sidewalk.mat", 0.25f, -1f, true);
         }
 
         EditorGUILayout.EndHorizontal();
@@ -194,7 +200,7 @@ public class SplineRoadBuilderEditor : Editor
         GUI.backgroundColor = Color.white;
     }
 
-    private void ApplyStylePreset(SplineRoadBuilder builder, string matFileName, float uvTile)
+    private void ApplyStylePreset(SplineRoadBuilder builder, string matFileName, float uvTile, float optionalWidth = -1f, bool tileWidth = false)
     {
         string path = $"Assets/_Project/Materials/RoadStyles/{matFileName}";
         Material mat = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -231,9 +237,14 @@ public class SplineRoadBuilderEditor : Editor
             Undo.RecordObject(builder, "Apply Road Style");
             builder.roadMaterial = mat;
             builder.uvTiling = uvTile;
+            builder.tileAcrossWidth = tileWidth;
+            if (optionalWidth > 0f)
+            {
+                builder.roadWidth = optionalWidth;
+            }
             builder.RebuildRoadMesh();
             EditorUtility.SetDirty(builder);
-            Debug.Log($"[SplineRoadBuilder] Applied Road Style: '{mat.name}'");
+            Debug.Log($"[SplineRoadBuilder] Applied Road Style: '{mat.name}'" + (optionalWidth > 0 ? $" (Width: {optionalWidth}m)" : "") + (tileWidth ? " (Tile Across Width: ON)" : ""));
         }
     }
 
