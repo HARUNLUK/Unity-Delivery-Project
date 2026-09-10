@@ -32,6 +32,9 @@ public class AITrafficVehicle : MonoBehaviour
     [Tooltip("Minimum hard safety distance where vehicle speed is clamped to zero to prevent any physical overlap/clipping")]
     public float hardStopDistance = 3.8f;
 
+    [Tooltip("Lateral safety corridor margin added to vehicle half-width for collision detection (meters)")]
+    public float lateralSafetyMargin = 0.22f;
+
     [Tooltip("Lateral spacing between left and right headlight rays")]
     public float raySpreadWidth = 0.75f;
 
@@ -603,7 +606,7 @@ public class AITrafficVehicle : MonoBehaviour
 
     /// <summary>
     /// Multi-point forward laser Raycast system and direct physical proximity barrier.
-    /// Eliminates all vehicle interpenetration/clipping while avoiding false alarms on road curves.
+    /// Tightly bounded to the vehicle's driving path corridor to eliminate phantom stops from diagonal/sidewalk/opposite lane objects.
     /// </summary>
     private void CheckFrontRadar()
     {
@@ -614,32 +617,38 @@ public class AITrafficVehicle : MonoBehaviour
         float forwardExtent = (boxCollider != null && boxCollider.size.z > 0.1f)
             ? (boxCollider.center.z + boxCollider.size.z * 0.5f)
             : 2.0f;
-        float halfWidth = (boxCollider != null && boxCollider.size.x > 0.1f)
-            ? (boxCollider.size.x * 0.5f * 0.85f)
-            : raySpreadWidth;
+        float carPhysicalHalfWidth = (boxCollider != null && boxCollider.size.x > 0.1f)
+            ? (boxCollider.size.x * 0.5f)
+            : (raySpreadWidth > 0.1f ? raySpreadWidth : 0.9f);
+
+        // Clearance corridor width: car width + tight safety margin
+        float corridorHalfWidth = carPhysicalHalfWidth + lateralSafetyMargin;
 
         Vector3 frontBumper = transform.position + (transform.forward * (forwardExtent - 0.05f));
         Vector3 mainOrigin = frontBumper + (Vector3.up * sensorHeight);
         Vector3 lowOrigin = frontBumper + (Vector3.up * Mathf.Max(0.25f, sensorHeight * 0.45f));
 
-        // 1. MULTI-POINT FORWARD LASER RAYCAST GRID
+        float innerRayOffset = carPhysicalHalfWidth * 0.5f;
+        float outerRayOffset = carPhysicalHalfWidth * 0.85f;
+
+        // 1. MULTI-POINT FORWARD LASER RAYCAST GRID (Tightly aligned to vehicle body width)
         LaserRay[] rays = new LaserRay[]
         {
-            // Main Headlight Level (Center, Left, Right, Wide-Left, Wide-Right)
+            // Main Headlight Level (Center, Inner-Left, Inner-Right, Outer-Left, Outer-Right)
             new LaserRay { origin = mainOrigin, direction = transform.forward, maxDistance = sensorDistance },
-            new LaserRay { origin = mainOrigin - (transform.right * halfWidth), direction = transform.forward, maxDistance = sensorDistance },
-            new LaserRay { origin = mainOrigin + (transform.right * halfWidth), direction = transform.forward, maxDistance = sensorDistance },
-            new LaserRay { origin = mainOrigin - (transform.right * (halfWidth * 1.25f)), direction = transform.forward, maxDistance = sensorDistance * 0.8f },
-            new LaserRay { origin = mainOrigin + (transform.right * (halfWidth * 1.25f)), direction = transform.forward, maxDistance = sensorDistance * 0.8f },
+            new LaserRay { origin = mainOrigin - (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance },
+            new LaserRay { origin = mainOrigin + (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance },
+            new LaserRay { origin = mainOrigin - (transform.right * outerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.9f },
+            new LaserRay { origin = mainOrigin + (transform.right * outerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.9f },
 
             // Lower Bumper Level (Catches low obstacles, sports cars, pedestrians)
             new LaserRay { origin = lowOrigin, direction = transform.forward, maxDistance = sensorDistance * 0.75f },
-            new LaserRay { origin = lowOrigin - (transform.right * (halfWidth * 0.85f)), direction = transform.forward, maxDistance = sensorDistance * 0.75f },
-            new LaserRay { origin = lowOrigin + (transform.right * (halfWidth * 0.85f)), direction = transform.forward, maxDistance = sensorDistance * 0.75f },
+            new LaserRay { origin = lowOrigin - (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.75f },
+            new LaserRay { origin = lowOrigin + (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.75f },
 
-            // Angled Lateral Feeler Rays (Detects merging cars, crossroads, junctions)
-            new LaserRay { origin = mainOrigin - (transform.right * halfWidth * 0.8f), direction = (Quaternion.Euler(0, -14f, 0) * transform.forward), maxDistance = sensorDistance * 0.6f },
-            new LaserRay { origin = mainOrigin + (transform.right * halfWidth * 0.8f), direction = (Quaternion.Euler(0, 14f, 0) * transform.forward), maxDistance = sensorDistance * 0.6f }
+            // Subtle Lateral Feeler Rays (Only 4.5 degrees, short range for tight turning clearance)
+            new LaserRay { origin = mainOrigin - (transform.right * outerRayOffset), direction = (Quaternion.Euler(0, -4.5f, 0) * transform.forward), maxDistance = 4.5f },
+            new LaserRay { origin = mainOrigin + (transform.right * outerRayOffset), direction = (Quaternion.Euler(0, 4.5f, 0) * transform.forward), maxDistance = 4.5f }
         };
 
         for (int i = 0; i < rays.Length; i++)
@@ -648,6 +657,11 @@ public class AITrafficVehicle : MonoBehaviour
             if (Physics.Raycast(r.origin, r.direction, out RaycastHit hit, r.maxDistance, obstacleLayers, QueryTriggerInteraction.Ignore))
             {
                 if (!IsValidObstacleHit(hit)) continue;
+
+                // Validate that the hit point is genuinely within the vehicle's driving corridor
+                Vector3 toHit = hit.point - transform.position;
+                float hitSide = Mathf.Abs(Vector3.Dot(toHit, transform.right));
+                if (hitSide > corridorHalfWidth) continue;
 
                 hitObstacle = true;
                 if (hit.distance < closestDist)
@@ -694,7 +708,7 @@ public class AITrafficVehicle : MonoBehaviour
                 float yDist = Mathf.Abs(toOther.y);
 
                 // If other vehicle is inside our driving corridor in front
-                if (fwdDist > 0.05f && fwdDist < 5.2f && sideDist < 2.0f && yDist < 2.5f)
+                if (fwdDist > 0.05f && fwdDist < 5.2f && sideDist <= (corridorHalfWidth + 0.15f) && yDist < 2.5f)
                 {
                     hitObstacle = true;
                     if (fwdDist < closestDist)
@@ -717,7 +731,8 @@ public class AITrafficVehicle : MonoBehaviour
             float playerSide = Mathf.Abs(Vector3.Dot(toPlayer, transform.right));
             float playerY = Mathf.Abs(toPlayer.y);
 
-            if (playerFwd > 0.1f && playerFwd < (sensorDistance + 2.0f) && playerSide < (laneOffset * 1.5f + 1.2f) && playerY < 3.5f)
+            // Only consider player if physically inside vehicle's driving path corridor (not on sidewalk or flank)
+            if (playerFwd > 0.1f && playerFwd < sensorDistance && playerSide <= (corridorHalfWidth + 0.20f) && playerY < 3.5f)
             {
                 hitObstacle = true;
                 hitPlayer = true;
@@ -741,7 +756,8 @@ public class AITrafficVehicle : MonoBehaviour
                 float carSide = Mathf.Abs(Vector3.Dot(toCar, transform.right));
                 float carY = Mathf.Abs(toCar.y);
 
-                if (carFwd > 0.1f && carFwd < (sensorDistance + 2.0f) && carSide < (laneOffset * 1.5f + 1.4f) && carY < 3.5f)
+                // Only consider if car is inside our lane/corridor directly ahead (not on sidewalk, opposite lane, or diagonal)
+                if (carFwd > 0.1f && carFwd < sensorDistance && carSide <= (corridorHalfWidth + 0.35f) && carY < 3.5f)
                 {
                     hitObstacle = true;
                     hitPlayer = true;
@@ -936,26 +952,31 @@ public class AITrafficVehicle : MonoBehaviour
         float forwardExtent = (boxCollider != null && boxCollider.size.z > 0.1f)
             ? (boxCollider.center.z + boxCollider.size.z * 0.5f)
             : 2.0f;
-        float halfWidth = (boxCollider != null && boxCollider.size.x > 0.1f)
-            ? (boxCollider.size.x * 0.5f * 0.85f)
-            : raySpreadWidth;
+        float carPhysicalHalfWidth = (boxCollider != null && boxCollider.size.x > 0.1f)
+            ? (boxCollider.size.x * 0.5f)
+            : (raySpreadWidth > 0.1f ? raySpreadWidth : 0.9f);
+
+        float corridorHalfWidth = carPhysicalHalfWidth + lateralSafetyMargin;
 
         Vector3 frontBumper = transform.position + (transform.forward * (forwardExtent - 0.05f));
         Vector3 mainOrigin = frontBumper + (Vector3.up * sensorHeight);
         Vector3 lowOrigin = frontBumper + (Vector3.up * Mathf.Max(0.25f, sensorHeight * 0.45f));
 
+        float innerRayOffset = carPhysicalHalfWidth * 0.5f;
+        float outerRayOffset = carPhysicalHalfWidth * 0.85f;
+
         LaserRay[] rays = new LaserRay[]
         {
             new LaserRay { origin = mainOrigin, direction = transform.forward, maxDistance = sensorDistance },
-            new LaserRay { origin = mainOrigin - (transform.right * halfWidth), direction = transform.forward, maxDistance = sensorDistance },
-            new LaserRay { origin = mainOrigin + (transform.right * halfWidth), direction = transform.forward, maxDistance = sensorDistance },
-            new LaserRay { origin = mainOrigin - (transform.right * (halfWidth * 1.25f)), direction = transform.forward, maxDistance = sensorDistance * 0.8f },
-            new LaserRay { origin = mainOrigin + (transform.right * (halfWidth * 1.25f)), direction = transform.forward, maxDistance = sensorDistance * 0.8f },
+            new LaserRay { origin = mainOrigin - (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance },
+            new LaserRay { origin = mainOrigin + (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance },
+            new LaserRay { origin = mainOrigin - (transform.right * outerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.9f },
+            new LaserRay { origin = mainOrigin + (transform.right * outerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.9f },
             new LaserRay { origin = lowOrigin, direction = transform.forward, maxDistance = sensorDistance * 0.75f },
-            new LaserRay { origin = lowOrigin - (transform.right * (halfWidth * 0.85f)), direction = transform.forward, maxDistance = sensorDistance * 0.75f },
-            new LaserRay { origin = lowOrigin + (transform.right * (halfWidth * 0.85f)), direction = transform.forward, maxDistance = sensorDistance * 0.75f },
-            new LaserRay { origin = mainOrigin - (transform.right * halfWidth * 0.8f), direction = (Quaternion.Euler(0, -14f, 0) * transform.forward), maxDistance = sensorDistance * 0.6f },
-            new LaserRay { origin = mainOrigin + (transform.right * halfWidth * 0.8f), direction = (Quaternion.Euler(0, 14f, 0) * transform.forward), maxDistance = sensorDistance * 0.6f }
+            new LaserRay { origin = lowOrigin - (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.75f },
+            new LaserRay { origin = lowOrigin + (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.75f },
+            new LaserRay { origin = mainOrigin - (transform.right * outerRayOffset), direction = (Quaternion.Euler(0, -4.5f, 0) * transform.forward), maxDistance = 4.5f },
+            new LaserRay { origin = mainOrigin + (transform.right * outerRayOffset), direction = (Quaternion.Euler(0, 4.5f, 0) * transform.forward), maxDistance = 4.5f }
         };
 
         for (int i = 0; i < rays.Length; i++)
@@ -965,10 +986,15 @@ public class AITrafficVehicle : MonoBehaviour
             {
                 if (IsValidObstacleHit(hit))
                 {
-                    Gizmos.color = Color.red;
-                    Gizmos.DrawLine(r.origin, hit.point);
-                    Gizmos.DrawWireSphere(hit.point, 0.15f);
-                    continue;
+                    Vector3 toHit = hit.point - transform.position;
+                    float hitSide = Mathf.Abs(Vector3.Dot(toHit, transform.right));
+                    if (hitSide <= corridorHalfWidth)
+                    {
+                        Gizmos.color = Color.red;
+                        Gizmos.DrawLine(r.origin, hit.point);
+                        Gizmos.DrawWireSphere(hit.point, 0.15f);
+                        continue;
+                    }
                 }
             }
 
@@ -978,6 +1004,6 @@ public class AITrafficVehicle : MonoBehaviour
 
         // Draw Hard Stop Safety Barrier Box
         Gizmos.color = isObstacleDetected ? Color.red : Color.green;
-        Gizmos.DrawWireCube(frontBumper + (transform.forward * (hardStopDistance * 0.5f)) + (Vector3.up * sensorHeight), new Vector3(halfWidth * 2.2f, 1.2f, hardStopDistance));
+        Gizmos.DrawWireCube(frontBumper + (transform.forward * (hardStopDistance * 0.5f)) + (Vector3.up * sensorHeight), new Vector3(corridorHalfWidth * 2.0f, 1.2f, hardStopDistance));
     }
 }
