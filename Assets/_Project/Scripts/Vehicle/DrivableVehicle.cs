@@ -29,6 +29,19 @@ public class DrivableVehicle : MonoBehaviour
     [Tooltip("If checked, this vehicle is immediately unlocked from the start (e.g. Pickup Truck)")]
     public bool isUnlockedByDefault = false;
 
+    [Tooltip("Custom fee ($) to recall this vehicle to warehouse garage. Set to -1 to use default fee from VehicleShowroomManager.")]
+    public int customRecallFee = -1;
+
+    /// <summary>
+    /// Returns the effective recall fee for this vehicle (custom if specified >= 0, otherwise showroom global default).
+    /// </summary>
+    public int GetRecallFee()
+    {
+        if (customRecallFee >= 0) return customRecallFee;
+        if (VehicleShowroomManager.Instance != null) return VehicleShowroomManager.Instance.defaultRecallFee;
+        return 150;
+    }
+
     [Header("--- FUEL & CONSUMPTION ---")]
     [Tooltip("Maximum fuel capacity in Litres")]
     public float maxFuel = 50f;

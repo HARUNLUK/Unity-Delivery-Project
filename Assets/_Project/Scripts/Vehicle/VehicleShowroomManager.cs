@@ -14,6 +14,10 @@ public class VehicleShowroomManager : MonoBehaviour
     [Tooltip("Global fallback spawn point outside the warehouse")]
     public Transform warehouseGarageSpawnPoint;
 
+    [Header("--- VEHICLE RECALL / TOW SERVICE FEE ---")]
+    [Tooltip("Default fee ($) to recall / tow any vehicle back to the warehouse garage. Can be overridden per vehicle in DrivableVehicle.")]
+    public int defaultRecallFee = 150;
+
     public static event Action OnShowroomUpdated;
 
     private void Awake()

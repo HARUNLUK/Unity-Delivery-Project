@@ -848,21 +848,44 @@ public class CargoTabletUI : MonoBehaviour
                 vehicleRecallButton.gameObject.SetActive(true);
                 vehicleRecallButton.interactable = true;
 
+                int fee = v.GetRecallFee();
+                int playerBalance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
+                bool canAfford = playerBalance >= fee || fee == 0;
+
                 Image recImg = vehicleRecallButton.GetComponent<Image>();
-                if (recImg != null) recImg.color = new Color(0.15f, 0.45f, 0.75f);
+                if (recImg != null)
+                {
+                    recImg.color = canAfford ? new Color(0.15f, 0.45f, 0.75f) : new Color(0.45f, 0.20f, 0.20f);
+                }
 
                 if (vehicleRecallButtonText != null)
                 {
-                    vehicleRecallButtonText.text = "RECALL TO WAREHOUSE GARAGE";
+                    vehicleRecallButtonText.text = fee > 0 ? $"RECALL TO GARAGE (${fee})" : "RECALL TO GARAGE (FREE)";
                 }
 
                 vehicleRecallButton.onClick.RemoveAllListeners();
                 vehicleRecallButton.onClick.AddListener(() => {
+                    int currentFee = v.GetRecallFee();
+                    int curBalance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
+
+                    if (currentFee > 0)
+                    {
+                        if (PlayerEconomyManager.Instance == null || !PlayerEconomyManager.Instance.SpendMoney(currentFee))
+                        {
+                            if (InteractionPromptHUD.Instance != null)
+                            {
+                                InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF4444>[INSUFFICIENT FUNDS] Need ${currentFee} to recall {v.vehicleName}! (Balance: ${curBalance})</color>");
+                            }
+                            return;
+                        }
+                    }
+
                     v.RecallToGarage();
                     CloseTablet();
                     if (InteractionPromptHUD.Instance != null)
                     {
-                        InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>[GARAGE RECALL] {v.vehicleName} recovered to warehouse garage!</color>");
+                        string feeMsg = currentFee > 0 ? $" (-${currentFee})" : "";
+                        InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>[GARAGE RECALL] {v.vehicleName} recovered to warehouse garage!{feeMsg}</color>");
                     }
                 });
             }
