@@ -264,7 +264,10 @@ public class DaySummaryManager : MonoBehaviour
                     statusLabel = "<color=#FFAA22>[NOT DELIVERED]</color>";
                 }
 
-                string moneyLabel = res.moneyChange >= 0 ? $"+${res.moneyChange}" : $"-${Mathf.Abs(res.moneyChange)}";
+                string moneyLabel = (res.moneyChange == 0 && res.status != CargoDeliveryStatus.Correct)
+                    ? "<color=#32FF64>$0 (Kasko Korumalı)</color>"
+                    : (res.moneyChange >= 0 ? $"+${res.moneyChange}" : $"-${Mathf.Abs(res.moneyChange)}");
+
                 rowText.text = $"{res.trackingNumber}{typeBadge} | {statusLabel} ({moneyLabel})\nRecipient: {res.recipientName} | Target: {res.targetAddress} | Landed: {res.actualAddress}";
             }
 
@@ -272,6 +275,8 @@ public class DaySummaryManager : MonoBehaviour
             {
                 if (res.status == CargoDeliveryStatus.Correct)
                     rowImg.color = new Color(0.12f, 0.38f, 0.18f, 0.9f);
+                else if (res.moneyChange == 0)
+                    rowImg.color = new Color(0.12f, 0.28f, 0.35f, 0.9f); // Insured protected tone
                 else if (res.status == CargoDeliveryStatus.Broken)
                     rowImg.color = new Color(0.55f, 0.10f, 0.10f, 0.9f);
                 else if (res.status == CargoDeliveryStatus.WrongAddress)

@@ -8,8 +8,39 @@ public class InsuranceAgencyManager : MonoBehaviour
     [Header("--- PROPERTY LINK ---")]
     public PurchasableProperty propertyComponent;
 
-    [Header("--- INSURANCE TIERS ---")]
-    [SerializeField] private int insuranceTier = 1; // 1: Basic (30%), 2: Silver (60%), 3: Gold (100%)
+    [Header("--- INSURANCE TIER UPGRADE COSTS ($) ---")]
+    [Tooltip("Upgrade cost to unlock Tier 2 (Silver Insurance)")]
+    public int tier2UpgradeCost = 3000;
+
+    [Tooltip("Upgrade cost to unlock Tier 3 (Gold Full Insurance)")]
+    public int tier3UpgradeCost = 7500;
+
+    [Header("--- TIER 1 STATS (Included with building) ---")]
+    [Range(0f, 1f), Tooltip("Penalty multiplier for broken fragile cargo (e.g. 0.70 = 30% discount)")]
+    public float tier1FragileMultiplier = 0.70f;
+    [Range(0f, 1f), Tooltip("Penalty multiplier for wrong address deliveries (1.0 = no discount)")]
+    public float tier1WrongAddressMultiplier = 1.00f;
+    [Range(0f, 1f), Tooltip("Penalty multiplier for undelivered / lost cargo at day end (1.0 = no discount)")]
+    public float tier1UndeliveredMultiplier = 1.00f;
+
+    [Header("--- TIER 2 STATS (Silver) ---")]
+    [Range(0f, 1f), Tooltip("Penalty multiplier for broken fragile cargo (e.g. 0.40 = 60% discount)")]
+    public float tier2FragileMultiplier = 0.40f;
+    [Range(0f, 1f), Tooltip("Penalty multiplier for wrong address deliveries (e.g. 0.50 = 50% discount)")]
+    public float tier2WrongAddressMultiplier = 0.50f;
+    [Range(0f, 1f), Tooltip("Penalty multiplier for undelivered / lost cargo at day end (e.g. 0.50 = 50% discount)")]
+    public float tier2UndeliveredMultiplier = 0.50f;
+
+    [Header("--- TIER 3 STATS (Gold Full Coverage) ---")]
+    [Range(0f, 1f), Tooltip("Penalty multiplier for broken fragile cargo (0.0 = 100% full coverage)")]
+    public float tier3FragileMultiplier = 0.00f;
+    [Range(0f, 1f), Tooltip("Penalty multiplier for wrong address deliveries (e.g. 0.25 = 75% discount)")]
+    public float tier3WrongAddressMultiplier = 0.25f;
+    [Range(0f, 1f), Tooltip("Penalty multiplier for undelivered / lost cargo at day end (0.0 = 100% full coverage / 0 penalty)")]
+    public float tier3UndeliveredMultiplier = 0.00f;
+
+    [Header("--- RUNTIME STATE ---")]
+    [SerializeField] private int insuranceTier = 1; // 1: Basic, 2: Silver, 3: Gold
 
     public int InsuranceTier => insuranceTier;
 
@@ -43,8 +74,27 @@ public class InsuranceAgencyManager : MonoBehaviour
 
     public bool IsAgencyUnlocked()
     {
+        if (propertyComponent == null)
+        {
+            propertyComponent = GetComponent<PurchasableProperty>();
+            if (propertyComponent == null) propertyComponent = GetComponentInParent<PurchasableProperty>();
+            if (propertyComponent == null) propertyComponent = GetComponentInChildren<PurchasableProperty>();
+            if (propertyComponent == null)
+            {
+                PurchasableProperty[] all = UnityEngine.Object.FindObjectsByType<PurchasableProperty>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                foreach (var p in all)
+                {
+                    if (p != null && (p.propertyType == PropertyType.InsuranceAgency || p.propertyId.Contains("insurance")))
+                    {
+                        propertyComponent = p;
+                        break;
+                    }
+                }
+            }
+        }
+
         if (propertyComponent != null) return propertyComponent.IsUnlocked;
-        return true;
+        return false;
     }
 
     /// <summary>
@@ -56,10 +106,10 @@ public class InsuranceAgencyManager : MonoBehaviour
 
         switch (insuranceTier)
         {
-            case 1: return 0.70f; // 30% discount
-            case 2: return 0.40f; // 60% discount
-            case 3: return 0.00f; // 100% full coverage (0 penalty!)
-            default: return 0.70f;
+            case 1: return tier1FragileMultiplier;
+            case 2: return tier2FragileMultiplier;
+            case 3: return tier3FragileMultiplier;
+            default: return tier1FragileMultiplier;
         }
     }
 
@@ -72,9 +122,25 @@ public class InsuranceAgencyManager : MonoBehaviour
 
         switch (insuranceTier)
         {
-            case 1: return 1.00f; // No wrong address coverage in tier 1
-            case 2: return 0.50f; // 50% discount on wrong address
-            case 3: return 0.25f; // 75% discount on wrong address
+            case 1: return tier1WrongAddressMultiplier;
+            case 2: return tier2WrongAddressMultiplier;
+            case 3: return tier3WrongAddressMultiplier;
+            default: return 1.00f;
+        }
+    }
+
+    /// <summary>
+    /// Returns the multiplier applied to undelivered / lost cargo penalties at day end.
+    /// </summary>
+    public float GetUndeliveredPenaltyMultiplier()
+    {
+        if (!IsAgencyUnlocked()) return 1.0f;
+
+        switch (insuranceTier)
+        {
+            case 1: return tier1UndeliveredMultiplier;
+            case 2: return tier2UndeliveredMultiplier;
+            case 3: return tier3UndeliveredMultiplier;
             default: return 1.00f;
         }
     }
@@ -83,8 +149,8 @@ public class InsuranceAgencyManager : MonoBehaviour
     {
         switch (insuranceTier)
         {
-            case 1: return 3000;
-            case 2: return 7500;
+            case 1: return tier2UpgradeCost;
+            case 2: return tier3UpgradeCost;
             default: return 0;
         }
     }
@@ -93,10 +159,19 @@ public class InsuranceAgencyManager : MonoBehaviour
     {
         switch (insuranceTier)
         {
-            case 1: return "Temel Kasko (%30 Hasar İndirimi)";
-            case 2: return "Gümüş Kasko (%60 Hasar + %50 Yanlış Adres İndirimi)";
-            case 3: return "Altın Tam Kasko (%100 Hasar Koruması)";
-            default: return "Kasko";
+            case 1:
+                int d1 = Mathf.RoundToInt((1f - tier1FragileMultiplier) * 100f);
+                return $"Temel Kasko (%{d1} Hasar İndirimi)";
+            case 2:
+                int d2Frag = Mathf.RoundToInt((1f - tier2FragileMultiplier) * 100f);
+                int d2Wrong = Mathf.RoundToInt((1f - tier2WrongAddressMultiplier) * 100f);
+                int d2Undel = Mathf.RoundToInt((1f - tier2UndeliveredMultiplier) * 100f);
+                return $"Gümüş Kasko (%{d2Frag} Hasar, %{d2Wrong} Yanlış Adres, %{d2Undel} Teslimat Koruması)";
+            case 3:
+                int d3Wrong = Mathf.RoundToInt((1f - tier3WrongAddressMultiplier) * 100f);
+                return $"Altın Tam Kasko (%100 Tam Koruma & %{d3Wrong} Yanlış Adres İndirimi)";
+            default:
+                return "Kasko";
         }
     }
 
@@ -110,7 +185,8 @@ public class InsuranceAgencyManager : MonoBehaviour
         }
 
         int nextCost = GetNextTierCost();
-        string nextTierName = insuranceTier == 1 ? "Gümüş Kasko (%60 İndirim)" : "Altın Tam Kasko (%100 Koruma)";
+        int targetTier = insuranceTier + 1;
+        string nextTierName = targetTier == 2 ? $"Gümüş Kasko (%{Mathf.RoundToInt((1f - tier2FragileMultiplier) * 100f)} İndirim)" : $"Altın Tam Kasko (%100 Koruma)";
         int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
 
         if (balance < nextCost)
@@ -135,8 +211,7 @@ public class InsuranceAgencyManager : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                string tierName = insuranceTier == 2 ? "Gümüş Kasko (%60 İndirim)" : "Altın Tam Kasko (%100 Koruma)";
-                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>🛡️ Sigorta Yükseltildi: {tierName}</color>");
+                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>🛡️ Sigorta Yükseltildi: {GetTierName()}</color>");
             }
             return true;
         }

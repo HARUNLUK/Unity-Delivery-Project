@@ -134,6 +134,13 @@ public class CommercialHubUIManager : MonoBehaviour
     public void OpenGarageWorkshopPanel(DrivableVehicle v)
     {
         if (v == null) return;
+        if (VehicleServiceGarage.Instance != null && !VehicleServiceGarage.Instance.IsGarageUnlocked())
+        {
+            if (InteractionPromptHUD.Instance != null)
+                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>Oto Servis Garajı henüz satın alınmadı veya kilitli!</color>", 2.5f);
+            return;
+        }
+
         EnsureUI();
         CloseAllPanels();
 
@@ -171,6 +178,13 @@ public class CommercialHubUIManager : MonoBehaviour
         {
             string bonusStr = tuningStage > 0 ? $"(+{(torqueMult - 1f) * 100:0}% Tork)" : "(Standart Fabrika Çıkışı)";
             garageTuningInfoText.text = $"<b>Motor Performansı:</b> Stage {tuningStage} {bonusStr}";
+        }
+
+        if (garageRepairBtn != null)
+        {
+            int repCost = VehicleServiceGarage.Instance != null ? VehicleServiceGarage.Instance.repairCost : 150;
+            TextMeshProUGUI repairTxt = garageRepairBtn.GetComponentInChildren<TextMeshProUGUI>();
+            if (repairTxt != null) repairTxt.text = $"🔧 Tamir & Bakım Yap (${repCost:N0})";
         }
 
         if (garageTuneBtn != null)
@@ -250,6 +264,7 @@ public class CommercialHubUIManager : MonoBehaviour
             insuranceBalanceText.text = $"<b>Cüzdan Bakiyeniz:</b> <color=#32FF64>${balance:N0}</color>";
         }
 
+        InsuranceAgencyManager ins = InsuranceAgencyManager.Instance;
         if (insuranceTier2UpgradeBtn != null)
         {
             TextMeshProUGUI txt = insuranceTier2UpgradeBtn.GetComponentInChildren<TextMeshProUGUI>();
@@ -260,8 +275,8 @@ public class CommercialHubUIManager : MonoBehaviour
             }
             else
             {
-                if (txt != null) txt.text = "🛡️ Gümüş Kasko Satın Al ($3.000)";
-                insuranceTier2UpgradeBtn.interactable = (balance >= 3000);
+                if (txt != null) txt.text = $"🛡️ Gümüş Kasko Satın Al (${ins.tier2UpgradeCost:N0})";
+                insuranceTier2UpgradeBtn.interactable = (balance >= ins.tier2UpgradeCost);
             }
         }
 
@@ -275,8 +290,8 @@ public class CommercialHubUIManager : MonoBehaviour
             }
             else
             {
-                if (txt != null) txt.text = "🛡️ Altın Tam Kasko Satın Al ($7.500)";
-                insuranceTier3UpgradeBtn.interactable = (tier == 2 && balance >= 7500);
+                if (txt != null) txt.text = $"🛡️ Altın Tam Kasko Satın Al (${ins.tier3UpgradeCost:N0})";
+                insuranceTier3UpgradeBtn.interactable = (tier == 2 && balance >= ins.tier3UpgradeCost);
             }
         }
     }
@@ -310,9 +325,10 @@ public class CommercialHubUIManager : MonoBehaviour
     {
         if (PassiveDispatchManager.Instance == null) return;
 
-        int level = PassiveDispatchManager.Instance.DispatchHubLevel;
-        int couriers = PassiveDispatchManager.Instance.GetCourierCount();
-        int dailyRev = PassiveDispatchManager.Instance.GetDailyPassiveRevenue();
+        PassiveDispatchManager hub = PassiveDispatchManager.Instance;
+        int level = hub.DispatchHubLevel;
+        int couriers = hub.GetCourierCount();
+        int dailyRev = hub.GetDailyPassiveRevenue();
         int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
 
         if (dispatchStatusText != null)
@@ -335,13 +351,13 @@ public class CommercialHubUIManager : MonoBehaviour
             TextMeshProUGUI txt = dispatchTier2UpgradeBtn.GetComponentInChildren<TextMeshProUGUI>();
             if (level >= 2)
             {
-                if (txt != null) txt.text = "✅ Seviye 2 Aktif (5 Kurye)";
+                if (txt != null) txt.text = $"✅ Seviye 2 Aktif ({hub.level2Couriers} Kurye)";
                 dispatchTier2UpgradeBtn.interactable = false;
             }
             else
             {
-                if (txt != null) txt.text = "📦 Seviye 2'ye Yükselt (5 Kurye - +$2.200/Gün) [$6.000]";
-                dispatchTier2UpgradeBtn.interactable = (balance >= 6000);
+                if (txt != null) txt.text = $"📦 Seviye 2'ye Yükselt ({hub.level2Couriers} Kurye - +${hub.level2DailyRevenue:N0}/Gün) [${hub.level2UpgradeCost:N0}]";
+                dispatchTier2UpgradeBtn.interactable = (balance >= hub.level2UpgradeCost);
             }
         }
 
@@ -350,13 +366,13 @@ public class CommercialHubUIManager : MonoBehaviour
             TextMeshProUGUI txt = dispatchTier3UpgradeBtn.GetComponentInChildren<TextMeshProUGUI>();
             if (level >= 3)
             {
-                if (txt != null) txt.text = "⭐ Seviye 3 Maksimum Filo (10 Kurye)";
+                if (txt != null) txt.text = $"⭐ Seviye 3 Maksimum Filo ({hub.level3Couriers} Kurye)";
                 dispatchTier3UpgradeBtn.interactable = false;
             }
             else
             {
-                if (txt != null) txt.text = "📦 Seviye 3'e Yükselt (10 Kurye - +$4.800/Gün) [$14.000]";
-                dispatchTier3UpgradeBtn.interactable = (level == 2 && balance >= 14000);
+                if (txt != null) txt.text = $"📦 Seviye 3'e Yükselt ({hub.level3Couriers} Kurye - +${hub.level3DailyRevenue:N0}/Gün) [${hub.level3UpgradeCost:N0}]";
+                dispatchTier3UpgradeBtn.interactable = (level == 2 && balance >= hub.level3UpgradeCost);
             }
         }
     }

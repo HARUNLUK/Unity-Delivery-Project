@@ -22,11 +22,23 @@ public class VehicleServiceGarage : MonoBehaviour
     [Header("--- PROPERTY LINK ---")]
     public PurchasableProperty propertyComponent;
 
-    [Header("--- GARAGE SERVICE COSTS ---")]
+    [Header("--- GARAGE SERVICE COSTS ($) ---")]
+    [Tooltip("Cost to fully repair and refuel vehicle ($)")]
     public int repairCost = 150;
-    public int stage1TuningCost = 1500;  // +15% Tork
-    public int stage2TuningCost = 3500;  // +30% Tork
-    public int stage3TuningCost = 7000;  // +50% Tork
+    [Tooltip("Cost for Stage 1 Engine Torque Tuning ($)")]
+    public int stage1TuningCost = 1500;
+    [Tooltip("Cost for Stage 2 Engine Torque Tuning ($)")]
+    public int stage2TuningCost = 3500;
+    [Tooltip("Cost for Stage 3 Engine Torque Tuning ($)")]
+    public int stage3TuningCost = 7000;
+
+    [Header("--- ENGINE TUNING TORQUE MULTIPLIERS ---")]
+    [Tooltip("Torque multiplier for Stage 1 (e.g. 1.15 = +15% Torque)")]
+    public float stage1TorqueMultiplier = 1.15f;
+    [Tooltip("Torque multiplier for Stage 2 (e.g. 1.30 = +30% Torque)")]
+    public float stage2TorqueMultiplier = 1.30f;
+    [Tooltip("Torque multiplier for Stage 3 (e.g. 1.50 = +50% Torque - MAX)")]
+    public float stage3TorqueMultiplier = 1.50f;
 
     [Header("--- GARAGE BAY TRIGGER ---")]
     [Tooltip("Trigger transform where car is placed/parked for service")]
@@ -45,8 +57,27 @@ public class VehicleServiceGarage : MonoBehaviour
 
     public bool IsGarageUnlocked()
     {
+        if (propertyComponent == null)
+        {
+            propertyComponent = GetComponent<PurchasableProperty>();
+            if (propertyComponent == null) propertyComponent = GetComponentInParent<PurchasableProperty>();
+            if (propertyComponent == null) propertyComponent = GetComponentInChildren<PurchasableProperty>();
+            if (propertyComponent == null)
+            {
+                PurchasableProperty[] all = UnityEngine.Object.FindObjectsByType<PurchasableProperty>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                foreach (var p in all)
+                {
+                    if (p != null && (p.propertyType == PropertyType.AutoServiceGarage || p.propertyId.Contains("service") || p.propertyId.Contains("garage")))
+                    {
+                        propertyComponent = p;
+                        break;
+                    }
+                }
+            }
+        }
+
         if (propertyComponent != null) return propertyComponent.IsUnlocked;
-        return true;
+        return false;
     }
 
     public Vector3 GetBayPosition()
@@ -66,7 +97,7 @@ public class VehicleServiceGarage : MonoBehaviour
 
     public bool IsVehicleInServiceBay(DrivableVehicle v)
     {
-        if (v == null) return false;
+        if (v == null || !IsGarageUnlocked()) return false;
 
         Vector3 bayPos = GetBayPosition();
         float d = Vector3.Distance(bayPos, v.transform.position);
@@ -84,6 +115,8 @@ public class VehicleServiceGarage : MonoBehaviour
 
     public DrivableVehicle FindActiveVehicleInBay()
     {
+        if (!IsGarageUnlocked()) return null;
+
         Vector3 bayPos = GetBayPosition();
         DrivableVehicle[] vehicles = UnityEngine.Object.FindObjectsByType<DrivableVehicle>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
         DrivableVehicle closest = null;
@@ -104,7 +137,7 @@ public class VehicleServiceGarage : MonoBehaviour
 
     public string GetGaragePromptForVehicle(DrivableVehicle v)
     {
-        if (v == null) return string.Empty;
+        if (v == null || !IsGarageUnlocked()) return string.Empty;
         int stage = GetVehicleTuningStage(v.vehicleId);
         int nextCost = GetTuningCostForStage(stage + 1);
         string tuneInfo = stage < 3 ? $"[T] Tork (${nextCost:N0})" : "[T] Tork: MAX";
@@ -115,7 +148,7 @@ public class VehicleServiceGarage : MonoBehaviour
 
     public void CheckGarageShortcutInputs(DrivableVehicle v)
     {
-        if (v == null) return;
+        if (v == null || !IsGarageUnlocked()) return;
 
         bool rPressed = false;
         bool tPressed = false;
@@ -149,7 +182,7 @@ public class VehicleServiceGarage : MonoBehaviour
 
     public bool TryRepairVehicle(DrivableVehicle v)
     {
-        if (v == null) return false;
+        if (v == null || !IsGarageUnlocked()) return false;
 
         if (PlayerEconomyManager.Instance != null && PlayerEconomyManager.Instance.SpendMoney(repairCost))
         {
@@ -193,16 +226,16 @@ public class VehicleServiceGarage : MonoBehaviour
     {
         switch (stage)
         {
-            case 1: return 1.15f; // +15%
-            case 2: return 1.30f; // +30%
-            case 3: return 1.50f; // +50%
+            case 1: return stage1TorqueMultiplier;
+            case 2: return stage2TorqueMultiplier;
+            case 3: return stage3TorqueMultiplier;
             default: return 1.00f;
         }
     }
 
     public bool TryTuneVehicle(DrivableVehicle v)
     {
-        if (v == null) return false;
+        if (v == null || !IsGarageUnlocked()) return false;
         int currentStage = GetVehicleTuningStage(v.vehicleId);
         if (currentStage >= 3)
         {

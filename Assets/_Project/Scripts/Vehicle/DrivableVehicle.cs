@@ -280,6 +280,7 @@ public class DrivableVehicle : MonoBehaviour
 
             // Check if vehicle is inside the Auto Service Garage bay
             bool inGarage = VehicleServiceGarage.Instance != null &&
+                            VehicleServiceGarage.Instance.IsGarageUnlocked() &&
                             VehicleServiceGarage.Instance.IsVehicleInServiceBay(this);
 
             bool isUIOpen = CommercialHubUIManager.Instance != null && CommercialHubUIManager.Instance.IsAnyPanelOpen;

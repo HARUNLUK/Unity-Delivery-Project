@@ -932,6 +932,7 @@ public class FPSPlayerController : MonoBehaviour
 
                     // Check if vehicle is in the Auto Service Garage bay
                     bool inGarageBay = VehicleServiceGarage.Instance != null &&
+                                       VehicleServiceGarage.Instance.IsGarageUnlocked() &&
                                        VehicleServiceGarage.Instance.IsVehicleInServiceBay(vehicle);
 
                     if (inGarageBay)
@@ -977,7 +978,7 @@ public class FPSPlayerController : MonoBehaviour
         }
 
         // 5. Check if standing near a vehicle inside the service garage bay without aiming directly at it
-        if (VehicleServiceGarage.Instance != null)
+        if (VehicleServiceGarage.Instance != null && VehicleServiceGarage.Instance.IsGarageUnlocked())
         {
             DrivableVehicle bayVehicle = VehicleServiceGarage.Instance.FindActiveVehicleInBay();
             if (bayVehicle != null && Vector3.Distance(transform.position, bayVehicle.transform.position) <= 6.0f)

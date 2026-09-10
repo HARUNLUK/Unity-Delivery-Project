@@ -8,7 +8,32 @@ public class PassiveDispatchManager : MonoBehaviour
     [Header("--- PROPERTY LINK ---")]
     public PurchasableProperty propertyComponent;
 
-    [Header("--- DISPATCH HUB TIERS ---")]
+    [Header("--- DISPATCH HUB UPGRADE COSTS ($) ---")]
+    [Tooltip("Upgrade cost to unlock Level 2 (5 Couriers)")]
+    public int level2UpgradeCost = 6000;
+
+    [Tooltip("Upgrade cost to unlock Level 3 (10 Couriers - Mega Hub)")]
+    public int level3UpgradeCost = 14000;
+
+    [Header("--- LEVEL 1 STATS (Included with building) ---")]
+    [Tooltip("Number of active couriers at Level 1")]
+    public int level1Couriers = 2;
+    [Tooltip("Daily passive revenue generated at Level 1 ($)")]
+    public int level1DailyRevenue = 850;
+
+    [Header("--- LEVEL 2 STATS ---")]
+    [Tooltip("Number of active couriers at Level 2")]
+    public int level2Couriers = 5;
+    [Tooltip("Daily passive revenue generated at Level 2 ($)")]
+    public int level2DailyRevenue = 2200;
+
+    [Header("--- LEVEL 3 STATS (Max) ---")]
+    [Tooltip("Number of active couriers at Level 3")]
+    public int level3Couriers = 10;
+    [Tooltip("Daily passive revenue generated at Level 3 ($)")]
+    public int level3DailyRevenue = 4800;
+
+    [Header("--- RUNTIME STATE ---")]
     [SerializeField] private int dispatchHubLevel = 1;
 
     [Header("--- TODAY'S PASSIVE REVENUE ---")]
@@ -59,42 +84,76 @@ public class PassiveDispatchManager : MonoBehaviour
 
     public bool IsHubUnlocked()
     {
+        if (propertyComponent == null)
+        {
+            propertyComponent = GetComponent<PurchasableProperty>();
+            if (propertyComponent == null) propertyComponent = GetComponentInParent<PurchasableProperty>();
+            if (propertyComponent == null) propertyComponent = GetComponentInChildren<PurchasableProperty>();
+            if (propertyComponent == null)
+            {
+                PurchasableProperty[] all = UnityEngine.Object.FindObjectsByType<PurchasableProperty>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                foreach (var p in all)
+                {
+                    if (p != null && (p.propertyType == PropertyType.LogisticsHub || p.propertyId.Contains("logistics") || p.propertyId.Contains("dispatch")))
+                    {
+                        propertyComponent = p;
+                        break;
+                    }
+                }
+            }
+        }
+
         if (propertyComponent != null) return propertyComponent.IsUnlocked;
         return false;
     }
 
     public int GetDailyPassiveRevenue()
     {
+        return GetDailyPassiveRevenueForLevel(dispatchHubLevel);
+    }
+
+    public int GetDailyPassiveRevenueForLevel(int level)
+    {
         if (!IsHubUnlocked()) return 0;
 
-        switch (dispatchHubLevel)
+        switch (level)
         {
-            case 1: return 850;   // 2 kurye
-            case 2: return 2200;  // 5 kurye
-            case 3: return 4800;  // 10 kurye
-            default: return dispatchHubLevel * 1600;
+            case 1: return level1DailyRevenue;
+            case 2: return level2DailyRevenue;
+            case 3: return level3DailyRevenue;
+            default: return level * level1DailyRevenue;
         }
     }
 
     public int GetCourierCount()
     {
+        return GetCourierCountForLevel(dispatchHubLevel);
+    }
+
+    public int GetCourierCountForLevel(int level)
+    {
         if (!IsHubUnlocked()) return 0;
 
-        switch (dispatchHubLevel)
+        switch (level)
         {
-            case 1: return 2;
-            case 2: return 5;
-            case 3: return 10;
-            default: return dispatchHubLevel * 3;
+            case 1: return level1Couriers;
+            case 2: return level2Couriers;
+            case 3: return level3Couriers;
+            default: return level * level1Couriers;
         }
     }
 
     public int GetUpgradeCost()
     {
-        switch (dispatchHubLevel)
+        return GetUpgradeCostForLevel(dispatchHubLevel + 1);
+    }
+
+    public int GetUpgradeCostForLevel(int targetLevel)
+    {
+        switch (targetLevel)
         {
-            case 1: return 6000;
-            case 2: return 14000;
+            case 2: return level2UpgradeCost;
+            case 3: return level3UpgradeCost;
             default: return 0;
         }
     }
@@ -108,10 +167,10 @@ public class PassiveDispatchManager : MonoBehaviour
             return $"<color=#32FF64>📦 Dağıtım Şubesi: MAKSİMUM SEVİYE ({GetCourierCount()} Kurye - +${GetDailyPassiveRevenue():N0}/Gün)</color>";
         }
 
-        int nextCost = GetUpgradeCost();
         int nextLevel = dispatchHubLevel + 1;
-        int nextRevenue = nextLevel == 2 ? 2200 : 4800;
-        int nextCouriers = nextLevel == 2 ? 5 : 10;
+        int nextCost = GetUpgradeCostForLevel(nextLevel);
+        int nextRevenue = GetDailyPassiveRevenueForLevel(nextLevel);
+        int nextCouriers = GetCourierCountForLevel(nextLevel);
         int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
 
         if (balance < nextCost)

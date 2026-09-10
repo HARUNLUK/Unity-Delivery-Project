@@ -797,9 +797,20 @@ public class PhysicalCargoPackage : MonoBehaviour
         }
         else
         {
-            result.actualAddress = isExploded ? "Exploded & Destroyed" : "Undelivered (Vehicle / Street)";
-            result.status = isExploded ? CargoDeliveryStatus.Broken : CargoDeliveryStatus.Undelivered;
-            result.moneyChange = -wrongPenalty;
+            result.actualAddress = isExploded ? "Exploded & Destroyed" : (isBroken ? "Broken in Transit" : "Undelivered (Vehicle / Street)");
+            result.status = (isExploded || isBroken) ? CargoDeliveryStatus.Broken : CargoDeliveryStatus.Undelivered;
+
+            if (isBroken || isExploded)
+            {
+                float fragileMult = InsuranceAgencyManager.Instance != null ? InsuranceAgencyManager.Instance.GetFragilePenaltyMultiplier() : 1.0f;
+                result.moneyChange = -Mathf.RoundToInt(wrongPenalty * fragileMult);
+            }
+            else
+            {
+                float undeliveredMult = InsuranceAgencyManager.Instance != null ? InsuranceAgencyManager.Instance.GetUndeliveredPenaltyMultiplier() : 1.0f;
+                result.moneyChange = -Mathf.RoundToInt(wrongPenalty * undeliveredMult);
+            }
+
             result.xpAwarded = 0;
         }
 
