@@ -68,6 +68,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DeliveryPoint
   pointId: Point_01
+  requiredLevel: 2
+  districtName: Maple Suburbs
+  recipientName: John Doe
   addressName: "Atat\xFCrk Cad. No: 1"
   addressDescription: Two-story suburban house with front yard and wooden fence.
   visualMarker: {fileID: 0}

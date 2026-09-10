@@ -454,7 +454,8 @@ public class PhysicalCargoPackage : MonoBehaviour
                 if (isBroken)
                 {
                     result.status = CargoDeliveryStatus.Broken;
-                    result.moneyChange = -wrongPenalty * 2; // Broken fragile penalty
+                    float fragileMult = InsuranceAgencyManager.Instance != null ? InsuranceAgencyManager.Instance.GetFragilePenaltyMultiplier() : 1.0f;
+                    result.moneyChange = -Mathf.RoundToInt(wrongPenalty * 2 * fragileMult); // Broken fragile penalty with insurance discount
                     result.xpAwarded = 0;
                 }
                 else
@@ -483,7 +484,8 @@ public class PhysicalCargoPackage : MonoBehaviour
             else
             {
                 result.status = CargoDeliveryStatus.WrongAddress;
-                result.moneyChange = -wrongPenalty;
+                float wrongMult = InsuranceAgencyManager.Instance != null ? InsuranceAgencyManager.Instance.GetWrongDeliveryPenaltyMultiplier() : 1.0f;
+                result.moneyChange = -Mathf.RoundToInt(wrongPenalty * wrongMult);
                 result.xpAwarded = 0;
             }
         }

@@ -16,6 +16,9 @@ public class CarController : MonoBehaviour
     public float turnAssistTorque = 3.5f;
     public Vector3 centerOfMassOffset = new Vector3(0, -1.0f, 0);
 
+    [Header("--- TUNING & PERFORMANCE BOOST ---")]
+    public float tuningTorqueMultiplier = 1.0f;
+
     [Header("--- HANDBRAKE & DRIFT SETTINGS ---")]
     public float driftSidewaysStiffness = 0.25f;
     public float driftYawBoost = 4.0f;
@@ -106,6 +109,21 @@ public class CarController : MonoBehaviour
             normalRearSidewaysFriction = rearLeftCollider.sidewaysFriction;
             driftRearSidewaysFriction = rearLeftCollider.sidewaysFriction;
             currentRearStiffness = normalRearSidewaysFriction.stiffness;
+        }
+
+        DrivableVehicle dv = GetComponent<DrivableVehicle>();
+        if (dv != null)
+        {
+            int stage = PlayerPrefs.GetInt("Vehicle_TuningStage_" + dv.vehicleId, 0);
+            if (stage == 1) tuningTorqueMultiplier = 1.15f;
+            else if (stage == 2) tuningTorqueMultiplier = 1.30f;
+            else if (stage >= 3) tuningTorqueMultiplier = 1.50f;
+
+            int colorIdx = PlayerPrefs.GetInt("Vehicle_ColorIdx_" + dv.vehicleId, -1);
+            if (colorIdx >= 0 && VehicleServiceGarage.Instance != null && colorIdx < VehicleServiceGarage.Instance.paintPresets.Count)
+            {
+                VehicleServiceGarage.Instance.ApplyColorToVehicle(dv, VehicleServiceGarage.Instance.paintPresets[colorIdx]);
+            }
         }
     }
 
@@ -281,11 +299,11 @@ public class CarController : MonoBehaviour
 
             if (verticalInput > 0.05f)
             {
-                motor = verticalInput * motorForce;
+                motor = verticalInput * motorForce * tuningTorqueMultiplier;
             }
             else if (verticalInput < -0.05f)
             {
-                motor = verticalInput * reverseForce;
+                motor = verticalInput * reverseForce * tuningTorqueMultiplier;
             }
             else
             {
@@ -383,6 +401,8 @@ public class CarController : MonoBehaviour
 
     private void ApplyMotorTorque(float force)
     {
+        force *= tuningTorqueMultiplier;
+
         // AWD Torque Distribution (Front wheels pull towards steering angle, preventing sluggishness)
         float frontForce = force * 0.35f;
         float rearForce = force * 0.65f;

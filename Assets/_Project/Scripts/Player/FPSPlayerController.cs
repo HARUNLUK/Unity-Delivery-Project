@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterController))]
 public class FPSPlayerController : MonoBehaviour
 {
+    public static FPSPlayerController Instance { get; private set; }
     [Header("--- MOVEMENT SETTINGS ---")]
     public float walkSpeed = 4.5f;
     public float sprintSpeed = 8.0f;
@@ -68,6 +69,7 @@ public class FPSPlayerController : MonoBehaviour
 
     private void Awake()
     {
+        Instance = this;
         controller = GetComponent<CharacterController>();
         EnsureComponents();
     }
@@ -199,17 +201,18 @@ public class FPSPlayerController : MonoBehaviour
             return;
         }
 
-        // F9 Dev Reset for Vehicle Purchases & Branch Progression
+        // F9 Dev Reset for Vehicles, Shops / Properties & Branch Progression
         if (CheckF9DevInput())
         {
             DrivableVehicle.ResetAllVehiclesInGame();
+            PurchasableProperty.ResetAllPropertiesInGame();
             if (BranchManager.Instance != null)
             {
                 BranchManager.Instance.ResetBranchProgression();
             }
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF5555>[DEV RESET] ALL VEHICLE & BRANCH PROGRESSION RESET (F9)</color>");
+                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF5555>[DEV RESET] TÜM ARAÇLAR, DÜKKANLAR VE ŞUBE SIFIRLANDI (F9)</color>", 3.5f);
             }
             if (CargoTabletUI.Instance != null && CargoTabletUI.Instance.IsTabletOpen)
             {
@@ -518,21 +521,29 @@ public class FPSPlayerController : MonoBehaviour
 
         if (playerCamera == null) return;
 
-        // Raycast forward with fallback SphereCast (ignoring invisible trigger zones)
+        // Perform raycast / spherecast with RaycastAll to avoid static shop/building geometry blocking interactables
         Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
-        bool hasHit = Physics.Raycast(ray, out RaycastHit hit, interactionDistance, interactionLayers, QueryTriggerInteraction.Ignore);
-        if (!hasHit)
+        RaycastHit[] hits = Physics.RaycastAll(ray, interactionDistance, interactionLayers, QueryTriggerInteraction.Ignore);
+        if (hits == null || hits.Length == 0)
         {
-            hasHit = Physics.SphereCast(ray, 0.25f, out hit, interactionDistance, interactionLayers, QueryTriggerInteraction.Ignore);
+            hits = Physics.SphereCastAll(ray, 0.25f, interactionDistance, interactionLayers, QueryTriggerInteraction.Ignore);
+        }
+
+        if (hits != null && hits.Length > 1)
+        {
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
         }
 
         // 0. Check Branch Upgrade Terminal (Direct Hit or Proximity)
         BranchUpgradeTerminal terminal = null;
-        if (hasHit)
+        if (hits != null)
         {
-            terminal = hit.collider.GetComponentInParent<BranchUpgradeTerminal>();
-            if (terminal == null) terminal = hit.collider.GetComponent<BranchUpgradeTerminal>();
-            if (terminal == null) terminal = hit.collider.GetComponentInChildren<BranchUpgradeTerminal>();
+            foreach (var h in hits)
+            {
+                terminal = h.collider.GetComponentInParent<BranchUpgradeTerminal>();
+                if (terminal == null) terminal = h.collider.GetComponent<BranchUpgradeTerminal>();
+                if (terminal != null) break;
+            }
         }
 
         if (terminal == null)
@@ -565,23 +576,87 @@ public class FPSPlayerController : MonoBehaviour
             return;
         }
 
-        // 1. Physical Cargo Package or Rigidbody Object Detection
+        // 1. Check Locked Purchasable Commercial Property
+        PurchasableProperty lockedProperty = null;
+        if (hits != null)
+        {
+            foreach (var h in hits)
+            {
+                PurchasableProperty p = h.collider.GetComponentInParent<PurchasableProperty>();
+                if (p == null) p = h.collider.GetComponent<PurchasableProperty>();
+                if (p != null && !p.IsUnlocked)
+                {
+                    lockedProperty = p;
+                    break;
+                }
+            }
+        }
+
+        if (lockedProperty == null)
+        {
+            Collider[] closeProps = Physics.OverlapSphere(transform.position, 5.5f, interactionLayers, QueryTriggerInteraction.Collide);
+            foreach (var cp in closeProps)
+            {
+                if (cp.transform.IsChildOf(transform)) continue;
+                PurchasableProperty p = cp.GetComponentInParent<PurchasableProperty>();
+                if (p == null) p = cp.GetComponent<PurchasableProperty>();
+                if (p != null && !p.IsUnlocked)
+                {
+                    Vector3 anchorPos = p.interactionAnchor != null ? p.interactionAnchor.position : p.transform.position;
+                    float d = Vector3.Distance(transform.position, anchorPos);
+                    if (d <= p.interactionDistance)
+                    {
+                        lockedProperty = p;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (lockedProperty != null && !lockedProperty.IsUnlocked)
+        {
+            if (InteractionPromptHUD.Instance != null)
+            {
+                InteractionPromptHUD.Instance.ShowPrompt(lockedProperty.GetPromptText());
+            }
+
+            if (interactPressed)
+            {
+                lockedProperty.TryPurchase();
+            }
+            return;
+        }
+
+        // 2. Physical Cargo Package or Rigidbody Object Detection (High Priority)
         PhysicalCargoPackage pkg = null;
         Rigidbody targetRb = null;
 
-        if (hasHit)
+        if (hits != null)
         {
-            pkg = hit.collider.GetComponentInParent<PhysicalCargoPackage>();
-            if (pkg == null) pkg = hit.collider.GetComponent<PhysicalCargoPackage>();
-            if (pkg == null) pkg = hit.collider.GetComponentInChildren<PhysicalCargoPackage>();
+            foreach (var h in hits)
+            {
+                PhysicalCargoPackage p = h.collider.GetComponentInParent<PhysicalCargoPackage>();
+                if (p == null) p = h.collider.GetComponent<PhysicalCargoPackage>();
+                if (p != null)
+                {
+                    pkg = p;
+                    targetRb = p.GetComponent<Rigidbody>();
+                    break;
+                }
 
-            targetRb = hit.collider.attachedRigidbody;
+                Rigidbody rb = h.collider.attachedRigidbody;
+                if (rb != null && !rb.isKinematic && h.collider.GetComponentInParent<DrivableVehicle>() == null)
+                {
+                    targetRb = rb;
+                    break;
+                }
+            }
         }
 
-        // Yakın mesafe taraması (Kutunun dibinde durup aşağı bakarken kesin algılama)
+        // Proximity scan fallback for packages directly under or in front of the player
         if (pkg == null && targetRb == null)
         {
-            Collider[] closeHits = Physics.OverlapSphere(playerCamera.transform.position + (playerCamera.transform.forward * 1.2f), 0.85f, interactionLayers, QueryTriggerInteraction.Ignore);
+            Collider[] closeHits = Physics.OverlapSphere(playerCamera.transform.position + (playerCamera.transform.forward * 1.2f), 0.95f, interactionLayers, QueryTriggerInteraction.Ignore);
             float closestDist = float.MaxValue;
 
             foreach (var ch in closeHits)
@@ -602,7 +677,7 @@ public class FPSPlayerController : MonoBehaviour
             }
         }
 
-        if (pkg != null || (targetRb != null && !targetRb.isKinematic && (hasHit ? hit.collider.GetComponentInParent<DrivableVehicle>() == null : true)))
+        if (pkg != null || (targetRb != null && !targetRb.isKinematic))
         {
             if (InteractionPromptHUD.Instance != null)
             {
@@ -623,100 +698,136 @@ public class FPSPlayerController : MonoBehaviour
             return;
         }
 
-        if (hasHit)
+        // 3. Vehicle Tailgate Interaction
+        if (hits != null)
         {
-            // 2. Direct hit on VehicleTailgate collider
-            VehicleTailgate directTailgate = hit.collider.GetComponent<VehicleTailgate>();
-            if (directTailgate == null) directTailgate = hit.collider.GetComponentInParent<VehicleTailgate>();
-
-            if (directTailgate != null)
+            foreach (var h in hits)
             {
-                if (InteractionPromptHUD.Instance != null)
-                {
-                    InteractionPromptHUD.Instance.ShowPrompt(directTailgate.GetPromptText());
-                }
+                VehicleTailgate directTailgate = h.collider.GetComponent<VehicleTailgate>();
+                if (directTailgate == null) directTailgate = h.collider.GetComponentInParent<VehicleTailgate>();
 
-                if (interactPressed)
+                if (directTailgate != null)
                 {
-                    directTailgate.ToggleDoor();
-                }
-                return;
-            }
-
-            // 3. Hit Vehicle - Check lock & ownership or drive
-            DrivableVehicle vehicle = hit.collider.GetComponentInParent<DrivableVehicle>();
-            if (vehicle != null && !vehicle.isPlayerInside)
-            {
-                if (!vehicle.IsUnlocked)
-                {
-                    int playerLevel = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.PlayerLevel : 1;
-                    int currentBalance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
-
-                    if (playerLevel < vehicle.requiredPlayerLevel)
+                    if (InteractionPromptHUD.Instance != null)
                     {
-                        if (InteractionPromptHUD.Instance != null)
-                        {
-                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF5555>[LOCKED] {vehicle.vehicleName}</color> (Requires Level {vehicle.requiredPlayerLevel} - ${vehicle.purchasePrice})");
-                        }
+                        InteractionPromptHUD.Instance.ShowPrompt(directTailgate.GetPromptText());
                     }
-                    else if (currentBalance < vehicle.purchasePrice)
+
+                    if (interactPressed)
+                    {
+                        directTailgate.ToggleDoor();
+                    }
+                    return;
+                }
+            }
+        }
+
+        // 4. Vehicle Drive & Service Garage Interaction
+        if (hits != null)
+        {
+            foreach (var h in hits)
+            {
+                DrivableVehicle vehicle = h.collider.GetComponentInParent<DrivableVehicle>();
+                if (vehicle != null && !vehicle.isPlayerInside)
+                {
+                    if (!vehicle.IsUnlocked)
+                    {
+                        int playerLevel = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.PlayerLevel : 1;
+                        int currentBalance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
+
+                        if (playerLevel < vehicle.requiredPlayerLevel)
+                        {
+                            if (InteractionPromptHUD.Instance != null)
+                            {
+                                InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF5555>[LOCKED] {vehicle.vehicleName}</color> (Requires Level {vehicle.requiredPlayerLevel} - ${vehicle.purchasePrice})");
+                            }
+                        }
+                        else if (currentBalance < vehicle.purchasePrice)
+                        {
+                            if (InteractionPromptHUD.Instance != null)
+                            {
+                                InteractionPromptHUD.Instance.ShowPrompt($"<color=#FFAA33>[LOCKED] {vehicle.vehicleName}</color> (${vehicle.purchasePrice} - Balance: ${currentBalance})");
+                            }
+                        }
+                        else
+                        {
+                            if (InteractionPromptHUD.Instance != null)
+                            {
+                                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Purchase: {vehicle.vehicleName}</color> (${vehicle.purchasePrice})");
+                            }
+
+                            if (interactPressed)
+                            {
+                                bool bought = vehicle.TryPurchase();
+                                if (bought && InteractionPromptHUD.Instance != null)
+                                {
+                                    InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>[PURCHASED] {vehicle.vehicleName} Successfully Purchased!</color>");
+                                }
+                            }
+                        }
+                        return;
+                    }
+
+                    float distToTailgate = float.MaxValue;
+                    if (vehicle.rearTailgate != null)
+                    {
+                        distToTailgate = Vector3.Distance(h.point, vehicle.rearTailgate.transform.position);
+                    }
+
+                    // If aiming specifically at the rear tailgate area (< 1.8m from tailgate)
+                    if (vehicle.rearTailgate != null && distToTailgate < 1.8f)
                     {
                         if (InteractionPromptHUD.Instance != null)
                         {
-                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#FFAA33>[LOCKED] {vehicle.vehicleName}</color> (${vehicle.purchasePrice} - Balance: ${currentBalance})");
+                            InteractionPromptHUD.Instance.ShowPrompt(vehicle.rearTailgate.GetPromptText());
+                        }
+
+                        if (interactPressed)
+                        {
+                            vehicle.rearTailgate.ToggleDoor();
+                        }
+                        return;
+                    }
+
+                    // Check if vehicle is in the unlocked Auto Service Garage bay
+                    bool inGarageBay = VehicleServiceGarage.Instance != null &&
+                                       VehicleServiceGarage.Instance.IsGarageUnlocked() &&
+                                       VehicleServiceGarage.Instance.IsVehicleInServiceBay(vehicle);
+
+                    if (inGarageBay)
+                    {
+                        VehicleServiceGarage.Instance.CheckGarageShortcutInputs(vehicle);
+                        string garageInfo = VehicleServiceGarage.Instance.GetGaragePromptForVehicle(vehicle);
+
+                        if (InteractionPromptHUD.Instance != null)
+                        {
+                            InteractionPromptHUD.Instance.ShowPrompt($"[E] Drive {vehicle.vehicleName} | " + garageInfo);
                         }
                     }
                     else
                     {
                         if (InteractionPromptHUD.Instance != null)
                         {
-                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Purchase: {vehicle.vehicleName}</color> (${vehicle.purchasePrice})");
+                            InteractionPromptHUD.Instance.ShowPrompt($"[E] Drive {vehicle.vehicleName}");
                         }
-
-                        if (interactPressed)
-                        {
-                            bool bought = vehicle.TryPurchase();
-                            if (bought && InteractionPromptHUD.Instance != null)
-                            {
-                                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>[PURCHASED] {vehicle.vehicleName} Successfully Purchased!</color>");
-                            }
-                        }
-                    }
-                    return;
-                }
-
-                float distToTailgate = float.MaxValue;
-                if (vehicle.rearTailgate != null)
-                {
-                    distToTailgate = Vector3.Distance(hit.point, vehicle.rearTailgate.transform.position);
-                }
-
-                // If aiming specifically at the rear tailgate area (< 1.8m from tailgate)
-                if (vehicle.rearTailgate != null && distToTailgate < 1.8f)
-                {
-                    if (InteractionPromptHUD.Instance != null)
-                    {
-                        InteractionPromptHUD.Instance.ShowPrompt(vehicle.rearTailgate.GetPromptText());
                     }
 
                     if (interactPressed)
                     {
-                        vehicle.rearTailgate.ToggleDoor();
+                        vehicle.EnterVehicle(this);
                     }
                     return;
                 }
+            }
+        }
 
-                // Looking at the car cabin/body prompts driving
-                if (InteractionPromptHUD.Instance != null)
-                {
-                    InteractionPromptHUD.Instance.ShowPrompt($"[E] Drive {vehicle.vehicleName}");
-                }
-
-                if (interactPressed)
-                {
-                    vehicle.EnterVehicle(this);
-                }
-                return;
+        // 5. Check if standing near a vehicle inside the service garage bay without aiming directly at it
+        if (VehicleServiceGarage.Instance != null && VehicleServiceGarage.Instance.IsGarageUnlocked())
+        {
+            DrivableVehicle bayVehicle = VehicleServiceGarage.Instance.FindActiveVehicleInBay();
+            if (bayVehicle != null && Vector3.Distance(transform.position, bayVehicle.transform.position) <= 5.0f)
+            {
+                VehicleServiceGarage.Instance.CheckGarageShortcutInputs(bayVehicle);
             }
         }
 

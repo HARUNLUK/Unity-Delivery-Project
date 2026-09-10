@@ -138,7 +138,14 @@ public class DaySummaryManager : MonoBehaviour
             }
         }
 
-        // 2. Daily Warehouse / Branch Rent Expense
+        // 2. Passive Logistics Hub Income & Daily Warehouse / Branch Rent Expense
+        int passiveIncome = 0;
+        if (PassiveDispatchManager.Instance != null)
+        {
+            passiveIncome = PassiveDispatchManager.Instance.CalculateDailyPassiveRevenue();
+            totalReward += passiveIncome;
+        }
+
         int dailyRent = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.GetDailyWarehouseRent() : 50;
         totalPenalty += dailyRent;
 
@@ -162,7 +169,13 @@ public class DaySummaryManager : MonoBehaviour
 
         // 5. Populate UI Text Elements
         if (totalDeliveredText != null) totalDeliveredText.text = $"Total Packages Today: {totalCount}";
-        if (correctDeliveriesText != null) correctDeliveriesText.text = $"[+] Correct Deliveries: {correctCount} (+${totalReward})";
+        
+        string correctText = $"[+] Correct Deliveries: {correctCount} (+${totalReward - passiveIncome})";
+        if (passiveIncome > 0)
+        {
+            correctText += $" | Pasif Şube: +${passiveIncome}";
+        }
+        if (correctDeliveriesText != null) correctDeliveriesText.text = correctText;
         
         string wrongBreakdown = $"[-] Penalties: -${totalPenalty - dailyRent}";
         if (brokenCount > 0) wrongBreakdown += $" (Broken: {brokenCount})";
