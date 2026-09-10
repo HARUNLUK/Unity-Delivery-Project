@@ -20,6 +20,131 @@ public class BranchManager : MonoBehaviour
     [Tooltip("Optional fallback physical in-world upgrade terminal / desk")]
     public BranchUpgradeTerminal upgradeTerminal;
 
+    [Header("--- CARGO TYPE UNLOCK LEVELS & SPAWN CHANCES ---")]
+    [Tooltip("Minimum branch level required for Standard cargo")]
+    public int standardRequiredLevel = 1;
+    [Range(0f, 100f), Tooltip("Standard cargo spawn weight / probability")]
+    public float standardSpawnWeight = 50f;
+
+    [Tooltip("Minimum branch level required for Fragile cargo")]
+    public int fragileRequiredLevel = 5;
+    [Range(0f, 100f), Tooltip("Fragile cargo spawn weight / probability")]
+    public float fragileSpawnWeight = 30f;
+
+    [Tooltip("Minimum branch level required for Express cargo")]
+    public int expressRequiredLevel = 8;
+    [Range(0f, 100f), Tooltip("Express cargo spawn weight / probability")]
+    public float expressSpawnWeight = 20f;
+
+    [Tooltip("Minimum branch level required for Explosive cargo")]
+    public int explosiveRequiredLevel = 3;
+    [Range(0f, 100f), Tooltip("Explosive cargo spawn weight / probability")]
+    public float explosiveSpawnWeight = 20f;
+
+    [Header("--- EXPRESS CARGO TIME LIMIT ---")]
+    [Tooltip("Minimum target delivery hour for Express cargo (e.g. 10.0 = 10:00)")]
+    public float minExpressDeliveryHour = 10.0f;
+
+    [Tooltip("Maximum target delivery hour for Express cargo (e.g. 14.0 = 14:00)")]
+    public float maxExpressDeliveryHour = 14.0f;
+
+    [Tooltip("Minute step when picking random express time (e.g. 15 = 10:00, 10:15, 10:30, 10:45...)")]
+    [Range(5, 60)]
+    public int expressMinuteInterval = 15;
+
+    [Header("--- FRAGILE & EXPLOSIVE TUNING ---")]
+    [Tooltip("Minimum impact speed to trigger damage (m/s). Gentle drop < 2.5 m/s, 1.5m drop ~5.0 m/s, high drop > 7.0 m/s.")]
+    public float fragileMinDamageSpeedThreshold = 3.5f;
+
+    [Tooltip("Damage multiplier when speed threshold is exceeded.")]
+    public float fragileDamageMultiplier = 16.0f;
+
+    [Tooltip("Damage ratio when packages collide with each other (0.20 = 80% less damage).")]
+    public float fragilePackageCollisionRatio = 0.20f;
+
+    [Tooltip("Spawn immunity duration (seconds).")]
+    public float fragileSpawnImmunityDuration = 3.5f;
+
+    [Header("--- DEFAULT & CUSTOM CARGO PACKAGE PREFABS ---")]
+    [Tooltip("Primary default cargo box prefab (Fallback used if specific lists are empty)")]
+    public GameObject cargoPackagePrefab;
+
+    [Tooltip("Custom 3D Prefabs for standard packages (drag prefabs from project)")]
+    public List<GameObject> packagePrefabs = new List<GameObject>();
+
+    [Tooltip("Custom 3D Prefabs for fragile packages")]
+    public List<GameObject> fragilePackagePrefabs = new List<GameObject>();
+
+    [Tooltip("Custom 3D Prefabs for express packages")]
+    public List<GameObject> expressPackagePrefabs = new List<GameObject>();
+
+    [Tooltip("Custom 3D Prefabs for explosive packages")]
+    public List<GameObject> explosivePackagePrefabs = new List<GameObject>();
+
+    [Header("--- EXPLOSION VFX PREFAB ---")]
+    [Tooltip("Custom explosion particle effect prefab (drag prefab from project or leave empty for procedural effect)")]
+    public GameObject explosionVfxPrefab;
+
+    [Header("--- PREFAB SCALE MULTIPLIER PER CARGO TYPE ---")]
+    [Tooltip("Apply scale multiplier to custom 3D prefabs")]
+    public bool enablePrefabScaling = true;
+
+    [Tooltip("Scale X, Y, Z axes independently with random multipliers")]
+    public bool randomizeAxesIndependently = false;
+
+    [Header("Standard Cargo Scale")]
+    [Tooltip("If true, scales randomly between standardMinScale and standardMaxScale. If false, uses standardFixedScale.")]
+    public bool standardRandomScale = true;
+    [Range(0.05f, 2.5f), Tooltip("Fixed scale multiplier used when random scaling is disabled")]
+    public float standardFixedScale = 0.45f;
+    [Range(0.05f, 2.5f), Tooltip("Standard package minimum random scale multiplier")]
+    public float standardMinScale = 0.35f;
+    [Range(0.05f, 2.5f), Tooltip("Standard package maximum random scale multiplier")]
+    public float standardMaxScale = 0.55f;
+
+    [Header("Fragile Cargo Scale")]
+    [Tooltip("If true, scales randomly between fragileMinScale and fragileMaxScale. If false, uses fragileFixedScale.")]
+    public bool fragileRandomScale = true;
+    [Range(0.05f, 2.5f), Tooltip("Fixed scale multiplier used when random scaling is disabled")]
+    public float fragileFixedScale = 0.40f;
+    [Range(0.05f, 2.5f), Tooltip("Fragile package minimum random scale multiplier")]
+    public float fragileMinScale = 0.35f;
+    [Range(0.05f, 2.5f), Tooltip("Fragile package maximum random scale multiplier")]
+    public float fragileMaxScale = 0.50f;
+
+    [Header("Express Cargo Scale")]
+    [Tooltip("If true, scales randomly between expressMinScale and expressMaxScale. If false, uses expressFixedScale.")]
+    public bool expressRandomScale = true;
+    [Range(0.05f, 2.5f), Tooltip("Fixed scale multiplier used when random scaling is disabled")]
+    public float expressFixedScale = 0.35f;
+    [Range(0.05f, 2.5f), Tooltip("Express package minimum random scale multiplier")]
+    public float expressMinScale = 0.30f;
+    [Range(0.05f, 2.5f), Tooltip("Express package maximum random scale multiplier")]
+    public float expressMaxScale = 0.45f;
+
+    [Header("Explosive Cargo Scale")]
+    [Tooltip("If true, scales randomly between explosiveMinScale and explosiveMaxScale. If false, uses explosiveFixedScale.")]
+    public bool explosiveRandomScale = true;
+    [Range(0.05f, 2.5f), Tooltip("Fixed scale multiplier used when random scaling is disabled")]
+    public float explosiveFixedScale = 0.50f;
+    [Range(0.05f, 2.5f), Tooltip("Explosive package minimum random scale multiplier")]
+    public float explosiveMinScale = 0.40f;
+    [Range(0.05f, 2.5f), Tooltip("Explosive package maximum random scale multiplier")]
+    public float explosiveMaxScale = 0.60f;
+
+    [Header("--- CARGO BOX MATERIALS (SKINS) ---")]
+    [Tooltip("Cardboard materials for standard packages")]
+    public List<Material> cardboardMaterials = new List<Material>();
+
+    [Tooltip("Materials for fragile packages")]
+    public List<Material> fragileMaterials = new List<Material>();
+
+    [Tooltip("Materials for express packages")]
+    public List<Material> expressMaterials = new List<Material>();
+
+    [Tooltip("Materials for explosive packages")]
+    public List<Material> explosiveMaterials = new List<Material>();
+
     public static event Action<int, BranchTier> OnBranchUpgraded;
     public static event Action OnBranchReset;
 
@@ -100,12 +225,20 @@ public class BranchManager : MonoBehaviour
                         t.tierName = "Starter Garage";
                         t.description = "Entry-level parcel warehouse and garage. Basic package volume and low operating rent.";
                     }
+                    if (t.dailyPackageCapacity == 10 || t.dailyPackageCapacity == 4)
+                    {
+                        t.dailyPackageCapacity = 5;
+                    }
                     break;
                 case 2:
                     if (string.IsNullOrEmpty(t.tierName) || t.tierName.Contains("Şube") || t.tierName.Contains("Lojistik") || t.tierName.Contains("Orta"))
                     {
                         t.tierName = "Regional Hub";
                         t.description = "Expanded logistics hub with improved daily parcel limits and high earnings potential.";
+                    }
+                    if (t.dailyPackageCapacity == 10)
+                    {
+                        t.dailyPackageCapacity = 8;
                     }
                     break;
                 case 3:
@@ -137,7 +270,7 @@ public class BranchManager : MonoBehaviour
                 description = "Entry-level parcel warehouse and garage. Basic package volume and low operating rent.",
                 upgradeCost = 0,
                 requiredPlayerLevel = 1,
-                dailyPackageCapacity = 4,
+                dailyPackageCapacity = 5,
                 dailyRent = 50
             },
             new BranchTier
@@ -366,5 +499,178 @@ public class BranchManager : MonoBehaviour
         ApplyTierVisuals(false);
         OnBranchReset?.Invoke();
         Debug.Log("<color=#FF3333>[DEV] BRANCH PROGRESSION RESET TO LEVEL 1!</color>");
+    }
+
+    // =========================================================================
+    // CENTRALIZED CARGO QUERY & CONFIGURATION HELPERS
+    // =========================================================================
+
+    /// <summary>
+    /// Selects an unlocked cargo type using weighted random probability based on the current branch level.
+    /// </summary>
+    public CargoType DetermineRandomCargoType(int branchLevel = -1)
+    {
+        int level = branchLevel > 0 ? branchLevel : currentBranchLevel;
+        List<(CargoType type, float weight)> available = new List<(CargoType, float)>();
+
+        if (level >= standardRequiredLevel && standardSpawnWeight > 0f)
+        {
+            available.Add((CargoType.Standard, standardSpawnWeight));
+        }
+
+        if (level >= fragileRequiredLevel && fragileSpawnWeight > 0f)
+        {
+            available.Add((CargoType.Fragile, fragileSpawnWeight));
+        }
+
+        if (level >= expressRequiredLevel && expressSpawnWeight > 0f)
+        {
+            available.Add((CargoType.Express, expressSpawnWeight));
+        }
+
+        if (level >= explosiveRequiredLevel && explosiveSpawnWeight > 0f)
+        {
+            available.Add((CargoType.Explosive, explosiveSpawnWeight));
+        }
+
+        if (available.Count == 0)
+        {
+            return CargoType.Standard;
+        }
+
+        float totalWeight = 0f;
+        for (int i = 0; i < available.Count; i++)
+        {
+            totalWeight += available[i].weight;
+        }
+
+        if (totalWeight <= 0f)
+        {
+            return CargoType.Standard;
+        }
+
+        float roll = UnityEngine.Random.Range(0f, totalWeight);
+        float cumulative = 0f;
+
+        for (int i = 0; i < available.Count; i++)
+        {
+            cumulative += available[i].weight;
+            if (roll <= cumulative)
+            {
+                return available[i].type;
+            }
+        }
+
+        return available[0].type;
+    }
+
+    /// <summary>
+    /// Selects the 3D prefab model suitable for the given cargo type.
+    /// </summary>
+    public GameObject GetPrefabForCargoType(CargoType type)
+    {
+        if (type == CargoType.Fragile && fragilePackagePrefabs != null && fragilePackagePrefabs.Count > 0)
+        {
+            var valid = fragilePackagePrefabs.FindAll(p => p != null);
+            if (valid.Count > 0) return valid[UnityEngine.Random.Range(0, valid.Count)];
+        }
+        else if (type == CargoType.Express && expressPackagePrefabs != null && expressPackagePrefabs.Count > 0)
+        {
+            var valid = expressPackagePrefabs.FindAll(p => p != null);
+            if (valid.Count > 0) return valid[UnityEngine.Random.Range(0, valid.Count)];
+        }
+        else if (type == CargoType.Explosive && explosivePackagePrefabs != null && explosivePackagePrefabs.Count > 0)
+        {
+            var valid = explosivePackagePrefabs.FindAll(p => p != null);
+            if (valid.Count > 0) return valid[UnityEngine.Random.Range(0, valid.Count)];
+        }
+
+        if (packagePrefabs != null && packagePrefabs.Count > 0)
+        {
+            var valid = packagePrefabs.FindAll(p => p != null);
+            if (valid.Count > 0) return valid[UnityEngine.Random.Range(0, valid.Count)];
+        }
+
+        if (cargoPackagePrefab != null)
+        {
+            return cargoPackagePrefab;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Selects the cardboard material suitable for the specified cargo type.
+    /// </summary>
+    public Material GetMaterialForCargoType(CargoType type)
+    {
+        if (type == CargoType.Fragile && fragileMaterials != null && fragileMaterials.Count > 0)
+        {
+            var valid = fragileMaterials.FindAll(m => m != null);
+            if (valid.Count > 0) return valid[UnityEngine.Random.Range(0, valid.Count)];
+        }
+        else if (type == CargoType.Express && expressMaterials != null && expressMaterials.Count > 0)
+        {
+            var valid = expressMaterials.FindAll(m => m != null);
+            if (valid.Count > 0) return valid[UnityEngine.Random.Range(0, valid.Count)];
+        }
+        else if (type == CargoType.Explosive && explosiveMaterials != null && explosiveMaterials.Count > 0)
+        {
+            var valid = explosiveMaterials.FindAll(m => m != null);
+            if (valid.Count > 0) return valid[UnityEngine.Random.Range(0, valid.Count)];
+        }
+
+        if (cardboardMaterials != null && cardboardMaterials.Count > 0)
+        {
+            var valid = cardboardMaterials.FindAll(m => m != null);
+            if (valid.Count > 0) return valid[UnityEngine.Random.Range(0, valid.Count)];
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Returns scale settings (isRandom, fixedScale, minScale, maxScale) for the specified cargo type.
+    /// </summary>
+    public (bool isRandom, float fixedScale, float minScale, float maxScale) GetScaleSettingsForCargoType(CargoType type)
+    {
+        switch (type)
+        {
+            case CargoType.Fragile:
+                return (fragileRandomScale, fragileFixedScale, fragileMinScale, fragileMaxScale);
+            case CargoType.Express:
+                return (expressRandomScale, expressFixedScale, expressMinScale, expressMaxScale);
+            case CargoType.Explosive:
+                return (explosiveRandomScale, explosiveFixedScale, explosiveMinScale, explosiveMaxScale);
+            case CargoType.Standard:
+            default:
+                return (standardRandomScale, standardFixedScale, standardMinScale, standardMaxScale);
+        }
+    }
+
+    /// <summary>
+    /// Returns the scale multiplier min/max range for the specified cargo type.
+    /// </summary>
+    public (float minScale, float maxScale) GetScaleRangeForCargoType(CargoType type)
+    {
+        var settings = GetScaleSettingsForCargoType(type);
+        return (settings.minScale, settings.maxScale);
+    }
+
+    /// <summary>
+    /// Generates a random delivery cutoff hour for express shipments within min and max interval.
+    /// </summary>
+    public float GenerateRandomExpressDeliveryHour()
+    {
+        int minTotalMins = Mathf.RoundToInt(Mathf.Min(minExpressDeliveryHour, maxExpressDeliveryHour) * 60f);
+        int maxTotalMins = Mathf.RoundToInt(Mathf.Max(minExpressDeliveryHour, maxExpressDeliveryHour) * 60f);
+        int step = Mathf.Max(5, expressMinuteInterval);
+
+        int stepsCount = Mathf.Max(1, (maxTotalMins - minTotalMins) / step);
+        int chosenStep = UnityEngine.Random.Range(0, stepsCount + 1);
+        int chosenTotalMins = minTotalMins + (chosenStep * step);
+        chosenTotalMins = Mathf.Clamp(chosenTotalMins, minTotalMins, maxTotalMins);
+
+        return chosenTotalMins / 60f;
     }
 }

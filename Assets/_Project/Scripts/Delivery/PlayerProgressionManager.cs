@@ -55,11 +55,11 @@ public class PlayerProgressionManager : MonoBehaviour
 
         switch (warehouseLevel)
         {
-            case 1: return 4;
-            case 2: return 7;
-            case 3: return 12;
-            case 4: return 18;
-            default: return 4 + (warehouseLevel * 4);
+            case 1: return 5;
+            case 2: return 8;
+            case 3: return 14;
+            case 4: return 22;
+            default: return 5 + (warehouseLevel * 4);
         }
     }
 

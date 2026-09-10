@@ -29,38 +29,38 @@ public static class CargoSetupHelper
         GameObject expressPrefab = CreateCargoPackagePrefab("Cargo_Package_Express", CargoType.Express, expressMat, explosionPrefab);
         GameObject explosivePrefab = CreateCargoPackagePrefab("Cargo_Package_Explosive", CargoType.Explosive, explosiveMat, explosionPrefab);
 
-        // 4. Auto-configure CargoWarehouseGenerator in the active scene if present
-        CargoWarehouseGenerator[] gens = Object.FindObjectsByType<CargoWarehouseGenerator>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        foreach (var gen in gens)
+        // 4. Auto-configure BranchManager in the active scene if present
+        BranchManager[] branchManagers = Object.FindObjectsByType<BranchManager>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var bm in branchManagers)
         {
-            if (gen == null) continue;
+            if (bm == null) continue;
 
-            gen.cargoPackagePrefab = stdPrefab;
-            gen.explosionVfxPrefab = explosionPrefab;
+            bm.cargoPackagePrefab = stdPrefab;
+            bm.explosionVfxPrefab = explosionPrefab;
 
-            if (!gen.packagePrefabs.Contains(stdPrefab)) gen.packagePrefabs.Add(stdPrefab);
-            if (!gen.fragilePackagePrefabs.Contains(fragilePrefab)) gen.fragilePackagePrefabs.Add(fragilePrefab);
-            if (!gen.expressPackagePrefabs.Contains(expressPrefab)) gen.expressPackagePrefabs.Add(expressPrefab);
-            if (!gen.explosivePackagePrefabs.Contains(explosivePrefab)) gen.explosivePackagePrefabs.Add(explosivePrefab);
+            if (!bm.packagePrefabs.Contains(stdPrefab)) bm.packagePrefabs.Add(stdPrefab);
+            if (!bm.fragilePackagePrefabs.Contains(fragilePrefab)) bm.fragilePackagePrefabs.Add(fragilePrefab);
+            if (!bm.expressPackagePrefabs.Contains(expressPrefab)) bm.expressPackagePrefabs.Add(expressPrefab);
+            if (!bm.explosivePackagePrefabs.Contains(explosivePrefab)) bm.explosivePackagePrefabs.Add(explosivePrefab);
 
-            if (!gen.cardboardMaterials.Contains(stdMat)) gen.cardboardMaterials.Add(stdMat);
-            if (!gen.fragileMaterials.Contains(fragileMat)) gen.fragileMaterials.Add(fragileMat);
-            if (!gen.expressMaterials.Contains(expressMat)) gen.expressMaterials.Add(expressMat);
-            if (!gen.explosiveMaterials.Contains(explosiveMat)) gen.explosiveMaterials.Add(explosiveMat);
+            if (!bm.cardboardMaterials.Contains(stdMat)) bm.cardboardMaterials.Add(stdMat);
+            if (!bm.fragileMaterials.Contains(fragileMat)) bm.fragileMaterials.Add(fragileMat);
+            if (!bm.expressMaterials.Contains(expressMat)) bm.expressMaterials.Add(expressMat);
+            if (!bm.explosiveMaterials.Contains(explosiveMat)) bm.explosiveMaterials.Add(explosiveMat);
 
-            EditorUtility.SetDirty(gen.gameObject);
+            EditorUtility.SetDirty(bm.gameObject);
         }
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
-        if (gens.Length > 0)
+        if (branchManagers.Length > 0)
         {
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         }
 
-        Debug.Log("<color=#32FF64><b>[CargoSetupHelper]</b> Successfully created Cargo Prefabs, Explosion VFX, and linked to CargoWarehouseGenerator!</color>");
-        EditorUtility.DisplayDialog("Cargo & Explosion Setup", "Successfully created and configured:\n\n1. Explosion VFX Prefab (VFX_Explosion)\n2. Standard, Fragile, Express & Explosive Cargo Prefabs\n3. Linked all prefabs to CargoWarehouseGenerator in the scene!", "OK");
+        Debug.Log("<color=#32FF64><b>[CargoSetupHelper]</b> Successfully created Cargo Prefabs, Explosion VFX, and linked to BranchManager!</color>");
+        EditorUtility.DisplayDialog("Cargo & Explosion Setup", "Successfully created and configured:\n\n1. Explosion VFX Prefab (VFX_Explosion)\n2. Standard, Fragile, Express & Explosive Cargo Prefabs\n3. Linked all prefabs & materials to BranchManager in the scene!", "OK");
     }
 
     private static void EnsureDirectories()
