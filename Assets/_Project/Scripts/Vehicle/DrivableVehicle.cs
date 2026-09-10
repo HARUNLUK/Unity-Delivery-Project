@@ -114,11 +114,26 @@ public class DrivableVehicle : MonoBehaviour
     public static event Action<DrivableVehicle> OnVehicleRecalled;
     public static event Action OnAnyVehicleReset;
 
+    public static readonly System.Collections.Generic.List<DrivableVehicle> AllDrivableVehicles = new System.Collections.Generic.List<DrivableVehicle>();
+
     public const string SAVE_PREFIX = "DELIVERY_VEHICLE_UNLOCKED_";
     public const string FUEL_SAVE_PREFIX = "DELIVERY_VEHICLE_FUEL_";
 
     private Rigidbody rb;
     private float enterTimestamp = 0f;
+
+    private void OnEnable()
+    {
+        if (!AllDrivableVehicles.Contains(this))
+        {
+            AllDrivableVehicles.Add(this);
+        }
+    }
+
+    private void OnDisable()
+    {
+        AllDrivableVehicles.Remove(this);
+    }
 
     public float FuelPercentage => maxFuel > 0 ? Mathf.Clamp01(currentFuel / maxFuel) : 0f;
     public bool HasFuel => currentFuel > 0.05f;

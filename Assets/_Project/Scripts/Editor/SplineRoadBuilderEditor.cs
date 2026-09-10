@@ -187,6 +187,13 @@ public class SplineRoadBuilderEditor : Editor
         }
         EditorGUILayout.EndHorizontal();
 
+        EditorGUILayout.Space(8);
+        GUI.backgroundColor = new Color(0.2f, 0.85f, 0.5f);
+        if (GUILayout.Button("🚗 Setup / Select AI Traffic Manager", GUILayout.Height(30)))
+        {
+            SplineTrafficManagerEditor.SetupTrafficManagerInScene();
+        }
+
         EditorGUILayout.Space(5);
         GUI.backgroundColor = new Color(1f, 0.3f, 0.3f);
         if (GUILayout.Button("Clear All Roads & Branches", GUILayout.Height(26)))

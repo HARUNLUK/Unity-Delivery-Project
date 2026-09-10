@@ -88,9 +88,17 @@ graph TD
   - *Tier 4:* 18 Daily Parcels ($550 Daily Rent)
 - **Comprehensive Daily Ledger (`DaySummaryManager.cs`):** Itemized breakdown of base delivery earnings, speed bonuses, damaged cargo fees, lost package penalties, and operating rent.
 
-### 5. 🛠️ Custom Unity Editor Tooling (`Tools ➔ Delivery Game`)
+### 5. 🚗 Autonomous AI Traffic & Spline Roads ([Full Documentation](Docs/Traffic_and_Road_System.md))
+- **Spline Road & Sidewalk Generator (`SplineRoadBuilder.cs`):** Multi-branch procedural spline roads with Catmull-Rom smoothing, seamless cross-width UV tiling (`tileAcrossWidth`), and customizable road caps (RoundedCap / SquareCap / Open).
+- **Dynamic AI Traffic Manager (`SplineTrafficManager.cs`):** High-performance proximity bubble spawning (35m–280m), automated junction linking, and zero-allocation object pooling.
+- **Multi-Point Laser Raycast Collision Grid (`AITrafficVehicle.cs`):** 10-point forward laser array with a 3.8m hard physical safety barrier to guarantee zero vehicle clipping/interpenetration.
+- **Cubic Bézier Junction Turning & Cul-de-Sac Arcs:** Early turn anticipation (4.5m–8.5m in advance) with cubic ease-in-out steering and 180° forward U-turn loops at dead ends.
+- **Anti-Jam Recovery:** Motionless 10-second auto-despawn with player character and drivable vehicle immunity.
+
+### 6. 🛠️ Custom Unity Editor Tooling (`Tools ➔ Delivery Game`)
 - **`VehicleSetupHelper`:** One-click utility that inspects raw 3D car meshes and automatically attaches `WheelCollider` pairs, seat anchors, physics rigidbodies, center-of-mass offsets, and vehicle controllers.
-- **`SplineRoadBuilder` & `SimpleRoadBuilder`:** In-editor procedural road mesh generation along customizable spline paths.
+- **`SplineRoadBuilderEditor` & `RoadTextureGenerator`:** In-editor procedural road mesh generation, sidewalk presets (`🚶 Sadece Kaldırım`), and procedural road texture creation.
+- **`SplineTrafficManagerEditor`:** Traffic branch visualizer, path rebuild utilities, and live fleet monitoring.
 - **`DeliveryUIBuilder`:** Automated Canvas instantiation for the digital delivery tablet, crosshair HUD, prompt badges, and day-summary modals.
 - **`AddressLocalizationEditor`:** Procedural street and recipient database generator.
 
@@ -119,17 +127,19 @@ graph TD
 ```
 Assets/_Project/
 ├── Scripts/
-│   ├── Vehicle/         # CarController, DrivableVehicle, FuelStationPump, VehicleTailgate
+│   ├── Vehicle/         # CarController, DrivableVehicle, SplineTrafficManager, AITrafficVehicle, FuelStationPump
 │   ├── Player/          # FPSPlayerController, PhysicsGrabber
 │   ├── Delivery/        # PhysicalCargoPackage, CargoWarehouseGenerator, DaySummaryManager, DeliveryPoint
 │   ├── Branch/          # BranchManager, BranchData, BranchUpgradeTerminal
 │   ├── UI/              # InteractionPromptHUD, CargoTabletUI, MainHUDController
 │   ├── Camera/          # SmoothFollowCamera
 │   ├── Localization/    # AddressLocalizationManager
-│   └── Editor/          # VehicleSetupHelper, SplineRoadBuilderEditor, MapSetupTool, AddressLocalizationEditor
-├── Prefabs/             # Vehicles, Packages, Delivery Stations, UI Canvas
+│   └── Editor/          # SplineRoadBuilderEditor, SplineTrafficManagerEditor, RoadTextureGenerator, VehicleSetupHelper
+├── Prefabs/             # Vehicles, Traffic Cars, Packages, Delivery Stations, UI Canvas
 ├── Materials/           # URP Shaders & Physical Materials
 └── Scenes/              # Prototype Demo Scenes & Test Tracks
+Docs/
+└── Traffic_and_Road_System.md  # Detailed Architecture & Parameter Reference
 ```
 
 ---
@@ -162,9 +172,11 @@ Assets/_Project/
 - [x] Package types (Standard, Fragile, Express) with impact damage thresholds.
 - [x] Day/Night cycle, financial ledger, and branch progression system.
 - [x] Custom editor setup tools for rapid vehicle and map creation.
-- [ ] AI traffic vehicles & pedestrian navigation system.
+- [x] Procedural Spline Road & Seamless Sidewalk generator (`SplineRoadBuilder`).
+- [x] Autonomous AI traffic system with 10-point laser raycasts and Bezier junction turns (`SplineTrafficManager`).
+- [x] Vehicle tuning, damage system, and maintenance service garage (`VehicleServiceGarage`).
+- [ ] Pedestrian navigation & sidewalk walking AI system.
 - [ ] Dynamic weather conditions (Rain/Wet road friction modifiers).
-- [ ] Vehicle tuning, damage system, and maintenance garage.
 - [ ] Audio system integration (Engine sound pitch lerping, ambient city sounds, radio).
 
 ---
