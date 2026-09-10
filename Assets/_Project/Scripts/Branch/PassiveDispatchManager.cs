@@ -99,6 +99,29 @@ public class PassiveDispatchManager : MonoBehaviour
         }
     }
 
+    public string GetUpgradePromptText()
+    {
+        if (!IsHubUnlocked()) return string.Empty;
+
+        if (dispatchHubLevel >= 3)
+        {
+            return $"<color=#32FF64>📦 Dağıtım Şubesi: MAKSİMUM SEVİYE ({GetCourierCount()} Kurye - +${GetDailyPassiveRevenue():N0}/Gün)</color>";
+        }
+
+        int nextCost = GetUpgradeCost();
+        int nextLevel = dispatchHubLevel + 1;
+        int nextRevenue = nextLevel == 2 ? 2200 : 4800;
+        int nextCouriers = nextLevel == 2 ? 5 : 10;
+        int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
+
+        if (balance < nextCost)
+        {
+            return $"<color=#FFAA33>📦 Seviye {nextLevel} ({nextCouriers} Kurye, +${nextRevenue:N0}/Gün) - ${nextCost:N0} (Bakiye: ${balance:N0})</color>";
+        }
+
+        return $"<color=#32FF64>[E] Şubeyi Yükselt: Seviye {nextLevel} ({nextCouriers} Kurye - +${nextRevenue:N0}/Gün) (${nextCost:N0})</color>";
+    }
+
     public bool TryUpgradeHub()
     {
         if (!IsHubUnlocked()) return false;

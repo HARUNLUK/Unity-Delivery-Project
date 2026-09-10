@@ -80,6 +80,7 @@ public class FuelStationPump : MonoBehaviour
             }
         }
 #endif
+#if ENABLE_LEGACY_INPUT_MANAGER
         try
         {
             if (Input.GetKey(KeyCode.F) || Input.GetKey(KeyCode.Space))
@@ -88,6 +89,7 @@ public class FuelStationPump : MonoBehaviour
             }
         }
         catch { }
+#endif
 
         if (isHoldingRefuelKey)
         {

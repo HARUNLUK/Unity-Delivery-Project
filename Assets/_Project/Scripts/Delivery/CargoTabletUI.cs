@@ -227,6 +227,7 @@ public class CargoTabletUI : MonoBehaviour
             }
         }
 
+#if ENABLE_LEGACY_INPUT_MANAGER
         try
         {
             if (Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.T) || Input.GetKeyDown(KeyCode.M) || Input.GetKeyDown(KeyCode.I))
@@ -239,6 +240,7 @@ public class CargoTabletUI : MonoBehaviour
             }
         }
         catch { }
+#endif
 
         return false;
     }
@@ -656,7 +658,7 @@ public class CargoTabletUI : MonoBehaviour
 
         if (vehicleDetailRoot != null) vehicleDetailRoot.SetActive(true);
 
-        int playerLvl = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.PlayerLevel : 1;
+        int branchLvl = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : (PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.WarehouseLevel : 1);
         int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
 
         if (vehicleNameText != null) vehicleNameText.text = v.vehicleName;
@@ -665,12 +667,14 @@ public class CargoTabletUI : MonoBehaviour
 
         float fuelPct = v.maxFuel > 0 ? (v.currentFuel / v.maxFuel) * 100f : 0f;
         string fuelColor = v.currentFuel <= 0.05f ? "#FF4444" : (fuelPct < 25f ? "#FFAA33" : "#32FF64");
+        float condPct = v.ConditionPercentage * 100f;
+        string condColor = condPct < 25f ? "#FF4444" : (condPct < 70f ? "#FFAA33" : "#32FF64");
 
         if (vehicleFuelStatusText != null)
         {
             vehicleFuelStatusText.gameObject.SetActive(true);
-            string fuelTag = v.currentFuel <= 0.05f ? "<color=#FF4444>[OUT OF FUEL - Refuel Needed]</color>" : (fuelPct < 25f ? "<color=#FFAA33>[LOW FUEL LEVEL]</color>" : "<color=#32FF64>[FUEL LEVEL NORMAL]</color>");
-            vehicleFuelStatusText.text = $"<b>Fuel Tank:</b> <color={fuelColor}>{v.currentFuel:F1} / {v.maxFuel:F1} L ({fuelPct:F0}%)</color>  {fuelTag}";
+            string fuelTag = v.currentFuel <= 0.05f ? "<color=#FF4444>[EMPTY]</color>" : (fuelPct < 25f ? "<color=#FFAA33>[LOW]</color>" : "<color=#32FF64>[OK]</color>");
+            vehicleFuelStatusText.text = $"<b>Fuel Tank:</b> <color={fuelColor}>{v.currentFuel:F1} / {v.maxFuel:F1} L ({fuelPct:F0}%)</color> {fuelTag}  |  <b>Condition:</b> <color={condColor}>%{condPct:F0}</color>";
         }
         
         if (vehicleLevelReqText != null)
@@ -681,9 +685,9 @@ public class CargoTabletUI : MonoBehaviour
             }
             else
             {
-                bool lvlOk = playerLvl >= v.requiredPlayerLevel;
+                bool lvlOk = branchLvl >= v.requiredPlayerLevel;
                 string lvlColor = lvlOk ? "#32FF64" : "#FF5555";
-                vehicleLevelReqText.text = $"<b>Required Level:</b> <color={lvlColor}>Level {v.requiredPlayerLevel}</color> (Yours: Level {playerLvl})";
+                vehicleLevelReqText.text = $"<b>Required Branch Level:</b> <color={lvlColor}>Level {v.requiredPlayerLevel}</color> (Current: Level {branchLvl})";
             }
         }
 
@@ -691,7 +695,7 @@ public class CargoTabletUI : MonoBehaviour
         {
             if (v.IsUnlocked)
             {
-                vehiclePriceText.text = $"<b>Fuel Status:</b> <color={fuelColor}>{v.currentFuel:F1} / {v.maxFuel:F1} Liters ({fuelPct:F0}%)</color>";
+                vehiclePriceText.text = $"<b>Vehicle Condition:</b> <color={condColor}>%{condPct:F0}</color> (Visit Service Garage to Repair)";
             }
             else
             {
@@ -720,9 +724,9 @@ public class CargoTabletUI : MonoBehaviour
             }
             else
             {
-                if (playerLvl < v.requiredPlayerLevel)
+                if (branchLvl < v.requiredPlayerLevel)
                 {
-                    vehicleStatusText.text = $"<color=#FF5555>[LOCKED] Reach Level {v.requiredPlayerLevel} to purchase.</color>";
+                    vehicleStatusText.text = $"<color=#FF5555>[LOCKED] Upgrade Branch to Level {v.requiredPlayerLevel} to purchase.</color>";
                 }
                 else if (balance < v.purchasePrice)
                 {
@@ -745,7 +749,7 @@ public class CargoTabletUI : MonoBehaviour
             else
             {
                 vehicleBuyButton.gameObject.SetActive(true);
-                bool canAfford = (playerLvl >= v.requiredPlayerLevel) && (balance >= v.purchasePrice);
+                bool canAfford = (branchLvl >= v.requiredPlayerLevel) && (balance >= v.purchasePrice);
                 vehicleBuyButton.interactable = canAfford;
 
                 Image btnImg = vehicleBuyButton.GetComponent<Image>();
@@ -904,34 +908,29 @@ public class CargoTabletUI : MonoBehaviour
                 nextBranchRentText.text = $"<b>New Rent Fee:</b> ${current.dailyRent} -> <color=#FFAA33>${next.dailyRent}</color>";
             }
 
-            int playerLvl = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.PlayerLevel : 1;
             int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
 
             if (nextBranchLevelReqText != null)
             {
-                nextBranchLevelReqText.gameObject.SetActive(true);
-                string lvlTag = playerLvl >= next.requiredPlayerLevel ? "<color=#32FF64>" : "<color=#FF5555>";
-                nextBranchLevelReqText.text = $"<b>Required Level:</b> {lvlTag}Level {next.requiredPlayerLevel} (Yours: {playerLvl})</color>";
+                nextBranchLevelReqText.gameObject.SetActive(false);
             }
 
             if (branchUpgradeButton != null)
             {
                 branchUpgradeButton.gameObject.SetActive(true);
                 bool canAfford = balance >= next.upgradeCost;
-                bool canLevel = playerLvl >= next.requiredPlayerLevel;
 
-                branchUpgradeButton.interactable = canAfford && canLevel;
+                branchUpgradeButton.interactable = canAfford;
 
                 Image btnImg = branchUpgradeButton.GetComponent<Image>();
                 if (btnImg != null)
                 {
-                    btnImg.color = (canAfford && canLevel) ? new Color(0.1f, 0.7f, 0.35f) : new Color(0.3f, 0.3f, 0.35f);
+                    btnImg.color = canAfford ? new Color(0.1f, 0.7f, 0.35f) : new Color(0.3f, 0.3f, 0.35f);
                 }
 
                 if (branchUpgradeButtonText != null)
                 {
-                    if (!canLevel) branchUpgradeButtonText.text = $"REQUIRES LEVEL {next.requiredPlayerLevel}";
-                    else if (!canAfford) branchUpgradeButtonText.text = $"INSUFFICIENT FUNDS (${next.upgradeCost})";
+                    if (!canAfford) branchUpgradeButtonText.text = $"INSUFFICIENT FUNDS (${next.upgradeCost})";
                     else branchUpgradeButtonText.text = $"UPGRADE BRANCH (${next.upgradeCost})";
                 }
             }

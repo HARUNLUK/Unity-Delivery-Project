@@ -42,6 +42,34 @@ public class DrivableVehicle : MonoBehaviour
     [Tooltip("Fuel consumed per second while idling (Litres/sec)")]
     public float idleFuelBurnRate = 0.008f;
 
+    [Header("--- CONDITION & DAMAGE (KONDİSYON VE HASAR) ---")]
+    [Tooltip("Maximum vehicle durability / health (100 = Factory New)")]
+    public float maxCondition = 100f;
+
+    [Tooltip("Current condition of the vehicle")]
+    public float currentCondition = 100f;
+
+    [Tooltip("Condition degradation per second while driving/moving (e.g. 0.015 = 1% per ~66 seconds)")]
+    public float drivingWearRate = 0.015f;
+
+    [Tooltip("Condition degradation per second while idling")]
+    public float idleWearRate = 0.002f;
+
+    [Tooltip("Minimum collision relative velocity in m/s required to inflict crash damage (e.g. 6.0 m/s ~= 21.6 km/h)")]
+    public float minCollisionSpeed = 6.0f;
+
+    [Tooltip("Collision impact damage scaling multiplier")]
+    public float collisionDamageMultiplier = 1.2f;
+
+    [Tooltip("Cooldown between taking collision damage hits to prevent multi-contact frame spam")]
+    public float collisionDamageCooldown = 0.35f;
+
+    private float lastCollisionDamageTime = 0f;
+
+    public const string CONDITION_SAVE_PREFIX = "DELIVERY_VEHICLE_COND_";
+
+    public float ConditionPercentage => maxCondition > 0 ? Mathf.Clamp01(currentCondition / maxCondition) : 0f;
+
     [Header("--- SPOTS & CAMERA ANCHORS ---")]
     [Tooltip("In-vehicle FPS driver camera anchor point (Transform). If left empty, DriverSeatPoint is searched automatically inside the vehicle.")]
     public Transform driverSeatPoint;
@@ -130,6 +158,12 @@ public class DrivableVehicle : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
+            rb.maxDepenetrationVelocity = 6.0f;
+        }
+
         if (carController == null) carController = GetComponent<CarController>();
         if (rearTailgate == null) rearTailgate = GetComponentInChildren<VehicleTailgate>();
 
@@ -159,9 +193,17 @@ public class DrivableVehicle : MonoBehaviour
             carController.enabled = false;
         }
 
-        // Load saved fuel
+        // Load saved fuel & condition
         currentFuel = PlayerPrefs.GetFloat(FUEL_SAVE_PREFIX + EffectiveVehicleId, maxFuel);
         currentFuel = Mathf.Clamp(currentFuel, 0f, maxFuel);
+
+        currentCondition = PlayerPrefs.GetFloat(CONDITION_SAVE_PREFIX + EffectiveVehicleId, maxCondition);
+        currentCondition = Mathf.Clamp(currentCondition, 0f, maxCondition);
+
+        if (carController != null)
+        {
+            carController.SetConditionRatio(ConditionPercentage);
+        }
     }
 
     private void EnsureAnchors()
@@ -205,11 +247,48 @@ public class DrivableVehicle : MonoBehaviour
     {
         if (isPlayerInside)
         {
-            // 1. Fuel Consumption
-            HandleFuelConsumption();
+            // 1. Fuel & Condition Degradation
+            HandleFuelAndCondition();
+
+            // Check if vehicle is inside the Auto Service Garage bay
+            bool inGarage = VehicleServiceGarage.Instance != null &&
+                            VehicleServiceGarage.Instance.IsVehicleInServiceBay(this);
+
+            bool isUIOpen = CommercialHubUIManager.Instance != null && CommercialHubUIManager.Instance.IsAnyPanelOpen;
+
+            if (inGarage)
+            {
+                if (InteractionPromptHUD.Instance != null && !isUIOpen)
+                {
+                    string garageInfo = VehicleServiceGarage.Instance.GetGaragePromptForVehicle(this);
+                    InteractionPromptHUD.Instance.ShowPrompt($"<color=#FFD232><b>[F] OTO SERVİS & MODİFİYE MENÜSÜ</b></color>  |  [E] İn  |  {garageInfo}");
+                }
+
+                VehicleServiceGarage.Instance.CheckGarageShortcutInputs(this);
+
+                bool fPressed = false;
+#if ENABLE_INPUT_SYSTEM
+                if (Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame) fPressed = true;
+#endif
+#if ENABLE_LEGACY_INPUT_MANAGER
+                try { if (Input.GetKeyDown(KeyCode.F)) fPressed = true; } catch { }
+#endif
+
+                if (fPressed && CommercialHubUIManager.Instance != null)
+                {
+                    if (isUIOpen)
+                    {
+                        CommercialHubUIManager.Instance.CloseAllPanels();
+                    }
+                    else
+                    {
+                        CommercialHubUIManager.Instance.OpenGarageWorkshopPanel(this);
+                    }
+                }
+            }
 
             // 2. Debounce to prevent immediate exit on the frame of entry
-            if (Time.time - enterTimestamp > 0.35f)
+            if (!isUIOpen && Time.time - enterTimestamp > 0.35f)
             {
                 bool exitPressed = false;
 #if ENABLE_INPUT_SYSTEM
@@ -218,6 +297,7 @@ public class DrivableVehicle : MonoBehaviour
                     exitPressed = true;
                 }
 #endif
+#if ENABLE_LEGACY_INPUT_MANAGER
                 try
                 {
                     if (Input.GetKeyDown(KeyCode.E))
@@ -226,6 +306,7 @@ public class DrivableVehicle : MonoBehaviour
                     }
                 }
                 catch { }
+#endif
 
                 if (exitPressed)
                 {
@@ -235,12 +316,13 @@ public class DrivableVehicle : MonoBehaviour
         }
     }
 
-    private void HandleFuelConsumption()
+    private void HandleFuelAndCondition()
     {
         if (carController == null) return;
 
         bool isDriving = Mathf.Abs(carController.verticalInput) > 0.1f || (rb != null && rb.linearVelocity.magnitude > 0.5f);
 
+        // 1. Fuel
         if (HasFuel)
         {
             float burn = isDriving ? fuelBurnRate : idleFuelBurnRate;
@@ -267,11 +349,71 @@ public class DrivableVehicle : MonoBehaviour
             }
         }
 
-        // Canlı Yakıt HUD Göstergesi
+        // 2. Condition Wear
+        float wear = isDriving ? drivingWearRate : idleWearRate;
+        currentCondition = Mathf.Max(0f, currentCondition - (wear * Time.deltaTime));
+
+        // CarController'a kondisyon oranını aktar (Maksimum hız ve tork buna göre dinamik kısıtlanır)
+        if (carController != null)
+        {
+            carController.SetConditionRatio(ConditionPercentage);
+        }
+
+        // 3. Canlı Dashboard HUD Göstergesi (Ayrı Yakıt & Kondisyon Barları)
         if (InteractionPromptHUD.Instance != null)
         {
             bool isLowFuel = currentFuel < (maxFuel * 0.18f);
-            InteractionPromptHUD.Instance.UpdateFuelHUD(currentFuel, maxFuel, isLowFuel);
+            InteractionPromptHUD.Instance.UpdateVehicleHUD(currentFuel, maxFuel, isLowFuel, currentCondition, maxCondition);
+        }
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision == null) return;
+        if (Time.time - lastCollisionDamageTime < collisionDamageCooldown) return;
+
+        // Ignore collisions with player or child objects
+        if (currentPlayer != null && collision.transform.IsChildOf(currentPlayer.transform)) return;
+
+        float impactSpeed = collision.relativeVelocity.magnitude;
+        if (rb != null && collision.impulse.magnitude > 0.01f)
+        {
+            float impulseSpeed = collision.impulse.magnitude / rb.mass;
+            if (impulseSpeed > impactSpeed) impactSpeed = impulseSpeed;
+        }
+
+        if (impactSpeed > minCollisionSpeed)
+        {
+            lastCollisionDamageTime = Time.time;
+            float excess = impactSpeed - minCollisionSpeed;
+            // Progressive damage formula (more balanced and durable)
+            float damage = (excess * collisionDamageMultiplier) + (excess * excess * 0.12f);
+            damage = Mathf.Clamp(damage, 1f, 30f);
+
+            currentCondition = Mathf.Max(0f, currentCondition - damage);
+
+            // CarController'a yeni kondisyon oranını derhal ilet
+            if (carController != null)
+            {
+                carController.SetConditionRatio(ConditionPercentage);
+            }
+
+            // Persist condition after heavy impacts
+            PlayerPrefs.SetFloat(CONDITION_SAVE_PREFIX + EffectiveVehicleId, currentCondition);
+
+            if (isPlayerInside && InteractionPromptHUD.Instance != null)
+            {
+                if (currentCondition <= 0.01f)
+                {
+                    InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>⚠️ [AĞIR HASARLI] Araç motoru hasar gördü! Minimum hızda (Limp Mode) çalışıyor. Lütfen oto servise gidin.</color>", 3.5f);
+                }
+                else if (damage >= 4f)
+                {
+                    InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF4444>💥 [ARAÇ HASARI] -%{damage:F0} Kondisyon! (Kalan: %{ConditionPercentage * 100:F0})</color>", 2.2f);
+                }
+            }
+
+            Debug.Log($"<color=#FFAA33>[DrivableVehicle] Impact damage: -{damage:F1} (Impact Speed: {impactSpeed:F1} m/s). New Condition: {currentCondition:F1}/{maxCondition}</color>");
         }
     }
 
@@ -303,12 +445,12 @@ public class DrivableVehicle : MonoBehaviour
     {
         if (IsUnlocked) return true;
 
-        int playerLevel = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.PlayerLevel : 1;
+        int branchLevel = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : (PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.WarehouseLevel : 1);
         int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
 
-        if (playerLevel < requiredPlayerLevel)
+        if (branchLevel < requiredPlayerLevel)
         {
-            Debug.LogWarning($"[DrivableVehicle] Player Level {playerLevel} is too low. Required Level {requiredPlayerLevel}.");
+            Debug.LogWarning($"[DrivableVehicle] Branch Level {branchLevel} is too low. Required Level {requiredPlayerLevel}.");
             return false;
         }
 
@@ -345,20 +487,38 @@ public class DrivableVehicle : MonoBehaviour
     }
 
     /// <summary>
-    /// Resets vehicle back to lock state (dev tool)
+    /// Resets vehicle back to lock state and restores fuel & condition (dev tool)
     /// </summary>
     public void ResetLockState()
     {
         PlayerPrefs.DeleteKey(SAVE_PREFIX + EffectiveVehicleId);
         PlayerPrefs.DeleteKey(SAVE_PREFIX + vehicleId);
         PlayerPrefs.DeleteKey(SAVE_PREFIX + gameObject.name.ToLower().Replace(" ", "_"));
+
         currentFuel = maxFuel;
         PlayerPrefs.SetFloat(FUEL_SAVE_PREFIX + EffectiveVehicleId, maxFuel);
+
+        currentCondition = maxCondition;
+        PlayerPrefs.SetFloat(CONDITION_SAVE_PREFIX + EffectiveVehicleId, maxCondition);
+        PlayerPrefs.DeleteKey(CONDITION_SAVE_PREFIX + EffectiveVehicleId);
+        PlayerPrefs.DeleteKey(CONDITION_SAVE_PREFIX + vehicleId);
+        PlayerPrefs.DeleteKey(CONDITION_SAVE_PREFIX + gameObject.name.ToLower().Replace(" ", "_"));
+
+        if (carController != null)
+        {
+            carController.SetConditionRatio(1.0f);
+        }
+
+        if (isPlayerInside && InteractionPromptHUD.Instance != null)
+        {
+            InteractionPromptHUD.Instance.UpdateVehicleHUD(currentFuel, maxFuel, false, currentCondition, maxCondition);
+        }
+
         PlayerPrefs.Save();
     }
 
     /// <summary>
-    /// Static global reset helper: Wipes all vehicle purchase keys from PlayerPrefs.
+    /// Static global reset helper: Wipes all vehicle purchase keys and restores fuel & condition to 100%.
     /// </summary>
     public static void ResetAllVehiclesInGame()
     {
@@ -378,10 +538,18 @@ public class DrivableVehicle : MonoBehaviour
         PlayerPrefs.DeleteKey(SAVE_PREFIX + "drivable_van");
         PlayerPrefs.DeleteKey(SAVE_PREFIX + "driveable_van");
         PlayerPrefs.DeleteKey(SAVE_PREFIX + "cargo_van_01");
+
+        PlayerPrefs.DeleteKey(CONDITION_SAVE_PREFIX + "pickup_truck");
+        PlayerPrefs.DeleteKey(CONDITION_SAVE_PREFIX + "drivable_pickup");
+        PlayerPrefs.DeleteKey(CONDITION_SAVE_PREFIX + "cargo_van");
+        PlayerPrefs.DeleteKey(CONDITION_SAVE_PREFIX + "drivable_van");
+        PlayerPrefs.DeleteKey(CONDITION_SAVE_PREFIX + "driveable_van");
+        PlayerPrefs.DeleteKey(CONDITION_SAVE_PREFIX + "cargo_van_01");
+
         PlayerPrefs.Save();
 
         OnAnyVehicleReset?.Invoke();
-        Debug.Log("<color=#FF3333>[DEV] F9 PRESSED: ALL VEHICLE PURCHASES AND FUELS RESET!</color>");
+        Debug.Log("<color=#FF3333>[DEV] F9 PRESSED: ALL VEHICLE PURCHASES, FUELS AND CONDITIONS RESET TO 100%!</color>");
     }
 
     /// <summary>
@@ -505,16 +673,80 @@ public class DrivableVehicle : MonoBehaviour
 
         if (InteractionPromptHUD.Instance != null)
         {
-            InteractionPromptHUD.Instance.ShowPrompt("[E] Exit  |  [V] Change Camera");
-            InteractionPromptHUD.Instance.UpdateFuelHUD(currentFuel, maxFuel, currentFuel < (maxFuel * 0.18f));
+            bool inGarage = VehicleServiceGarage.Instance != null &&
+                            VehicleServiceGarage.Instance.IsGarageUnlocked() &&
+                            VehicleServiceGarage.Instance.IsVehicleInServiceBay(this);
+
+            if (inGarage)
+            {
+                InteractionPromptHUD.Instance.ShowPrompt("[E] Araçtan İn  |  <color=#FFD232>[F] Servis Menüsü</color>  |  [V] Kamera");
+            }
+            else
+            {
+                InteractionPromptHUD.Instance.ShowPrompt("[E] Exit  |  [V] Change Camera");
+            }
+            InteractionPromptHUD.Instance.UpdateVehicleHUD(currentFuel, maxFuel, currentFuel < (maxFuel * 0.18f), currentCondition, maxCondition);
         }
 
         Debug.Log($"[DrivableVehicle] Player entered '{vehicleName}'. Press [E] to exit.");
     }
 
+    public Vector3 GetSafeExitPosition()
+    {
+        if (exitPoint != null)
+        {
+            Vector3 customPos = exitPoint.position;
+            if (IsSpawnPositionClear(customPos))
+            {
+                return customPos;
+            }
+        }
+
+        float[] candidateSideOffsets = new float[] { -1.6f, -1.2f, -0.9f, 1.6f, 1.2f, 0.9f };
+        foreach (float offset in candidateSideOffsets)
+        {
+            Vector3 worldPos = transform.position + (transform.right * offset) + (Vector3.up * 0.25f);
+            if (IsSpawnPositionClear(worldPos))
+            {
+                return worldPos;
+            }
+        }
+
+        Vector3 rearPos = transform.position - (transform.forward * 2.8f) + (Vector3.up * 0.25f);
+        if (IsSpawnPositionClear(rearPos)) return rearPos;
+
+        Vector3 frontPos = transform.position + (transform.forward * 2.8f) + (Vector3.up * 0.25f);
+        if (IsSpawnPositionClear(frontPos)) return frontPos;
+
+        Vector3 fallback = transform.position - (transform.right * 1.3f) + (Vector3.up * 0.35f);
+        if (Physics.Raycast(fallback + Vector3.up * 1.0f, Vector3.down, out RaycastHit hit, 3.0f, ~0, QueryTriggerInteraction.Ignore))
+        {
+            return hit.point + Vector3.up * 0.15f;
+        }
+
+        return fallback;
+    }
+
+    private bool IsSpawnPositionClear(Vector3 pos)
+    {
+        Vector3 bottom = pos + Vector3.up * 0.35f;
+        Vector3 top = pos + Vector3.up * 1.45f;
+        Collider[] overlaps = Physics.OverlapCapsule(bottom, top, 0.28f, ~0, QueryTriggerInteraction.Ignore);
+        foreach (var col in overlaps)
+        {
+            if (col == null || col.isTrigger) continue;
+            if (col.transform.IsChildOf(transform) || (rb != null && col.attachedRigidbody == rb)) continue;
+            if (currentPlayer != null && col.transform.IsChildOf(currentPlayer.transform)) continue;
+            return false; // Solid wall/obstacle
+        }
+        return true;
+    }
+
     public void ExitVehicle()
     {
         if (!isPlayerInside || currentPlayer == null) return;
+
+        FPSPlayerController player = currentPlayer;
 
         // 1. Cut all engine torque, center steer and apply neutral coasting deceleration
         if (carController != null)
@@ -523,22 +755,31 @@ public class DrivableVehicle : MonoBehaviour
             carController.enabled = false;
         }
 
-        // 2. Save remaining fuel
+        // 2. Save remaining fuel and condition
         PlayerPrefs.SetFloat(FUEL_SAVE_PREFIX + EffectiveVehicleId, currentFuel);
+        PlayerPrefs.SetFloat(CONDITION_SAVE_PREFIX + EffectiveVehicleId, currentCondition);
         PlayerPrefs.Save();
 
-        // 3. Calculate exit position outside driver door
-        Vector3 spawnPos = exitPoint != null ? exitPoint.position : transform.position - (transform.right * 2.0f);
-        spawnPos.y += 0.1f;
+        // 3. Set debounce safety timer so the player doesn't instantly re-enter the vehicle on the same frame
+        player.exitVehicleSafetyTimer = 0.5f;
 
-        // 4. Unparent player from vehicle
-        currentPlayer.transform.SetParent(null);
-        currentPlayer.transform.position = spawnPos;
-        currentPlayer.transform.rotation = Quaternion.LookRotation(transform.forward, Vector3.up);
+        // 4. Temporarily disable player on-foot and CharacterController while moving position
+        player.SetOnFootActive(false);
 
-        // 5. Detach camera and restore on-foot player
-        currentPlayer.DetachCameraFromSeat();
-        currentPlayer.SetOnFootActive(true);
+        // 5. Unparent player from vehicle
+        player.transform.SetParent(null);
+
+        // 6. Find safe collision-free exit position
+        Vector3 spawnPos = GetSafeExitPosition();
+        player.transform.position = spawnPos;
+        player.transform.rotation = Quaternion.Euler(0f, transform.eulerAngles.y, 0f);
+
+        Physics.SyncTransforms();
+
+        // 7. Detach camera and restore on-foot player
+        player.DetachCameraFromSeat();
+        player.SetOnFootActive(true);
+        FPSPlayerController.LockCursor(true);
 
         isPlayerInside = false;
         currentPlayer = null;
@@ -549,7 +790,7 @@ public class DrivableVehicle : MonoBehaviour
             InteractionPromptHUD.Instance.HideFuelHUD();
         }
 
-        Debug.Log($"[DrivableVehicle] Player exited '{vehicleName}'. On-foot controls restored.");
+        Debug.Log($"[DrivableVehicle] Player exited '{vehicleName}'. On-foot controls restored at {spawnPos}.");
     }
 
     private void FixedUpdate()

@@ -106,6 +106,24 @@ public static class DeliveryUIBuilder
         Transform oldPrompt = canvas.transform.Find("InteractionPromptBox");
         if (oldPrompt != null) Object.DestroyImmediate(oldPrompt.gameObject);
 
+        Transform oldFuelSingle = canvas.transform.Find("VehicleFuelGaugePanel");
+        if (oldFuelSingle != null) Object.DestroyImmediate(oldFuelSingle.gameObject);
+
+        Transform oldDash = canvas.transform.Find("VehicleDashboardPanel");
+        if (oldDash != null) Object.DestroyImmediate(oldDash.gameObject);
+
+        Transform oldGarage = canvas.transform.Find("GarageWorkshopPanel");
+        if (oldGarage != null) Object.DestroyImmediate(oldGarage.gameObject);
+
+        Transform oldInsurance = canvas.transform.Find("InsuranceAgencyPanel");
+        if (oldInsurance != null) Object.DestroyImmediate(oldInsurance.gameObject);
+
+        Transform oldDispatch = canvas.transform.Find("PassiveDispatchPanel");
+        if (oldDispatch != null) Object.DestroyImmediate(oldDispatch.gameObject);
+
+        Transform oldPropModal = canvas.transform.Find("PropertyPurchaseModal");
+        if (oldPropModal != null) Object.DestroyImmediate(oldPropModal.gameObject);
+
         // ==========================================
         // 0. MAIN TOP STATUS BAR (PERMANENT HUD)
         // ==========================================
@@ -1089,8 +1107,11 @@ public static class DeliveryUIBuilder
         // Interaction Prompt HUD (Press E to interact, drive, pick cargo)
         InteractionPromptHUD.CreatePromptHUDTool();
 
+        // Commercial Hub Shop UIs (Garage Workshop, Insurance Agency, Passive Dispatch, Property Modal)
+        CommercialHubUIManager.CreateCommercialHubUITool();
+
         EditorUtility.SetDirty(canvas.gameObject);
-        Debug.Log("[DeliveryUIBuilder] Professional & Clean Tablet UI successfully generated!");
+        Debug.Log("<color=#32FF64>[DeliveryUIBuilder] Professional Tablet, HUD, and Commercial Shop UI Panels successfully generated!</color>");
     }
 
     private static TextMeshProUGUI AddTextMeshPro(GameObject target, string text, float fontSize, FontStyles style, TextAlignmentOptions alignment, Color color)

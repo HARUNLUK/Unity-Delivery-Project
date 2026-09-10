@@ -151,11 +151,7 @@ public class DaySummaryManager : MonoBehaviour
 
         int netProfit = totalReward - totalPenalty;
 
-        // 3. Update XP and Player Level
-        if (PlayerProgressionManager.Instance != null)
-        {
-            PlayerProgressionManager.Instance.AddXP(totalXP);
-        }
+        // 3. XP System temporarily disabled per user request
 
         // 4. Update and persist economy
         if (PlayerEconomyManager.Instance != null)
@@ -189,12 +185,18 @@ public class DaySummaryManager : MonoBehaviour
             netEarningsText.color = netProfit >= 0 ? new Color(0.2f, 0.95f, 0.3f) : new Color(0.95f, 0.2f, 0.2f);
         }
 
-        if (progressionInfoText != null && PlayerProgressionManager.Instance != null)
+        if (progressionInfoText != null)
         {
-            int pLvl = PlayerProgressionManager.Instance.PlayerLevel;
-            int cXp = PlayerProgressionManager.Instance.CurrentXP;
-            int nXp = PlayerProgressionManager.Instance.XPForNextLevel;
-            progressionInfoText.text = $"PLAYER LEVEL {pLvl} | XP: {cXp}/{nXp} (+{totalXP} XP Today)";
+            if (BranchManager.Instance != null)
+            {
+                BranchTier currentTier = BranchManager.Instance.CurrentTier;
+                string tName = currentTier != null ? currentTier.tierName : "Branch";
+                progressionInfoText.text = $"BRANCH LEVEL {BranchManager.Instance.CurrentBranchLevel} ({tName.ToUpper()})";
+            }
+            else
+            {
+                progressionInfoText.text = string.Empty;
+            }
         }
 
         // 6. Detaylı Liste Satırlarını Oluştur
@@ -247,9 +249,7 @@ public class DaySummaryManager : MonoBehaviour
                 }
 
                 string moneyLabel = res.moneyChange >= 0 ? $"+${res.moneyChange}" : $"-${Mathf.Abs(res.moneyChange)}";
-                string xpLabel = res.xpAwarded > 0 ? $" (+{res.xpAwarded} XP)" : "";
-
-                rowText.text = $"{res.trackingNumber}{typeBadge} | {statusLabel} ({moneyLabel}){xpLabel}\nRecipient: {res.recipientName} | Target: {res.targetAddress} | Landed: {res.actualAddress}";
+                rowText.text = $"{res.trackingNumber}{typeBadge} | {statusLabel} ({moneyLabel})\nRecipient: {res.recipientName} | Target: {res.targetAddress} | Landed: {res.actualAddress}";
             }
 
             if (rowImg != null)

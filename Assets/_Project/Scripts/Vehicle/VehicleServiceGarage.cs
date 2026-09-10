@@ -1,17 +1,29 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class VehicleServiceGarage : MonoBehaviour
 {
-    public static VehicleServiceGarage Instance { get; private set; }
+    private static VehicleServiceGarage instance;
+    public static VehicleServiceGarage Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = UnityEngine.Object.FindAnyObjectByType<VehicleServiceGarage>(FindObjectsInactive.Include);
+            }
+            return instance;
+        }
+        private set => instance = value;
+    }
 
     [Header("--- PROPERTY LINK ---")]
     public PurchasableProperty propertyComponent;
 
     [Header("--- GARAGE SERVICE COSTS ---")]
     public int repairCost = 150;
-    public int paintJobCost = 300;
     public int stage1TuningCost = 1500;  // +15% Tork
     public int stage2TuningCost = 3500;  // +30% Tork
     public int stage3TuningCost = 7000;  // +50% Tork
@@ -22,30 +34,11 @@ public class VehicleServiceGarage : MonoBehaviour
 
     public float serviceDistance = 6.5f;
 
-    [Header("--- COLOR PRESETS ---")]
-    public List<Color> paintPresets = new List<Color>()
-    {
-        new Color(0.95f, 0.95f, 0.95f, 1f), // White (Default)
-        new Color(0.98f, 0.78f, 0.12f, 1f), // Express Yellow
-        new Color(0.85f, 0.15f, 0.15f, 1f), // Crimson Red
-        new Color(0.15f, 0.45f, 0.85f, 1f), // Royal Blue
-        new Color(0.18f, 0.18f, 0.20f, 1f), // Matte Black
-        new Color(0.20f, 0.65f, 0.35f, 1f), // Forest Green
-        new Color(0.95f, 0.45f, 0.10f, 1f)  // Sunset Orange
-    };
-
     public static event Action<DrivableVehicle> OnVehicleRepaired;
-    public static event Action<DrivableVehicle, Color> OnVehiclePainted;
     public static event Action<DrivableVehicle, int> OnVehicleTuned;
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
         Instance = this;
         if (propertyComponent == null) propertyComponent = GetComponent<PurchasableProperty>();
     }
@@ -59,24 +52,42 @@ public class VehicleServiceGarage : MonoBehaviour
     public Vector3 GetBayPosition()
     {
         if (serviceBayAnchor != null) return serviceBayAnchor.position;
+
+        Transform bayChild = transform.Find("ServiceBayAnchor");
+        if (bayChild == null) bayChild = transform.Find("ServiceBay");
+        if (bayChild == null) bayChild = transform.Find("InteractionAnchor");
+        if (bayChild != null) return bayChild.position;
+
+        BoxCollider box = GetComponent<BoxCollider>();
+        if (box != null) return transform.TransformPoint(box.center);
+
         return transform.position;
     }
 
     public bool IsVehicleInServiceBay(DrivableVehicle v)
     {
-        if (!IsGarageUnlocked() || v == null) return false;
-        float d = Vector3.Distance(GetBayPosition(), v.transform.position);
-        return d <= serviceDistance;
+        if (v == null) return false;
+
+        Vector3 bayPos = GetBayPosition();
+        float d = Vector3.Distance(bayPos, v.transform.position);
+        float effectiveRadius = Mathf.Max(serviceDistance, 16.0f);
+        if (d <= effectiveRadius) return true;
+
+        BoxCollider box = GetComponent<BoxCollider>();
+        if (box != null && box.bounds.Contains(v.transform.position))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public DrivableVehicle FindActiveVehicleInBay()
     {
-        if (!IsGarageUnlocked()) return null;
-
         Vector3 bayPos = GetBayPosition();
         DrivableVehicle[] vehicles = UnityEngine.Object.FindObjectsByType<DrivableVehicle>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
         DrivableVehicle closest = null;
-        float minDist = serviceDistance;
+        float minDist = Mathf.Max(serviceDistance, 16.0f);
 
         foreach (var v in vehicles)
         {
@@ -99,28 +110,38 @@ public class VehicleServiceGarage : MonoBehaviour
         string tuneInfo = stage < 3 ? $"[T] Tork (${nextCost:N0})" : "[T] Tork: MAX";
 
         return $"<color=#32D2FF>[R] Tamir (${repairCost})</color> | " +
-               $"<color=#FFD232>[C] Renk (${paintJobCost})</color> | " +
                $"<color=#FF77FF>{tuneInfo}</color>";
     }
 
     public void CheckGarageShortcutInputs(DrivableVehicle v)
     {
-        if (v == null || !IsGarageUnlocked()) return;
+        if (v == null) return;
 
-        // [R] Repair
-        if (Input.GetKeyDown(KeyCode.R))
+        bool rPressed = false;
+        bool tPressed = false;
+
+#if ENABLE_INPUT_SYSTEM
+        if (Keyboard.current != null)
+        {
+            rPressed = Keyboard.current.rKey.wasPressedThisFrame;
+            tPressed = Keyboard.current.tKey.wasPressedThisFrame;
+        }
+#endif
+
+#if ENABLE_LEGACY_INPUT_MANAGER
+        try
+        {
+            if (Input.GetKeyDown(KeyCode.R)) rPressed = true;
+            if (Input.GetKeyDown(KeyCode.T)) tPressed = true;
+        }
+        catch { }
+#endif
+
+        if (rPressed)
         {
             TryRepairVehicle(v);
         }
-
-        // [C] Paint
-        if (Input.GetKeyDown(KeyCode.C))
-        {
-            CycleVehicleColor(v);
-        }
-
-        // [T] Tune
-        if (Input.GetKeyDown(KeyCode.T))
+        if (tPressed)
         {
             TryTuneVehicle(v);
         }
@@ -133,6 +154,11 @@ public class VehicleServiceGarage : MonoBehaviour
         if (PlayerEconomyManager.Instance != null && PlayerEconomyManager.Instance.SpendMoney(repairCost))
         {
             v.currentFuel = v.maxFuel;
+            v.currentCondition = v.maxCondition;
+            PlayerPrefs.SetFloat(DrivableVehicle.FUEL_SAVE_PREFIX + v.EffectiveVehicleId, v.maxFuel);
+            PlayerPrefs.SetFloat(DrivableVehicle.CONDITION_SAVE_PREFIX + v.EffectiveVehicleId, v.maxCondition);
+            PlayerPrefs.Save();
+
             OnVehicleRepaired?.Invoke(v);
 
             if (InteractionPromptHUD.Instance != null)
@@ -145,49 +171,6 @@ public class VehicleServiceGarage : MonoBehaviour
             InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>Yetersiz Bakiye!</color>", 2.0f);
 
         return false;
-    }
-
-    public bool CycleVehicleColor(DrivableVehicle v)
-    {
-        if (v == null || paintPresets.Count == 0) return false;
-
-        if (PlayerEconomyManager.Instance != null && PlayerEconomyManager.Instance.SpendMoney(paintJobCost))
-        {
-            int colorIdx = (PlayerPrefs.GetInt("Vehicle_ColorIdx_" + v.vehicleId, 0) + 1) % paintPresets.Count;
-            PlayerPrefs.SetInt("Vehicle_ColorIdx_" + v.vehicleId, colorIdx);
-            PlayerPrefs.Save();
-
-            Color newColor = paintPresets[colorIdx];
-            ApplyColorToVehicle(v, newColor);
-            OnVehiclePainted?.Invoke(v, newColor);
-
-            if (InteractionPromptHUD.Instance != null)
-                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>🎨 {v.vehicleName} Yeni Rengine Boyandı!</color>", 2.5f);
-
-            return true;
-        }
-
-        if (InteractionPromptHUD.Instance != null)
-            InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>Yetersiz Bakiye!</color>", 2.0f);
-
-        return false;
-    }
-
-    public void ApplyColorToVehicle(DrivableVehicle v, Color c)
-    {
-        if (v == null) return;
-        Renderer[] renderers = v.GetComponentsInChildren<Renderer>(true);
-        foreach (var r in renderers)
-        {
-            if (r.name.ToLower().Contains("body") || r.name.ToLower().Contains("car") || r.name.ToLower().Contains("van"))
-            {
-                foreach (var mat in r.materials)
-                {
-                    if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", c);
-                    else if (mat.HasProperty("_Color")) mat.SetColor("_Color", c);
-                }
-            }
-        }
     }
 
     public int GetVehicleTuningStage(string vehicleId)

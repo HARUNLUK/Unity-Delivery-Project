@@ -250,14 +250,7 @@ public class BranchManager : MonoBehaviour
         }
 
         BranchTier next = NextTier;
-        int playerLvl = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.PlayerLevel : 1;
         int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
-
-        if (playerLvl < next.requiredPlayerLevel)
-        {
-            Debug.LogWarning($"[BranchManager] Player level too low! Required: {next.requiredPlayerLevel}, Current: {playerLvl}");
-            return false;
-        }
 
         if (balance < next.upgradeCost)
         {

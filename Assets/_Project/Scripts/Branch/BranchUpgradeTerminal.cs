@@ -143,7 +143,7 @@ public class BranchUpgradeTerminal : MonoBehaviour
         {
             if (current != null && next != null)
             {
-                screenText.text = $"<b>BRANCH OFFICE</b>\n<color=#32FFFF>Current: Level {current.tierLevel} ({current.tierName})</color>\n<size=75%>Next: {next.tierName}\nPrice: ${next.upgradeCost} (Level {next.requiredPlayerLevel})</size>";
+                screenText.text = $"<b>BRANCH OFFICE</b>\n<color=#32FFFF>Current: Level {current.tierLevel} ({current.tierName})</color>\n<size=75%>Next: {next.tierName}\nUpgrade Price: ${next.upgradeCost:N0}</size>";
             }
             else if (current != null)
             {

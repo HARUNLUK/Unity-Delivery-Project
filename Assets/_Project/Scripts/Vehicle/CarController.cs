@@ -19,6 +19,22 @@ public class CarController : MonoBehaviour
     [Header("--- TUNING & PERFORMANCE BOOST ---")]
     public float tuningTorqueMultiplier = 1.0f;
 
+    [Header("--- SPEED LIMITS & CONDITION SCALING ---")]
+    [Tooltip("Maximum forward speed at 100% condition in m/s (35 m/s ~= 126 km/h)")]
+    public float maxForwardSpeed = 35f;
+
+    [Tooltip("Maximum reverse speed in m/s (10 m/s ~= 36 km/h)")]
+    public float maxReverseSpeed = 10f;
+
+    [Tooltip("Minimum forward speed cap when vehicle condition is at 0% / Limp Mode in m/s (8.5 m/s ~= 30 km/h)")]
+    public float minConditionMaxSpeed = 8.5f;
+
+    [Tooltip("Motor torque multiplier when condition is at 0% / Limp Mode")]
+    public float minConditionTorqueMultiplier = 0.35f;
+
+    [Range(0f, 1f)]
+    public float currentConditionRatio = 1.0f; // 1.0 = 100%, 0.0 = 0%
+
     [Header("--- HANDBRAKE & DRIFT SETTINGS ---")]
     public float driftSidewaysStiffness = 0.25f;
     public float driftYawBoost = 4.0f;
@@ -100,8 +116,26 @@ public class CarController : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         if (rb != null)
         {
-            rb.centerOfMass += centerOfMassOffset;
-            rb.maxAngularVelocity = 7f;
+            rb.centerOfMass = new Vector3(0f, -0.5f, 0f);
+            rb.maxAngularVelocity = 6f;
+            rb.linearDamping = 0.05f;
+            rb.angularDamping = 1.0f;
+            rb.maxDepenetrationVelocity = 5.0f;
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
+        }
+
+        WheelCollider[] wheels = new WheelCollider[] { frontLeftCollider, frontRightCollider, rearLeftCollider, rearRightCollider };
+        foreach (var wc in wheels)
+        {
+            if (wc != null)
+            {
+                JointSpring s = wc.suspensionSpring;
+                if (s.spring < 25000f) s.spring = 35000f;
+                if (s.damper < 3000f) s.damper = 4500f;
+                s.targetPosition = 0.5f;
+                wc.suspensionSpring = s;
+                wc.wheelDampingRate = 0.5f;
+            }
         }
 
         if (rearLeftCollider != null)
@@ -118,12 +152,6 @@ public class CarController : MonoBehaviour
             if (stage == 1) tuningTorqueMultiplier = 1.15f;
             else if (stage == 2) tuningTorqueMultiplier = 1.30f;
             else if (stage >= 3) tuningTorqueMultiplier = 1.50f;
-
-            int colorIdx = PlayerPrefs.GetInt("Vehicle_ColorIdx_" + dv.vehicleId, -1);
-            if (colorIdx >= 0 && VehicleServiceGarage.Instance != null && colorIdx < VehicleServiceGarage.Instance.paintPresets.Count)
-            {
-                VehicleServiceGarage.Instance.ApplyColorToVehicle(dv, VehicleServiceGarage.Instance.paintPresets[colorIdx]);
-            }
         }
     }
 
@@ -143,6 +171,11 @@ public class CarController : MonoBehaviour
         }
 
         isBaseEulerCaptured = true;
+    }
+
+    public void SetConditionRatio(float ratio)
+    {
+        currentConditionRatio = Mathf.Clamp01(ratio);
     }
 
     private void OnDisable()
@@ -212,6 +245,11 @@ public class CarController : MonoBehaviour
         verticalInput = 0f;
         isHandbraking = false;
 
+        if (FPSPlayerController.Instance != null && FPSPlayerController.Instance.IsUIBlockingInput())
+        {
+            return;
+        }
+
 #if ENABLE_INPUT_SYSTEM
         if (Keyboard.current != null)
         {
@@ -237,16 +275,28 @@ public class CarController : MonoBehaviour
         float speed = Mathf.Abs(horizontalInput) > 0.05f ? steerSpeed : steerReturnSpeed;
         currentSteerAngle = Mathf.MoveTowards(currentSteerAngle, targetSteerAngle, speed * Time.fixedDeltaTime);
 
-        // 2. Ackermann Steering Angle Differential (İç tekerlek daha geniş döner, tekerlek kasması sıfırlanır)
-        if (currentSteerAngle > 0.05f)
+        // 2. Hasarlı Direksiyon Yalpalaması (SADECE Kondisyon %30'un altına düştüğünde ve araç hareket halindeyken sağ-sol yalpalama)
+        float wobbleAngle = 0f;
+        if (currentConditionRatio < 0.30f && (Mathf.Abs(ForwardSpeed) > 0.8f || Mathf.Abs(verticalInput) > 0.1f))
         {
-            if (frontLeftCollider != null) frontLeftCollider.steerAngle = currentSteerAngle * 0.85f;
-            if (frontRightCollider != null) frontRightCollider.steerAngle = currentSteerAngle * 1.05f;
+            float wobbleIntensity = Mathf.Clamp01((0.30f - currentConditionRatio) / 0.30f); // 0 (%30'da) -> 1.0 (%0'da)
+            float wobbleTime = Time.time * 7.5f;
+            // Organik sağ-sol yalpalama salınımı
+            wobbleAngle = (Mathf.Sin(wobbleTime) * 0.7f + Mathf.Sin(wobbleTime * 2.3f) * 0.3f) * (maxSteerAngle * 0.25f * wobbleIntensity);
         }
-        else if (currentSteerAngle < -0.05f)
+
+        float effectiveSteerAngle = currentSteerAngle + wobbleAngle;
+
+        // 3. Ackermann Steering Angle Differential (İç tekerlek daha geniş döner, tekerlek kasması sıfırlanır)
+        if (effectiveSteerAngle > 0.05f)
         {
-            if (frontLeftCollider != null) frontLeftCollider.steerAngle = currentSteerAngle * 1.05f;
-            if (frontRightCollider != null) frontRightCollider.steerAngle = currentSteerAngle * 0.85f;
+            if (frontLeftCollider != null) frontLeftCollider.steerAngle = effectiveSteerAngle * 0.85f;
+            if (frontRightCollider != null) frontRightCollider.steerAngle = effectiveSteerAngle * 1.05f;
+        }
+        else if (effectiveSteerAngle < -0.05f)
+        {
+            if (frontLeftCollider != null) frontLeftCollider.steerAngle = effectiveSteerAngle * 1.05f;
+            if (frontRightCollider != null) frontRightCollider.steerAngle = effectiveSteerAngle * 0.85f;
         }
         else
         {
@@ -254,19 +304,22 @@ public class CarController : MonoBehaviour
             if (frontRightCollider != null) frontRightCollider.steerAngle = 0f;
         }
 
-        // 3. Agile Yaw Torque Assist (Dönüşlerde araca çeviklik desteği)
-        if (rb != null && Mathf.Abs(currentSteerAngle) > 0.5f && rb.linearVelocity.magnitude > 0.5f)
+        // 4. Agile Yaw Torque Assist (Dönüşlerde araca çeviklik desteği)
+        if (rb != null && Mathf.Abs(effectiveSteerAngle) > 0.5f && rb.linearVelocity.magnitude > 0.5f)
         {
-            float directionSign = ForwardSpeed >= -0.2f ? 1f : -1f;
-            float steerRatio = currentSteerAngle / maxSteerAngle;
-            rb.AddTorque(transform.up * (steerRatio * turnAssistTorque * directionSign), ForceMode.Acceleration);
+            if (rb.angularVelocity.magnitude < 2.5f)
+            {
+                float directionSign = ForwardSpeed >= -0.2f ? 1f : -1f;
+                float steerRatio = effectiveSteerAngle / maxSteerAngle;
+                rb.AddTorque(transform.up * (steerRatio * turnAssistTorque * directionSign), ForceMode.Acceleration);
+            }
         }
 
-        // 4. Direksiyon Modeli Rotasyonu (SADECE X açısını değiştirir; Y ve Z açıları daima korunur)
+        // 5. Direksiyon Modeli Rotasyonu (SADECE X açısını değiştirir; Y ve Z açıları daima korunur)
         if (steeringWheel != null)
         {
             EnsureBaseSteeringEuler();
-            float steerRot = currentSteerAngle * steeringWheelMultiplier;
+            float steerRot = effectiveSteerAngle * steeringWheelMultiplier;
             float targetX = baseSteeringEuler.x - steerRot;
             steeringWheel.localEulerAngles = new Vector3(targetX, baseSteeringEuler.y, baseSteeringEuler.z);
         }
@@ -282,6 +335,11 @@ public class CarController : MonoBehaviour
             HandleHandbrake();
             return;
         }
+
+        // 1. SADECE %0 Kondisyonda (Maks Hasar / Limp Mode) maksimum hızı kısıtla
+        bool isMaxDamaged = currentConditionRatio <= 0.02f;
+        float activeMaxSpeed = isMaxDamaged ? minConditionMaxSpeed : maxForwardSpeed;
+        float baseTorqueMult = isMaxDamaged ? minConditionTorqueMultiplier : 1.0f;
 
         if (ForwardSpeed > 1.0f && verticalInput < -0.05f)
         {
@@ -299,16 +357,48 @@ public class CarController : MonoBehaviour
 
             if (verticalInput > 0.05f)
             {
-                motor = verticalInput * motorForce * tuningTorqueMultiplier;
+                if (ForwardSpeed < activeMaxSpeed)
+                {
+                    motor = verticalInput * motorForce * tuningTorqueMultiplier * baseTorqueMult;
+                }
+                else
+                {
+                    motor = 0f; // Hız sınırına ulaşınca torku kes (sarsıntısız, düzgün)
+                }
             }
             else if (verticalInput < -0.05f)
             {
-                motor = verticalInput * reverseForce * tuningTorqueMultiplier;
+                if (Mathf.Abs(ForwardSpeed) < maxReverseSpeed)
+                {
+                    motor = verticalInput * reverseForce * tuningTorqueMultiplier * baseTorqueMult;
+                }
+                else
+                {
+                    motor = 0f;
+                }
             }
             else
             {
                 motor = 0f;
                 footBrake = 500f;
+            }
+        }
+
+        // 2. SADECE Kondisyon %30'un ALTINA düştüğünde araba hasarlı motor teklemeleriyle sallanmaya başlasın
+        if (currentConditionRatio < 0.30f && (Mathf.Abs(verticalInput) > 0.1f || ForwardSpeed > 1f))
+        {
+            float shakeRatio = Mathf.Clamp01((0.30f - currentConditionRatio) / 0.30f); // 0 (at 30%) -> 1 (at 0%)
+
+            // Motor teklemesi (Tork dalgalanması)
+            float sputter = Mathf.Sin(Time.time * 22f) * (0.35f * shakeRatio);
+            motor *= Mathf.Clamp01(1f - sputter);
+
+            // Fiziksel motor/şasi sarsıntısı
+            if (rb != null)
+            {
+                float pitchRumble = (Mathf.PerlinNoise(Time.time * 26f, 0f) - 0.5f) * (1.2f * shakeRatio);
+                float rollRumble = (Mathf.PerlinNoise(0f, Time.time * 26f) - 0.5f) * (0.8f * shakeRatio);
+                rb.AddRelativeTorque(new Vector3(pitchRumble, 0f, rollRumble), ForceMode.Acceleration);
             }
         }
 
@@ -365,12 +455,12 @@ public class CarController : MonoBehaviour
         currentRearStiffness = Mathf.MoveTowards(currentRearStiffness, normalRearSidewaysFriction.stiffness, Time.fixedDeltaTime * 2.5f);
         SetRearStiffness(currentRearStiffness);
 
-        // Yalnızca düz giderken toparla (dönüş yaparken dönüş açısını KISITLAMA!)
+        // Yalnızca düz giderken toparla (dönüş yaparken veya duvara çarpınca fizik motorunu kitleme!)
         if (Mathf.Abs(horizontalInput) < 0.1f && verticalInput > 0.1f && rb != null && ForwardSpeed > 2f)
         {
             Vector3 localVel = transform.InverseTransformDirection(rb.linearVelocity);
 
-            if (Mathf.Abs(localVel.x) > 0.5f)
+            if (Mathf.Abs(localVel.x) > 0.5f && Mathf.Abs(localVel.x) < 8.0f)
             {
                 localVel.x = Mathf.MoveTowards(localVel.x, 0f, Time.fixedDeltaTime * driftRecoveryRate);
                 rb.linearVelocity = transform.TransformDirection(localVel);

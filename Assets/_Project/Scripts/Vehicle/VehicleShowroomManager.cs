@@ -124,6 +124,7 @@ public class VehicleShowroomManager : MonoBehaviour
             return true;
         }
 #endif
+#if ENABLE_LEGACY_INPUT_MANAGER
         try
         {
             if (Input.GetKeyDown(KeyCode.F9))
@@ -132,6 +133,7 @@ public class VehicleShowroomManager : MonoBehaviour
             }
         }
         catch { }
+#endif
 
         return false;
     }

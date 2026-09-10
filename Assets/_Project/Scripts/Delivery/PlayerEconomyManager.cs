@@ -83,6 +83,7 @@ public class PlayerEconomyManager : MonoBehaviour
             ShowResetFeedback();
         }
 #endif
+#if ENABLE_LEGACY_INPUT_MANAGER
         try
         {
             if (Input.GetKeyDown(KeyCode.F7))
@@ -92,6 +93,7 @@ public class PlayerEconomyManager : MonoBehaviour
             }
         }
         catch { }
+#endif
     }
 
     private void ShowResetFeedback()
@@ -105,6 +107,19 @@ public class PlayerEconomyManager : MonoBehaviour
 
     public void AddCash(int amount) => AddEarnings(amount);
     public void DeductCash(int amount) => AddPenalty(amount);
+
+    /// <summary>
+    /// Overwrites total vault balance directly (e.g. from FPSPlayerController Inspector or debug commands).
+    /// </summary>
+    public void SetBalance(int newBalance)
+    {
+        totalSavedBalance = Mathf.Max(0, newBalance);
+        todayEarned = 0;
+        todayPenalties = 0;
+        PlayerPrefs.SetInt(BALANCE_KEY, totalSavedBalance);
+        PlayerPrefs.Save();
+        OnEconomyUpdated?.Invoke(CurrentLiveBalance, TodayNetProfit);
+    }
 
     public bool SpendMoney(int amount)
     {

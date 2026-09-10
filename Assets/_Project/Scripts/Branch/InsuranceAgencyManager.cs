@@ -89,6 +89,38 @@ public class InsuranceAgencyManager : MonoBehaviour
         }
     }
 
+    public string GetTierName()
+    {
+        switch (insuranceTier)
+        {
+            case 1: return "Temel Kasko (%30 Hasar İndirimi)";
+            case 2: return "Gümüş Kasko (%60 Hasar + %50 Yanlış Adres İndirimi)";
+            case 3: return "Altın Tam Kasko (%100 Hasar Koruması)";
+            default: return "Kasko";
+        }
+    }
+
+    public string GetUpgradePromptText()
+    {
+        if (!IsAgencyUnlocked()) return string.Empty;
+
+        if (insuranceTier >= 3)
+        {
+            return "<color=#32FF64>🛡️ Altın Tam Kasko: MAKSİMUM SEVİYE (%100 Hasar Koruması)</color>";
+        }
+
+        int nextCost = GetNextTierCost();
+        string nextTierName = insuranceTier == 1 ? "Gümüş Kasko (%60 İndirim)" : "Altın Tam Kasko (%100 Koruma)";
+        int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
+
+        if (balance < nextCost)
+        {
+            return $"<color=#FFAA33>🛡️ {nextTierName} - ${nextCost:N0} (Bakiye: ${balance:N0})</color>";
+        }
+
+        return $"<color=#32FF64>[E] Kaskoyu Yükselt: {nextTierName} (${nextCost:N0})</color>";
+    }
+
     public bool TryUpgradeTier()
     {
         if (!IsAgencyUnlocked()) return false;

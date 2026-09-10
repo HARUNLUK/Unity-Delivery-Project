@@ -125,10 +125,10 @@ public class VehicleUnlockable : MonoBehaviour
     {
         if (IsUnlocked) return true;
 
-        int currentLvl = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.PlayerLevel : 1;
-        if (currentLvl < requiredPlayerLevel)
+        int branchLvl = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : (PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.WarehouseLevel : 1);
+        if (branchLvl < requiredPlayerLevel)
         {
-            Debug.LogWarning($"[VehicleUnlockable] Insufficient level! Required: {requiredPlayerLevel}, Current: {currentLvl}");
+            Debug.LogWarning($"[VehicleUnlockable] Insufficient branch level! Required: {requiredPlayerLevel}, Current: {branchLvl}");
             return false;
         }
 

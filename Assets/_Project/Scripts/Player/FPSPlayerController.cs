@@ -26,6 +26,8 @@ public class FPSPlayerController : MonoBehaviour
     public PhysicsGrabber grabber;
 
     private CharacterController controller;
+    public CharacterController Controller => controller;
+    public bool IsOnFoot => isOnFoot;
     private Vector3 velocity;
     private float pitch = 0f;
     private bool isOnFoot = true;
@@ -56,6 +58,15 @@ public class FPSPlayerController : MonoBehaviour
     [Tooltip("Hold duration in seconds for maximum throw power")]
     public float throwChargeDuration = 0.85f;
 
+    [Header("--- ECONOMY / CASH OVERRIDE (OYUNCU PARASI) ---")]
+    [Tooltip("Directly view or set the player's cash balance from Inspector in Editor/Runtime")]
+    public int playerCash = 500;
+
+    [Tooltip("If true, the player's saved cash in PlayerPrefs will be overwritten with playerCash on Start")]
+    public bool overrideStartingCash = false;
+
+    private int lastTrackedCash = -1;
+
     private float vehicleYaw = 0f;
     private float vehiclePitch = 0f;
     private float tpsYawOffset = 0f;
@@ -66,6 +77,7 @@ public class FPSPlayerController : MonoBehaviour
 
     private float currentDropHoldTime = 0f;
     private float afterGrabSafetyTimer = 0f;
+    public float exitVehicleSafetyTimer = 0f;
 
     private void Awake()
     {
@@ -159,6 +171,28 @@ public class FPSPlayerController : MonoBehaviour
 
         SetOnFootActive(true);
         LockCursor(true);
+
+        if (overrideStartingCash && PlayerEconomyManager.Instance != null)
+        {
+            PlayerEconomyManager.Instance.SetBalance(playerCash);
+            lastTrackedCash = playerCash;
+        }
+        else if (PlayerEconomyManager.Instance != null)
+        {
+            playerCash = PlayerEconomyManager.Instance.CurrentLiveBalance;
+            lastTrackedCash = playerCash;
+        }
+    }
+
+    [ContextMenu("Apply Inspector Cash To Player Economy")]
+    public void ApplyInspectorCash()
+    {
+        if (PlayerEconomyManager.Instance != null)
+        {
+            PlayerEconomyManager.Instance.SetBalance(playerCash);
+            lastTrackedCash = playerCash;
+            Debug.Log($"<color=#32FF64>[FPSPlayerController] Player cash updated to ${playerCash}.</color>");
+        }
     }
 
     public bool IsUIBlockingInput()
@@ -169,7 +203,7 @@ public class FPSPlayerController : MonoBehaviour
         if (DaySummaryManager.Instance != null && DaySummaryManager.Instance.summaryPanelRoot != null && DaySummaryManager.Instance.summaryPanelRoot.activeSelf)
             return true;
 
-        if (Cursor.lockState != CursorLockMode.Locked || Cursor.visible)
+        if (CommercialHubUIManager.Instance != null && CommercialHubUIManager.Instance.IsAnyPanelOpen)
             return true;
 
         return false;
@@ -177,7 +211,56 @@ public class FPSPlayerController : MonoBehaviour
 
     private void Update()
     {
+        // Live sync Inspector playerCash <-> PlayerEconomyManager
+        if (PlayerEconomyManager.Instance != null)
+        {
+            if (playerCash != lastTrackedCash)
+            {
+                PlayerEconomyManager.Instance.SetBalance(playerCash);
+                lastTrackedCash = playerCash;
+            }
+            else
+            {
+                playerCash = PlayerEconomyManager.Instance.CurrentLiveBalance;
+                lastTrackedCash = playerCash;
+            }
+        }
+
+        if (exitVehicleSafetyTimer > 0f)
+        {
+            exitVehicleSafetyTimer -= Time.deltaTime;
+        }
+
         bool isUIOpen = IsUIBlockingInput();
+
+        // Auto re-lock cursor if clicking in game without open UI
+        if (!isUIOpen && isOnFoot && (Cursor.lockState != CursorLockMode.Locked || Cursor.visible))
+        {
+            if ((Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame) ||
+                (Keyboard.current != null && (Keyboard.current.wKey.wasPressedThisFrame || Keyboard.current.eKey.wasPressedThisFrame)))
+            {
+                LockCursor(true);
+            }
+        }
+
+        // F9 Dev Reset for Vehicles, Shops / Properties & Branch Progression (Works on foot AND inside vehicles)
+        if (CheckF9DevInput())
+        {
+            DrivableVehicle.ResetAllVehiclesInGame();
+            PurchasableProperty.ResetAllPropertiesInGame();
+            if (BranchManager.Instance != null)
+            {
+                BranchManager.Instance.ResetBranchProgression();
+            }
+            if (InteractionPromptHUD.Instance != null)
+            {
+                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF5555>[DEV RESET] TÜM ARAÇLAR (YAKIT & KONDİSYON %100), DÜKKANLAR VE ŞUBE SIFIRLANDI (F9)</color>", 3.5f);
+            }
+            if (CargoTabletUI.Instance != null && CargoTabletUI.Instance.IsTabletOpen)
+            {
+                CargoTabletUI.Instance.PopulateVehicleList();
+            }
+        }
 
         if (!isOnFoot)
         {
@@ -201,25 +284,6 @@ public class FPSPlayerController : MonoBehaviour
             return;
         }
 
-        // F9 Dev Reset for Vehicles, Shops / Properties & Branch Progression
-        if (CheckF9DevInput())
-        {
-            DrivableVehicle.ResetAllVehiclesInGame();
-            PurchasableProperty.ResetAllPropertiesInGame();
-            if (BranchManager.Instance != null)
-            {
-                BranchManager.Instance.ResetBranchProgression();
-            }
-            if (InteractionPromptHUD.Instance != null)
-            {
-                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF5555>[DEV RESET] TÜM ARAÇLAR, DÜKKANLAR VE ŞUBE SIFIRLANDI (F9)</color>", 3.5f);
-            }
-            if (CargoTabletUI.Instance != null && CargoTabletUI.Instance.IsTabletOpen)
-            {
-                CargoTabletUI.Instance.PopulateVehicleList();
-            }
-        }
-
         if (!isUIOpen)
         {
             HandleMouseLook();
@@ -237,6 +301,7 @@ public class FPSPlayerController : MonoBehaviour
             return true;
         }
 #endif
+#if ENABLE_LEGACY_INPUT_MANAGER
         try
         {
             if (Input.GetKeyDown(KeyCode.F9))
@@ -245,6 +310,7 @@ public class FPSPlayerController : MonoBehaviour
             }
         }
         catch { }
+#endif
 
         return false;
     }
@@ -434,6 +500,22 @@ public class FPSPlayerController : MonoBehaviour
             jumpPressed = Keyboard.current.spaceKey.wasPressedThisFrame;
         }
 
+#if ENABLE_LEGACY_INPUT_MANAGER
+        try
+        {
+            if (!IsUIBlockingInput())
+            {
+                if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) moveZ = Mathf.Max(moveZ, 1f);
+                if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) moveZ = Mathf.Min(moveZ, -1f);
+                if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) moveX = Mathf.Max(moveX, 1f);
+                if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) moveX = Mathf.Min(moveX, -1f);
+                if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) isSprinting = true;
+                if (Input.GetKeyDown(KeyCode.Space)) jumpPressed = true;
+            }
+        }
+        catch { }
+#endif
+
         Vector3 move = (transform.right * moveX + transform.forward * moveZ).normalized;
         float speed = isSprinting ? sprintSpeed : walkSpeed;
 
@@ -586,8 +668,13 @@ public class FPSPlayerController : MonoBehaviour
                 if (p == null) p = h.collider.GetComponent<PurchasableProperty>();
                 if (p != null && !p.IsUnlocked)
                 {
-                    lockedProperty = p;
-                    break;
+                    Vector3 anchorPos = p.interactionAnchor != null ? p.interactionAnchor.position : p.transform.position;
+                    float d = Vector3.Distance(transform.position, anchorPos);
+                    if (d <= p.interactionDistance || h.distance <= p.interactionDistance)
+                    {
+                        lockedProperty = p;
+                        break;
+                    }
                 }
             }
         }
@@ -622,9 +709,63 @@ public class FPSPlayerController : MonoBehaviour
 
             if (interactPressed)
             {
-                lockedProperty.TryPurchase();
+                if (CommercialHubUIManager.Instance != null)
+                {
+                    CommercialHubUIManager.Instance.OpenPropertyPurchaseModal(lockedProperty);
+                }
+                else
+                {
+                    lockedProperty.TryPurchase();
+                }
             }
             return;
+        }
+
+        // 1.1 Check Unlocked Insurance Agency & Passive Dispatch Hub In-World Terminal Upgrades
+        if (hits != null)
+        {
+            foreach (var h in hits)
+            {
+                if (h.distance > interactionDistance + 0.5f) continue;
+
+                InsuranceAgencyManager ins = h.collider.GetComponentInParent<InsuranceAgencyManager>();
+                if (ins == null) ins = h.collider.GetComponent<InsuranceAgencyManager>();
+                if (ins != null && ins.IsAgencyUnlocked())
+                {
+                    if (InteractionPromptHUD.Instance != null)
+                    {
+                        InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Kargo Sigorta Acentesi Menüsünü Aç ({ins.GetTierName()})</color>");
+                    }
+
+                    if (interactPressed)
+                    {
+                        if (CommercialHubUIManager.Instance != null)
+                            CommercialHubUIManager.Instance.OpenInsurancePanel();
+                        else
+                            ins.TryUpgradeTier();
+                    }
+                    return;
+                }
+
+                PassiveDispatchManager hub = h.collider.GetComponentInParent<PassiveDispatchManager>();
+                if (hub == null) hub = h.collider.GetComponent<PassiveDispatchManager>();
+                if (hub != null && hub.IsHubUnlocked())
+                {
+                    if (InteractionPromptHUD.Instance != null)
+                    {
+                        InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Bölge Dağıtım Şubesi Menüsünü Aç (Seviye {hub.DispatchHubLevel} - {hub.GetCourierCount()} Kurye)</color>");
+                    }
+
+                    if (interactPressed)
+                    {
+                        if (CommercialHubUIManager.Instance != null)
+                            CommercialHubUIManager.Instance.OpenDispatchHubPanel();
+                        else
+                            hub.TryUpgradeHub();
+                    }
+                    return;
+                }
+            }
         }
 
         // 2. Physical Cargo Package or Rigidbody Object Detection (High Priority)
@@ -732,14 +873,14 @@ public class FPSPlayerController : MonoBehaviour
                 {
                     if (!vehicle.IsUnlocked)
                     {
-                        int playerLevel = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.PlayerLevel : 1;
+                        int branchLevel = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : (PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.WarehouseLevel : 1);
                         int currentBalance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
 
-                        if (playerLevel < vehicle.requiredPlayerLevel)
+                        if (branchLevel < vehicle.requiredPlayerLevel)
                         {
                             if (InteractionPromptHUD.Instance != null)
                             {
-                                InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF5555>[LOCKED] {vehicle.vehicleName}</color> (Requires Level {vehicle.requiredPlayerLevel} - ${vehicle.purchasePrice})");
+                                InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF5555>[LOCKED] {vehicle.vehicleName}</color> (Requires Branch Level {vehicle.requiredPlayerLevel} - ${vehicle.purchasePrice})");
                             }
                         }
                         else if (currentBalance < vehicle.purchasePrice)
@@ -789,19 +930,33 @@ public class FPSPlayerController : MonoBehaviour
                         return;
                     }
 
-                    // Check if vehicle is in the unlocked Auto Service Garage bay
+                    // Check if vehicle is in the Auto Service Garage bay
                     bool inGarageBay = VehicleServiceGarage.Instance != null &&
-                                       VehicleServiceGarage.Instance.IsGarageUnlocked() &&
                                        VehicleServiceGarage.Instance.IsVehicleInServiceBay(vehicle);
 
                     if (inGarageBay)
                     {
                         VehicleServiceGarage.Instance.CheckGarageShortcutInputs(vehicle);
+
+                        bool fPressed = false;
+#if ENABLE_INPUT_SYSTEM
+                        if (Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame) fPressed = true;
+#endif
+#if ENABLE_LEGACY_INPUT_MANAGER
+                        try { if (Input.GetKeyDown(KeyCode.F)) fPressed = true; } catch { }
+#endif
+
+                        if (fPressed && CommercialHubUIManager.Instance != null)
+                        {
+                            CommercialHubUIManager.Instance.OpenGarageWorkshopPanel(vehicle);
+                            return;
+                        }
+
                         string garageInfo = VehicleServiceGarage.Instance.GetGaragePromptForVehicle(vehicle);
 
                         if (InteractionPromptHUD.Instance != null)
                         {
-                            InteractionPromptHUD.Instance.ShowPrompt($"[E] Drive {vehicle.vehicleName} | " + garageInfo);
+                            InteractionPromptHUD.Instance.ShowPrompt($"[E] Sür  |  <color=#FFD232>[F] Servis Menüsü</color>  |  " + garageInfo);
                         }
                     }
                     else
@@ -812,7 +967,7 @@ public class FPSPlayerController : MonoBehaviour
                         }
                     }
 
-                    if (interactPressed)
+                    if (interactPressed && exitVehicleSafetyTimer <= 0f)
                     {
                         vehicle.EnterVehicle(this);
                     }
@@ -822,12 +977,40 @@ public class FPSPlayerController : MonoBehaviour
         }
 
         // 5. Check if standing near a vehicle inside the service garage bay without aiming directly at it
-        if (VehicleServiceGarage.Instance != null && VehicleServiceGarage.Instance.IsGarageUnlocked())
+        if (VehicleServiceGarage.Instance != null)
         {
             DrivableVehicle bayVehicle = VehicleServiceGarage.Instance.FindActiveVehicleInBay();
-            if (bayVehicle != null && Vector3.Distance(transform.position, bayVehicle.transform.position) <= 5.0f)
+            if (bayVehicle != null && Vector3.Distance(transform.position, bayVehicle.transform.position) <= 6.0f)
             {
                 VehicleServiceGarage.Instance.CheckGarageShortcutInputs(bayVehicle);
+
+                bool fPressed = false;
+#if ENABLE_INPUT_SYSTEM
+                if (Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame) fPressed = true;
+#endif
+#if ENABLE_LEGACY_INPUT_MANAGER
+                try { if (Input.GetKeyDown(KeyCode.F)) fPressed = true; } catch { }
+#endif
+
+                if (fPressed && CommercialHubUIManager.Instance != null)
+                {
+                    CommercialHubUIManager.Instance.OpenGarageWorkshopPanel(bayVehicle);
+                    return;
+                }
+
+                if (InteractionPromptHUD.Instance != null)
+                {
+                    string garageInfo = VehicleServiceGarage.Instance.GetGaragePromptForVehicle(bayVehicle);
+                    InteractionPromptHUD.Instance.ShowPrompt($"[E] Sür  |  <color=#FFD232>[F] Servis Menüsü</color>  |  " + garageInfo);
+                }
+
+                if (interactPressed && exitVehicleSafetyTimer <= 0f && Vector3.Distance(transform.position, bayVehicle.transform.position) <= 3.5f)
+                {
+                    bayVehicle.EnterVehicle(this);
+                    return;
+                }
+
+                return;
             }
         }
 
@@ -841,6 +1024,7 @@ public class FPSPlayerController : MonoBehaviour
     public void SetOnFootActive(bool active)
     {
         isOnFoot = active;
+        velocity = Vector3.zero;
         if (controller != null) controller.enabled = active;
     }
 
@@ -877,8 +1061,8 @@ public class FPSPlayerController : MonoBehaviour
         pitch = 0f;
 
         playerCamera.transform.SetParent(cameraHolder != null ? cameraHolder : transform);
-        playerCamera.transform.localPosition = originalCameraLocalPos;
-        playerCamera.transform.localRotation = originalCameraLocalRot;
+        playerCamera.transform.localPosition = Vector3.zero;
+        playerCamera.transform.localRotation = Quaternion.identity;
         if (cameraHolder != null) cameraHolder.localRotation = Quaternion.identity;
     }
 

@@ -20,12 +20,12 @@ public class PlayerProgressionManager : MonoBehaviour
     private const string PREFS_CURRENT_XP = "Delivery_CurrentXP";
     private const string PREFS_WAREHOUSE_LEVEL = "Delivery_WarehouseLevel";
 
-    public int PlayerLevel => playerLevel;
+    public int PlayerLevel => BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : (warehouseLevel > 0 ? warehouseLevel : 1);
     public int CurrentXP => currentXP;
     public int WarehouseLevel => BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : warehouseLevel;
 
-    public int XPForNextLevel => GetXPRequiredForLevel(playerLevel + 1);
-    public int XPForCurrentLevel => GetXPRequiredForLevel(playerLevel);
+    public int XPForNextLevel => GetXPRequiredForLevel(PlayerLevel + 1);
+    public int XPForCurrentLevel => GetXPRequiredForLevel(PlayerLevel);
 
     private void Awake()
     {
@@ -43,7 +43,6 @@ public class PlayerProgressionManager : MonoBehaviour
     public static int GetXPRequiredForLevel(int level)
     {
         if (level <= 1) return 0;
-        // Exponential smooth progression: Level 2 = 300, Level 3 = 800, Level 4 = 1600, Level 5 = 2700...
         return Mathf.RoundToInt(150f * Mathf.Pow(level - 1, 1.6f));
     }
 
@@ -83,20 +82,7 @@ public class PlayerProgressionManager : MonoBehaviour
 
     public void AddXP(int amount)
     {
-        if (amount <= 0) return;
-
-        currentXP += amount;
-        OnXPGained?.Invoke(amount, currentXP);
-
-        // Check for level ups
-        while (currentXP >= GetXPRequiredForLevel(playerLevel + 1))
-        {
-            playerLevel++;
-            Debug.Log($"<color=#32FF64>[LEVEL UP] You reached Player Level {playerLevel}!</color>");
-            OnLevelUp?.Invoke(playerLevel);
-        }
-
-        SaveProgression();
+        // XP System temporarily disabled per user request
     }
 
     public bool UpgradeWarehouse()

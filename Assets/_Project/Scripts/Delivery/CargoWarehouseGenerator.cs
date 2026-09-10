@@ -130,8 +130,8 @@ public class CargoWarehouseGenerator : MonoBehaviour
 
         ClearOldPackages();
 
-        int playerLevel = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.PlayerLevel : 1;
-        int toSpawn = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.GetDailyPackageLimit() : Mathf.Max(1, packageCount);
+        int branchLevel = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : (PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.WarehouseLevel : 1);
+        int toSpawn = BranchManager.Instance != null ? BranchManager.Instance.GetDailyPackageLimit() : (PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.GetDailyPackageLimit() : Mathf.Max(1, packageCount));
 
         DeliveryPoint[] allPoints = Object.FindObjectsByType<DeliveryPoint>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
         if (allPoints == null || allPoints.Length == 0)
@@ -140,11 +140,11 @@ public class CargoWarehouseGenerator : MonoBehaviour
             return;
         }
 
-        // Filter points by player level
+        // Filter points by branch level
         List<DeliveryPoint> availablePoints = new List<DeliveryPoint>();
         foreach (var p in allPoints)
         {
-            if (p.requiredLevel <= playerLevel)
+            if (p.requiredLevel <= branchLevel)
             {
                 availablePoints.Add(p);
             }
@@ -165,8 +165,8 @@ public class CargoWarehouseGenerator : MonoBehaviour
             Vector3 spawnPos = GetSafeSpawnPosition(i);
             Quaternion spawnRot = transform.rotation * Quaternion.Euler(0f, Random.Range(-25f, 25f), 0f);
 
-            // Determine Cargo Type based on player level unlock rules & weighted random selection
-            CargoType chosenType = DetermineRandomCargoType(playerLevel);
+            // Determine Cargo Type based on branch level unlock rules & weighted random selection
+            CargoType chosenType = DetermineRandomCargoType(branchLevel);
 
             // Check if user provided custom 3D Prefab model
             GameObject chosenPrefab = GetPrefabForCargoType(chosenType);
@@ -234,7 +234,7 @@ public class CargoWarehouseGenerator : MonoBehaviour
             currentPackages.Add(pkg);
         }
 
-        Debug.Log($"<color=#32FF64>[CargoWarehouseGenerator] Spawned {currentPackages.Count} packages safely at {transform.position} for Player Level {playerLevel}!</color>");
+        Debug.Log($"<color=#32FF64>[CargoWarehouseGenerator] Spawned {currentPackages.Count} packages safely at {transform.position} for Branch Level {branchLevel}!</color>");
     }
 
     /// <summary>
@@ -305,23 +305,23 @@ public class CargoWarehouseGenerator : MonoBehaviour
     }
 
     /// <summary>
-    /// Selects an unlocked cargo type using weighted random probability based on player level.
+    /// Selects an unlocked cargo type using weighted random probability based on branch level.
     /// </summary>
-    public CargoType DetermineRandomCargoType(int playerLevel)
+    public CargoType DetermineRandomCargoType(int branchLevel)
     {
         List<(CargoType type, float weight)> available = new List<(CargoType, float)>();
 
-        if (playerLevel >= standardRequiredLevel && standardSpawnWeight > 0f)
+        if (branchLevel >= standardRequiredLevel && standardSpawnWeight > 0f)
         {
             available.Add((CargoType.Standard, standardSpawnWeight));
         }
 
-        if (playerLevel >= fragileRequiredLevel && fragileSpawnWeight > 0f)
+        if (branchLevel >= fragileRequiredLevel && fragileSpawnWeight > 0f)
         {
             available.Add((CargoType.Fragile, fragileSpawnWeight));
         }
 
-        if (playerLevel >= expressRequiredLevel && expressSpawnWeight > 0f)
+        if (branchLevel >= expressRequiredLevel && expressSpawnWeight > 0f)
         {
             available.Add((CargoType.Express, expressSpawnWeight));
         }

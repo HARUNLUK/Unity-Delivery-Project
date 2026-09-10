@@ -55,7 +55,6 @@ public class PurchasableProperty : MonoBehaviour
     public static event Action<PurchasableProperty> OnPropertyUnlocked;
 
     private const string PREF_KEY_PREFIX = "Property_Unlocked_";
-    private bool isPlayerNearby = false;
 
     private void Awake()
     {
@@ -86,67 +85,16 @@ public class PurchasableProperty : MonoBehaviour
         if (forSaleSignboard != null) forSaleSignboard.SetActive(!isUnlocked);
     }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if (isUnlocked) return;
-        if (other.CompareTag("Player") || other.GetComponent<FPSPlayerController>() != null || other.GetComponentInParent<FPSPlayerController>() != null)
-        {
-            isPlayerNearby = true;
-        }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag("Player") || other.GetComponent<FPSPlayerController>() != null || other.GetComponentInParent<FPSPlayerController>() != null)
-        {
-            isPlayerNearby = false;
-            if (InteractionPromptHUD.Instance != null && !isUnlocked)
-            {
-                InteractionPromptHUD.Instance.HidePrompt();
-            }
-        }
-    }
-
-    private void Update()
-    {
-        if (isUnlocked) return;
-
-        // Check player distance if interaction anchor is assigned
-        if (!isPlayerNearby && interactionAnchor != null)
-        {
-            Transform playerT = GetPlayerTransform();
-            if (playerT != null)
-            {
-                float dist = Vector3.Distance(playerT.position, interactionAnchor.position);
-                isPlayerNearby = (dist <= interactionDistance);
-            }
-        }
-
-        if (isPlayerNearby)
-        {
-            UpdatePurchasePrompt();
-            CheckPurchaseInput();
-        }
-    }
-
-    private Transform GetPlayerTransform()
-    {
-        if (FPSPlayerController.Instance != null) return FPSPlayerController.Instance.transform;
-        GameObject playerObj = GameObject.FindWithTag("Player");
-        if (playerObj != null) return playerObj.transform;
-        return null;
-    }
-
     public string GetPromptText()
     {
         if (isUnlocked) return string.Empty;
 
-        int playerLevel = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.PlayerLevel : 1;
+        int branchLevel = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : (PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.WarehouseLevel : 1);
         int playerBalance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
 
-        if (playerLevel < requiredPlayerLevel)
+        if (branchLevel < requiredPlayerLevel)
         {
-            return $"<color=#FF4444>[KİLİTLİ] {displayName} - Level {requiredPlayerLevel} Gerekiyor!</color>";
+            return $"<color=#FF4444>[KİLİTLİ] {displayName} - Şube Level {requiredPlayerLevel} Gerekiyor!</color>";
         }
         else if (playerBalance < purchaseCost)
         {
@@ -158,47 +106,15 @@ public class PurchasableProperty : MonoBehaviour
         }
     }
 
-    private void UpdatePurchasePrompt()
-    {
-        if (InteractionPromptHUD.Instance == null) return;
-        string text = GetPromptText();
-        if (!string.IsNullOrEmpty(text))
-        {
-            InteractionPromptHUD.Instance.ShowPrompt(text);
-        }
-    }
-
-    private void CheckPurchaseInput()
-    {
-        bool ePressed = false;
-
-#if ENABLE_INPUT_SYSTEM
-        if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.eKey.wasPressedThisFrame)
-        {
-            ePressed = true;
-        }
-#endif
-        try
-        {
-            if (Input.GetKeyDown(KeyCode.E)) ePressed = true;
-        }
-        catch { }
-
-        if (ePressed)
-        {
-            TryPurchase();
-        }
-    }
-
     public bool TryPurchase()
     {
         if (isUnlocked) return false;
 
-        int playerLevel = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.PlayerLevel : 1;
-        if (playerLevel < requiredPlayerLevel)
+        int branchLevel = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : (PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.WarehouseLevel : 1);
+        if (branchLevel < requiredPlayerLevel)
         {
             if (InteractionPromptHUD.Instance != null)
-                InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF3333>Seviyeniz yetersiz! (Gereken: Level {requiredPlayerLevel})</color>");
+                InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF3333>Şube seviyeniz yetersiz! (Gereken: Level {requiredPlayerLevel})</color>");
             return false;
         }
 
@@ -223,7 +139,6 @@ public class PurchasableProperty : MonoBehaviour
     public void UnlockProperty()
     {
         isUnlocked = true;
-        isPlayerNearby = false;
         SaveState();
         UpdateVisuals();
 
