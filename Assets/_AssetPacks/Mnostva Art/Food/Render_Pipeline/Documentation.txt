@@ -1,0 +1,75 @@
+READ ME | Built-in + URP + HDRP
+
+Thank you for purchasing our asset! All assets are set up for the Built-in Render Pipeline by default and include one-click conversion packages for URP and HDRP.
+
+What’s Included
+
+• Built-in RP version (default)
+• URP Converter URP.unitypackage
+• HDRP Converter HDRP.unitypackage
+• Documentation & organised folder structure
+
+Quick Start
+
+1. Using Built-in RP (Default)
+
+No additional steps required — everything is ready to go after importing the package.
+
+! Tip: If your project is currently using URP or HDRP and you want to convert materials back to Built-in:
+
+- Make sure your project is set to Built-in Render Pipeline.
+- Open the folder: Assets/Render_Pipeline
+- Double-click Built-In file
+- Click Import when prompted
+
+2. Converting to URP
+
+To convert the shaders of all materials to URP:
+
+- Make sure your project is using Universal Render Pipeline.
+- Open the folder: Assets/Render_Pipeline
+- Double-click URP file
+- Click Import when prompted
+
+The package will automatically replace compatible shaders with URP versions.
+
+3. Converting to HDRP
+
+To convert the shaders of all materials to HDRP:
+
+- Make sure your project is using High Definition Render Pipeline.
+- Open the folder: Assets/Render_Pipeline
+- Double-click HDRP file
+- Click Import when prompted
+
+The package will automatically replace compatible shaders with HDRP versions.
+
+Additional Manual Options (if you prefer doing it manually)
+
+If you want to switch your project to URP or HDRP without using the included converter:
+
+Setting up URP manually
+
+- Open Unity.
+- Go to Window › Package Manager.
+- In the Unity Registry, install Universal Render Pipeline.
+- Create a URP Asset: Right-click in Project › Create › Rendering › URP Asset.
+- Assign it in Edit › Project Settings › Graphics under Scriptable Render Pipeline Settings.
+- To upgrade existing Built-in materials, go to Edit › Rendering › Materials and run the Built-in → URP conversion.
+
+Setting up HDRP manually
+
+- Open Unity.
+- Go to Window › Package Manager and install High Definition RP.
+- Open Window › Rendering › HDRP Wizard.
+- Apply the recommended fixes, then scroll to “Convert All Built-In Materials to HDRP” and click Proceed (recommended to back up your project first).
+
+❓ FAQ
+
+Scene looks dark/black after conversionAdd a Directional Light, check Environment Lighting (Window ▸ Rendering ▸ Lighting), and regenerate lighting if needed.
+
+Materials still appear pink - ensure the URP/HDRP package is installed and re‑import the corresponding converter package.
+
+📣 Need Help?
+
+We’re happy to assist!📧 Email: mnostva@gmail.com

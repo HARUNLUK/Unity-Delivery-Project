@@ -27,6 +27,25 @@ public class DayTimeManager : MonoBehaviour
     [Tooltip("Evening 18:00 sunset rotation")]
     public Vector3 eveningSunRotation = new Vector3(175f, -30f, 0f);
 
+    [Header("--- SKYBOX & ATMOSPHERE (BOXOPHOBIC) ---")]
+    [Tooltip("Skybox material (If empty, automatically uses RenderSettings.skybox)")]
+    public Material skyboxMaterial;
+
+    [Tooltip("Automatically animate the skybox Day-to-Night transition")]
+    public bool autoControlSkybox = true;
+
+    [Tooltip("Skybox Day-to-Night transition curve (0 = Day, 1 = Night)")]
+    public AnimationCurve skyboxBlendCurve;
+
+    [Tooltip("Sunlight color gradient throughout the day")]
+    public Gradient sunColorGradient;
+
+    [Tooltip("Sunlight intensity curve throughout the day")]
+    public AnimationCurve sunIntensityCurve;
+
+    [Tooltip("Horizon fog color gradient throughout the day")]
+    public Gradient fogColorGradient;
+
     public float CurrentTimeInSeconds { get; private set; }
     public int CurrentHour { get; private set; }
     public int CurrentMinute { get; private set; }
@@ -36,6 +55,7 @@ public class DayTimeManager : MonoBehaviour
 
     private float totalShiftInGameMinutes;
     private float totalRealTimeSeconds;
+    private static readonly int CubemapTransitionId = Shader.PropertyToID("_CubemapTransition");
 
     private void Awake()
     {
@@ -52,6 +72,74 @@ public class DayTimeManager : MonoBehaviour
                     break;
                 }
             }
+        }
+
+        if (skyboxMaterial == null)
+        {
+            skyboxMaterial = RenderSettings.skybox;
+        }
+
+        SetupDefaultCurves();
+    }
+
+    private void SetupDefaultCurves()
+    {
+        // Default Skybox Blend Curve: 0.0 at 09:00 -> 0.0 at 14:00 -> 0.4 at 17:00 -> 0.85 at 18:00
+        if (skyboxBlendCurve == null || skyboxBlendCurve.length == 0)
+        {
+            skyboxBlendCurve = new AnimationCurve(
+                new Keyframe(0f, 0f),       // 09:00 Morning
+                new Keyframe(0.55f, 0.05f), // 14:00 Midday
+                new Keyframe(0.85f, 0.45f), // 17:00 Late Afternoon / Sunset
+                new Keyframe(1.0f, 0.85f)   // 18:00 Evening Dusk
+            );
+        }
+
+        // Default Sun Intensity Curve
+        if (sunIntensityCurve == null || sunIntensityCurve.length == 0)
+        {
+            sunIntensityCurve = new AnimationCurve(
+                new Keyframe(0f, 1.0f),
+                new Keyframe(0.5f, 1.25f),
+                new Keyframe(0.85f, 0.9f),
+                new Keyframe(1.0f, 0.4f)
+            );
+        }
+
+        // Default Sun Color Gradient
+        if (sunColorGradient == null || sunColorGradient.colorKeys.Length == 0)
+        {
+            sunColorGradient = new Gradient();
+            sunColorGradient.SetKeys(
+                new GradientColorKey[] {
+                    new GradientColorKey(new Color(1f, 0.92f, 0.82f), 0.0f),  // Morning Warm Gold
+                    new GradientColorKey(new Color(1f, 0.98f, 0.95f), 0.4f),  // Noon White Sunlight
+                    new GradientColorKey(new Color(1f, 0.65f, 0.35f), 0.85f), // Sunset Orange
+                    new GradientColorKey(new Color(0.85f, 0.45f, 0.45f), 1.0f) // Dusk Red/Violet
+                },
+                new GradientAlphaKey[] {
+                    new GradientAlphaKey(1.0f, 0.0f),
+                    new GradientAlphaKey(1.0f, 1.0f)
+                }
+            );
+        }
+
+        // Default Fog Color Gradient
+        if (fogColorGradient == null || fogColorGradient.colorKeys.Length == 0)
+        {
+            fogColorGradient = new Gradient();
+            fogColorGradient.SetKeys(
+                new GradientColorKey[] {
+                    new GradientColorKey(new Color(0.95f, 0.85f, 0.75f), 0.0f), // Morning Horizon Peach
+                    new GradientColorKey(new Color(0.82f, 0.90f, 1.0f), 0.4f),  // Noon Sky Tint
+                    new GradientColorKey(new Color(1.0f, 0.60f, 0.40f), 0.85f), // Sunset Warm Gold
+                    new GradientColorKey(new Color(0.35f, 0.30f, 0.50f), 1.0f)  // Night Twilight
+                },
+                new GradientAlphaKey[] {
+                    new GradientAlphaKey(1.0f, 0.0f),
+                    new GradientAlphaKey(1.0f, 1.0f)
+                }
+            );
         }
     }
 
@@ -80,7 +168,7 @@ public class DayTimeManager : MonoBehaviour
         CurrentHour = Mathf.FloorToInt(currentTotalInGameMinutes / 60f);
         CurrentMinute = Mathf.FloorToInt(currentTotalInGameMinutes % 60f);
 
-        // Interpolate sun angle smoothly
+        // Interpolate sun angle, colors, and skybox blend smoothly
         UpdateSunPosition(progress);
 
         // 18:00 End of Shift Check
@@ -99,9 +187,41 @@ public class DayTimeManager : MonoBehaviour
 
     private void UpdateSunPosition(float progress)
     {
+        // 1. Sun Rotation
         if (directionalSun != null)
         {
             directionalSun.transform.rotation = Quaternion.Euler(Vector3.Lerp(morningSunRotation, eveningSunRotation, progress));
+
+            if (sunColorGradient != null)
+            {
+                directionalSun.color = sunColorGradient.Evaluate(progress);
+            }
+
+            if (sunIntensityCurve != null)
+            {
+                directionalSun.intensity = sunIntensityCurve.Evaluate(progress);
+            }
+        }
+
+        // 2. BOXOPHOBIC Skybox Day/Night Blend
+        if (autoControlSkybox)
+        {
+            if (skyboxMaterial == null)
+            {
+                skyboxMaterial = RenderSettings.skybox;
+            }
+
+            if (skyboxMaterial != null && skyboxMaterial.HasProperty(CubemapTransitionId))
+            {
+                float blendVal = skyboxBlendCurve != null ? skyboxBlendCurve.Evaluate(progress) : progress;
+                skyboxMaterial.SetFloat(CubemapTransitionId, blendVal);
+            }
+        }
+
+        // 3. Dynamic Fog Color Harmonization
+        if (RenderSettings.fog && fogColorGradient != null)
+        {
+            RenderSettings.fogColor = fogColorGradient.Evaluate(progress);
         }
     }
 

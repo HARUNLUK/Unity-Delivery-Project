@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 389df04ae1a92284ab621a0b28bdf34e
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 392136
+  packageName: Cozy Village & Home - Low Poly Props
+  packageVersion: 1.0
+  assetPath: Assets/Cozy Village & Home/Shader/Vertex_toon_Shader.shader
+  uploadId: 950772

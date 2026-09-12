@@ -1,0 +1,37 @@
+Cozy Village & Home — Low Poly Props
+
+Thank you for downloading this asset pack! This is a collection of 16 optimized low-poly props designed for cozy simulators, farming games, or casual RPGs.
+Inside you'll find everything you need for basic indoor rooms and outdoor village scenes — from simple fences to a water well.
+
+Setup & How to Use
+
+Make sure your project is using the Universal Render Pipeline (URP).
+Drop the package into your Unity project.
+Open the Showcase Demo Scene to see the intended lighting and setup, or just drag prefabs straight from the Prefabs folder into your world.
+
+Technical Details & Optimization
+
+This pack is highly optimized for performance:
+Zero Textures: The assets use Vertex Colors instead of traditional texture maps. This means zero VRAM usage, tiny build sizes, and near-instant loading.
+Draw Call Efficiency: Everything shares a single master material (+ one for emissive parts), allowing for SRP Batching. You can fill a scene with these props and keep it down to just 1–2 draw calls.
+Grid Snapping: All pivots are cleaned and placed at the absolute bottom/center of the models for easy layout.
+
+Custom Vertex Toon Shader
+
+This package includes a custom graphics shader and does not contain any C# scripts or runtime code, requiring no external offline documentation.
+Included in the pack is a custom HLSL shader (Custom/URPVertexToon) built specifically for vertex-colored meshes. Select the main material in your inspector to tweak:
+Lighting Style: Switch between Standard Lit and stylized Toon shading via a simple dropdown menu.
+Toon Controls: Adjust the threshold, smoothness, and shadow intensity to fit your game's art style.
+HDR Emission: Includes a dedicated toggle and multiplier for glowing elements.
+
+Package Specs
+
+Unity Version: 2021.3 LTS or higher (URP).
+Polycount: Very low (from 48 triangles for the fence up to 1,734 for the well).
+Rigging/Animations: None.
+UV Mapping: None (Vertex Colors only).
+
+Community & Support
+
+This pack is 100% free to support the indie game dev community. If you find it useful and want to support our work, please check out our other assets on the Unity Asset Store!
+Good luck with your project!

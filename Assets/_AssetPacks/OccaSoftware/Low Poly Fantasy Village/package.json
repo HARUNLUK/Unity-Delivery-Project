@@ -1,0 +1,20 @@
+{
+  "displayName": "Low Poly Fantasy Village",
+  "name": "com.occasoftware.low-poly-fantasy-village",
+  "version": "0.1.0",
+  "unity": "2022.3",
+  "author": {
+    "name": "OccaSoftware",
+    "email": "hello@occasoftware.com",
+    "url": "https://www.occasoftware.com/"
+  },
+  "documentationUrl": "https://docs.occasoftware.com/",
+  "unityRelease": "0f1",
+  "packageType": "package",
+  "hideInEditor": false,
+  "pipelines": {
+    "universal": "supported",
+    "builtIn": "supported",
+    "highDefinition": "supported"
+  }
+}
