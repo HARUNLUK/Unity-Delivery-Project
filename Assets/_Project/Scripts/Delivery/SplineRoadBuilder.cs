@@ -87,8 +87,11 @@ public class SplineRoadBuilder : MonoBehaviour
     public int capSegments = 20;
 
     [Header("--- TERRAIN SCULPTING (ORGANIC SMOOTH & ZERO LAG) ---")]
-    [Tooltip("Automatically sculpt and pull the terrain up/down to match all branches")]
-    public bool autoDeformTerrain = true;
+    [Tooltip("If enabled, automatically sculpts terrain to match road on waypoint changes. (Leave FALSE if you want to manually dig/sculpt under the road!)")]
+    public bool autoDeformTerrain = false;
+
+    [Tooltip("If enabled, road mesh snaps on or above the terrain. If disabled, road mesh strictly follows spline waypoint heights (for bridges/tunnels).")]
+    public bool conformToGround = true;
 
     [Tooltip("Width of the gentle natural slope blending the road into surrounding terrain (in meters)")]
     [Range(4.0f, 40.0f)]
@@ -119,7 +122,7 @@ public class SplineRoadBuilder : MonoBehaviour
         MigrateLegacyWaypoints();
         if (HasAnyPoints())
         {
-            UpdateRoadAndTerrain();
+            RebuildRoadMesh();
         }
     }
 
@@ -405,7 +408,7 @@ public class SplineRoadBuilder : MonoBehaviour
                 float priorityOffset = renderPriority * 0.02f;
                 float splineY = transform.TransformPoint(pt).y + terrainOffset + priorityOffset;
 
-                if (activeTerrain != null)
+                if (activeTerrain != null && conformToGround)
                 {
                     float leftGroundY = activeTerrain.SampleHeight(worldLeft) + activeTerrain.transform.position.y;
                     float rightGroundY = activeTerrain.SampleHeight(worldRight) + activeTerrain.transform.position.y;
@@ -518,7 +521,7 @@ public class SplineRoadBuilder : MonoBehaviour
         {
             Vector3 worldP = transform.TransformPoint(localP);
             float splineY = transform.TransformPoint(centerPt).y + terrainOffset + priorityOffset;
-            if (activeTerrain != null)
+            if (activeTerrain != null && conformToGround)
             {
                 float groundY = activeTerrain.SampleHeight(worldP) + activeTerrain.transform.position.y;
                 worldP.y = Mathf.Max(splineY, groundY + priorityOffset) + 0.04f;

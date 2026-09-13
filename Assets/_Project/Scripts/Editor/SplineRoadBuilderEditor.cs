@@ -99,7 +99,7 @@ public class SplineRoadBuilderEditor : Editor
             {
                 Undo.RecordObject(builder, "Toggle Point Round Cap");
                 activeBranch.SetPointRoundCapped(builder.selectedPointIndex, !isRound);
-                builder.UpdateRoadAndTerrain();
+                builder.RebuildRoadMesh();
                 EditorUtility.SetDirty(builder);
             }
             GUI.backgroundColor = Color.white;
@@ -158,15 +158,29 @@ public class SplineRoadBuilderEditor : Editor
             EditorUtility.SetDirty(builder);
         }
 
-        EditorGUILayout.Space(10);
+        EditorGUILayout.Space(8);
+        if (builder.autoDeformTerrain)
+        {
+            EditorGUILayout.HelpBox("⚠️ DİKKAT: 'Auto Deform Terrain' AÇIK. Point güncelledikçe arazi otomatik düzeltilir. Yolun altını kazmak (köprü/tünel/çukur) istiyorsanız bu tiki KAPATIN.", MessageType.Warning);
+        }
+        else
+        {
+            EditorGUILayout.HelpBox("🔒 'Auto Deform Terrain' KAPALI (Güvenli Mod). Yolun altını kazabilirsiniz, araziniz bozulmaz. Araziyi yola sıfırlamak istediğinizde alttaki butonu kullanın.", MessageType.Info);
+        }
+
+        EditorGUILayout.Space(6);
 
         GUI.backgroundColor = Color.white;
         EditorGUILayout.LabelField("TERRAIN & ROAD ACTIONS", EditorStyles.boldLabel);
 
         GUI.backgroundColor = new Color(0.2f, 0.75f, 1f);
-        if (GUILayout.Button("Snap & Deform Terrain Under Road", GUILayout.Height(32)))
+        if (GUILayout.Button("⛰️ Snap & Deform Terrain Under Road (Manuel Sıfırla)", GUILayout.Height(34)))
         {
-            Undo.RegisterCompleteObjectUndo(Terrain.activeTerrain.terrainData, "Deform Terrain Under Road");
+            Terrain t = Terrain.activeTerrain;
+            if (t != null && t.terrainData != null)
+            {
+                Undo.RegisterCompleteObjectUndo(t.terrainData, "Deform Terrain Under Road");
+            }
             builder.DeformTerrainUnderRoad();
         }
 
