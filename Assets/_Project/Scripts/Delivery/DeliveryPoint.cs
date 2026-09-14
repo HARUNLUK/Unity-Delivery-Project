@@ -3,29 +3,22 @@ using UnityEngine;
 
 public class DeliveryPoint : MonoBehaviour
 {
-    [Header("--- ADDRESS & IDENTITY ---")]
-    [Tooltip("Unique Index / ID of this point (e.g. 1, 2, 3...)")]
+    [Header("--- DELIVERY POINT CONFIG ---")]
+    [Tooltip("Unique Index / ID of this point matching localization JSON (e.g. 1, 2, 3...)")]
     public string pointId = "1";
 
-    [Tooltip("Required Player Level to receive deliveries here (1 = Starter Suburbs, 2 = Commercial, 3 = Hillside Villas, etc.)")]
+    [Tooltip("Required Player / Branch Level to receive deliveries here")]
     public int requiredLevel = 1;
 
-    [Tooltip("District / Neighborhood name")]
-    public string districtName = "Maple Suburbs";
-
-    [Tooltip("Recipient Name (Person or Business receiving the parcel)")]
-    public string recipientName = "John Doe";
-
-    [Tooltip("Address name of this delivery destination (e.g. 104 Maple Street)")]
-    public string addressName = "104 Maple Street";
-
-    [Tooltip("Visual hint / description of the house for the player")]
-    [TextArea(2, 5)]
-    public string addressDescription = "Two-story suburban house with front yard and wooden fence.";
+    // Fields hidden from Inspector as they are dynamically resolved from JSON localization
+    [HideInInspector] public string districtName = "Maple Town";
+    [HideInInspector] public string recipientName = "";
+    [HideInInspector] public string addressName = "";
+    [HideInInspector] [TextArea(2, 5)] public string addressDescription = "";
 
     public string EffectiveDescription => AddressLocalizationManager.GetDescription(pointId, addressDescription);
-    public string EffectiveAddressName => AddressLocalizationManager.GetAddressName(pointId, addressName);
-    public string EffectiveRecipient => AddressLocalizationManager.GetRecipient(pointId, recipientName);
+    public string EffectiveAddressName => AddressLocalizationManager.GetAddressName(pointId, string.IsNullOrEmpty(addressName) ? "Maple Town" : addressName);
+    public string EffectiveRecipient => AddressLocalizationManager.GetRecipient(pointId, string.IsNullOrEmpty(recipientName) ? "Resident" : recipientName);
 
     [Header("--- VISUAL MARKER ---")]
     public GameObject visualMarker;

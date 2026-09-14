@@ -4,93 +4,114 @@
     {
       "id": "1",
       "district": "Maple Town",
-      "recipient": "Lucas Baker",
+      "recipient": "Florist Hana Takahashi",
       "addressName": "Maple Town",
-      "description": "The solitary dark green-roofed house located right at the neighborhood entrance."
+      "description": "The house with a Sakura tree in its garden."
     },
     {
       "id": "2",
       "district": "Maple Town",
-      "recipient": "Hannah Miller",
+      "recipient": "Grocer Barnaby",
       "addressName": "Maple Town",
-      "description": "Blue house with a blue car parked in the driveway."
+      "description": "The local produce market with a green-and-white striped awning and fruit crates out front."
     },
     {
       "id": "3",
       "district": "Maple Town",
-      "recipient": "Noah Campbell",
+      "recipient": "Baker Beatrice Sweet",
       "addressName": "Maple Town",
-      "description": "Dark green-roofed house directly across from the blue house."
+      "description": "The green-shuttered house with a hanging lantern and orange pumpkins lined up on its front porch."
     },
     {
       "id": "4",
       "district": "Maple Town",
-      "recipient": "Bella Martinez",
+      "recipient": "Ornithologist Arthur Miller",
       "addressName": "Maple Town",
-      "description": "Red house with a white car parked at the entrance."
+      "description": "The brown-roofed house with a stone birdbath in the left yard and a blue car parked under the carport."
     },
     {
       "id": "5",
       "district": "Maple Town",
-      "recipient": "Ethan Carter",
+      "recipient": "The Henderson Family",
       "addressName": "Maple Town",
-      "description": "Enter the neighborhood near the green-roofed house and take the first right; the house on the corner as the road curves."
+      "description": "The white-fenced house with an orange picnic table, chairs, and basket set under the tree."
     },
     {
       "id": "6",
       "district": "Maple Town",
-      "recipient": "Mia Roberts",
+      "recipient": "Ranger Tom Walker",
       "addressName": "Maple Town",
-      "description": "Enter the neighborhood near the red-roofed house and take the first left; the blue-roofed house on the left."
+      "description": "The white house right at the curve entrance, featuring a dark forest-green roof and shutters."
     },
     {
       "id": "7",
       "district": "Maple Town",
-      "recipient": "Grocer Ali",
+      "recipient": "Old Miller Higgins",
       "addressName": "Maple Town",
-      "description": "Enter the neighborhood near the red-roofed house and take the first left; the brown-roofed house on the right."
+      "description": "The twin house estate with two orange trees at the gate, a stone water well, and wooden barrels in the courtyard."
     },
     {
       "id": "8",
       "district": "Maple Town",
-      "recipient": "Lily Jenkins",
+      "recipient": "Woodcutter Jack",
       "addressName": "Maple Town",
-      "description": "The very first house encountered upon entering the neighborhood from the red-roofed house entrance."
+      "description": "The unfenced forest cottage with a stone path and a tree stump resting under the giant tree."
     },
     {
       "id": "9",
       "district": "Maple Town",
-      "recipient": "William Davis",
+      "recipient": "Mail Carrier Leo Parker",
       "addressName": "Maple Town",
-      "description": "Blue-roofed house with a red car parked out front."
+      "description": "The cream-colored house with a red bicycle leaning against its garden fence."
     },
     {
       "id": "10",
       "district": "Maple Town",
-      "recipient": "Rosemary Cooper",
+      "recipient": "Artist Lily Monet",
       "addressName": "Maple Town",
-      "description": "Purple-roofed house located in the cul-de-sac."
+      "description": "The black-roofed house with green window frames and bright blue flowers blooming in its front yard."
     },
     {
       "id": "11",
       "district": "Maple Town",
-      "recipient": "Teacher Mary",
+      "recipient": "Teacher Mary Summer",
       "addressName": "Maple Town",
-      "description": "Enter the cul-de-sac past the blue-roofed house; the house located along the road's bend."
+      "description": "The light blue-roofed house with a wooden bench and watering can nestled among colorful flowers."
     },
     {
       "id": "12",
       "district": "Maple Town",
-      "recipient": "Gardener Thomas",
+      "recipient": "Curator Edward Vance",
       "addressName": "Maple Town",
-      "description": "Brown-roofed house with a purple car parked out front."
+      "description": "The brown-roofed house with two street lamps standing at the gate and a rock garden."
     },
     {
       "id": "13",
-      "district": "Stadium District",
-      "recipient": "Oliver Queen",
-      "addressName": "Stadium District",
-      "description": "To be delivered to the local green grocery / produce shop in the Stadium District."
+      "district": "Maple Town",
+      "recipient": "Little Noah & Emma",
+      "addressName": "Maple Town",
+      "description": "The house at the curved road corner featuring a curved white picket fence and a red swing set in the yard."
+    },
+    {
+      "id": "14",
+      "district": "Maple Town",
+      "recipient": "Twin Brothers Alan & Dean",
+      "addressName": "Maple Town",
+      "description": "The twin houses connected overhead by a covered wooden bridge with a flowering courtyard."
+    },
+    {
+      "id": "15",
+      "district": "Maple Town",
+      "recipient": "Meteorologist Simon Reed",
+      "addressName": "Maple Town",
+      "description": "The white house with a colorful flower meadow, set against wind turbines turning on the hill behind."
+    },
+    {
+      "id": "16",
+      "district": "Maple Town",
+      "recipient": "Author Vincent Blackwood",
+      "addressName": "Maple Town",
+      "description": "The modern house at the cul-de-sac turnaround, surrounded by high stone walls and an iron gate."
     }
   ]
 }

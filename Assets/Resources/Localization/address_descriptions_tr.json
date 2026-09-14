@@ -4,93 +4,114 @@
     {
       "id": "1",
       "district": "Maple Town",
-      "recipient": "Lucas Baker",
+      "recipient": "Japon Çiçekçisi Hana Hanım",
       "addressName": "Akçaağaç Kasabası",
-      "description": "Kasaba girişindeki koyu yeşil çatılı tek ev."
+      "description": "Bahçesinde Sakura ağacı olan ev."
     },
     {
       "id": "2",
       "district": "Maple Town",
-      "recipient": "Hannah Miller",
+      "recipient": "Taze Manav Rasim Efendi",
       "addressName": "Akçaağaç Kasabası",
-      "description": "Mavi boyalı ev. Girişinde mavi bir araba park halinde."
+      "description": "Önünde yeşil-beyaz çizgili tentesi ve meyve-sebze kasaları bulunan kasaba manavı."
     },
     {
       "id": "3",
       "district": "Maple Town",
-      "recipient": "Noah Campbell",
+      "recipient": "Turta Şefi Şükran Teyze",
       "addressName": "Akçaağaç Kasabası",
-      "description": "Koyu yeşil çatılı ev. Tam karşısında mavi bir ev bulunuyor."
+      "description": "Giriş verandasında fener asılı ve turuncu balkabakları dizili olan yeşil panjurlu ev."
     },
     {
       "id": "4",
       "district": "Maple Town",
-      "recipient": "Bella Martinez",
+      "recipient": "Kuş Gözlemcisi Melih Bey",
       "addressName": "Akçaağaç Kasabası",
-      "description": "Kırmızı ev. Girişinde beyaz bir araba park halinde."
+      "description": "Sol bahçesinde taş kuş banyosu ve otoparkında mavi araba bulunan kahverengi çatılı ev."
     },
     {
       "id": "5",
       "district": "Maple Town",
-      "recipient": "Ethan Carter",
+      "recipient": "Pikniksever Sarp ve Ailesi",
       "addressName": "Akçaağaç Kasabası",
-      "description": "Mahalleye yeşil çatılı ev tarafından girince ilk sağa dönün; virajın köşesindeki ev."
+      "description": "Bahçesindeki ağacın altında turuncu piknik masası ve sepeti kurulu olan beyaz çitli ev."
     },
     {
       "id": "6",
       "district": "Maple Town",
-      "recipient": "Mia Roberts",
+      "recipient": "Ormancı Tahsin Kaptan",
       "addressName": "Akçaağaç Kasabası",
-      "description": "Mahalleye kırmızı çatılı ev tarafından girince ilk sola dönün; solda kalan mavi çatılı ev."
+      "description": "Virajın başında, hem çatısı hem panjurları koyu orman yeşili olan beyaz ev."
     },
     {
       "id": "7",
       "district": "Maple Town",
-      "recipient": "Ali Bakkal",
+      "recipient": "Değirmenci Mahmut Dede",
       "addressName": "Akçaağaç Kasabası",
-      "description": "Mahalleye kırmızı çatılı ev tarafından girince ilk sola dönün; sağda kalan kahverengi çatılı ev."
+      "description": "Girişinde iki turuncu ağaç, avlusunda taş su kuyusu ve ahşap fıçılar bulunan ikiz ev."
     },
     {
       "id": "8",
       "district": "Maple Town",
-      "recipient": "Lily Jenkins",
+      "recipient": "Marangoz Hasret Usta",
       "addressName": "Akçaağaç Kasabası",
-      "description": "Mahalleye kırmızı çatılı ev girişinden girince karşınıza çıkan ilk ev."
+      "description": "Bahçesindeki büyük ağacın dibinde ağaç kütüğü ve taş patika bulunan çitsiz orman kulübesi."
     },
     {
       "id": "9",
       "district": "Maple Town",
-      "recipient": "William Davis",
+      "recipient": "Postacı Bedirhan",
       "addressName": "Akçaağaç Kasabası",
-      "description": "Mavi çatılı ev. Önünde kırmızı bir araba park halinde."
+      "description": "Bahçe çitine kırmızı bir bisiklet yaslanmış olan krem rengi ev."
     },
     {
       "id": "10",
       "district": "Maple Town",
-      "recipient": "Rosemary Cooper",
+      "recipient": "Ressam Serap Hanım",
       "addressName": "Akçaağaç Kasabası",
-      "description": "Çıkmaz sokakta yer alan mor çatılı ev."
+      "description": "Ön bahçesinde parlak mavi çiçekler açmış olan, siyah çatılı ve yeşil pencereli ev."
     },
     {
       "id": "11",
       "district": "Maple Town",
-      "recipient": "Meryem Öğretmen",
+      "recipient": "Seda Öğretmen",
       "addressName": "Akçaağaç Kasabası",
-      "description": "Mavi çatılı evin oradan çıkmaz sokağa girince, yolun kıvrıldığı tarafta kalan ev."
+      "description": "Rengarenk çiçeklerinin arasında ahşap bank ve sulama kabı bulunan açık mavi çatılı ev."
     },
     {
       "id": "12",
       "district": "Maple Town",
-      "recipient": "Bahçıvan Thomas",
+      "recipient": "Koleksiyoncu Harun Bey",
       "addressName": "Akçaağaç Kasabası",
-      "description": "Kahverengi çatılı ev. Önünde mor bir araba park halinde."
+      "description": "Bahçe girişinde iki adet sokak lambası ve taş bahçesi bulunan kahverengi çatılı ev."
     },
     {
       "id": "13",
-      "district": "Stadium District",
-      "recipient": "Oliver Queen",
-      "addressName": "Stadyum Bölgesi",
-      "description": "Stadyum bölgesindeki manava teslim edilecek."
+      "district": "Maple Town",
+      "recipient": "Doruk ve Emma Ailesi",
+      "addressName": "Akçaağaç Kasabası",
+      "description": "Bahçesinde kırmızı salıncak bulunan, yol virajı köşesindeki kavisli beyaz çitli ev."
+    },
+    {
+      "id": "14",
+      "district": "Maple Town",
+      "recipient": "İkiz Kardeşler Murat ve Mert",
+      "addressName": "Akçaağaç Kasabası",
+      "description": "Birbirine üstten ahşap bir bağlantı köprüsüyle bağlanan çiçekli avlulu ikiz ev."
+    },
+    {
+      "id": "15",
+      "district": "Maple Town",
+      "recipient": "Meteorolog Sinan Bey",
+      "addressName": "Akçaağaç Kasabası",
+      "description": "Arkasındaki tepede rüzgar türbinleri görünen, renkli çiçek çayırlı beyaz ev."
+    },
+    {
+      "id": "16",
+      "district": "Maple Town",
+      "recipient": "Yazar Haluk Karadağ",
+      "addressName": "Akçaağaç Kasabası",
+      "description": "Çıkmaz sokak dönüş balonunun tam ucundaki, yüksek taş duvarlar ve demir kapıyla çevrili modern ev."
     }
   ]
 }
