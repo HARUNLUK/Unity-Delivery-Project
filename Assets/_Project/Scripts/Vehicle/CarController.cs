@@ -8,13 +8,40 @@ using UnityEngine.InputSystem;
 public class CarController : MonoBehaviour
 {
     [Header("--- MOTOR & BRAKE SETTINGS ---")]
-    public float motorForce = 16000f;
-    public float reverseForce = 11000f;
-    public float footBrakeForce = 100000f;
-    public float handBrakeForce = 150000f;
-    public float maxSteerAngle = 40f;
-    public float turnAssistTorque = 3.5f;
-    public Vector3 centerOfMassOffset = new Vector3(0, -1.0f, 0);
+    public float motorForce = 12000f;
+    public float reverseForce = 8000f;
+    public float footBrakeForce = 160000f;
+    public float handBrakeForce = 200000f;
+
+    [Tooltip("Base active braking deceleration in m/s^2 for foot brake (S key)")]
+    public float brakeDeceleration = 16.0f;
+
+    [Tooltip("Base active deceleration in m/s^2 for handbrake (Space key)")]
+    public float handbrakeDeceleration = 22.0f;
+
+    [Tooltip("Natural engine braking torque when releasing gas")]
+    public float engineBrakeTorque = 1500f;
+
+    [Tooltip("Maximum steering angle at low speeds for tight, agile cornering (42° = very responsive)")]
+    public float maxSteerAngle = 42f;
+
+    [Tooltip("Steering angle at maximum forward speed (26° = comfortable high speed turning)")]
+    public float highSpeedSteerAngle = 26f;
+
+    [Tooltip("Dynamic steering bite / agility assist torque to make turns feel responsive and satisfying")]
+    public float steerAgility = 2.5f;
+
+    public Vector3 centerOfMassOffset = new Vector3(0, -0.45f, 0.05f);
+
+    [Header("--- AERODYNAMIC DOWNFORCE & STABILITY ---")]
+    [Tooltip("Downward force factor applied as speed increases to keep vehicle glued to the road and prevent flying")]
+    public float downforce = 45f;
+
+    [Tooltip("Body roll damping factor to prevent rollover and wheel pinch on sharp turns")]
+    public float rollDamping = 300f;
+
+    [Tooltip("Active straight-line yaw stabilizer at high speed to eliminate road pulling / wandering")]
+    public bool enableStraightLineStabilizer = true;
 
     [Header("--- TUNING & PERFORMANCE BOOST ---")]
     public float tuningTorqueMultiplier = 1.0f;
@@ -35,13 +62,15 @@ public class CarController : MonoBehaviour
     [Range(0f, 1f)]
     public float currentConditionRatio = 1.0f; // 1.0 = 100%, 0.0 = 0%
 
-    [Header("--- HANDBRAKE & DRIFT SETTINGS ---")]
-    public float driftSidewaysStiffness = 0.25f;
-    public float driftYawBoost = 4.0f;
+    [Header("--- PURE PHYSICS HANDBRAKE & DRIFT ---")]
+    [Tooltip("Rear wheel sideways friction stiffness when handbraking into a turn (allows momentum to slide rear)")]
+    public float driftSidewaysStiffness = 0.5f;
 
-    [Header("--- DRIFT RECOVERY ASSIST ---")]
-    [Tooltip("Recovery rate to straighten vehicle when accelerating after drift")]
-    public float driftRecoveryRate = 8.0f;
+    [Tooltip("Rear wheel forward friction stiffness when handbraking into a turn")]
+    public float driftForwardStiffness = 0.6f;
+
+    [Tooltip("Speed at which tire grip recovers back to normal when handbrake is released")]
+    public float driftRecoveryRate = 3.5f;
 
     [Header("--- WHEEL COLLIDERS (Physics Wheels) ---")]
     public WheelCollider frontLeftCollider;
@@ -56,7 +85,7 @@ public class CarController : MonoBehaviour
     public Transform rearRightMesh;
 
     [Header("--- WHEEL MODEL ROTATION & POSITION OFFSET ---")]
-    public Vector3 wheelMeshRotationOffset = new Vector3(-90f, 0f, 0f);
+    public Vector3 wheelMeshRotationOffset = Vector3.zero;
     public Vector3 wheelMeshPositionOffset = Vector3.zero;
 
     [Header("--- STEERING WHEEL & SMOOTH STEERING ---")]
@@ -67,10 +96,10 @@ public class CarController : MonoBehaviour
     public float steeringWheelMultiplier = 3.5f;
 
     [Tooltip("Steering angle interpolation speed (Degrees/Second)")]
-    public float steerSpeed = 160f;
+    public float steerSpeed = 260f;
 
     [Tooltip("Steering return-to-center speed when key is released (Degrees/Second)")]
-    public float steerReturnSpeed = 220f;
+    public float steerReturnSpeed = 300f;
 
     [Tooltip("If checked, forces initial steering wheel rotation to customInitialSteeringEuler")]
     public bool overrideInitialSteeringEuler = false;
@@ -92,8 +121,9 @@ public class CarController : MonoBehaviour
     public bool IsHandbraking => isHandbraking;
 
     private WheelFrictionCurve normalRearSidewaysFriction;
-    private WheelFrictionCurve driftRearSidewaysFriction;
-    private float currentRearStiffness;
+    private WheelFrictionCurve normalRearForwardFriction;
+    private float currentRearSidewaysStiffness;
+    private float currentRearForwardStiffness;
 
     public float ForwardSpeed { get; private set; }
 
@@ -107,6 +137,17 @@ public class CarController : MonoBehaviour
         {
             mc.convex = true;
         }
+
+        // Auto-fix any WheelCollider GameObjects that have legacy imported -90° X rotation
+        WheelCollider[] wheels = new WheelCollider[] { frontLeftCollider, frontRightCollider, rearLeftCollider, rearRightCollider };
+        foreach (var wc in wheels)
+        {
+            if (wc != null)
+            {
+                wc.transform.localRotation = Quaternion.identity;
+                wc.center = Vector3.zero;
+            }
+        }
     }
 
     private void Start()
@@ -116,33 +157,84 @@ public class CarController : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         if (rb != null)
         {
-            rb.centerOfMass = new Vector3(0f, -0.5f, 0f);
-            rb.maxAngularVelocity = 6f;
-            rb.linearDamping = 0.05f;
-            rb.angularDamping = 1.0f;
+            rb.centerOfMass = centerOfMassOffset;
+            rb.maxAngularVelocity = 8f;
+            rb.linearDamping = 0.08f;
+            rb.angularDamping = 3.0f;
             rb.maxDepenetrationVelocity = 5.0f;
             rb.interpolation = RigidbodyInterpolation.Interpolate;
         }
 
-        WheelCollider[] wheels = new WheelCollider[] { frontLeftCollider, frontRightCollider, rearLeftCollider, rearRightCollider };
-        foreach (var wc in wheels)
+        // Front wheels: aggressive grip for instant steering bite & zero understeer
+        WheelCollider[] frontWheels = new WheelCollider[] { frontLeftCollider, frontRightCollider };
+        foreach (var wc in frontWheels)
         {
             if (wc != null)
             {
                 JointSpring s = wc.suspensionSpring;
-                if (s.spring < 25000f) s.spring = 35000f;
-                if (s.damper < 3000f) s.damper = 4500f;
+                if (s.spring < 25000f) s.spring = 32000f;
+                if (s.damper < 3500f) s.damper = 5500f;
                 s.targetPosition = 0.5f;
                 wc.suspensionSpring = s;
                 wc.wheelDampingRate = 0.5f;
+                wc.forceAppPointDistance = 0.12f;
+
+                WheelFrictionCurve side = wc.sidewaysFriction;
+                side.extremumSlip = 0.22f;
+                side.asymptoteSlip = 0.45f;
+                side.extremumValue = 1.15f;
+                side.asymptoteValue = 0.9f;
+                side.stiffness = 3.0f; // High front grip = turns instantly
+                wc.sidewaysFriction = side;
+
+                WheelFrictionCurve fwd = wc.forwardFriction;
+                fwd.extremumSlip = 0.25f;
+                fwd.asymptoteSlip = 0.5f;
+                fwd.extremumValue = 1.0f;
+                fwd.asymptoteValue = 0.8f;
+                fwd.stiffness = 2.0f;
+                wc.forwardFriction = fwd;
+            }
+        }
+
+        // Rear wheels: balanced grip for smooth rotation and controllable drifts
+        WheelCollider[] rearWheels = new WheelCollider[] { rearLeftCollider, rearRightCollider };
+        foreach (var wc in rearWheels)
+        {
+            if (wc != null)
+            {
+                JointSpring s = wc.suspensionSpring;
+                if (s.spring < 25000f) s.spring = 32000f;
+                if (s.damper < 3500f) s.damper = 5500f;
+                s.targetPosition = 0.5f;
+                wc.suspensionSpring = s;
+                wc.wheelDampingRate = 0.5f;
+                wc.forceAppPointDistance = 0.12f;
+
+                WheelFrictionCurve side = wc.sidewaysFriction;
+                side.extremumSlip = 0.25f;
+                side.asymptoteSlip = 0.5f;
+                side.extremumValue = 1.0f;
+                side.asymptoteValue = 0.8f;
+                side.stiffness = 2.4f;
+                wc.sidewaysFriction = side;
+
+                WheelFrictionCurve fwd = wc.forwardFriction;
+                fwd.extremumSlip = 0.25f;
+                fwd.asymptoteSlip = 0.5f;
+                fwd.extremumValue = 1.0f;
+                fwd.asymptoteValue = 0.8f;
+                fwd.stiffness = 2.0f;
+                wc.forwardFriction = fwd;
             }
         }
 
         if (rearLeftCollider != null)
         {
             normalRearSidewaysFriction = rearLeftCollider.sidewaysFriction;
-            driftRearSidewaysFriction = rearLeftCollider.sidewaysFriction;
-            currentRearStiffness = normalRearSidewaysFriction.stiffness;
+            normalRearForwardFriction = rearLeftCollider.forwardFriction;
+            currentRearSidewaysStiffness = normalRearSidewaysFriction.stiffness;
+            currentRearForwardStiffness = normalRearForwardFriction.stiffness;
         }
 
         DrivableVehicle dv = GetComponent<DrivableVehicle>();
@@ -190,7 +282,7 @@ public class CarController : MonoBehaviour
         isHandbraking = false;
         currentSteerAngle = 0f;
 
-        // 1. Zero Throttle (Cut motor torque across all wheels)
+        // 1. Zero Throttle across all wheels
         if (frontLeftCollider != null) frontLeftCollider.motorTorque = 0f;
         if (frontRightCollider != null) frontRightCollider.motorTorque = 0f;
         if (rearLeftCollider != null) rearLeftCollider.motorTorque = 0f;
@@ -200,8 +292,8 @@ public class CarController : MonoBehaviour
         if (frontLeftCollider != null) frontLeftCollider.steerAngle = 0f;
         if (frontRightCollider != null) frontRightCollider.steerAngle = 0f;
 
-        // 3. Natural Deceleration Brake (Smoothly halts vehicle like idling to park)
-        float neutralBrake = 2000f;
+        // 3. Deceleration Brake (Smoothly halts vehicle to parked idle)
+        float neutralBrake = 3000f;
         if (frontLeftCollider != null) frontLeftCollider.brakeTorque = neutralBrake;
         if (frontRightCollider != null) frontRightCollider.brakeTorque = neutralBrake;
         if (rearLeftCollider != null) rearLeftCollider.brakeTorque = neutralBrake;
@@ -223,7 +315,8 @@ public class CarController : MonoBehaviour
         CalculateSpeed();
         HandleSteering();
         HandleMotorAndBrakes();
-        HandleDriftRecovery();
+        HandleDriftFrictionTransition();
+        ApplyAerodynamicsAndRollDamping();
         UpdateWheelMeshes();
     }
 
@@ -270,52 +363,64 @@ public class CarController : MonoBehaviour
 
     private void HandleSteering()
     {
-        // 1. Smooth Steering Interpolation (Tekerleklerin ve direksiyonun kademeli, yumuşak dönmesi)
-        float targetSteerAngle = maxSteerAngle * horizontalInput;
-        float speed = Mathf.Abs(horizontalInput) > 0.05f ? steerSpeed : steerReturnSpeed;
+        // 1. Clean Input Deadzone (Straight line stability)
+        float steerInput = Mathf.Abs(horizontalInput) > 0.02f ? horizontalInput : 0f;
+
+        // 2. Speed-sensitive Max Steer Angle (agile 42° at low speeds, comfortable 26° at 100+ km/h)
+        float speedFactor = Mathf.InverseLerp(10f, 35f, Mathf.Abs(ForwardSpeed));
+        float currentMaxAngle = Mathf.Lerp(maxSteerAngle, highSpeedSteerAngle, speedFactor);
+
+        float targetSteerAngle = currentMaxAngle * steerInput;
+        float speed = Mathf.Abs(steerInput) > 0.01f ? steerSpeed : steerReturnSpeed;
         currentSteerAngle = Mathf.MoveTowards(currentSteerAngle, targetSteerAngle, speed * Time.fixedDeltaTime);
 
-        // 2. Hasarlı Direksiyon Yalpalaması (SADECE Kondisyon %30'un altına düştüğünde ve araç hareket halindeyken sağ-sol yalpalama)
+        // Snap to zero when near neutral to ensure laser-straight driving
+        if (Mathf.Abs(steerInput) < 0.01f && Mathf.Abs(currentSteerAngle) < 0.08f)
+        {
+            currentSteerAngle = 0f;
+        }
+
+        // 3. Damaged Steering Wobble (ONLY active if condition < 30% and moving)
         float wobbleAngle = 0f;
         if (currentConditionRatio < 0.30f && (Mathf.Abs(ForwardSpeed) > 0.8f || Mathf.Abs(verticalInput) > 0.1f))
         {
-            float wobbleIntensity = Mathf.Clamp01((0.30f - currentConditionRatio) / 0.30f); // 0 (%30'da) -> 1.0 (%0'da)
+            float wobbleIntensity = Mathf.Clamp01((0.30f - currentConditionRatio) / 0.30f);
             float wobbleTime = Time.time * 7.5f;
-            // Organik sağ-sol yalpalama salınımı
-            wobbleAngle = (Mathf.Sin(wobbleTime) * 0.7f + Mathf.Sin(wobbleTime * 2.3f) * 0.3f) * (maxSteerAngle * 0.25f * wobbleIntensity);
+            wobbleAngle = (Mathf.Sin(wobbleTime) * 0.7f + Mathf.Sin(wobbleTime * 2.3f) * 0.3f) * (currentMaxAngle * 0.25f * wobbleIntensity);
         }
 
         float effectiveSteerAngle = currentSteerAngle + wobbleAngle;
 
-        // 3. Ackermann Steering Angle Differential (İç tekerlek daha geniş döner, tekerlek kasması sıfırlanır)
-        if (effectiveSteerAngle > 0.05f)
-        {
-            if (frontLeftCollider != null) frontLeftCollider.steerAngle = effectiveSteerAngle * 0.85f;
-            if (frontRightCollider != null) frontRightCollider.steerAngle = effectiveSteerAngle * 1.05f;
-        }
-        else if (effectiveSteerAngle < -0.05f)
-        {
-            if (frontLeftCollider != null) frontLeftCollider.steerAngle = effectiveSteerAngle * 1.05f;
-            if (frontRightCollider != null) frontRightCollider.steerAngle = effectiveSteerAngle * 0.85f;
-        }
-        else
+        // 4. Symmetric Steering Output
+        if (Mathf.Abs(effectiveSteerAngle) < 0.05f)
         {
             if (frontLeftCollider != null) frontLeftCollider.steerAngle = 0f;
             if (frontRightCollider != null) frontRightCollider.steerAngle = 0f;
         }
-
-        // 4. Agile Yaw Torque Assist (Dönüşlerde araca çeviklik desteği)
-        if (rb != null && Mathf.Abs(effectiveSteerAngle) > 0.5f && rb.linearVelocity.magnitude > 0.5f)
+        else
         {
-            if (rb.angularVelocity.magnitude < 2.5f)
-            {
-                float directionSign = ForwardSpeed >= -0.2f ? 1f : -1f;
-                float steerRatio = effectiveSteerAngle / maxSteerAngle;
-                rb.AddTorque(transform.up * (steerRatio * turnAssistTorque * directionSign), ForceMode.Acceleration);
-            }
+            if (frontLeftCollider != null) frontLeftCollider.steerAngle = effectiveSteerAngle;
+            if (frontRightCollider != null) frontRightCollider.steerAngle = effectiveSteerAngle;
         }
 
-        // 5. Direksiyon Modeli Rotasyonu (SADECE X açısını değiştirir; Y ve Z açıları daima korunur)
+        // 5. Straight Line High-Speed Yaw Stabilizer (Cancels micro road bump pulling when driving straight)
+        if (enableStraightLineStabilizer && Mathf.Abs(steerInput) < 0.05f && rb != null && Mathf.Abs(ForwardSpeed) > 3f)
+        {
+            Vector3 localAng = transform.InverseTransformDirection(rb.angularVelocity);
+            localAng.y = Mathf.MoveTowards(localAng.y, 0f, Time.fixedDeltaTime * 14f);
+            rb.angularVelocity = transform.TransformDirection(localAng);
+        }
+
+        // 6. Dynamic Steering Yaw Bite / Agility (Gives intuitive, crisp turning feedback into the corner)
+        if (rb != null && Mathf.Abs(steerInput) > 0.05f && rb.linearVelocity.magnitude > 1.2f)
+        {
+            float directionSign = ForwardSpeed >= -0.2f ? 1f : -1f;
+            float steerRatio = effectiveSteerAngle / maxSteerAngle;
+            float agilityTorque = steerRatio * steerAgility * 1.6f * directionSign;
+            rb.AddTorque(transform.up * agilityTorque, ForceMode.Acceleration);
+        }
+
+        // 7. Steering Wheel Visual Model Rotation (only rotates around its primary X steering axis)
         if (steeringWheel != null)
         {
             EnsureBaseSteeringEuler();
@@ -336,20 +441,36 @@ public class CarController : MonoBehaviour
             return;
         }
 
-        // 1. SADECE %0 Kondisyonda (Maks Hasar / Limp Mode) maksimum hızı kısıtla
+        // 1. Condition Speed Cap
         bool isMaxDamaged = currentConditionRatio <= 0.02f;
         float activeMaxSpeed = isMaxDamaged ? minConditionMaxSpeed : maxForwardSpeed;
         float baseTorqueMult = isMaxDamaged ? minConditionTorqueMultiplier : 1.0f;
 
-        if (ForwardSpeed > 1.0f && verticalInput < -0.05f)
+        // Foot Braking / Reverse Logic with Progressive Braking Curve
+        if (ForwardSpeed > 0.35f && verticalInput < -0.05f)
         {
             footBrake = footBrakeForce * Mathf.Abs(verticalInput);
             motor = 0f;
+
+            // Progressive braking curve: bite gets stronger as speed drops for firm, non-linear stops
+            if (rb != null)
+            {
+                float speedRatio = Mathf.Clamp01(ForwardSpeed / 25f);
+                float progressiveBite = Mathf.Lerp(2.2f, 1.0f, speedRatio); // Up to 2.2x bite at lower speeds
+                rb.AddForce(-transform.forward * (brakeDeceleration * progressiveBite * rb.mass * Mathf.Abs(verticalInput)), ForceMode.Force);
+            }
         }
-        else if (ForwardSpeed < -1.0f && verticalInput > 0.05f)
+        else if (ForwardSpeed < -0.35f && verticalInput > 0.05f)
         {
             footBrake = footBrakeForce * Mathf.Abs(verticalInput);
             motor = 0f;
+
+            if (rb != null)
+            {
+                float speedRatio = Mathf.Clamp01(Mathf.Abs(ForwardSpeed) / 10f);
+                float progressiveBite = Mathf.Lerp(2.2f, 1.0f, speedRatio);
+                rb.AddForce(transform.forward * (brakeDeceleration * progressiveBite * rb.mass * Mathf.Abs(verticalInput)), ForceMode.Force);
+            }
         }
         else
         {
@@ -363,7 +484,7 @@ public class CarController : MonoBehaviour
                 }
                 else
                 {
-                    motor = 0f; // Hız sınırına ulaşınca torku kes (sarsıntısız, düzgün)
+                    motor = 0f;
                 }
             }
             else if (verticalInput < -0.05f)
@@ -380,24 +501,27 @@ public class CarController : MonoBehaviour
             else
             {
                 motor = 0f;
-                footBrake = 500f;
+                footBrake = engineBrakeTorque; // Engine braking resistance (stops endless coasting)
             }
         }
 
-        // 2. SADECE Kondisyon %30'un ALTINA düştüğünde araba hasarlı motor teklemeleriyle sallanmaya başlasın
+        // Full stop clamp ONLY when actively braking to a standstill (never during gas / acceleration)
+        if (rb != null && footBrake > 10000f && motor == 0f && Mathf.Abs(ForwardSpeed) < 0.25f)
+        {
+            rb.linearVelocity = Vector3.MoveTowards(rb.linearVelocity, Vector3.zero, Time.fixedDeltaTime * 20f);
+        }
+
+        // 2. Sputter / Shaking when heavily damaged (<30% condition)
         if (currentConditionRatio < 0.30f && (Mathf.Abs(verticalInput) > 0.1f || ForwardSpeed > 1f))
         {
-            float shakeRatio = Mathf.Clamp01((0.30f - currentConditionRatio) / 0.30f); // 0 (at 30%) -> 1 (at 0%)
-
-            // Motor teklemesi (Tork dalgalanması)
+            float shakeRatio = Mathf.Clamp01((0.30f - currentConditionRatio) / 0.30f);
             float sputter = Mathf.Sin(Time.time * 22f) * (0.35f * shakeRatio);
             motor *= Mathf.Clamp01(1f - sputter);
 
-            // Fiziksel motor/şasi sarsıntısı
             if (rb != null)
             {
-                float pitchRumble = (Mathf.PerlinNoise(Time.time * 26f, 0f) - 0.5f) * (1.2f * shakeRatio);
-                float rollRumble = (Mathf.PerlinNoise(0f, Time.time * 26f) - 0.5f) * (0.8f * shakeRatio);
+                float pitchRumble = (Mathf.PerlinNoise(Time.time * 26f, 0f) - 0.5f) * (1.0f * shakeRatio);
+                float rollRumble = (Mathf.PerlinNoise(0f, Time.time * 26f) - 0.5f) * (0.7f * shakeRatio);
                 rb.AddRelativeTorque(new Vector3(pitchRumble, 0f, rollRumble), ForceMode.Acceleration);
             }
         }
@@ -406,86 +530,125 @@ public class CarController : MonoBehaviour
         ApplyBrakes(footBrake);
     }
 
+    /// <summary>
+    /// Dual-mode Handbrake:
+    /// 1. If steering: Drift mode (locks rear wheels, front rolls free, reduced rear sideways grip).
+    /// 2. If straight: Emergency Power Stop (all 4 wheels lock with full tire grip and progressive non-linear deceleration).
+    /// </summary>
     private void HandleHandbrake()
     {
-        bool isSteering = Mathf.Abs(horizontalInput) > 0.1f;
+        ApplyMotorTorque(0f);
 
-        if (isSteering)
+        bool isSteeringDrift = Mathf.Abs(horizontalInput) > 0.1f;
+
+        if (isSteeringDrift)
         {
-            currentRearStiffness = driftSidewaysStiffness;
-            SetRearStiffness(currentRearStiffness);
-
-            ApplyMotorTorque(0f);
-            if (rearLeftCollider != null) rearLeftCollider.brakeTorque = handBrakeForce * 0.5f;
-            if (rearRightCollider != null) rearRightCollider.brakeTorque = handBrakeForce * 0.5f;
+            // DRIFT MODE: Lock rear wheels, let front roll free, reduce rear sideways grip
             if (frontLeftCollider != null) frontLeftCollider.brakeTorque = 0f;
             if (frontRightCollider != null) frontRightCollider.brakeTorque = 0f;
+            if (rearLeftCollider != null) rearLeftCollider.brakeTorque = handBrakeForce;
+            if (rearRightCollider != null) rearRightCollider.brakeTorque = handBrakeForce;
 
-            if (rb != null && rb.linearVelocity.magnitude > 4f)
-            {
-                rb.AddTorque(transform.up * horizontalInput * driftYawBoost, ForceMode.Acceleration);
-            }
+            currentRearSidewaysStiffness = Mathf.MoveTowards(currentRearSidewaysStiffness, driftSidewaysStiffness, Time.fixedDeltaTime * 6f);
+            currentRearForwardStiffness = Mathf.MoveTowards(currentRearForwardStiffness, driftForwardStiffness, Time.fixedDeltaTime * 6f);
+            SetRearFriction(currentRearSidewaysStiffness, currentRearForwardStiffness);
         }
         else
         {
-            currentRearStiffness = normalRearSidewaysFriction.stiffness;
-            SetRearStiffness(currentRearStiffness);
+            // EMERGENCY POWER STOP MODE: All 4 wheels lock with full normal tire friction + progressive deceleration
+            if (frontLeftCollider != null) frontLeftCollider.brakeTorque = handBrakeForce * 0.85f;
+            if (frontRightCollider != null) frontRightCollider.brakeTorque = handBrakeForce * 0.85f;
+            if (rearLeftCollider != null) rearLeftCollider.brakeTorque = handBrakeForce;
+            if (rearRightCollider != null) rearRightCollider.brakeTorque = handBrakeForce;
 
-            ApplyMotorTorque(0f);
-            ApplyBrakes(handBrakeForce);
+            // Retain full normal tire friction for immediate asphalt bite
+            float targetSideways = normalRearSidewaysFriction.stiffness > 0.1f ? normalRearSidewaysFriction.stiffness : 2.4f;
+            float targetForward = normalRearForwardFriction.stiffness > 0.1f ? normalRearForwardFriction.stiffness : 2.0f;
+            currentRearSidewaysStiffness = targetSideways;
+            currentRearForwardStiffness = targetForward;
+            SetRearFriction(currentRearSidewaysStiffness, currentRearForwardStiffness);
 
-            if (rb != null)
+            // Progressive stopping deceleration (gets progressively stronger as vehicle slows down)
+            if (rb != null && Mathf.Abs(ForwardSpeed) > 0.3f)
             {
-                if (rb.linearVelocity.magnitude > 0.2f)
-                {
-                    rb.linearVelocity = Vector3.MoveTowards(rb.linearVelocity, Vector3.zero, Time.fixedDeltaTime * 20f);
-                }
-                else
-                {
-                    rb.linearVelocity = Vector3.zero;
-                }
+                float speedRatio = Mathf.Clamp01(Mathf.Abs(ForwardSpeed) / 25f);
+                float progressiveMultiplier = Mathf.Lerp(2.5f, 1.0f, speedRatio); // Up to 2.5x bite at lower speeds
+                float direction = ForwardSpeed > 0 ? -1f : 1f;
+                rb.AddForce(transform.forward * (direction * handbrakeDeceleration * progressiveMultiplier * rb.mass), ForceMode.Force);
             }
+        }
+
+        // Full stop clamp when near zero speed under handbrake
+        if (rb != null && Mathf.Abs(ForwardSpeed) < 0.4f)
+        {
+            rb.linearVelocity = Vector3.MoveTowards(rb.linearVelocity, Vector3.zero, Time.fixedDeltaTime * 25f);
         }
     }
 
-    private void HandleDriftRecovery()
+    /// <summary>
+    /// Smoothly restores normal tire grip when handbrake is released.
+    /// Uses natural physics friction transition without altering Rigidbody velocity directly.
+    /// </summary>
+    private void HandleDriftFrictionTransition()
     {
         if (isHandbraking) return;
 
-        currentRearStiffness = Mathf.MoveTowards(currentRearStiffness, normalRearSidewaysFriction.stiffness, Time.fixedDeltaTime * 2.5f);
-        SetRearStiffness(currentRearStiffness);
+        float targetSideways = normalRearSidewaysFriction.stiffness > 0.1f ? normalRearSidewaysFriction.stiffness : 2.4f;
+        float targetForward = normalRearForwardFriction.stiffness > 0.1f ? normalRearForwardFriction.stiffness : 2.0f;
 
-        // Yalnızca düz giderken toparla (dönüş yaparken veya duvara çarpınca fizik motorunu kitleme!)
-        if (Mathf.Abs(horizontalInput) < 0.1f && verticalInput > 0.1f && rb != null && ForwardSpeed > 2f)
+        if (!Mathf.Approximately(currentRearSidewaysStiffness, targetSideways) || !Mathf.Approximately(currentRearForwardStiffness, targetForward))
         {
-            Vector3 localVel = transform.InverseTransformDirection(rb.linearVelocity);
-
-            if (Mathf.Abs(localVel.x) > 0.5f && Mathf.Abs(localVel.x) < 8.0f)
-            {
-                localVel.x = Mathf.MoveTowards(localVel.x, 0f, Time.fixedDeltaTime * driftRecoveryRate);
-                rb.linearVelocity = transform.TransformDirection(localVel);
-
-                Vector3 angularVel = rb.angularVelocity;
-                angularVel.y = Mathf.MoveTowards(angularVel.y, 0f, Time.fixedDeltaTime * 4f);
-                rb.angularVelocity = angularVel;
-            }
+            currentRearSidewaysStiffness = Mathf.MoveTowards(currentRearSidewaysStiffness, targetSideways, Time.fixedDeltaTime * driftRecoveryRate);
+            currentRearForwardStiffness = Mathf.MoveTowards(currentRearForwardStiffness, targetForward, Time.fixedDeltaTime * driftRecoveryRate);
+            SetRearFriction(currentRearSidewaysStiffness, currentRearForwardStiffness);
         }
     }
 
-    private void SetRearStiffness(float stiffness)
+    private void SetRearFriction(float sidewaysStiffness, float forwardStiffness)
     {
         if (rearLeftCollider != null)
         {
-            WheelFrictionCurve f = rearLeftCollider.sidewaysFriction;
-            f.stiffness = stiffness;
-            rearLeftCollider.sidewaysFriction = f;
+            WheelFrictionCurve sf = rearLeftCollider.sidewaysFriction;
+            sf.stiffness = sidewaysStiffness;
+            rearLeftCollider.sidewaysFriction = sf;
+
+            WheelFrictionCurve ff = rearLeftCollider.forwardFriction;
+            ff.stiffness = forwardStiffness;
+            rearLeftCollider.forwardFriction = ff;
         }
 
         if (rearRightCollider != null)
         {
-            WheelFrictionCurve f = rearRightCollider.sidewaysFriction;
-            f.stiffness = stiffness;
-            rearRightCollider.sidewaysFriction = f;
+            WheelFrictionCurve sf = rearRightCollider.sidewaysFriction;
+            sf.stiffness = sidewaysStiffness;
+            rearRightCollider.sidewaysFriction = sf;
+
+            WheelFrictionCurve ff = rearRightCollider.forwardFriction;
+            ff.stiffness = forwardStiffness;
+            rearRightCollider.forwardFriction = ff;
+        }
+    }
+
+    /// <summary>
+    /// Applies aerodynamic downforce proportional to speed (glues car to road)
+    /// and body roll damping on sharp turns to prevent rollover.
+    /// </summary>
+    private void ApplyAerodynamicsAndRollDamping()
+    {
+        if (rb == null) return;
+
+        // 1. Aerodynamic Downforce
+        if (rb.linearVelocity.sqrMagnitude > 1.0f)
+        {
+            float speed = rb.linearVelocity.magnitude;
+            rb.AddForce(-transform.up * (downforce * speed), ForceMode.Force);
+        }
+
+        // 2. Safe Body Roll Damping (prevents sharp turns from rolling chassis or causing wheel hops)
+        if (rollDamping > 0f)
+        {
+            Vector3 localAngularVel = transform.InverseTransformDirection(rb.angularVelocity);
+            rb.AddRelativeTorque(0f, 0f, -localAngularVel.z * rollDamping, ForceMode.Force);
         }
     }
 
@@ -493,9 +656,16 @@ public class CarController : MonoBehaviour
     {
         force *= tuningTorqueMultiplier;
 
-        // AWD Torque Distribution (Front wheels pull towards steering angle, preventing sluggishness)
-        float frontForce = force * 0.35f;
-        float rearForce = force * 0.65f;
+        // 30% Front, 70% Rear AWD for immediate, punchy acceleration from standstill
+        float frontForce = force * 0.30f;
+        float rearForce = force * 0.70f;
+
+        // If steering sharply at speed, transfer 100% torque to rear so front wheels steer freely
+        if (Mathf.Abs(currentSteerAngle) > 15f && ForwardSpeed > 3f)
+        {
+            frontForce = 0f;
+            rearForce = force;
+        }
 
         if (frontLeftCollider != null) frontLeftCollider.motorTorque = frontForce;
         if (frontRightCollider != null) frontRightCollider.motorTorque = frontForce;
@@ -505,10 +675,10 @@ public class CarController : MonoBehaviour
 
     private void ApplyBrakes(float force)
     {
-        if (frontLeftCollider != null) frontLeftCollider.brakeTorque = force;
-        if (frontRightCollider != null) frontRightCollider.brakeTorque = force;
-        if (rearLeftCollider != null) rearLeftCollider.brakeTorque = force;
-        if (rearRightCollider != null) rearRightCollider.brakeTorque = force;
+        if (frontLeftCollider != null) frontLeftCollider.brakeTorque = force * 0.7f;
+        if (frontRightCollider != null) frontRightCollider.brakeTorque = force * 0.7f;
+        if (rearLeftCollider != null) rearLeftCollider.brakeTorque = force * 0.5f;
+        if (rearRightCollider != null) rearRightCollider.brakeTorque = force * 0.5f;
     }
 
     private void UpdateWheelMeshes()

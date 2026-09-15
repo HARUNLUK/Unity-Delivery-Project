@@ -54,11 +54,20 @@ public static class VehicleSetupHelper
         // 3. Ensure CarController and bind wheels automatically
         CarController car = target.GetComponent<CarController>();
         if (car == null) car = target.AddComponent<CarController>();
-        car.motorForce = 18000f;
-        car.reverseForce = 12000f;
-        car.footBrakeForce = 60000f;
-        car.handBrakeForce = 90000f;
-        car.maxSteerAngle = 32f;
+        car.motorForce = 12000f;
+        car.reverseForce = 8000f;
+        car.footBrakeForce = 160000f;
+        car.handBrakeForce = 200000f;
+        car.brakeDeceleration = 16.0f;
+        car.handbrakeDeceleration = 22.0f;
+        car.engineBrakeTorque = 1500f;
+        car.maxSteerAngle = 42f;
+        car.highSpeedSteerAngle = 26f;
+        car.steerAgility = 2.5f;
+        car.downforce = 45f;
+        car.rollDamping = 300f;
+        car.driftSidewaysStiffness = 0.5f;
+        car.driftForwardStiffness = 0.6f;
         car.centerOfMassOffset = new Vector3(0f, -0.6f, 0f);
 
         // Auto-detect Wheel Colliders and Meshes
@@ -80,20 +89,24 @@ public static class VehicleSetupHelper
             foreach (var wc in allWheels)
             {
                 JointSpring spring = wc.suspensionSpring;
-                spring.spring = 35000f;
-                spring.damper = 4500f;
+                spring.spring = 32000f;
+                spring.damper = 6000f;
                 spring.targetPosition = 0.5f;
                 wc.suspensionSpring = spring;
-                wc.suspensionDistance = 0.22f;
+                wc.suspensionDistance = 0.20f;
                 wc.mass = 20f;
-                wc.wheelDampingRate = 0.25f;
+                wc.wheelDampingRate = 0.8f;
 
                 WheelFrictionCurve fwd = wc.forwardFriction;
-                fwd.stiffness = 1.5f;
+                fwd.extremumSlip = 0.3f;
+                fwd.asymptoteSlip = 0.5f;
+                fwd.stiffness = 2.0f;
                 wc.forwardFriction = fwd;
 
                 WheelFrictionCurve side = wc.sidewaysFriction;
-                side.stiffness = 1.6f;
+                side.extremumSlip = 0.2f;
+                side.asymptoteSlip = 0.4f;
+                side.stiffness = 2.4f;
                 wc.sidewaysFriction = side;
             }
         }
