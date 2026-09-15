@@ -198,10 +198,24 @@ MonoBehaviour:
   reverseForce: 3000
   footBrakeForce: 60000
   handBrakeForce: 90000
+  brakeDeceleration: 16
+  handbrakeDeceleration: 22
+  engineBrakeTorque: 1500
   maxSteerAngle: 32
+  highSpeedSteerAngle: 26
+  steerAgility: 2.5
   centerOfMassOffset: {x: 0, y: -0.6, z: 0}
+  downforce: 45
+  rollDamping: 300
+  enableStraightLineStabilizer: 1
+  tuningTorqueMultiplier: 1
+  maxForwardSpeed: 35
+  maxReverseSpeed: 10
+  minConditionMaxSpeed: 8.5
+  minConditionTorqueMultiplier: 0.35
+  currentConditionRatio: 1
   driftSidewaysStiffness: 0.25
-  driftYawBoost: 2
+  driftForwardStiffness: 0.6
   driftRecoveryRate: 16
   frontLeftCollider: {fileID: 5514210230758666401}
   frontRightCollider: {fileID: 5514210231182756941}
@@ -219,6 +233,9 @@ MonoBehaviour:
   steerReturnSpeed: 220
   overrideInitialSteeringEuler: 1
   customInitialSteeringEuler: {x: 0, y: -90, z: 0}
+  horizontalInput: 0
+  verticalInput: 0
+  isHandbraking: 0
 --- !u!114 &4027793834991877202
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -231,15 +248,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60d3569c58479c145a4d2eeacb7e659a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DrivableVehicle
+  vehicleId: pickup_truck
   vehicleName: Pickup
+  description: Agile and practical entry-level cargo vehicle.
+  purchasePrice: 0
+  requiredPlayerLevel: 1
+  cargoCapacity: 8
+  isUnlockedByDefault: 0
+  customRecallFee: -1
+  maxFuel: 50
+  currentFuel: 50
+  fuelBurnRate: 0.06
+  idleFuelBurnRate: 0.008
+  maxCondition: 100
+  currentCondition: 100
+  drivingWearRate: 0.015
+  idleWearRate: 0.002
+  minCollisionSpeed: 6
+  collisionDamageMultiplier: 1.2
+  collisionDamageCooldown: 0.35
   driverSeatPoint: {fileID: 8397278923025044643}
+  fpsCameraOffset: {x: 0, y: 0, z: 0}
+  tpsCameraPoint: {fileID: 0}
+  tpsDistance: 6
+  tpsHeight: 2
+  tpsLookAtHeight: 1.2
   exitPoint: {fileID: 9010723636884388646}
+  parkingSpotTransform: {fileID: 0}
+  garageSpawnTransform: {fileID: 0}
   enterDistance: 3
   carController: {fileID: 7460136228035059600}
   rearTailgate: {fileID: 3586572840828998091}
   isPlayerInside: 0
   currentPlayer: {fileID: 0}
-  defaultVehicleColor: {r: 0.9098039, g: 0.44313725, b: 0.039215688, a: 1}
+  paintableTargets: []
+  defaultVehicleColor: {r: 0.9098039, g: 0.44313726, b: 0.039215688, a: 1}
 --- !u!65 &4737197646184111697
 BoxCollider:
   m_ObjectHideFlags: 0
