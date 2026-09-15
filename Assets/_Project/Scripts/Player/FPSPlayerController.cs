@@ -666,7 +666,7 @@ public class FPSPlayerController : MonoBehaviour
             {
                 PurchasableProperty p = h.collider.GetComponentInParent<PurchasableProperty>();
                 if (p == null) p = h.collider.GetComponent<PurchasableProperty>();
-                if (p != null && !p.IsUnlocked)
+                if (p != null && !p.IsUnlocked && !p.disablePurchase)
                 {
                     Vector3 anchorPos = p.interactionAnchor != null ? p.interactionAnchor.position : p.transform.position;
                     float d = Vector3.Distance(transform.position, anchorPos);
@@ -687,7 +687,7 @@ public class FPSPlayerController : MonoBehaviour
                 if (cp.transform.IsChildOf(transform)) continue;
                 PurchasableProperty p = cp.GetComponentInParent<PurchasableProperty>();
                 if (p == null) p = cp.GetComponent<PurchasableProperty>();
-                if (p != null && !p.IsUnlocked)
+                if (p != null && !p.IsUnlocked && !p.disablePurchase)
                 {
                     Vector3 anchorPos = p.interactionAnchor != null ? p.interactionAnchor.position : p.transform.position;
                     float d = Vector3.Distance(transform.position, anchorPos);
@@ -700,7 +700,7 @@ public class FPSPlayerController : MonoBehaviour
             }
         }
 
-        if (lockedProperty != null && !lockedProperty.IsUnlocked)
+        if (lockedProperty != null && !lockedProperty.IsUnlocked && !lockedProperty.disablePurchase)
         {
             if (InteractionPromptHUD.Instance != null)
             {

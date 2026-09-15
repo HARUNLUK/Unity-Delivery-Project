@@ -47,6 +47,13 @@ public class PurchasableProperty : MonoBehaviour
 
     public float interactionDistance = 3.5f;
 
+    [Header("--- ACCESS & AVAILABILITY (ERİŞİM & GEÇİCİ KİLİT) ---")]
+    [Tooltip("Eğer işaretlenirse (tikli ise), bu iş yeri/dükkan henüz oyunda erişime ve satın alıma kapalıdır (İleride açılacak). Yaklaşınca 'Satın Al' UI göstergesi ÇIKMAZ ve satın alınamaz.")]
+    public bool disablePurchase = false;
+
+    public bool IsPurchaseDisabled => disablePurchase;
+    public bool IsAvailableForPurchase => !disablePurchase && !isUnlocked;
+
     [Header("--- RUNTIME STATE ---")]
     [SerializeField] private bool isUnlocked = false;
 
@@ -63,6 +70,11 @@ public class PurchasableProperty : MonoBehaviour
     }
 
     private void Start()
+    {
+        UpdateVisuals();
+    }
+
+    private void OnValidate()
     {
         UpdateVisuals();
     }
@@ -87,7 +99,7 @@ public class PurchasableProperty : MonoBehaviour
 
     public string GetPromptText()
     {
-        if (isUnlocked) return string.Empty;
+        if (isUnlocked || disablePurchase) return string.Empty;
 
         int branchLevel = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : (PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.WarehouseLevel : 1);
         int playerBalance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
@@ -108,7 +120,7 @@ public class PurchasableProperty : MonoBehaviour
 
     public bool TryPurchase()
     {
-        if (isUnlocked) return false;
+        if (isUnlocked || disablePurchase) return false;
 
         int branchLevel = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : (PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.WarehouseLevel : 1);
         if (branchLevel < requiredPlayerLevel)

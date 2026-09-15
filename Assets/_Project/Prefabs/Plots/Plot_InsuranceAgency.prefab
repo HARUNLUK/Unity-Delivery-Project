@@ -347,6 +347,7 @@ MonoBehaviour:
   forSaleSignboard: {fileID: 7027405208425100266}
   interactionAnchor: {fileID: 7076699773859768389}
   interactionDistance: 5.5
+  disablePurchase: 0
   isUnlocked: 0
 --- !u!114 &8795415675842616886
 MonoBehaviour:
@@ -1737,7 +1738,7 @@ Transform:
   m_GameObject: {fileID: 7515816728499017509}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.8, y: -0.6, z: 0}
+  m_LocalPosition: {x: 1.8, y: -0.6, z: 0.09000016}
   m_LocalScale: {x: 0.15, y: 2.4, z: 0.15}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2185,7 +2186,7 @@ Transform:
   m_GameObject: {fileID: 8592794150090674146}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.8, y: -0.6, z: 0}
+  m_LocalPosition: {x: -1.8, y: -0.6, z: 0.09}
   m_LocalScale: {x: 0.15, y: 2.4, z: 0.15}
   m_ConstrainProportionsScale: 0
   m_Children: []

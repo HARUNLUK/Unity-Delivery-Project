@@ -411,7 +411,7 @@ public class CommercialHubUIManager : MonoBehaviour
     // ==========================================
     public void OpenPropertyPurchaseModal(PurchasableProperty prop)
     {
-        if (prop == null || prop.IsUnlocked) return;
+        if (prop == null || prop.IsUnlocked || prop.disablePurchase) return;
         EnsureUI();
         CloseAllPanels();
 
@@ -447,7 +447,7 @@ public class CommercialHubUIManager : MonoBehaviour
 
     private void OnPropertyConfirmPurchase()
     {
-        if (activePropertyToBuy == null) return;
+        if (activePropertyToBuy == null || activePropertyToBuy.disablePurchase) return;
         if (activePropertyToBuy.TryPurchase())
         {
             CloseAllPanels();
