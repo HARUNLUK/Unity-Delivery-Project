@@ -398,8 +398,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "SATILIK T\u0130CAR\u0130 M\xDCLK\nOTO SERV\u0130S & MOD\u0130F\u0130YE
-    GARAJI\n<color=yellow>Fiyat: $10,000 | Seviye: 3</color>"
+  m_text: "OTO SERV\u0130S & MOD\u0130F\u0130YE GARAJI\n\n<color=green>Fiyat: $1000</color>
+    \n\n<color=yellow>Seviye: 2 Gerekli</color>"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -426,7 +426,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 1.25
+  m_fontSize: 1.05
   m_fontSizeBase: 3.5
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -465,7 +465,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 1.4960951, y: 0.39443588, z: 1.5124575, w: 0.37250996}
+  m_margin: {x: 1.5814203, y: 0.46268368, z: 1.5608902, w: 0.47926235}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   _SortingLayer: 0
@@ -613,7 +613,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4452327620672619658}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -22, y: 0, z: -15.999998}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -621,7 +621,7 @@ Transform:
   - {fileID: 8369583991066266412}
   - {fileID: 1887525517753250155}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!65 &8922766648848919898
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -660,8 +660,8 @@ MonoBehaviour:
   description: "Ara\xE7lar\u0131n\u0131z\u0131 tamir edebilece\u011Finiz, boyayabilece\u011Finiz
     ve motor g\xFCc\xFCn\xFC art\u0131rabilece\u011Finiz servis."
   propertyType: 2
-  requiredPlayerLevel: 3
-  purchaseCost: 10000
+  requiredPlayerLevel: 2
+  purchaseCost: 1000
   closedStateRoot: {fileID: 7811797316450356243}
   unlockedStateRoot: {fileID: 5251552538678075410}
   forSaleSignboard: {fileID: 0}
@@ -1848,15 +1848,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5189183100114367850, guid: ddcde1a5230e2403c82a5bc25fab21b1, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.747
+      value: 3.766
       objectReference: {fileID: 0}
     - target: {fileID: 5189183100114367850, guid: ddcde1a5230e2403c82a5bc25fab21b1, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.905
+      value: 0.9
       objectReference: {fileID: 0}
     - target: {fileID: 5189183100114367850, guid: ddcde1a5230e2403c82a5bc25fab21b1, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -3.007
+      value: -4.629
       objectReference: {fileID: 0}
     - target: {fileID: 5189183100114367850, guid: ddcde1a5230e2403c82a5bc25fab21b1, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1918,15 +1918,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4125054969720098204, guid: 02b65fb8bdd0243538c089644417deab, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.733
+      value: 3.829
       objectReference: {fileID: 0}
     - target: {fileID: 4125054969720098204, guid: 02b65fb8bdd0243538c089644417deab, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.91
+      value: 0.902
       objectReference: {fileID: 0}
     - target: {fileID: 4125054969720098204, guid: 02b65fb8bdd0243538c089644417deab, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.995
+      value: -0.462
       objectReference: {fileID: 0}
     - target: {fileID: 4125054969720098204, guid: 02b65fb8bdd0243538c089644417deab, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1992,7 +1992,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2429603082528042005, guid: 30cc8683d345c144998fca1a82843a73, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.1550293
+      value: -0.049999237
       objectReference: {fileID: 0}
     - target: {fileID: 2429603082528042005, guid: 30cc8683d345c144998fca1a82843a73, type: 3}
       propertyPath: m_LocalPosition.z
@@ -2649,7 +2649,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2429603082528042005, guid: 30cc8683d345c144998fca1a82843a73, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.1550293
+      value: -0.05
       objectReference: {fileID: 0}
     - target: {fileID: 2429603082528042005, guid: 30cc8683d345c144998fca1a82843a73, type: 3}
       propertyPath: m_LocalPosition.z
