@@ -239,6 +239,7 @@ MonoBehaviour:
   rearTailgate: {fileID: 3586572840828998091}
   isPlayerInside: 0
   currentPlayer: {fileID: 0}
+  defaultVehicleColor: {r: 0.9098039, g: 0.44313725, b: 0.039215688, a: 1}
 --- !u!65 &4737197646184111697
 BoxCollider:
   m_ObjectHideFlags: 0

@@ -51,6 +51,9 @@ public class CommercialHubUIManager : MonoBehaviour
     private TextMeshProUGUI garageTitleText;
     private TextMeshProUGUI garageVehicleStatusText;
     private TextMeshProUGUI garageTuningInfoText;
+    private TextMeshProUGUI garagePaintSectionTitle;
+    private TextMeshProUGUI garagePaintDescText;
+    private TextMeshProUGUI garageCurrentColorText;
     private Button garageRepairBtn;
     private Button garageTuneBtn;
     private Button garageDriveBtn;
@@ -159,7 +162,7 @@ public class CommercialHubUIManager : MonoBehaviour
 
         if (garageTitleText != null)
         {
-            garageTitleText.text = $"🔧 OTO SERVİS & MODİFİYE ATÖLYESİ - <color=#32FFFF>{activeGarageVehicle.vehicleName}</color>";
+            garageTitleText.text = $"🔧 OTO SERVİS & BOYA ATÖLYESİ - <color=#32FFFF>{activeGarageVehicle.vehicleName}</color>";
         }
 
         if (garageVehicleStatusText != null)
@@ -170,36 +173,29 @@ public class CommercialHubUIManager : MonoBehaviour
             garageVehicleStatusText.text = $"<b>Yakıt Durumu:</b> {activeGarageVehicle.currentFuel:F1} / {activeGarageVehicle.maxFuel:F1} L (%{fuelPct:F0})  |  <b>Kondisyon:</b> <color={condColor}>%{condPct:F0}</color>";
         }
 
-        int tuningStage = VehicleServiceGarage.Instance != null ? VehicleServiceGarage.Instance.GetVehicleTuningStage(activeGarageVehicle.vehicleId) : 0;
-        int nextTuneCost = VehicleServiceGarage.Instance != null ? VehicleServiceGarage.Instance.GetTuningCostForStage(tuningStage + 1) : 0;
-        float torqueMult = VehicleServiceGarage.Instance != null ? VehicleServiceGarage.Instance.GetTorqueMultiplierForStage(tuningStage) : 1f;
-
         if (garageTuningInfoText != null)
         {
-            string bonusStr = tuningStage > 0 ? $"(+{(torqueMult - 1f) * 100:0}% Tork)" : "(Standart Fabrika Çıkışı)";
-            garageTuningInfoText.text = $"<b>Motor Performansı:</b> Stage {tuningStage} {bonusStr}";
+            garageTuningInfoText.gameObject.SetActive(false);
         }
 
         if (garageRepairBtn != null)
         {
             int repCost = VehicleServiceGarage.Instance != null ? VehicleServiceGarage.Instance.repairCost : 150;
             TextMeshProUGUI repairTxt = garageRepairBtn.GetComponentInChildren<TextMeshProUGUI>();
-            if (repairTxt != null) repairTxt.text = $"🔧 Tamir & Bakım Yap (${repCost:N0})";
+            if (repairTxt != null) repairTxt.text = $"🛠️ Aracı Tamir Et & Depoyu Doldur (${repCost:N0})";
         }
 
         if (garageTuneBtn != null)
         {
-            TextMeshProUGUI btnTxt = garageTuneBtn.GetComponentInChildren<TextMeshProUGUI>();
-            if (tuningStage >= 3)
-            {
-                if (btnTxt != null) btnTxt.text = "🚀 Motor: MAKSİMUM SEVİYE";
-                garageTuneBtn.interactable = false;
-            }
-            else
-            {
-                if (btnTxt != null) btnTxt.text = $"🚀 Stage {tuningStage + 1} Tork Yükselt (${nextTuneCost:N0})";
-                garageTuneBtn.interactable = true;
-            }
+            garageTuneBtn.gameObject.SetActive(false);
+        }
+
+        if (garageCurrentColorText != null)
+        {
+            Color curCol = activeGarageVehicle.GetCurrentColor();
+            string hex = ColorUtility.ToHtmlStringRGB(curCol);
+            int pCost = VehicleServiceGarage.Instance != null ? VehicleServiceGarage.Instance.repaintCost : 250;
+            garageCurrentColorText.text = $"<b>Mevcut Renk:</b> <color=#{hex}>■ #{hex}</color>  |  <b>Boya Değişim Ücreti:</b> <color=#32FF64>${pCost:N0}</color>";
         }
     }
 
@@ -219,6 +215,30 @@ public class CommercialHubUIManager : MonoBehaviour
         {
             RefreshGarageUI();
         }
+    }
+
+    private void OnGaragePaintColorClicked(Color color)
+    {
+        if (activeGarageVehicle == null)
+        {
+            if (VehicleServiceGarage.Instance != null)
+            {
+                activeGarageVehicle = VehicleServiceGarage.Instance.FindActiveVehicleInBay();
+            }
+        }
+
+        if (activeGarageVehicle == null) return;
+
+        if (VehicleServiceGarage.Instance != null)
+        {
+            VehicleServiceGarage.Instance.TryRepaintVehicle(activeGarageVehicle, color);
+        }
+        else
+        {
+            activeGarageVehicle.ApplyPaintColor(color, true);
+        }
+
+        RefreshGarageUI();
     }
 
     private void OnGarageDriveClicked()
@@ -481,9 +501,36 @@ public class CommercialHubUIManager : MonoBehaviour
         }
 
         // 1. Build Garage Panel
+        Transform existingG = canvas.transform.Find("GarageWorkshopPanel");
+        if (existingG != null && (existingG.Find("PaintBtn_0") == null || existingG.Find("TuneBtn") != null))
+        {
+            if (Application.isPlaying)
+            {
+                Destroy(existingG.gameObject);
+            }
+            else
+            {
+                DestroyImmediate(existingG.gameObject);
+            }
+            existingG = null;
+            garagePanelRoot = null;
+        }
+
+        if (garagePanelRoot != null && (garagePanelRoot.transform.Find("PaintBtn_0") == null || garagePanelRoot.transform.Find("TuneBtn") != null))
+        {
+            if (Application.isPlaying)
+            {
+                Destroy(garagePanelRoot);
+            }
+            else
+            {
+                DestroyImmediate(garagePanelRoot);
+            }
+            garagePanelRoot = null;
+        }
+
         if (garagePanelRoot == null)
         {
-            Transform existingG = canvas.transform.Find("GarageWorkshopPanel");
             if (existingG != null)
             {
                 garagePanelRoot = existingG.gameObject;
@@ -610,6 +657,46 @@ public class CommercialHubUIManager : MonoBehaviour
             {
                 garageCloseBtn.onClick.RemoveAllListeners();
                 garageCloseBtn.onClick.AddListener(CloseAllPanels);
+            }
+        }
+
+        Transform tPaintTitle = root.transform.Find("PaintTitle");
+        if (tPaintTitle != null) garagePaintSectionTitle = tPaintTitle.GetComponent<TextMeshProUGUI>();
+
+        Transform tPaintDesc = root.transform.Find("PaintDesc");
+        if (tPaintDesc != null) garagePaintDescText = tPaintDesc.GetComponent<TextMeshProUGUI>();
+
+        Transform tCurrentCol = root.transform.Find("CurrentColor");
+        if (tCurrentCol != null) garageCurrentColorText = tCurrentCol.GetComponent<TextMeshProUGUI>();
+
+        (string name, string hex, bool darkText)[] palette = new (string, string, bool)[]
+        {
+            ("🔴 Kırmızı", "#C5221F", false),
+            ("🔵 Mavi", "#1A73E8", false),
+            ("🖤 Siyah", "#1E1E24", false),
+            ("⚪ Beyaz", "#F8F9FA", true),
+            ("🟡 Sarı", "#FBBC04", true),
+            ("🟢 Yeşil", "#1E8E3E", false),
+            ("🟠 Turuncu", "#E8710A", false),
+            ("🟣 Mor", "#9334E8", false),
+            ("🔘 Gri", "#5F6368", false),
+            ("🩵 Turkuaz", "#00BCD4", false)
+        };
+
+        for (int i = 0; i < palette.Length; i++)
+        {
+            Transform tP = root.transform.Find($"PaintBtn_{i}");
+            if (tP != null)
+            {
+                Button pBtn = tP.GetComponent<Button>();
+                if (pBtn != null)
+                {
+                    var item = palette[i];
+                    ColorUtility.TryParseHtmlString(item.hex, out Color colVal);
+                    Color capturedColor = colVal;
+                    pBtn.onClick.RemoveAllListeners();
+                    pBtn.onClick.AddListener(() => OnGaragePaintColorClicked(capturedColor));
+                }
             }
         }
     }
@@ -743,34 +830,76 @@ public class CommercialHubUIManager : MonoBehaviour
 
     private GameObject CreateGaragePanel(Transform parent)
     {
-        GameObject root = CreateDarkPanel(parent, "GarageWorkshopPanel", new Vector2(850, 480));
+        GameObject root = CreateDarkPanel(parent, "GarageWorkshopPanel", new Vector2(880, 560));
 
         // Header
-        garageTitleText = CreateTMPText(root, "Title", "🔧 OTO SERVİS & MODİFİYE ATÖLYESİ", 28, FontStyles.Bold, new Color(0.2f, 0.9f, 1f), TextAlignmentOptions.Center);
-        SetRectAnchors(garageTitleText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -35), new Vector2(800, 45));
+        garageTitleText = CreateTMPText(root, "Title", "🔧 OTO SERVİS & BOYA ATÖLYESİ", 28, FontStyles.Bold, new Color(0.2f, 0.9f, 1f), TextAlignmentOptions.Center);
+        SetRectAnchors(garageTitleText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -32), new Vector2(820, 40));
 
         // Status Line
-        garageVehicleStatusText = CreateTMPText(root, "Status", "Yakıt: 50.0 / 50.0 L (%100)  |  Kondisyon: %100", 20, FontStyles.Normal, Color.white, TextAlignmentOptions.Center);
-        SetRectAnchors(garageVehicleStatusText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -80), new Vector2(800, 35));
+        garageVehicleStatusText = CreateTMPText(root, "Status", "Yakıt: 50.0 / 50.0 L (%100)  |  Kondisyon: %100", 18, FontStyles.Normal, Color.white, TextAlignmentOptions.Center);
+        SetRectAnchors(garageVehicleStatusText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -68), new Vector2(820, 28));
 
-        // Repair Button
-        garageRepairBtn = CreateButton(root, "RepairBtn", "🛠️ Tamir & Depo Doldur ($150)", new Vector2(0, -145), new Vector2(750, 56), new Color(0.12f, 0.55f, 0.35f));
+        // Row 1: Repair Button (Centered & Prominent)
+        garageRepairBtn = CreateButton(root, "RepairBtn", "🛠️ Aracı Tamir Et & Depoyu Doldur ($150)", new Vector2(0, -112), new Vector2(500, 48), new Color(0.12f, 0.55f, 0.35f));
         garageRepairBtn.onClick.AddListener(OnGarageRepairClicked);
 
-        // Tuning Info
-        garageTuningInfoText = CreateTMPText(root, "TuningInfo", "Motor Performansı: Stage 0 (Standart)", 20, FontStyles.Normal, Color.white, TextAlignmentOptions.Left);
-        SetRectAnchors(garageTuningInfoText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -225), new Vector2(750, 30));
+        // --- PAINT SECTION HEADER ---
+        garagePaintSectionTitle = CreateTMPText(root, "PaintTitle", "🎨 ARAÇ GÖVDE & PARÇA BOYAMA ATÖLYESİ ($250)", 20, FontStyles.Bold, new Color(1f, 0.82f, 0.2f), TextAlignmentOptions.Center);
+        SetRectAnchors(garagePaintSectionTitle.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -175), new Vector2(820, 28));
 
-        // Tuning Button
-        garageTuneBtn = CreateButton(root, "TuneBtn", "🚀 Stage 1 Tork Yükselt ($1.500)", new Vector2(0, -275), new Vector2(750, 56), new Color(0.6f, 0.2f, 0.7f));
-        garageTuneBtn.onClick.AddListener(OnGarageTuneClicked);
+        garagePaintDescText = CreateTMPText(root, "PaintDesc", "<color=#AAAAAA>Boyanacak Hedefler: PickupBody (Element 0), Hood (Element 0), DoorL & DoorR (Element 0)</color>", 15, FontStyles.Normal, Color.white, TextAlignmentOptions.Center);
+        SetRectAnchors(garagePaintDescText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -202), new Vector2(820, 22));
 
-        // Drive Button
-        garageDriveBtn = CreateButton(root, "DriveBtn", "🚗 Aracı Sür & Çıkış Yap", new Vector2(-195, -365), new Vector2(350, 56), new Color(0.15f, 0.45f, 0.85f));
+        // 10 Color Swatches Grid (2 rows of 5)
+        (string name, string hex, bool darkText)[] palette = new (string, string, bool)[]
+        {
+            ("🔴 Kırmızı", "#C5221F", false),
+            ("🔵 Mavi", "#1A73E8", false),
+            ("🖤 Siyah", "#1E1E24", false),
+            ("⚪ Beyaz", "#F8F9FA", true),
+            ("🟡 Sarı", "#FBBC04", true),
+            ("🟢 Yeşil", "#1E8E3E", false),
+            ("🟠 Turuncu", "#E8710A", false),
+            ("🟣 Mor", "#9334E8", false),
+            ("🔘 Gri", "#5F6368", false),
+            ("🩵 Turkuaz", "#00BCD4", false)
+        };
+
+        float startX = -300f;
+        float stepX = 150f;
+
+        for (int i = 0; i < palette.Length; i++)
+        {
+            int row = i / 5;
+            int col = i % 5;
+            float x = startX + (col * stepX);
+            float y = row == 0 ? -245f : -305f;
+
+            var item = palette[i];
+            ColorUtility.TryParseHtmlString(item.hex, out Color colVal);
+            Color capturedColor = colVal;
+            Button pBtn = CreateButton(root, $"PaintBtn_{i}", item.name, new Vector2(x, y), new Vector2(138, 48), colVal);
+
+            TextMeshProUGUI bTxt = pBtn.GetComponentInChildren<TextMeshProUGUI>();
+            if (bTxt != null)
+            {
+                bTxt.color = item.darkText ? Color.black : Color.white;
+                bTxt.fontSize = 16;
+            }
+
+            pBtn.onClick.AddListener(() => OnGaragePaintColorClicked(capturedColor));
+        }
+
+        // Current Color Indicator
+        garageCurrentColorText = CreateTMPText(root, "CurrentColor", "<b>Mevcut Renk:</b> ■ Standart  |  <b>Boya Değişim Ücreti:</b> $250", 17, FontStyles.Normal, Color.white, TextAlignmentOptions.Center);
+        SetRectAnchors(garageCurrentColorText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -370), new Vector2(820, 26));
+
+        // Bottom Actions: Drive & Close
+        garageDriveBtn = CreateButton(root, "DriveBtn", "🚗 Aracı Sür & Çıkış Yap", new Vector2(-205, -432), new Vector2(380, 52), new Color(0.15f, 0.45f, 0.85f));
         garageDriveBtn.onClick.AddListener(OnGarageDriveClicked);
 
-        // Close Button
-        garageCloseBtn = CreateButton(root, "CloseBtn", "❌ Kapat (ESC)", new Vector2(195, -365), new Vector2(350, 56), new Color(0.35f, 0.38f, 0.45f));
+        garageCloseBtn = CreateButton(root, "CloseBtn", "❌ Kapat (ESC)", new Vector2(205, -432), new Vector2(380, 52), new Color(0.35f, 0.38f, 0.45f));
         garageCloseBtn.onClick.AddListener(CloseAllPanels);
 
         return root;

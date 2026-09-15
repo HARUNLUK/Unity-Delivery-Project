@@ -190,7 +190,10 @@ public static class VehicleSetupHelper
         }
         drivable.rearTailgate = existingTg;
 
-        // 7. Save / Connect as Project Prefab
+        // 7. Auto Detect Paintable Targets (Body, Hood, Doors Element 0)
+        drivable.AutoDetectPaintableTargets();
+
+        // 8. Save / Connect as Project Prefab
         string prefabPath = $"{PREFAB_DIR}/Drivable_{target.name.Replace("(Clone)", "").Trim()}.prefab";
         PrefabUtility.SaveAsPrefabAssetAndConnect(target, prefabPath, InteractionMode.UserAction);
 

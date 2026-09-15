@@ -25,6 +25,8 @@ public class VehicleServiceGarage : MonoBehaviour
     [Header("--- GARAGE SERVICE COSTS ($) ---")]
     [Tooltip("Cost to fully repair and refuel vehicle ($)")]
     public int repairCost = 150;
+    [Tooltip("Cost to custom paint and lacquer vehicle ($)")]
+    public int repaintCost = 250;
     [Tooltip("Cost for Stage 1 Engine Torque Tuning ($)")]
     public int stage1TuningCost = 1500;
     [Tooltip("Cost for Stage 2 Engine Torque Tuning ($)")]
@@ -48,6 +50,7 @@ public class VehicleServiceGarage : MonoBehaviour
 
     public static event Action<DrivableVehicle> OnVehicleRepaired;
     public static event Action<DrivableVehicle, int> OnVehicleTuned;
+    public static event Action<DrivableVehicle, Color> OnVehicleRepainted;
 
     private void Awake()
     {
@@ -138,12 +141,7 @@ public class VehicleServiceGarage : MonoBehaviour
     public string GetGaragePromptForVehicle(DrivableVehicle v)
     {
         if (v == null || !IsGarageUnlocked()) return string.Empty;
-        int stage = GetVehicleTuningStage(v.vehicleId);
-        int nextCost = GetTuningCostForStage(stage + 1);
-        string tuneInfo = stage < 3 ? $"[T] Tork (${nextCost:N0})" : "[T] Tork: MAX";
-
-        return $"<color=#32D2FF>[R] Tamir (${repairCost})</color> | " +
-               $"<color=#FF77FF>{tuneInfo}</color>";
+        return $"<color=#32D2FF>[R] Tamir (${repairCost})</color> | <color=#32FFFF>[F] Boya & Garaj Menüsü</color>";
     }
 
     public void CheckGarageShortcutInputs(DrivableVehicle v)
@@ -151,13 +149,11 @@ public class VehicleServiceGarage : MonoBehaviour
         if (v == null || !IsGarageUnlocked()) return;
 
         bool rPressed = false;
-        bool tPressed = false;
 
 #if ENABLE_INPUT_SYSTEM
         if (Keyboard.current != null)
         {
             rPressed = Keyboard.current.rKey.wasPressedThisFrame;
-            tPressed = Keyboard.current.tKey.wasPressedThisFrame;
         }
 #endif
 
@@ -165,7 +161,6 @@ public class VehicleServiceGarage : MonoBehaviour
         try
         {
             if (Input.GetKeyDown(KeyCode.R)) rPressed = true;
-            if (Input.GetKeyDown(KeyCode.T)) tPressed = true;
         }
         catch { }
 #endif
@@ -173,10 +168,6 @@ public class VehicleServiceGarage : MonoBehaviour
         if (rPressed)
         {
             TryRepairVehicle(v);
-        }
-        if (tPressed)
-        {
-            TryTuneVehicle(v);
         }
     }
 
@@ -270,5 +261,35 @@ public class VehicleServiceGarage : MonoBehaviour
             InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>Yetersiz Bakiye!</color>", 2.0f);
 
         return false;
+    }
+
+    public bool TryRepaintVehicle(DrivableVehicle v, Color chosenColor)
+    {
+        if (v == null || !IsGarageUnlocked()) return false;
+
+        // Try to deduct repaint cost if economy exists and funds are available
+        if (PlayerEconomyManager.Instance != null && repaintCost > 0)
+        {
+            if (!PlayerEconomyManager.Instance.SpendMoney(repaintCost))
+            {
+                // If player has some money but less than full price, spend remaining balance
+                int avail = PlayerEconomyManager.Instance.CurrentLiveBalance;
+                if (avail > 0)
+                {
+                    PlayerEconomyManager.Instance.SpendMoney(avail);
+                }
+            }
+        }
+
+        // Apply color immediately to the vehicle
+        v.ApplyPaintColor(chosenColor, true);
+
+        OnVehicleRepainted?.Invoke(v, chosenColor);
+
+        string hex = ColorUtility.ToHtmlStringRGB(chosenColor);
+        if (InteractionPromptHUD.Instance != null)
+            InteractionPromptHUD.Instance.ShowPrompt($"<color=#{hex}>🎨 {v.vehicleName} Yeni Rengine Boyandı!</color>", 2.5f);
+
+        return true;
     }
 }

@@ -123,6 +123,16 @@ public class DrivableVehicle : MonoBehaviour
     public bool isPlayerInside = false;
     public FPSPlayerController currentPlayer;
 
+    [Header("--- VEHICLE PAINT & CUSTOMIZATION (BOYA & RENK MODİFİYESİ) ---")]
+    [Tooltip("Target mesh renderers and material slots affected by paint customizations")]
+    public System.Collections.Generic.List<PaintablePartTarget> paintableTargets = new System.Collections.Generic.List<PaintablePartTarget>();
+
+    [Tooltip("Default factory vehicle color (Vibrant Orange #E8710A)")]
+    public Color defaultVehicleColor = new Color(0.9098f, 0.4431f, 0.0392f, 1f);
+
+    public const string COLOR_SAVE_PREFIX = "DELIVERY_VEHICLE_COLOR_";
+
+    public static event Action<DrivableVehicle, Color> OnVehicleColorChanged;
     public static event Action<DrivableVehicle> OnVehiclePurchased;
     public static event Action<DrivableVehicle> OnVehicleRecalled;
     public static event Action OnAnyVehicleReset;
@@ -210,6 +220,7 @@ public class DrivableVehicle : MonoBehaviour
         }
 
         EnsureAnchors();
+        LoadSavedColor();
     }
 
     private void Start()
@@ -221,12 +232,14 @@ public class DrivableVehicle : MonoBehaviour
             carController.enabled = false;
         }
 
-        // Load saved fuel & condition
+        // Load saved fuel, condition & color
         currentFuel = PlayerPrefs.GetFloat(FUEL_SAVE_PREFIX + EffectiveVehicleId, maxFuel);
         currentFuel = Mathf.Clamp(currentFuel, 0f, maxFuel);
 
         currentCondition = PlayerPrefs.GetFloat(CONDITION_SAVE_PREFIX + EffectiveVehicleId, maxCondition);
         currentCondition = Mathf.Clamp(currentCondition, 0f, maxCondition);
+
+        LoadSavedColor();
 
         if (carController != null)
         {
@@ -608,6 +621,13 @@ public class DrivableVehicle : MonoBehaviour
         PlayerPrefs.DeleteKey(CONDITION_SAVE_PREFIX + "driveable_van");
         PlayerPrefs.DeleteKey(CONDITION_SAVE_PREFIX + "cargo_van_01");
 
+        PlayerPrefs.DeleteKey(COLOR_SAVE_PREFIX + "pickup_truck");
+        PlayerPrefs.DeleteKey(COLOR_SAVE_PREFIX + "drivable_pickup");
+        PlayerPrefs.DeleteKey(COLOR_SAVE_PREFIX + "cargo_van");
+        PlayerPrefs.DeleteKey(COLOR_SAVE_PREFIX + "drivable_van");
+        PlayerPrefs.DeleteKey(COLOR_SAVE_PREFIX + "driveable_van");
+        PlayerPrefs.DeleteKey(COLOR_SAVE_PREFIX + "cargo_van_01");
+
         PlayerPrefs.Save();
 
         OnAnyVehicleReset?.Invoke();
@@ -890,4 +910,224 @@ public class DrivableVehicle : MonoBehaviour
         Gizmos.DrawLine(pivotPos, defaultTpsPos);
         Gizmos.DrawWireSphere(defaultTpsPos, 0.35f);
     }
+
+    #region --- VEHICLE PAINTING & CUSTOMIZATION ---
+
+    /// <summary>
+    /// Applies a paint color to all configured paintable targets (body, hood, doors, etc.) on this vehicle.
+    /// </summary>
+    public void ApplyPaintColor(Color newColor, bool save = true)
+    {
+        bool hasValidTarget = false;
+        if (paintableTargets != null && paintableTargets.Count > 0)
+        {
+            foreach (var t in paintableTargets)
+            {
+                if (t != null && t.targetRenderer != null && t.targetRenderer.transform.IsChildOf(transform))
+                {
+                    hasValidTarget = true;
+                    break;
+                }
+            }
+        }
+
+        if (!hasValidTarget)
+        {
+            AutoDetectPaintableTargets();
+        }
+
+        if (paintableTargets != null)
+        {
+            foreach (var target in paintableTargets)
+            {
+                if (target == null) continue;
+
+                // Re-bind renderer if missing or detached
+                if (target.targetRenderer == null || !target.targetRenderer.transform.IsChildOf(transform))
+                {
+                    if (!string.IsNullOrEmpty(target.partName))
+                    {
+                        string cleanName = target.partName.Split(' ')[0];
+                        MeshRenderer[] renderers = GetComponentsInChildren<MeshRenderer>(true);
+                        foreach (var r in renderers)
+                        {
+                            if (r.gameObject.name.Equals(cleanName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                target.targetRenderer = r;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (target.targetRenderer == null) continue;
+
+                int slot = Mathf.Max(0, target.materialIndex);
+
+                try
+                {
+                    Material[] mats = Application.isPlaying ? target.targetRenderer.materials : target.targetRenderer.sharedMaterials;
+                    if (mats != null && slot < mats.Length && mats[slot] != null)
+                    {
+                        Material mat = mats[slot];
+                        mat.color = newColor;
+                        if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", newColor);
+                        if (mat.HasProperty("_Color")) mat.SetColor("_Color", newColor);
+                        if (mat.HasProperty("_ColorDim")) mat.SetColor("_ColorDim", newColor * 0.75f);
+                        if (mat.HasProperty("_ColorDimCurve")) mat.SetColor("_ColorDimCurve", newColor * 0.75f);
+                        if (mat.HasProperty("_ColorDimExtra")) mat.SetColor("_ColorDimExtra", newColor * 0.45f);
+                        if (mat.HasProperty("_ColorDimSteps")) mat.SetColor("_ColorDimSteps", newColor * 0.45f);
+                        if (mat.HasProperty("_ColorGradient")) mat.SetColor("_ColorGradient", newColor);
+
+                        if (Application.isPlaying)
+                        {
+                            target.targetRenderer.materials = mats; // Explicit writeback
+                            try { target.targetRenderer.SetPropertyBlock(null, slot); } catch { }
+                        }
+                        else
+                        {
+                            target.targetRenderer.sharedMaterials = mats;
+                        }
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogWarning($"[DrivableVehicle] Material tinting notice: {ex.Message}");
+                }
+            }
+        }
+
+        if (save)
+        {
+            PlayerPrefs.SetString(COLOR_SAVE_PREFIX + EffectiveVehicleId, "#" + ColorUtility.ToHtmlStringRGBA(newColor));
+            PlayerPrefs.Save();
+        }
+
+        OnVehicleColorChanged?.Invoke(this, newColor);
+    }
+
+    /// <summary>
+    /// Returns the currently active or saved paint color for this vehicle.
+    /// </summary>
+    public Color GetCurrentColor()
+    {
+        string hex = PlayerPrefs.GetString(COLOR_SAVE_PREFIX + EffectiveVehicleId, string.Empty);
+        if (!string.IsNullOrEmpty(hex) && ColorUtility.TryParseHtmlString(hex, out Color savedCol))
+        {
+            return savedCol;
+        }
+
+        if (paintableTargets != null && paintableTargets.Count > 0)
+        {
+            foreach (var target in paintableTargets)
+            {
+                if (target != null && target.targetRenderer != null)
+                {
+                    Material[] mats = target.targetRenderer.sharedMaterials;
+                    int slot = Mathf.Max(0, target.materialIndex);
+                    if (mats != null && slot < mats.Length && mats[slot] != null)
+                    {
+                        Material m = mats[slot];
+                        if (m.HasProperty("_BaseColor")) return m.GetColor("_BaseColor");
+                        if (m.HasProperty("_Color")) return m.GetColor("_Color");
+                    }
+                }
+            }
+        }
+
+        return defaultVehicleColor;
+    }
+
+    /// <summary>
+    /// Loads and applies the saved color from PlayerPrefs, or detects default targets.
+    /// </summary>
+    public void LoadSavedColor()
+    {
+        if (paintableTargets == null || paintableTargets.Count == 0)
+        {
+            AutoDetectPaintableTargets();
+        }
+
+        string hex = PlayerPrefs.GetString(COLOR_SAVE_PREFIX + EffectiveVehicleId, string.Empty);
+        if (!string.IsNullOrEmpty(hex) && ColorUtility.TryParseHtmlString(hex, out Color savedCol))
+        {
+            ApplyPaintColor(savedCol, false);
+        }
+    }
+
+    /// <summary>
+    /// Auto-detects paintable targets (PickupBody [Element 0], Hood [Element 0], DoorL [Element 0], DoorR [Element 0])
+    /// </summary>
+    public void AutoDetectPaintableTargets()
+    {
+        if (paintableTargets == null) paintableTargets = new System.Collections.Generic.List<PaintablePartTarget>();
+        paintableTargets.Clear();
+
+        MeshRenderer[] allRenderers = GetComponentsInChildren<MeshRenderer>(true);
+
+        // 1. Search for Pickup specific parts
+        MeshRenderer bodyRenderer = null;
+        MeshRenderer hoodRenderer = null;
+        MeshRenderer doorLRenderer = null;
+        MeshRenderer doorRRenderer = null;
+        MeshRenderer backDoorRenderer = null;
+
+        foreach (var mr in allRenderers)
+        {
+            string n = mr.gameObject.name;
+            if (n.Equals("PickupBody", StringComparison.OrdinalIgnoreCase)) bodyRenderer = mr;
+            else if (n.Equals("Hood", StringComparison.OrdinalIgnoreCase)) hoodRenderer = mr;
+            else if (n.Equals("DoorL", StringComparison.OrdinalIgnoreCase)) doorLRenderer = mr;
+            else if (n.Equals("DoorR", StringComparison.OrdinalIgnoreCase)) doorRRenderer = mr;
+            else if (n.Equals("PickupBackDoor", StringComparison.OrdinalIgnoreCase)) backDoorRenderer = mr;
+        }
+
+        if (bodyRenderer != null)
+        {
+            paintableTargets.Add(new PaintablePartTarget { partName = "PickupBody", targetRenderer = bodyRenderer, materialIndex = 0, colorPropertyName = "_BaseColor" });
+            if (hoodRenderer != null) paintableTargets.Add(new PaintablePartTarget { partName = "Hood", targetRenderer = hoodRenderer, materialIndex = 0, colorPropertyName = "_BaseColor" });
+            if (doorLRenderer != null) paintableTargets.Add(new PaintablePartTarget { partName = "DoorL", targetRenderer = doorLRenderer, materialIndex = 0, colorPropertyName = "_BaseColor" });
+            if (doorRRenderer != null) paintableTargets.Add(new PaintablePartTarget { partName = "DoorR", targetRenderer = doorRRenderer, materialIndex = 0, colorPropertyName = "_BaseColor" });
+            if (backDoorRenderer != null) paintableTargets.Add(new PaintablePartTarget { partName = "PickupBackDoor", targetRenderer = backDoorRenderer, materialIndex = 0, colorPropertyName = "_BaseColor" });
+        }
+        else
+        {
+            // Generic vehicle detection
+            foreach (var r in allRenderers)
+            {
+                string n = r.gameObject.name.ToLower();
+                if (n.Contains("body") || n.Contains("hood") || n.Contains("door") || n.Contains("chassis") || n.Contains("cabin"))
+                {
+                    paintableTargets.Add(new PaintablePartTarget
+                    {
+                        partName = r.gameObject.name,
+                        targetRenderer = r,
+                        materialIndex = 0,
+                        colorPropertyName = "_BaseColor"
+                    });
+                }
+            }
+        }
+    }
+
+    #endregion
+}
+
+/// <summary>
+/// Defines a specific target MeshRenderer and material element index for vehicle paint customization.
+/// </summary>
+[System.Serializable]
+public class PaintablePartTarget
+{
+    [Tooltip("Description/Name of this paintable part (e.g. Body, Hood, Doors)")]
+    public string partName = "Body Part";
+
+    [Tooltip("Target MeshRenderer / SkinnedMeshRenderer to apply paint color to")]
+    public Renderer targetRenderer;
+
+    [Tooltip("Target material element index (0 = Element 0)")]
+    public int materialIndex = 0;
+
+    [Tooltip("Shader color property name to tint (default: _BaseColor, fallback: _Color)")]
+    public string colorPropertyName = "_BaseColor";
 }
