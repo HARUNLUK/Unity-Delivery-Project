@@ -97,39 +97,10 @@ public class CargoWarehouseGenerator : MonoBehaviour
                 boxObj = Instantiate(chosenPrefab, spawnPos, spawnRot);
                 isCustom = true;
 
-                // Scale multiplier applied to original prefab localScale based on cargo type
-                if (bm != null && bm.enablePrefabScaling)
+                // Scale multiplier applied to original prefab localScale based on cargo type and elongation
+                if (bm != null)
                 {
-                    var (isRandom, fixedS, minS_raw, maxS_raw) = bm.GetScaleSettingsForCargoType(chosenType);
-                    Vector3 origScale = chosenPrefab.transform.localScale;
-                    if (origScale == Vector3.zero) origScale = Vector3.one;
-
-                    if (isRandom)
-                    {
-                        float minS = Mathf.Min(minS_raw, maxS_raw);
-                        float maxS = Mathf.Max(minS_raw, maxS_raw);
-
-                        if (minS > 0f && maxS > 0f)
-                        {
-                            if (bm.randomizeAxesIndependently)
-                            {
-                                float rx = Random.Range(minS, maxS);
-                                float ry = Random.Range(minS, maxS);
-                                float rz = Random.Range(minS, maxS);
-                                boxObj.transform.localScale = new Vector3(origScale.x * rx, origScale.y * ry, origScale.z * rz);
-                            }
-                            else
-                            {
-                                float uniformScale = Random.Range(minS, maxS);
-                                boxObj.transform.localScale = origScale * uniformScale;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        float targetScale = fixedS > 0f ? fixedS : 1.0f;
-                        boxObj.transform.localScale = origScale * targetScale;
-                    }
+                    boxObj.transform.localScale = bm.CalculateCargoScale(chosenType, chosenPrefab.transform.localScale);
                 }
             }
             else
@@ -138,6 +109,12 @@ public class CargoWarehouseGenerator : MonoBehaviour
                 boxObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 boxObj.transform.position = spawnPos;
                 boxObj.transform.rotation = spawnRot;
+
+                if (bm != null)
+                {
+                    boxObj.transform.localScale = bm.CalculateCargoScale(chosenType, new Vector3(0.55f, 0.42f, 0.45f));
+                    isCustom = true;
+                }
             }
 
             boxObj.name = $"Cargo_Package_#{targetPoint.pointId}_{i + 1}";

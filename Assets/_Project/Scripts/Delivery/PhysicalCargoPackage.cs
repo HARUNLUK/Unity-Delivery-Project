@@ -401,7 +401,9 @@ public class PhysicalCargoPackage : MonoBehaviour
             new Vector3(0.40f, 0.65f, 0.40f), // Tall Carton
             new Vector3(0.35f, 0.30f, 0.35f), // Small Compact Box
             new Vector3(0.60f, 0.50f, 0.55f), // Cube Cargo Box
-            new Vector3(0.80f, 0.35f, 0.45f)  // Long Courier Box
+            new Vector3(0.80f, 0.35f, 0.45f), // Long Courier Box
+            new Vector3(1.25f, 0.30f, 0.35f), // Elongated Flat Box
+            new Vector3(0.35f, 0.30f, 1.35f)  // Long Deep Courier Box
         };
 
         Vector3 chosenSize = dimensionPresets[Random.Range(0, dimensionPresets.Length)];
@@ -409,7 +411,15 @@ public class PhysicalCargoPackage : MonoBehaviour
         chosenSize.y *= Random.Range(0.92f, 1.08f);
         chosenSize.z *= Random.Range(0.92f, 1.08f);
 
-        transform.localScale = chosenSize;
+        if (BranchManager.Instance != null)
+        {
+            transform.localScale = BranchManager.Instance.CalculateCargoScale(cargoType, chosenSize);
+        }
+        else
+        {
+            transform.localScale = chosenSize;
+        }
+
         if (col != null)
         {
             col.center = Vector3.zero;
@@ -565,46 +575,65 @@ public class PhysicalCargoPackage : MonoBehaviour
     {
         if (shippingLabel != null) Destroy(shippingLabel);
 
-        // Dynamically compute the top surface position and dimensions
+        Vector3 pLossy = transform.lossyScale;
+        float parentX = Mathf.Max(0.001f, Mathf.Abs(pLossy.x));
+        float parentY = Mathf.Max(0.001f, Mathf.Abs(pLossy.y));
+        float parentZ = Mathf.Max(0.001f, Mathf.Abs(pLossy.z));
+
+        // Dynamically compute the top surface position and dimensions in local coordinates
         float topY = 0.505f;
         float posX = 0f;
         float posZ = 0f;
-        float labelScaleX = 0.85f;
-        float labelScaleZ = 0.75f;
+        float boxWorldWidth = parentX;
+        float boxWorldLength = parentZ;
 
         if (col != null)
         {
             posX = col.center.x;
             posZ = col.center.z;
-            topY = col.center.y + (col.size.y * 0.5f) + 0.005f;
-            labelScaleX = Mathf.Clamp(col.size.x * 0.75f, 0.15f, 2.5f);
-            labelScaleZ = Mathf.Clamp(col.size.z * 0.65f, 0.15f, 2.5f);
+            topY = col.center.y + (col.size.y * 0.5f) + (0.003f / parentY);
+            boxWorldWidth = Mathf.Max(0.05f, col.size.x * parentX);
+            boxWorldLength = Mathf.Max(0.05f, col.size.z * parentZ);
         }
         else if (boxRenderer != null)
         {
-            Vector3 topWorld = boxRenderer.bounds.center + new Vector3(0f, boxRenderer.bounds.extents.y + 0.005f, 0f);
+            Vector3 topWorld = boxRenderer.bounds.center + new Vector3(0f, boxRenderer.bounds.extents.y + 0.003f, 0f);
             Vector3 localTop = transform.InverseTransformPoint(topWorld);
             posX = localTop.x;
             topY = localTop.y;
             posZ = localTop.z;
-            Vector3 localExtents = transform.InverseTransformVector(boxRenderer.bounds.extents);
-            labelScaleX = Mathf.Clamp(Mathf.Abs(localExtents.x) * 1.5f, 0.15f, 2.5f);
-            labelScaleZ = Mathf.Clamp(Mathf.Abs(localExtents.z) * 1.3f, 0.15f, 2.5f);
+            boxWorldWidth = Mathf.Max(0.05f, boxRenderer.bounds.size.x);
+            boxWorldLength = Mathf.Max(0.05f, boxRenderer.bounds.size.z);
         }
+
+        // Target sticker size in world meters (strictly proportional standard shipping label):
+        // Adapts to the smaller box surface edge, capped at realistic courier sticker dimensions (~28cm x ~22cm)
+        float minSurfaceEdge = Mathf.Min(boxWorldWidth, boxWorldLength);
+        float targetWorldWidth = Mathf.Clamp(minSurfaceEdge * 0.72f, 0.16f, 0.32f);
+        float targetWorldHeight = targetWorldWidth * 0.78f; // Proportional clean shipping label aspect ratio
+
+        // Inverse-scale the child transform to counteract parent's non-uniform stretch:
+        // Local rotation is Euler(90, 0, 0), so:
+        // - Child local X maps to Parent world X
+        // - Child local Y maps to Parent world Z
+        // - Child local Z maps to Parent world Y
+        float labelLocalScaleX = targetWorldWidth / parentX;
+        float labelLocalScaleY = targetWorldHeight / parentZ;
+        float labelLocalScaleZ = 1.0f / parentY;
 
         // White shipping label sticker on top of the box
         shippingLabel = new GameObject("ShippingLabel");
         shippingLabel.transform.SetParent(transform, false);
         shippingLabel.transform.localPosition = new Vector3(posX, topY, posZ);
         shippingLabel.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-        shippingLabel.transform.localScale = new Vector3(labelScaleX, labelScaleZ, 1f);
+        shippingLabel.transform.localScale = new Vector3(labelLocalScaleX, labelLocalScaleY, labelLocalScaleZ);
 
         // Clean quad mesh without any MeshCollider (fixes dynamic Rigidbody concave warning)
         GameObject quadObj = new GameObject("LabelBackground");
         quadObj.transform.SetParent(shippingLabel.transform, false);
         quadObj.transform.localPosition = Vector3.zero;
         quadObj.transform.localRotation = Quaternion.identity;
-        quadObj.transform.localScale = new Vector3(0.9f, 0.9f, 1f);
+        quadObj.transform.localScale = new Vector3(0.95f, 0.95f, 1f);
 
         MeshFilter mf = quadObj.AddComponent<MeshFilter>();
         mf.sharedMesh = GetQuadMesh();
@@ -627,7 +656,7 @@ public class PhysicalCargoPackage : MonoBehaviour
         labelTextObj.transform.localRotation = Quaternion.identity;
 
         RectTransform textRect = labelTextObj.AddComponent<RectTransform>();
-        textRect.sizeDelta = new Vector2(0.82f, 0.82f);
+        textRect.sizeDelta = new Vector2(0.88f, 0.88f);
 
         labelText = labelTextObj.AddComponent<TextMeshPro>();
         labelText.fontSize = 1.35f;

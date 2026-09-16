@@ -85,6 +85,15 @@ public class BranchManager : MonoBehaviour
     [Tooltip("Custom explosion particle effect prefab (drag prefab from project or leave empty for procedural effect)")]
     public GameObject explosionVfxPrefab;
 
+    public enum ElongatedAxisMode
+    {
+        HorizontalOnly_XZ, // Stretches randomly X or Z (keeps vertical height normal)
+        Forward_Z_Only,    // Always stretches length/depth (Z)
+        Width_X_Only,      // Always stretches width (X)
+        Height_Y_Only,     // Always stretches vertical height (Y)
+        Random_AnyAxis     // Stretches any of X, Y, or Z randomly
+    }
+
     [Header("--- PREFAB SCALE MULTIPLIER PER CARGO TYPE ---")]
     [Tooltip("Apply scale multiplier to custom 3D prefabs")]
     public bool enablePrefabScaling = true;
@@ -92,7 +101,7 @@ public class BranchManager : MonoBehaviour
     [Tooltip("Scale X, Y, Z axes independently with random multipliers")]
     public bool randomizeAxesIndependently = false;
 
-    [Header("Standard Cargo Scale")]
+    [Header("Standard Cargo Scale & Elongation")]
     [Tooltip("If true, scales randomly between standardMinScale and standardMaxScale. If false, uses standardFixedScale.")]
     public bool standardRandomScale = true;
     [Range(0.05f, 2.5f), Tooltip("Fixed scale multiplier used when random scaling is disabled")]
@@ -101,8 +110,18 @@ public class BranchManager : MonoBehaviour
     public float standardMinScale = 0.35f;
     [Range(0.05f, 2.5f), Tooltip("Standard package maximum random scale multiplier")]
     public float standardMaxScale = 0.55f;
+    [Tooltip("Enable single-axis elongation for Standard cargo (e.g. length 5, width 1)")]
+    public bool standardEnableElongated = true;
+    [Range(0f, 100f), Tooltip("Standard cargo elongated spawn chance percentage")]
+    public float standardElongatedChance = 25f;
+    [Range(1.0f, 10.0f), Tooltip("Standard cargo minimum elongated multiplier for single axis")]
+    public float standardElongatedMinMultiplier = 2.0f;
+    [Range(1.0f, 10.0f), Tooltip("Standard cargo maximum elongated multiplier for single axis")]
+    public float standardElongatedMaxMultiplier = 4.5f;
+    [Tooltip("Which axis should be elongated for Standard packages")]
+    public ElongatedAxisMode standardElongatedAxisMode = ElongatedAxisMode.HorizontalOnly_XZ;
 
-    [Header("Fragile Cargo Scale")]
+    [Header("Fragile Cargo Scale & Elongation")]
     [Tooltip("If true, scales randomly between fragileMinScale and fragileMaxScale. If false, uses fragileFixedScale.")]
     public bool fragileRandomScale = true;
     [Range(0.05f, 2.5f), Tooltip("Fixed scale multiplier used when random scaling is disabled")]
@@ -111,8 +130,18 @@ public class BranchManager : MonoBehaviour
     public float fragileMinScale = 0.35f;
     [Range(0.05f, 2.5f), Tooltip("Fragile package maximum random scale multiplier")]
     public float fragileMaxScale = 0.50f;
+    [Tooltip("Enable single-axis elongation for Fragile cargo")]
+    public bool fragileEnableElongated = true;
+    [Range(0f, 100f), Tooltip("Fragile cargo elongated spawn chance percentage")]
+    public float fragileElongatedChance = 20f;
+    [Range(1.0f, 10.0f), Tooltip("Fragile cargo minimum elongated multiplier for single axis")]
+    public float fragileElongatedMinMultiplier = 1.8f;
+    [Range(1.0f, 10.0f), Tooltip("Fragile cargo maximum elongated multiplier for single axis")]
+    public float fragileElongatedMaxMultiplier = 3.5f;
+    [Tooltip("Which axis should be elongated for Fragile packages")]
+    public ElongatedAxisMode fragileElongatedAxisMode = ElongatedAxisMode.HorizontalOnly_XZ;
 
-    [Header("Express Cargo Scale")]
+    [Header("Express Cargo Scale & Elongation")]
     [Tooltip("If true, scales randomly between expressMinScale and expressMaxScale. If false, uses expressFixedScale.")]
     public bool expressRandomScale = true;
     [Range(0.05f, 2.5f), Tooltip("Fixed scale multiplier used when random scaling is disabled")]
@@ -121,8 +150,18 @@ public class BranchManager : MonoBehaviour
     public float expressMinScale = 0.30f;
     [Range(0.05f, 2.5f), Tooltip("Express package maximum random scale multiplier")]
     public float expressMaxScale = 0.45f;
+    [Tooltip("Enable single-axis elongation for Express cargo")]
+    public bool expressEnableElongated = true;
+    [Range(0f, 100f), Tooltip("Express cargo elongated spawn chance percentage")]
+    public float expressElongatedChance = 30f;
+    [Range(1.0f, 10.0f), Tooltip("Express cargo minimum elongated multiplier for single axis")]
+    public float expressElongatedMinMultiplier = 2.0f;
+    [Range(1.0f, 10.0f), Tooltip("Express cargo maximum elongated multiplier for single axis")]
+    public float expressElongatedMaxMultiplier = 4.0f;
+    [Tooltip("Which axis should be elongated for Express packages")]
+    public ElongatedAxisMode expressElongatedAxisMode = ElongatedAxisMode.HorizontalOnly_XZ;
 
-    [Header("Explosive Cargo Scale")]
+    [Header("Explosive Cargo Scale & Elongation")]
     [Tooltip("If true, scales randomly between explosiveMinScale and explosiveMaxScale. If false, uses explosiveFixedScale.")]
     public bool explosiveRandomScale = true;
     [Range(0.05f, 2.5f), Tooltip("Fixed scale multiplier used when random scaling is disabled")]
@@ -131,6 +170,16 @@ public class BranchManager : MonoBehaviour
     public float explosiveMinScale = 0.40f;
     [Range(0.05f, 2.5f), Tooltip("Explosive package maximum random scale multiplier")]
     public float explosiveMaxScale = 0.60f;
+    [Tooltip("Enable single-axis elongation for Explosive cargo")]
+    public bool explosiveEnableElongated = true;
+    [Range(0f, 100f), Tooltip("Explosive cargo elongated spawn chance percentage")]
+    public float explosiveElongatedChance = 15f;
+    [Range(1.0f, 10.0f), Tooltip("Explosive cargo minimum elongated multiplier for single axis")]
+    public float explosiveElongatedMinMultiplier = 1.8f;
+    [Range(1.0f, 10.0f), Tooltip("Explosive cargo maximum elongated multiplier for single axis")]
+    public float explosiveElongatedMaxMultiplier = 3.0f;
+    [Tooltip("Which axis should be elongated for Explosive packages")]
+    public ElongatedAxisMode explosiveElongatedAxisMode = ElongatedAxisMode.HorizontalOnly_XZ;
 
     [Header("--- CARGO BOX MATERIALS (SKINS) ---")]
     [Tooltip("Cardboard materials for standard packages")]
@@ -629,23 +678,89 @@ public class BranchManager : MonoBehaviour
         return null;
     }
 
+    public struct CargoScaleConfig
+    {
+        public bool isRandom;
+        public float fixedScale;
+        public float minScale;
+        public float maxScale;
+        public bool enableElongated;
+        public float elongatedChance;
+        public float elongatedMinMultiplier;
+        public float elongatedMaxMultiplier;
+        public ElongatedAxisMode elongatedAxisMode;
+    }
+
+    /// <summary>
+    /// Returns all scale and elongated configuration settings for the specified cargo type.
+    /// </summary>
+    public CargoScaleConfig GetScaleConfigForCargoType(CargoType type)
+    {
+        switch (type)
+        {
+            case CargoType.Fragile:
+                return new CargoScaleConfig
+                {
+                    isRandom = fragileRandomScale,
+                    fixedScale = fragileFixedScale,
+                    minScale = fragileMinScale,
+                    maxScale = fragileMaxScale,
+                    enableElongated = fragileEnableElongated,
+                    elongatedChance = fragileElongatedChance,
+                    elongatedMinMultiplier = fragileElongatedMinMultiplier,
+                    elongatedMaxMultiplier = fragileElongatedMaxMultiplier,
+                    elongatedAxisMode = fragileElongatedAxisMode
+                };
+            case CargoType.Express:
+                return new CargoScaleConfig
+                {
+                    isRandom = expressRandomScale,
+                    fixedScale = expressFixedScale,
+                    minScale = expressMinScale,
+                    maxScale = expressMaxScale,
+                    enableElongated = expressEnableElongated,
+                    elongatedChance = expressElongatedChance,
+                    elongatedMinMultiplier = expressElongatedMinMultiplier,
+                    elongatedMaxMultiplier = expressElongatedMaxMultiplier,
+                    elongatedAxisMode = expressElongatedAxisMode
+                };
+            case CargoType.Explosive:
+                return new CargoScaleConfig
+                {
+                    isRandom = explosiveRandomScale,
+                    fixedScale = explosiveFixedScale,
+                    minScale = explosiveMinScale,
+                    maxScale = explosiveMaxScale,
+                    enableElongated = explosiveEnableElongated,
+                    elongatedChance = explosiveElongatedChance,
+                    elongatedMinMultiplier = explosiveElongatedMinMultiplier,
+                    elongatedMaxMultiplier = explosiveElongatedMaxMultiplier,
+                    elongatedAxisMode = explosiveElongatedAxisMode
+                };
+            case CargoType.Standard:
+            default:
+                return new CargoScaleConfig
+                {
+                    isRandom = standardRandomScale,
+                    fixedScale = standardFixedScale,
+                    minScale = standardMinScale,
+                    maxScale = standardMaxScale,
+                    enableElongated = standardEnableElongated,
+                    elongatedChance = standardElongatedChance,
+                    elongatedMinMultiplier = standardElongatedMinMultiplier,
+                    elongatedMaxMultiplier = standardElongatedMaxMultiplier,
+                    elongatedAxisMode = standardElongatedAxisMode
+                };
+        }
+    }
+
     /// <summary>
     /// Returns scale settings (isRandom, fixedScale, minScale, maxScale) for the specified cargo type.
     /// </summary>
     public (bool isRandom, float fixedScale, float minScale, float maxScale) GetScaleSettingsForCargoType(CargoType type)
     {
-        switch (type)
-        {
-            case CargoType.Fragile:
-                return (fragileRandomScale, fragileFixedScale, fragileMinScale, fragileMaxScale);
-            case CargoType.Express:
-                return (expressRandomScale, expressFixedScale, expressMinScale, expressMaxScale);
-            case CargoType.Explosive:
-                return (explosiveRandomScale, explosiveFixedScale, explosiveMinScale, explosiveMaxScale);
-            case CargoType.Standard:
-            default:
-                return (standardRandomScale, standardFixedScale, standardMinScale, standardMaxScale);
-        }
+        var cfg = GetScaleConfigForCargoType(type);
+        return (cfg.isRandom, cfg.fixedScale, cfg.minScale, cfg.maxScale);
     }
 
     /// <summary>
@@ -653,8 +768,87 @@ public class BranchManager : MonoBehaviour
     /// </summary>
     public (float minScale, float maxScale) GetScaleRangeForCargoType(CargoType type)
     {
-        var settings = GetScaleSettingsForCargoType(type);
-        return (settings.minScale, settings.maxScale);
+        var cfg = GetScaleConfigForCargoType(type);
+        return (cfg.minScale, cfg.maxScale);
+    }
+
+    /// <summary>
+    /// Computes the final localScale for a cargo package based on base scale, cargo type min/max limits,
+    /// and type-specific single-axis elongation (ince-uzun kargo boyutu).
+    /// </summary>
+    public Vector3 CalculateCargoScale(CargoType type, Vector3 baseScale)
+    {
+        if (baseScale == Vector3.zero) baseScale = Vector3.one;
+
+        if (!enablePrefabScaling) return baseScale;
+
+        CargoScaleConfig cfg = GetScaleConfigForCargoType(type);
+        Vector3 finalScale;
+
+        if (cfg.isRandom)
+        {
+            float minS = Mathf.Min(cfg.minScale, cfg.maxScale);
+            float maxS = Mathf.Max(cfg.minScale, cfg.maxScale);
+
+            if (minS > 0f && maxS > 0f)
+            {
+                if (randomizeAxesIndependently)
+                {
+                    float rx = UnityEngine.Random.Range(minS, maxS);
+                    float ry = UnityEngine.Random.Range(minS, maxS);
+                    float rz = UnityEngine.Random.Range(minS, maxS);
+                    finalScale = new Vector3(baseScale.x * rx, baseScale.y * ry, baseScale.z * rz);
+                }
+                else
+                {
+                    float uniformScale = UnityEngine.Random.Range(minS, maxS);
+                    finalScale = baseScale * uniformScale;
+                }
+            }
+            else
+            {
+                finalScale = baseScale;
+            }
+        }
+        else
+        {
+            float targetScale = cfg.fixedScale > 0f ? cfg.fixedScale : 1.0f;
+            finalScale = baseScale * targetScale;
+        }
+
+        // Apply type-specific single-axis elongation variation if enabled and chance rolled
+        if (cfg.enableElongated && cfg.elongatedChance > 0f && UnityEngine.Random.Range(0f, 100f) <= cfg.elongatedChance)
+        {
+            float minMult = Mathf.Min(cfg.elongatedMinMultiplier, cfg.elongatedMaxMultiplier);
+            float maxMult = Mathf.Max(cfg.elongatedMinMultiplier, cfg.elongatedMaxMultiplier);
+            float stretchFactor = UnityEngine.Random.Range(minMult, maxMult);
+
+            switch (cfg.elongatedAxisMode)
+            {
+                case ElongatedAxisMode.Forward_Z_Only:
+                    finalScale.z *= stretchFactor;
+                    break;
+                case ElongatedAxisMode.Width_X_Only:
+                    finalScale.x *= stretchFactor;
+                    break;
+                case ElongatedAxisMode.Height_Y_Only:
+                    finalScale.y *= stretchFactor;
+                    break;
+                case ElongatedAxisMode.HorizontalOnly_XZ:
+                    if (UnityEngine.Random.value < 0.5f) finalScale.z *= stretchFactor;
+                    else finalScale.x *= stretchFactor;
+                    break;
+                case ElongatedAxisMode.Random_AnyAxis:
+                default:
+                    int axis = UnityEngine.Random.Range(0, 3);
+                    if (axis == 0) finalScale.x *= stretchFactor;
+                    else if (axis == 1) finalScale.y *= stretchFactor;
+                    else finalScale.z *= stretchFactor;
+                    break;
+            }
+        }
+
+        return finalScale;
     }
 
     /// <summary>
