@@ -222,7 +222,8 @@ public class AITrafficVehicle : MonoBehaviour
                 transform.position = worldPos;
                 if (worldForward.sqrMagnitude > 0.001f)
                 {
-                    transform.rotation = Quaternion.LookRotation(worldForward, Vector3.up);
+                    Vector3 groundNormal = GetGroundNormal(worldPos, worldForward);
+                    transform.rotation = Quaternion.LookRotation(worldForward, groundNormal);
                 }
             }
         }
@@ -409,8 +410,8 @@ public class AITrafficVehicle : MonoBehaviour
 
             if (targetForward.sqrMagnitude > 0.001f)
             {
-                // Align vehicle rotation with silky smooth angular steering
-                Vector3 groundNormal = GetGroundNormal(targetPos);
+                // Align vehicle rotation with silky smooth angular steering and roll-stabilized road conforming
+                Vector3 groundNormal = GetGroundNormal(targetPos, targetForward);
                 Quaternion targetRot = Quaternion.LookRotation(targetForward, groundNormal);
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * 14.0f);
             }
@@ -497,7 +498,7 @@ public class AITrafficVehicle : MonoBehaviour
 
         if (currentTangent.sqrMagnitude > 0.001f)
         {
-            Vector3 groundNormal = GetGroundNormal(currentPos);
+            Vector3 groundNormal = GetGroundNormal(currentPos, currentTangent);
             Quaternion targetRot = Quaternion.LookRotation(currentTangent, groundNormal);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * 14.0f);
         }
@@ -582,7 +583,7 @@ public class AITrafficVehicle : MonoBehaviour
 
         if (arcTangent.sqrMagnitude > 0.001f)
         {
-            Vector3 groundNormal = GetGroundNormal(arcPos);
+            Vector3 groundNormal = GetGroundNormal(arcPos, arcTangent);
             Quaternion targetRot = Quaternion.LookRotation(arcTangent, groundNormal);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * 14.0f);
         }
@@ -894,38 +895,155 @@ public class AITrafficVehicle : MonoBehaviour
     }
 
     /// <summary>
-    /// Snaps vehicle to road or terrain surface.
+    /// Snaps vehicle to road mesh or terrain surface, preserving elevated bridge/overpass heights.
     /// </summary>
-    private Vector3 ApplyGroundHeight(Vector3 pos)
+    private Vector3 ApplyGroundHeight(Vector3 splinePos)
     {
+        // 1. Raycast downward from above spline position to detect physical road/bridge mesh
+        Vector3 rayOrigin = splinePos + (Vector3.up * 2.5f);
+        RaycastHit[] hits = Physics.RaycastAll(rayOrigin, Vector3.down, 6.0f, ~0, QueryTriggerInteraction.Ignore);
+        if (hits != null && hits.Length > 0)
+        {
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+            for (int i = 0; i < hits.Length; i++)
+            {
+                RaycastHit h = hits[i];
+                if (IsOwnCollider(h.collider)) continue;
+                if (h.collider.GetComponentInParent<AITrafficVehicle>() != null) continue;
+                if (h.collider.GetComponentInParent<DrivableVehicle>() != null) continue;
+                if (h.collider.GetComponentInParent<FPSPlayerController>() != null) continue;
+
+                if (IsRoadOrTerrainCollider(h.collider, h.normal))
+                {
+                    // Road or Bridge mesh takes immediate priority
+                    if (h.collider.GetComponent<TerrainCollider>() == null && h.collider.GetComponent<Terrain>() == null)
+                    {
+                        splinePos.y = h.point.y + groundOffset;
+                        return splinePos;
+                    }
+
+                    // Terrain collider: only snap if terrain is at/above spline level (not below in a dug canal/trench)
+                    if (h.point.y >= (splinePos.y - 0.35f))
+                    {
+                        splinePos.y = Mathf.Max(splinePos.y, h.point.y) + groundOffset;
+                        return splinePos;
+                    }
+                }
+            }
+        }
+
+        // 2. Fallback: Check Terrain height directly
         Terrain terrain = Terrain.activeTerrain;
         if (terrain != null)
         {
-            float terrainY = terrain.SampleHeight(pos) + terrain.transform.position.y;
-            pos.y = Mathf.Max(pos.y, terrainY) + groundOffset;
+            float terrainY = terrain.SampleHeight(splinePos) + terrain.transform.position.y;
+            if (terrainY >= (splinePos.y - 0.35f))
+            {
+                splinePos.y = Mathf.Max(splinePos.y, terrainY) + groundOffset;
+            }
+            else
+            {
+                splinePos.y += groundOffset;
+            }
         }
         else
         {
-            pos.y += groundOffset;
+            splinePos.y += groundOffset;
         }
-        return pos;
+
+        return splinePos;
     }
 
-    private Vector3 GetGroundNormal(Vector3 pos)
+    /// <summary>
+    /// Computes stable ground normal for vehicle chassis orientation.
+    /// Clamps lateral roll (bank) so wheels never lift on steep roadside ditches/water canals,
+    /// while preserving natural uphill/downhill pitch and road mesh alignment.
+    /// </summary>
+    private Vector3 GetGroundNormal(Vector3 pos, Vector3 forward)
     {
-        Terrain terrain = Terrain.activeTerrain;
-        if (terrain != null && terrain.terrainData != null)
+        if (forward.sqrMagnitude < 0.001f) forward = Vector3.forward;
+        Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
+        if (right.sqrMagnitude < 0.001f) right = Vector3.right;
+
+        Vector3 rawNormal = Vector3.up;
+        bool foundNormal = false;
+
+        // 1. Raycast downward from above vehicle to detect physical road / bridge surface normal
+        Vector3 rayOrigin = pos + (Vector3.up * 2.5f);
+        RaycastHit[] hits = Physics.RaycastAll(rayOrigin, Vector3.down, 6.0f, ~0, QueryTriggerInteraction.Ignore);
+        if (hits != null && hits.Length > 0)
         {
-            Vector3 tPos = terrain.transform.position;
-            Vector3 tSize = terrain.terrainData.size;
-            float normX = (pos.x - tPos.x) / tSize.x;
-            float normZ = (pos.z - tPos.z) / tSize.z;
-            if (normX >= 0f && normX <= 1f && normZ >= 0f && normZ <= 1f)
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+            for (int i = 0; i < hits.Length; i++)
             {
-                return terrain.terrainData.GetInterpolatedNormal(normX, normZ);
+                RaycastHit h = hits[i];
+                if (IsOwnCollider(h.collider)) continue;
+                if (h.collider.GetComponentInParent<AITrafficVehicle>() != null) continue;
+                if (h.collider.GetComponentInParent<DrivableVehicle>() != null) continue;
+                if (h.collider.GetComponentInParent<FPSPlayerController>() != null) continue;
+
+                if (IsRoadOrTerrainCollider(h.collider, h.normal))
+                {
+                    // Road / Bridge mesh takes highest priority
+                    if (h.collider.GetComponent<TerrainCollider>() == null && h.collider.GetComponent<Terrain>() == null)
+                    {
+                        rawNormal = h.normal;
+                        foundNormal = true;
+                        break;
+                    }
+
+                    // Terrain collider: only use if car is actually at terrain level (not elevated above water trench)
+                    if (pos.y <= (h.point.y + 0.45f))
+                    {
+                        rawNormal = h.normal;
+                        foundNormal = true;
+                        break;
+                    }
+                }
             }
         }
-        return Vector3.up;
+
+        // 2. Fallback: Sample Terrain normal if vehicle is at ground level
+        if (!foundNormal)
+        {
+            Terrain terrain = Terrain.activeTerrain;
+            if (terrain != null && terrain.terrainData != null)
+            {
+                float terrainY = terrain.SampleHeight(pos) + terrain.transform.position.y;
+                // Only sample terrain normal if vehicle is near terrain height (not high above a dug-out river trench/bridge)
+                if (pos.y <= (terrainY + 0.45f))
+                {
+                    Vector3 tPos = terrain.transform.position;
+                    Vector3 tSize = terrain.terrainData.size;
+                    float normX = (pos.x - tPos.x) / tSize.x;
+                    float normZ = (pos.z - tPos.z) / tSize.z;
+                    if (normX >= 0f && normX <= 1f && normZ >= 0f && normZ <= 1f)
+                    {
+                        rawNormal = terrain.terrainData.GetInterpolatedNormal(normX, normZ);
+                        foundNormal = true;
+                    }
+                }
+            }
+        }
+
+        if (!foundNormal || rawNormal.y < 0.2f)
+        {
+            rawNormal = Vector3.up;
+        }
+
+        // 3. STABILITY FILTER:
+        // Preserves uphill/downhill road pitch while strictly clamping lateral sideways roll
+        // (Prevents side wheels from lifting into the air when driving along dug canals/trenches)
+        float lateralRoll = Vector3.Dot(rawNormal, right);
+        lateralRoll = Mathf.Clamp(lateralRoll, -0.06f, 0.06f); // Max ~3.5 degrees lateral bank
+
+        float pitch = Vector3.Dot(rawNormal, forward);
+        pitch = Mathf.Clamp(pitch, -0.55f, 0.55f); // Natural uphill/downhill road pitch
+
+        float upMag = Mathf.Sqrt(Mathf.Max(0.01f, 1f - (lateralRoll * lateralRoll + pitch * pitch)));
+        Vector3 stableNormal = (Vector3.up * upMag + forward * pitch + right * lateralRoll).normalized;
+
+        return stableNormal;
     }
 
     /// <summary>

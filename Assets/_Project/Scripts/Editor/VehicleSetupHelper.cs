@@ -190,7 +190,13 @@ public static class VehicleSetupHelper
         }
         drivable.rearTailgate = existingTg;
 
-        // 7. Auto Detect Paintable Targets (Body, Hood, Doors Element 0)
+        // 7. Setup Vehicle Cargo Bed Stabilizer
+        VehicleCargoBed existingBed = target.GetComponent<VehicleCargoBed>();
+        if (existingBed == null) existingBed = target.AddComponent<VehicleCargoBed>();
+        existingBed.EnsureBedTrigger();
+        drivable.cargoBed = existingBed;
+
+        // 8. Auto Detect Paintable Targets (Body, Hood, Doors Element 0)
         drivable.AutoDetectPaintableTargets();
 
         // 8. Save / Connect as Project Prefab

@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PhysicsGrabber : MonoBehaviour
@@ -29,15 +30,11 @@ public class PhysicsGrabber : MonoBehaviour
     private float effectiveHoldDistance = 1.6f;
 
     private Camera playerCam;
-    private Collider[] playerColliders;
 
     private void Awake()
     {
         playerCam = GetComponentInParent<Camera>();
         if (playerCam == null) playerCam = Camera.main;
-
-        // Cache player colliders to ignore collision while carrying
-        playerColliders = transform.root.GetComponentsInChildren<Collider>();
     }
 
     public bool IsHoldingObject => grabbedRb != null;
@@ -137,23 +134,61 @@ public class PhysicsGrabber : MonoBehaviour
         return Mathf.Max(extents.x, extents.y, extents.z);
     }
 
+    private List<Collider> GetPlayerCharacterColliders()
+    {
+        List<Collider> list = new List<Collider>();
+
+        // Find the FPSPlayerController in parent or scene
+        FPSPlayerController player = GetComponentInParent<FPSPlayerController>();
+        if (player == null) player = FPSPlayerController.Instance != null ? FPSPlayerController.Instance : Object.FindAnyObjectByType<FPSPlayerController>();
+
+        if (player != null)
+        {
+            Collider[] cols = player.GetComponentsInChildren<Collider>(true);
+            foreach (var c in cols)
+            {
+                // CRITICAL: Strictly exclude vehicle colliders if player is seated/parented to vehicle!
+                if (c != null && c.GetComponentInParent<DrivableVehicle>() == null)
+                {
+                    list.Add(c);
+                }
+            }
+        }
+
+        return list;
+    }
+
     private void SetCollisionWithPlayer(Rigidbody rb, bool enable)
     {
         if (rb == null) return;
 
         Collider[] objCols = rb.GetComponentsInChildren<Collider>();
-        if (playerColliders == null || playerColliders.Length == 0)
-        {
-            playerColliders = transform.root.GetComponentsInChildren<Collider>();
-        }
-
-        if (playerColliders == null) return;
+        List<Collider> actualPlayerCols = GetPlayerCharacterColliders();
 
         foreach (var oc in objCols)
         {
-            foreach (var pc in playerColliders)
+            if (oc == null) continue;
+
+            // When enabling or releasing, always guarantee cargo collides with all vehicles
+            if (enable)
             {
-                if (oc != null && pc != null && oc != pc)
+                DrivableVehicle[] vehicles = Object.FindObjectsByType<DrivableVehicle>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                foreach (var v in vehicles)
+                {
+                    if (v == null) continue;
+                    foreach (var vc in v.GetComponentsInChildren<Collider>(true))
+                    {
+                        if (vc != null && vc != oc)
+                        {
+                            Physics.IgnoreCollision(oc, vc, false);
+                        }
+                    }
+                }
+            }
+
+            foreach (var pc in actualPlayerCols)
+            {
+                if (pc != null && oc != pc && pc.GetComponentInParent<DrivableVehicle>() == null)
                 {
                     Physics.IgnoreCollision(oc, pc, !enable);
                 }

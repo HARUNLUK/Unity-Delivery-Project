@@ -118,6 +118,7 @@ public class DrivableVehicle : MonoBehaviour
     public float enterDistance = 3.0f;
     public CarController carController;
     public VehicleTailgate rearTailgate;
+    public VehicleCargoBed cargoBed;
 
     [Header("--- CURRENT STATE ---")]
     public bool isPlayerInside = false;
@@ -281,6 +282,16 @@ public class DrivableVehicle : MonoBehaviour
                 exitObj.transform.localRotation = Quaternion.identity;
                 exitPoint = exitObj.transform;
             }
+        }
+
+        if (cargoBed == null)
+        {
+            cargoBed = GetComponent<VehicleCargoBed>();
+            if (cargoBed == null) cargoBed = gameObject.AddComponent<VehicleCargoBed>();
+        }
+        if (cargoBed != null)
+        {
+            cargoBed.EnsureBedTrigger();
         }
     }
 

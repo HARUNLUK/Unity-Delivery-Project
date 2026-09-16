@@ -132,11 +132,39 @@ PrefabInstance:
       value: PickupBody
       objectReference: {fileID: 0}
     - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-      propertyPath: paintableTargets.Array.data[0].targetRenderer
-      value: 
-      objectReference: {fileID: 8090716565421122670}
+      propertyPath: paintableTargets.Array.data[1].partName
+      value: Hood
+      objectReference: {fileID: 0}
+    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
+      propertyPath: paintableTargets.Array.data[2].partName
+      value: DoorL
+      objectReference: {fileID: 0}
+    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
+      propertyPath: paintableTargets.Array.data[3].partName
+      value: DoorR
+      objectReference: {fileID: 0}
+    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
+      propertyPath: paintableTargets.Array.data[4].partName
+      value: PickupBackDoor
+      objectReference: {fileID: 0}
     - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
       propertyPath: paintableTargets.Array.data[0].materialIndex
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
+      propertyPath: paintableTargets.Array.data[1].materialIndex
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
+      propertyPath: paintableTargets.Array.data[2].materialIndex
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
+      propertyPath: paintableTargets.Array.data[3].materialIndex
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
+      propertyPath: paintableTargets.Array.data[4].materialIndex
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
@@ -144,64 +172,16 @@ PrefabInstance:
       value: _BaseColor
       objectReference: {fileID: 0}
     - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-      propertyPath: paintableTargets.Array.data[1].partName
-      value: Hood
-      objectReference: {fileID: 0}
-    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-      propertyPath: paintableTargets.Array.data[1].targetRenderer
-      value: 
-      objectReference: {fileID: 3702383086356781752}
-    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-      propertyPath: paintableTargets.Array.data[1].materialIndex
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
       propertyPath: paintableTargets.Array.data[1].colorPropertyName
       value: _BaseColor
-      objectReference: {fileID: 0}
-    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-      propertyPath: paintableTargets.Array.data[2].partName
-      value: DoorL
-      objectReference: {fileID: 0}
-    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-      propertyPath: paintableTargets.Array.data[2].targetRenderer
-      value: 
-      objectReference: {fileID: 8154846070940180591}
-    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-      propertyPath: paintableTargets.Array.data[2].materialIndex
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
       propertyPath: paintableTargets.Array.data[2].colorPropertyName
       value: _BaseColor
       objectReference: {fileID: 0}
     - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-      propertyPath: paintableTargets.Array.data[3].partName
-      value: DoorR
-      objectReference: {fileID: 0}
-    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-      propertyPath: paintableTargets.Array.data[3].targetRenderer
-      value: 
-      objectReference: {fileID: 5254346985990108724}
-    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-      propertyPath: paintableTargets.Array.data[3].materialIndex
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
       propertyPath: paintableTargets.Array.data[3].colorPropertyName
       value: _BaseColor
-      objectReference: {fileID: 0}
-    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-      propertyPath: paintableTargets.Array.data[4].partName
-      value: PickupBackDoor
-      objectReference: {fileID: 0}
-    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-      propertyPath: paintableTargets.Array.data[4].targetRenderer
-      value: 
-      objectReference: {fileID: 7869763921200500759}
-    - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-      propertyPath: paintableTargets.Array.data[4].materialIndex
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4027793834991877202, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
       propertyPath: paintableTargets.Array.data[4].colorPropertyName
@@ -362,41 +342,6 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 2174193574375933704}
   m_SourcePrefab: {fileID: 100100000, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
---- !u!23 &64980176787478422 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 7869763921200500759, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-  m_PrefabInstance: {fileID: 7913351998673209217}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &2087993458310146030 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 8154846070940180591, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-  m_PrefabInstance: {fileID: 7913351998673209217}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &2131927133709149167 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 8090716565421122670, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-  m_PrefabInstance: {fileID: 7913351998673209217}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &2682719354098741685 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 5254346985990108724, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-  m_PrefabInstance: {fileID: 7913351998673209217}
-  m_PrefabAsset: {fileID: 0}
---- !u!137 &2893314459834284578 stripped
-SkinnedMeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 5041429711707127203, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-  m_PrefabInstance: {fileID: 7913351998673209217}
-  m_PrefabAsset: {fileID: 0}
---- !u!137 &6061399920189138868 stripped
-SkinnedMeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 4165746829356376117, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-  m_PrefabInstance: {fileID: 7913351998673209217}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &6823057314673499449 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 3702383086356781752, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
-  m_PrefabInstance: {fileID: 7913351998673209217}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &7151352276442508077 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1076196169278958764, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
