@@ -337,14 +337,37 @@ public class PhysicalCargoPackage : MonoBehaviour
             }
         }
 
-        // 6. Disable visual mesh and collider of this cargo
-        if (boxRenderer != null) boxRenderer.enabled = false;
-        if (col != null) col.enabled = false;
+        // 6. Completely clean up and hide all visual meshes, child parts (lids, covers, hinges), and colliders of this cargo
+        Renderer[] allRenderers = GetComponentsInChildren<Renderer>(true);
+        foreach (var r in allRenderers)
+        {
+            if (r != null) r.enabled = false;
+        }
+
+        Collider[] allColliders = GetComponentsInChildren<Collider>(true);
+        foreach (var c in allColliders)
+        {
+            if (c != null) c.enabled = false;
+        }
+
+        // Deactivate all child objects (e.g. Lid, straps, props, shipping label)
+        for (int i = transform.childCount - 1; i >= 0; i--)
+        {
+            Transform child = transform.GetChild(i);
+            if (child != null)
+            {
+                child.gameObject.SetActive(false);
+            }
+        }
+
         if (shippingLabel != null) shippingLabel.SetActive(false);
+
         if (rb != null)
         {
             rb.isKinematic = true;
+            rb.detectCollisions = false;
             rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
         }
 
         if (InteractionPromptHUD.Instance != null)
