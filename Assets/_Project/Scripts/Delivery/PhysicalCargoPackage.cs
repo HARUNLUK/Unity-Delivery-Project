@@ -324,10 +324,8 @@ public class PhysicalCargoPackage : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if ((cargoType != CargoType.Fragile && cargoType != CargoType.Explosive) || isBroken || isExploded) return;
-        if (isBeingCarried) return; // Never take damage while held by player!
+        if (isBeingCarried) return; // Never take damage or make drop sounds while held by player!
         if (Time.time < spawnImmunityUntil) return; // Do not take damage during initial spawn settling (3.5s)
-        if (Time.time - lastDamageTime < damageCooldown) return; // Cooldown to prevent multi-hit bounce/rolling frame spam
 
         float impactSpeed = collision.relativeVelocity.magnitude;
         if (rb != null && collision.impulse.magnitude > 0.01f)
@@ -335,6 +333,15 @@ public class PhysicalCargoPackage : MonoBehaviour
             float impulseSpeed = collision.impulse.magnitude / rb.mass;
             if (impulseSpeed > impactSpeed) impactSpeed = impulseSpeed;
         }
+
+        // Play universal cargo drop / impact sound for all cargo types
+        if (impactSpeed > 0.75f && AudioManager.Instance != null && !isExploded)
+        {
+            AudioManager.Instance.PlayCargoDrop(transform.position, impactSpeed);
+        }
+
+        if ((cargoType != CargoType.Fragile && cargoType != CargoType.Explosive) || isBroken || isExploded) return;
+        if (Time.time - lastDamageTime < damageCooldown) return; // Cooldown to prevent multi-hit bounce/rolling frame spam
 
         // Detect package-to-package collisions (cardboard-to-cardboard contact is softer)
         bool hitOtherCargo = collision.gameObject.GetComponent<PhysicalCargoPackage>() != null || 
@@ -368,11 +375,19 @@ public class PhysicalCargoPackage : MonoBehaviour
                 }
                 else
                 {
+                    if (AudioManager.Instance != null)
+                    {
+                        AudioManager.Instance.PlayCargoFragileBreak(transform.position);
+                    }
                     Debug.LogWarning($"<color=#FF4444>[PhysicalCargoPackage] FRAGILE CARGO BROKEN! Hit: '{collision.gameObject.name}', Impact: {impactSpeed:F1} m/s (Damage: -{damage:F0} HP)</color>");
                 }
             }
             else
             {
+                if (cargoType == CargoType.Fragile && AudioManager.Instance != null)
+                {
+                    AudioManager.Instance.PlayCargoFragileRattle(transform.position);
+                }
                 string tag = cargoType == CargoType.Explosive ? "EXPLOSIVE STABILITY COMPROMISED!" : "Fragile Cargo Damaged!";
                 Debug.Log($"<color=#FFAA00>[PhysicalCargoPackage] {tag} Hit: '{collision.gameObject.name}', Impact: {impactSpeed:F1} m/s, Damage: -{damage:F0} HP (Health: {health:F0}/100)</color>");
             }
@@ -389,6 +404,11 @@ public class PhysicalCargoPackage : MonoBehaviour
         Vector3 explosionPos = transform.position;
         float blastRadius = 8.0f;
         float explosionForce = 20000f;
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayCargoExplosion(explosionPos);
+        }
 
         Debug.LogWarning($"<color=#FF2222>💥💥 [PhysicalCargoPackage] EXPLOSION DETONATED at {explosionPos}! 💥💥</color>");
 

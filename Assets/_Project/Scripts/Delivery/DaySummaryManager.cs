@@ -87,6 +87,10 @@ public class DaySummaryManager : MonoBehaviour
         if (summaryPanelRoot != null)
         {
             summaryPanelRoot.SetActive(true);
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayTabletOpen();
+            }
         }
 
         if (CargoTabletUI.Instance != null)

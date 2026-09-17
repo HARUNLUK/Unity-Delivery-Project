@@ -397,6 +397,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 406654488547587606, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2174193574375933704}
+    - targetCorrespondingSourceObject: {fileID: 406654488547587606, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -3338799450434375980}
   m_SourcePrefab: {fileID: 100100000, guid: e2c4287a936a99c4d9988378e62d0060, type: 3}
 --- !u!4 &7151352276442508077 stripped
 Transform:
@@ -429,3 +432,23 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 3.88, y: 1.28, z: 1.93}
   m_Center: {x: 0, y: 3.91, z: 0.43}
+--- !u!114 &-3338799450434375980
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7527034146455630231}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78177c6f3871d594a9a35a1724fe90ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VehicleAudioController
+  engineSource: {fileID: 0}
+  startSource: {fileID: 0}
+  reverseSource: {fileID: 0}
+  brakeSource: {fileID: 0}
+  idlePitch: 0.85
+  maxPitch: 2.15
+  minEngineVolume: 0.45
+  maxEngineVolume: 0.95

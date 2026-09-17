@@ -199,7 +199,11 @@ public static class VehicleSetupHelper
         // 8. Auto Detect Paintable Targets (Body, Hood, Doors Element 0)
         drivable.AutoDetectPaintableTargets();
 
-        // 8. Save / Connect as Project Prefab
+        // 9. Attach VehicleAudioController for engine, reverse, brake and doors
+        VehicleAudioController vac = target.GetComponent<VehicleAudioController>();
+        if (vac == null) vac = target.AddComponent<VehicleAudioController>();
+
+        // 10. Save / Connect as Project Prefab
         string prefabPath = $"{PREFAB_DIR}/Drivable_{target.name.Replace("(Clone)", "").Trim()}.prefab";
         PrefabUtility.SaveAsPrefabAssetAndConnect(target, prefabPath, InteractionMode.UserAction);
 

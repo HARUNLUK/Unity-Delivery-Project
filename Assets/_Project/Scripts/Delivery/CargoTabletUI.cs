@@ -272,11 +272,21 @@ public class CargoTabletUI : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayTabletOpen();
+        }
+
         SwitchTab(currentTab);
     }
 
     public void CloseTablet()
     {
+        if (isTabletOpen && AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayTabletClose();
+        }
+
         isTabletOpen = false;
         if (tabletPanelRoot != null) tabletPanelRoot.SetActive(false);
 
@@ -291,6 +301,11 @@ public class CargoTabletUI : MonoBehaviour
     {
         currentTab = tab;
         EnsureTabletStructure();
+
+        if (AudioManager.Instance != null && isTabletOpen)
+        {
+            AudioManager.Instance.PlayTabSwitch();
+        }
 
         if (cargoViewRoot != null) cargoViewRoot.SetActive(currentTab == TabletTab.CargoInventory);
         if (vehicleViewRoot != null) vehicleViewRoot.SetActive(currentTab == TabletTab.VehicleDealership);
@@ -446,6 +461,7 @@ public class CargoTabletUI : MonoBehaviour
 
             PhysicalCargoPackage pkgRef = pkg;
             btn.onClick.AddListener(() => {
+                if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
                 DisplayCargoDetail(pkgRef);
             });
 
@@ -627,6 +643,7 @@ public class CargoTabletUI : MonoBehaviour
 
             DrivableVehicle vRef = v;
             btn.onClick.AddListener(() => {
+                if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
                 DisplayVehicleDetail(vRef);
             });
         }
@@ -764,6 +781,7 @@ public class CargoTabletUI : MonoBehaviour
 
                 vehicleBuyButton.onClick.RemoveAllListeners();
                 vehicleBuyButton.onClick.AddListener(() => {
+                    if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
                     if (v.TryPurchase())
                     {
                         DisplayVehicleDetail(v);
@@ -814,6 +832,7 @@ public class CargoTabletUI : MonoBehaviour
 
                     vehicleRefuelButton.onClick.RemoveAllListeners();
                     vehicleRefuelButton.onClick.AddListener(() => {
+                        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
                         if (PlayerEconomyManager.Instance != null && PlayerEconomyManager.Instance.SpendMoney(fuelCost))
                         {
                             v.Refuel(fuelToAdd);
@@ -865,6 +884,7 @@ public class CargoTabletUI : MonoBehaviour
 
                 vehicleRecallButton.onClick.RemoveAllListeners();
                 vehicleRecallButton.onClick.AddListener(() => {
+                    if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
                     int currentFee = v.GetRecallFee();
                     int curBalance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
 
@@ -977,6 +997,7 @@ public class CargoTabletUI : MonoBehaviour
 
     private void OnUpgradeBranchClicked()
     {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
         if (BranchManager.Instance != null)
         {
             bool ok = BranchManager.Instance.TryUpgradeBranch();

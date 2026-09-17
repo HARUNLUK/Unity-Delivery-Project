@@ -65,12 +65,20 @@ public class PlayerEconomyManager : MonoBehaviour
     public void AddEarnings(int amount)
     {
         todayEarned += amount;
+        if (amount > 0 && AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayMoneyAdd();
+        }
         OnEconomyUpdated?.Invoke(CurrentLiveBalance, TodayNetProfit);
     }
 
     public void AddPenalty(int amount)
     {
         todayPenalties += amount;
+        if (amount > 0 && AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayMoneySubtract();
+        }
         OnEconomyUpdated?.Invoke(CurrentLiveBalance, TodayNetProfit);
     }
 

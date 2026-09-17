@@ -1,0 +1,104 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6451615313536435391
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2133570954927300233}
+  - component: {fileID: 3166877883002864090}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2133570954927300233
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6451615313536435391}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3166877883002864090
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6451615313536435391}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3c5797bacba75c4ea7cd7afc235d988, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioManager
+  playerFootstep: {fileID: 8300000, guid: 5ff9b70fb9b7bae43a879af0933cab0b, type: 3}
+  playerFootstepWalkVolume: 0.15
+  playerFootstepSprintVolume: 0.5
+  playerFootstepBasePitch: 1
+  playerFootstepPitchVariation: 0.07
+  playerJump: {fileID: 8300000, guid: 292c3e9e76fa6574781345d92399cf32, type: 3}
+  playerJumpVolume: 0.7
+  playerLand: {fileID: 8300000, guid: 2041a4e51b28fda458c571e033d8d8fd, type: 3}
+  playerLandVolume: 0.2
+  cargoGrab: {fileID: 8300000, guid: d0e536dc08c01d44590805912650b5e5, type: 3}
+  cargoDropLight: {fileID: 8300000, guid: 75bfa5b00f27f4d4d8bbf2cb2eadef13, type: 3}
+  cargoDropMedium: {fileID: 8300000, guid: f4a6ee0304a61c9488e67be19b590901, type: 3}
+  cargoDropHeavy: {fileID: 8300000, guid: ecb9a0943ed527540992693a5519693d, type: 3}
+  cargoThrow: {fileID: 8300000, guid: ab2609ff39f2187429eb9d64037806fa, type: 3}
+  cargoFragileRattle: {fileID: 8300000, guid: 019cfc7d837217f4fb7fe11c5da50434, type: 3}
+  cargoFragileBreak: {fileID: 8300000, guid: 91443440e9ad5674287b26e5f7071654, type: 3}
+  cargoExplosiveDetonation: {fileID: 8300000, guid: 5968769afa97435468f3288a66fc4999, type: 3}
+  vehicleEngineIdleLoop: {fileID: 8300000, guid: 0198028c7d0754f4e9272180ec5fb4c5, type: 3}
+  vehicleEngineVolume: 0.66
+  vehicleReverseBeepLoop: {fileID: 8300000, guid: f30ac5aa9eb97c24b90a5101d689b0ff, type: 3}
+  vehicleReverseBeepVolume: 0.65
+  vehicleBrakeSqueak: {fileID: 8300000, guid: 1210d4cc6311a9e4496eea2d8b08eb0f, type: 3}
+  vehicleBrakeSqueakVolume: 0.7
+  vehicleDoorOpen: {fileID: 8300000, guid: 7b45fedb8328c8b49a8cc72afb9268a6, type: 3}
+  vehicleDoorOpenVolume: 0.85
+  vehicleDoorClose: {fileID: 8300000, guid: 30bf837491f58ba48b7064023b8c59c5, type: 3}
+  vehicleDoorCloseVolume: 0.9
+  vehicleTailgateOpen: {fileID: 8300000, guid: 6cf1dcba7e166194f886a73cba9d75f3, type: 3}
+  vehicleTailgateClose: {fileID: 8300000, guid: 936f7fa626cf0cd44ba32255d0f8a4c1, type: 3}
+  vehicleCrashLight: {fileID: 8300000, guid: 2407a49ed3be15945b9d8027907a366b, type: 3}
+  vehicleCrashHeavy: {fileID: 8300000, guid: 176eb784084611d4f93e8cd34195a258, type: 3}
+  vehicleCrashVolume: 0.9
+  fuelPumpingLoop: {fileID: 8300000, guid: 784b2b1feb46d7845a169c53746ff11f, type: 3}
+  fuelPumpingVolume: 0.95
+  fuelPumpFinishBeep: {fileID: 8300000, guid: 5f8b96c45be37194b99b195388922e4b, type: 3}
+  fuelPumpFinishBeepVolume: 0.9
+  garageRepairWrench: {fileID: 8300000, guid: d52c6018e111f944097cebd6c67e8d86, type: 3}
+  garageRepairVolume: 0.85
+  garagePaintSpray: {fileID: 8300000, guid: 1af872b56184100448a32e630dee5494, type: 3}
+  garagePaintVolume: 0.85
+  propertyPurchaseCash: {fileID: 8300000, guid: 863c3a1fda5dd714eb157caa6d2c3cb7, type: 3}
+  propertyPurchaseVolume: 0.9
+  uiTabletOpen: {fileID: 0}
+  uiTabletClose: {fileID: 0}
+  uiTabSwitch: {fileID: 0}
+  uiButtonClick: {fileID: 0}
+  uiNotificationPopup: {fileID: 0}
+  uiErrorBuzzer: {fileID: 0}
+  uiMoneyAdd: {fileID: 0}
+  uiMoneySubtract: {fileID: 0}
+  uiLevelUp: {fileID: 0}
+  ambientDayValleyLoop: {fileID: 8300000, guid: fbac87a475f1c4b459f52cadf4180e89, type: 3}
+  ambientRiverStreamLoop: {fileID: 8300000, guid: 654b6412cabc92e41b41448480d4d16a, type: 3}
+  aiTrafficHorn: {fileID: 0}
+  masterVolume: 1
+  sfxVolume: 1
+  uiVolume: 0.85
+  ambienceVolume: 0.45

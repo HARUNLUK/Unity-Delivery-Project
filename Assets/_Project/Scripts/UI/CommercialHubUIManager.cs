@@ -153,6 +153,11 @@ public class CommercialHubUIManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayTabletOpen();
+        }
+
         RefreshGarageUI();
     }
 
@@ -264,6 +269,11 @@ public class CommercialHubUIManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayTabletOpen();
+        }
+
         RefreshInsuranceUI();
     }
 
@@ -337,6 +347,11 @@ public class CommercialHubUIManager : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayTabletOpen();
+        }
 
         RefreshDispatchUI();
     }
@@ -421,6 +436,11 @@ public class CommercialHubUIManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayTabletOpen();
+        }
+
         int branchLevel = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : (PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.WarehouseLevel : 1);
         int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
 
@@ -456,6 +476,8 @@ public class CommercialHubUIManager : MonoBehaviour
 
     public void CloseAllPanels()
     {
+        bool wasOpen = IsAnyPanelOpen;
+
         if (garagePanelRoot != null) garagePanelRoot.SetActive(false);
         if (insurancePanelRoot != null) insurancePanelRoot.SetActive(false);
         if (dispatchPanelRoot != null) dispatchPanelRoot.SetActive(false);
@@ -463,6 +485,11 @@ public class CommercialHubUIManager : MonoBehaviour
 
         activeGarageVehicle = null;
         activePropertyToBuy = null;
+
+        if (wasOpen && AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayTabletClose();
+        }
 
         if (FPSPlayerController.Instance != null && FPSPlayerController.Instance.IsOnFoot)
         {

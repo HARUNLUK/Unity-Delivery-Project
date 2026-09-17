@@ -112,6 +112,9 @@ public class AITrafficVehicle : MonoBehaviour
     private BoxCollider boxCollider;
     private Rigidbody rb;
     private Collider[] ownColliders;
+    private AudioSource engineAudioSource;
+    private float baseEnginePitch = 1.0f;
+    private float hornCooldownTimer = 0f;
 
     private void Awake()
     {
@@ -149,6 +152,19 @@ public class AITrafficVehicle : MonoBehaviour
         rb.isKinematic = true;
         rb.useGravity = false;
         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+
+        engineAudioSource = GetComponent<AudioSource>();
+        if (engineAudioSource == null)
+        {
+            engineAudioSource = gameObject.AddComponent<AudioSource>();
+            engineAudioSource.spatialBlend = 1.0f; // 3D Spatial
+            engineAudioSource.loop = true;
+            engineAudioSource.playOnAwake = false;
+            engineAudioSource.minDistance = 2.0f;
+            engineAudioSource.maxDistance = 35.0f;
+            engineAudioSource.rolloffMode = AudioRolloffMode.Logarithmic;
+            engineAudioSource.dopplerLevel = 0.5f;
+        }
 
         CacheOwnColliders();
         AutoDetectWheels();
@@ -204,6 +220,22 @@ public class AITrafficVehicle : MonoBehaviour
         uTurnProgress = 0f;
         isTransitioningJunction = false;
         junctionTransitionProgress = 0f;
+        hornCooldownTimer = Random.Range(2.0f, 4.0f);
+        baseEnginePitch = Random.Range(0.82f, 1.25f);
+
+        // Start 3D Engine Audio with randomized pitch
+        if (VehicleAudioController.enableVehicleAudio && engineAudioSource != null && AudioManager.Instance != null)
+        {
+            AudioClip clip = AudioManager.Instance.vehicleEngineIdleLoop;
+            if (clip != null)
+            {
+                engineAudioSource.clip = clip;
+                engineAudioSource.pitch = baseEnginePitch;
+                engineAudioSource.volume = 0.55f * AudioManager.Instance.masterVolume;
+                engineAudioSource.Play();
+            }
+        }
+
         CacheOwnColliders();
 
         // Calculate lane offset based on road width
@@ -289,6 +321,31 @@ public class AITrafficVehicle : MonoBehaviour
 
         // 2. FORWARD RADAR & COLLISION DETECTION
         CheckFrontRadar();
+
+        // Update 3D Engine Audio Pitch with speed
+        if (engineAudioSource != null && engineAudioSource.isPlaying)
+        {
+            float speedRatio = Mathf.Clamp01(currentSpeed / Mathf.Max(1f, cruiseSpeed));
+            engineAudioSource.pitch = baseEnginePitch * Mathf.Lerp(0.85f, 1.35f, speedRatio);
+        }
+
+        // Honk horn when blocked by player or obstacle in front
+        if (isObstacleDetected && (isPlayerInFront || closestObstacleDistance <= hardStopDistance + 1.2f))
+        {
+            hornCooldownTimer -= Time.deltaTime;
+            if (hornCooldownTimer <= 0f && currentSpeed < 1.5f)
+            {
+                if (AudioManager.Instance != null)
+                {
+                    AudioManager.Instance.PlayTrafficHorn(transform.position);
+                }
+                hornCooldownTimer = Random.Range(3.5f, 6.5f);
+            }
+        }
+        else
+        {
+            hornCooldownTimer = Mathf.Max(0.5f, hornCooldownTimer);
+        }
 
         // 3. SPEED ADJUSTMENT (ACCELERATION & BRAKING)
         float accelRate = (targetSpeed < currentSpeed) ? brakeDeceleration : acceleration;

@@ -73,7 +73,10 @@ public class VehicleTailgate : MonoBehaviour
 
         if (audioSource != null)
         {
-            AudioClip clipToPlay = isOpen ? openSound : closeSound;
+            AudioClip clipToPlay = isOpen 
+                ? (openSound != null ? openSound : (AudioManager.Instance != null ? AudioManager.Instance.vehicleTailgateOpen : null))
+                : (closeSound != null ? closeSound : (AudioManager.Instance != null ? AudioManager.Instance.vehicleTailgateClose : null));
+
             if (clipToPlay != null) audioSource.PlayOneShot(clipToPlay);
         }
     }

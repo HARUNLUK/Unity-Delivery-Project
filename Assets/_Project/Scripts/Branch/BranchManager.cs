@@ -436,6 +436,10 @@ public class BranchManager : MonoBehaviour
 
         if (balance < next.upgradeCost)
         {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayError();
+            }
             Debug.LogWarning($"[BranchManager] Insufficient balance! Required: ${next.upgradeCost}, Balance: ${balance}");
             return false;
         }
@@ -448,6 +452,11 @@ public class BranchManager : MonoBehaviour
 
         currentBranchLevel++;
         SaveBranchLevel();
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayLevelUp();
+        }
 
         // Update visuals without altering user-designed generator positions
         ApplyTierVisuals(false);

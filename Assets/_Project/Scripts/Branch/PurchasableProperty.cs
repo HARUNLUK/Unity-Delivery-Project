@@ -154,6 +154,11 @@ public class PurchasableProperty : MonoBehaviour
         SaveState();
         UpdateVisuals();
 
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayPropertyPurchase(transform.position);
+        }
+
         Debug.Log($"<color=#32FF64>[PROPERTY UNLOCKED] {displayName} başarıyla satın alındı ve açıldı!</color>");
 
         if (InteractionPromptHUD.Instance != null)

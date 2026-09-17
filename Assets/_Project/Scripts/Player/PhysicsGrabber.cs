@@ -75,6 +75,11 @@ public class PhysicsGrabber : MonoBehaviour
                 InteractionPromptHUD.Instance.ShowHeldCargoInfo(pkg);
             }
         }
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayCargoGrab(targetRb.position);
+        }
     }
 
     public void ReleaseObject(Vector3 throwForce = default)
@@ -106,6 +111,10 @@ public class PhysicsGrabber : MonoBehaviour
         if (throwForce != Vector3.zero)
         {
             releasedRb.linearVelocity = throwForce;
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayCargoThrow(releasedRb.position);
+            }
         }
         else
         {

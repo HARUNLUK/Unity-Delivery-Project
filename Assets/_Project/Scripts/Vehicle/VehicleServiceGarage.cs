@@ -183,6 +183,11 @@ public class VehicleServiceGarage : MonoBehaviour
             PlayerPrefs.SetFloat(DrivableVehicle.CONDITION_SAVE_PREFIX + v.EffectiveVehicleId, v.maxCondition);
             PlayerPrefs.Save();
 
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayGarageRepair(v.transform.position);
+            }
+
             OnVehicleRepaired?.Invoke(v);
 
             if (InteractionPromptHUD.Instance != null)
@@ -249,6 +254,11 @@ public class VehicleServiceGarage : MonoBehaviour
                 cc.tuningTorqueMultiplier = GetTorqueMultiplierForStage(nextStage);
             }
 
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayGarageRepair(v.transform.position);
+            }
+
             OnVehicleTuned?.Invoke(v, nextStage);
 
             if (InteractionPromptHUD.Instance != null)
@@ -283,6 +293,11 @@ public class VehicleServiceGarage : MonoBehaviour
 
         // Apply color immediately to the vehicle
         v.ApplyPaintColor(chosenColor, true);
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayGaragePaint(v.transform.position);
+        }
 
         OnVehicleRepainted?.Invoke(v, chosenColor);
 

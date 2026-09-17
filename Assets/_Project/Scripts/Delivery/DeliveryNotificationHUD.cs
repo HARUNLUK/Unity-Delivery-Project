@@ -59,6 +59,11 @@ public class DeliveryNotificationHUD : MonoBehaviour
         notificationText.text = message;
         hideTimer = 3.5f;
 
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayNotification();
+        }
+
         if (notificationBackground != null)
         {
             notificationBackground.color = isCorrect 

@@ -11,6 +11,12 @@ public class FPSPlayerController : MonoBehaviour
     public float jumpHeight = 1.2f;
     public float gravity = -20f;
 
+    [Header("--- FOOTSTEP TIMING SETTINGS ---")]
+    [Tooltip("Yürüme adımları arasındaki süre (saniye - varsayılan 0.50)")]
+    public float walkStepInterval = 0.50f;
+    [Tooltip("Koşma adımları arasındaki süre (saniye - varsayılan 0.32)")]
+    public float sprintStepInterval = 0.32f;
+
     [Header("--- MOUSE LOOK SETTINGS ---")]
     public float mouseSensitivity = 2.0f;
     public float minPitch = -80f;
@@ -78,6 +84,9 @@ public class FPSPlayerController : MonoBehaviour
     private float currentDropHoldTime = 0f;
     private float afterGrabSafetyTimer = 0f;
     public float exitVehicleSafetyTimer = 0f;
+    private float footstepTimer = 0f;
+    private bool wasGroundedLastFrame = true;
+    private float previousAirborneVelocityY = 0f;
     private PhysicalCargoPackage currentlyFocusedPackage = null;
 
     private void UpdateCargoFocus(PhysicalCargoPackage newTarget)
@@ -496,9 +505,28 @@ public class FPSPlayerController : MonoBehaviour
         if (controller == null || !controller.enabled) return;
 
         bool isGrounded = controller.isGrounded;
+
+        // Reliable Land Audio Detection before velocity is clamped
+        if (!wasGroundedLastFrame && isGrounded && previousAirborneVelocityY < -2.2f)
+        {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayLand();
+            }
+        }
+
         if (isGrounded && velocity.y < 0)
         {
             velocity.y = -2f;
+        }
+
+        if (!isGrounded)
+        {
+            previousAirborneVelocityY = velocity.y;
+        }
+        else
+        {
+            previousAirborneVelocityY = 0f;
         }
 
         float moveX = 0f;
@@ -538,10 +566,38 @@ public class FPSPlayerController : MonoBehaviour
 
         controller.Move(move * speed * Time.deltaTime);
 
+        // Footsteps audio modulation
+        if (isGrounded && move.sqrMagnitude > 0.01f)
+        {
+            float stepInterval = isSprinting ? sprintStepInterval : walkStepInterval;
+            footstepTimer += Time.deltaTime;
+            if (footstepTimer >= stepInterval)
+            {
+                footstepTimer = 0f;
+                if (AudioManager.Instance != null)
+                {
+                    AudioManager.Instance.PlayFootstep(isSprinting);
+                }
+            }
+        }
+        else
+        {
+            // Reset so the next step triggers right after beginning movement
+            footstepTimer = Mathf.Max(0f, walkStepInterval * 0.75f);
+        }
+
+        // Jump audio
         if (jumpPressed && isGrounded)
         {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            previousAirborneVelocityY = velocity.y;
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayJump();
+            }
         }
+
+        wasGroundedLastFrame = isGrounded;
 
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
