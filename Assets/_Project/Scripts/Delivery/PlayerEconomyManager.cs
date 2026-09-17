@@ -72,10 +72,10 @@ public class PlayerEconomyManager : MonoBehaviour
         OnEconomyUpdated?.Invoke(CurrentLiveBalance, TodayNetProfit);
     }
 
-    public void AddPenalty(int amount)
+    public void AddPenalty(int amount, bool playSound = true)
     {
         todayPenalties += amount;
-        if (amount > 0 && AudioManager.Instance != null)
+        if (playSound && amount > 0 && AudioManager.Instance != null)
         {
             AudioManager.Instance.PlayMoneySubtract();
         }
@@ -114,7 +114,7 @@ public class PlayerEconomyManager : MonoBehaviour
     }
 
     public void AddCash(int amount) => AddEarnings(amount);
-    public void DeductCash(int amount) => AddPenalty(amount);
+    public void DeductCash(int amount, bool playSound = true) => AddPenalty(amount, playSound);
 
     /// <summary>
     /// Overwrites total vault balance directly (e.g. from FPSPlayerController Inspector or debug commands).

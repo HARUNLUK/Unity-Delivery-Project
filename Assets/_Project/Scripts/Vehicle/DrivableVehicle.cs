@@ -520,7 +520,7 @@ public class DrivableVehicle : MonoBehaviour
         if (InteractionPromptHUD.Instance != null && isPlayerInside)
         {
             bool isLowFuel = currentFuel < (maxFuel * 0.18f);
-            InteractionPromptHUD.Instance.UpdateFuelHUD(currentFuel, maxFuel, isLowFuel);
+            InteractionPromptHUD.Instance.UpdateVehicleHUD(currentFuel, maxFuel, isLowFuel, currentCondition, maxCondition);
         }
     }
 

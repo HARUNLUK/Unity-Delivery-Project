@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -6,13 +7,13 @@ public class FuelStationPump : MonoBehaviour
 {
     [Header("--- STATION SETTINGS ---")]
     [Tooltip("Display name of the fuel pump")]
-    public string stationName = "Gas Station";
+    public string stationName = "Petrol İstasyonu";
 
     [Tooltip("Price in USD per litre of fuel")]
-    public float pricePerLiter = 35f;
+    public float pricePerLiter = 5.0f;
 
     [Tooltip("How many litres are filled per second while holding key")]
-    public float refuelRateLitersPerSecond = 5.5f;
+    public float refuelRateLitersPerSecond = 6.0f;
 
     [Header("--- VISUALS & EFFECTS ---")]
     [Tooltip("Optional light that turns green while pumping fuel")]
@@ -22,7 +23,8 @@ public class FuelStationPump : MonoBehaviour
     private float accumulatedCost = 0f;
     private bool isActivelyRefueling = false;
     private AudioSource pumpAudioSource;
-    private bool wasFullLastFrame = false;
+    private readonly HashSet<Collider> insideColliders = new HashSet<Collider>();
+    private bool wasShowingPrompt = false;
 
     private void Awake()
     {
@@ -33,6 +35,7 @@ public class FuelStationPump : MonoBehaviour
         }
 
         EnsurePumpAudioSource();
+        SetPumpLightActive(false);
     }
 
     private void EnsurePumpAudioSource()
@@ -44,7 +47,7 @@ public class FuelStationPump : MonoBehaviour
             {
                 pumpAudioSource = gameObject.AddComponent<AudioSource>();
             }
-            pumpAudioSource.spatialBlend = 0.70f; // Clear audible presence inside cabin & nearby
+            pumpAudioSource.spatialBlend = 0.70f;
             pumpAudioSource.minDistance = 6.0f;
             pumpAudioSource.maxDistance = 50.0f;
             pumpAudioSource.rolloffMode = AudioRolloffMode.Linear;
@@ -56,28 +59,88 @@ public class FuelStationPump : MonoBehaviour
     private void OnDisable()
     {
         StopPumpingAudio();
+        if (wasShowingPrompt && InteractionPromptHUD.Instance != null)
+        {
+            InteractionPromptHUD.Instance.HidePrompt();
+        }
+        insideColliders.Clear();
     }
 
-    private void OnTriggerStay(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
-        EnsurePumpAudioSource();
-
-        // 1. Detect vehicle in trigger zone
-        DrivableVehicle vehicle = other.GetComponentInParent<DrivableVehicle>();
-        if (vehicle == null) vehicle = other.GetComponent<DrivableVehicle>();
-        if (vehicle == null)
+        if (other != null)
         {
-            FPSPlayerController player = other.GetComponentInParent<FPSPlayerController>();
-            if (player != null && player.currentVehicleTransform != null)
+            insideColliders.Add(other);
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other != null)
+        {
+            insideColliders.Remove(other);
+        }
+    }
+
+    private void Update()
+    {
+        // 1. Clean up stale/destroyed colliders
+        insideColliders.RemoveWhere(c => c == null || !c.gameObject.activeInHierarchy);
+
+        // 2. Identify target vehicle and whether player/car is present at this pump
+        DrivableVehicle targetVehicle = FindActiveVehicle();
+        bool isPlayerPresent = IsPlayerNearPump();
+
+        if (targetVehicle == null && !isPlayerPresent)
+        {
+            // Nothing near the pump: cleanup
+            if (isActivelyRefueling)
             {
-                vehicle = player.currentVehicleTransform.GetComponent<DrivableVehicle>();
+                StopPumpingAudio();
+                SetPumpLightActive(false);
             }
+
+            if (accumulatedCost >= 0.05f)
+            {
+                int remainingCost = Mathf.CeilToInt(accumulatedCost);
+                if (PlayerEconomyManager.Instance != null)
+                {
+                    // Deduct silently (no coin sound spam)
+                    PlayerEconomyManager.Instance.DeductCash(remainingCost, false);
+                }
+                accumulatedCost = 0f;
+            }
+
+            if (wasShowingPrompt)
+            {
+                if (InteractionPromptHUD.Instance != null)
+                {
+                    InteractionPromptHUD.Instance.HidePrompt();
+                }
+                wasShowingPrompt = false;
+            }
+            return;
         }
 
-        if (vehicle == null) return;
+        // 3. If player is present on foot but no vehicle is close enough
+        if (targetVehicle == null)
+        {
+            if (isActivelyRefueling)
+            {
+                StopPumpingAudio();
+                SetPumpLightActive(false);
+            }
 
-        // 2. Check if fuel tank is already full
-        if (vehicle.currentFuel >= vehicle.maxFuel - 0.05f)
+            if (InteractionPromptHUD.Instance != null)
+            {
+                InteractionPromptHUD.Instance.ShowPrompt($"<b>{stationName}</b>: Yakıt almak için aracınızı pompaya yanaştırın.");
+                wasShowingPrompt = true;
+            }
+            return;
+        }
+
+        // 4. Check if vehicle fuel tank is already full
+        if (targetVehicle.currentFuel >= targetVehicle.maxFuel - 0.05f)
         {
             if (isActivelyRefueling)
             {
@@ -90,97 +153,228 @@ public class FuelStationPump : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[DEPO DOLU]</color> ({vehicle.maxFuel:F1} / {vehicle.maxFuel:F1} L)");
+                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[DEPO DOLU]</color> ({targetVehicle.maxFuel:F1} / {targetVehicle.maxFuel:F1} L) Deponuz tamamen dolu.");
+                wasShowingPrompt = true;
             }
             SetPumpLightActive(false);
             return;
         }
 
-        int playerBalance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
-        if (playerBalance <= 0)
+        // 5. Check economy balance
+        int playerBalance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 99999;
+        if (playerBalance <= 0 && pricePerLiter > 0)
         {
-            StopPumpingAudio();
+            if (isActivelyRefueling)
+            {
+                StopPumpingAudio();
+            }
+
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF5555>[YETERSİZ BAKİYE]</color> Yakıt için para gerekli (${pricePerLiter}/L)");
+                InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF5555>[YETERSİZ BAKİYE]</color> Yakıt için para gerekli (${pricePerLiter:F0}/L - Bakiyeniz: $0)");
+                wasShowingPrompt = true;
             }
             SetPumpLightActive(false);
             return;
         }
 
-        // 3. Check for Hold-to-Refuel Input (F, Space, E, Gamepad, Mouse)
-        bool isHoldingRefuelKey = false;
+        // 6. Check hold-to-refuel inputs
+        bool isHoldingRefuelKey = CheckRefuelInput();
+
+        if (isHoldingRefuelKey)
+        {
+            isActivelyRefueling = true;
+            SetPumpLightActive(true);
+            PlayPumpingAudio();
+
+            float deltaLiters = refuelRateLitersPerSecond * Time.deltaTime;
+            float maxCanAdd = targetVehicle.maxFuel - targetVehicle.currentFuel;
+
+            // Restrict by balance if needed
+            if (pricePerLiter > 0)
+            {
+                float affordableLiters = playerBalance / pricePerLiter;
+                maxCanAdd = Mathf.Min(maxCanAdd, affordableLiters);
+            }
+
+            deltaLiters = Mathf.Clamp(deltaLiters, 0f, maxCanAdd);
+
+            if (deltaLiters > 0f)
+            {
+                float costThisFrame = deltaLiters * pricePerLiter;
+                accumulatedCost += costThisFrame;
+
+                if (accumulatedCost >= 1f)
+                {
+                    int intDeduction = Mathf.FloorToInt(accumulatedCost);
+                    if (PlayerEconomyManager.Instance != null)
+                    {
+                        // CRITICAL: Deduct silently without spamming coin sound during pumping!
+                        PlayerEconomyManager.Instance.DeductCash(intDeduction, false);
+                    }
+                    accumulatedCost -= intDeduction;
+                }
+
+                targetVehicle.Refuel(deltaLiters);
+            }
+
+            if (InteractionPromptHUD.Instance != null)
+            {
+                float percent = (targetVehicle.currentFuel / targetVehicle.maxFuel) * 100f;
+                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>⛽ [YAKIT ALINIYOR...]</color> {targetVehicle.currentFuel:F1} / {targetVehicle.maxFuel:F1} L (%{percent:F0}) - ${pricePerLiter:F0}/L");
+                wasShowingPrompt = true;
+            }
+        }
+        else
+        {
+            if (isActivelyRefueling)
+            {
+                StopPumpingAudio();
+            }
+            SetPumpLightActive(false);
+
+            if (InteractionPromptHUD.Instance != null)
+            {
+                bool isDriving = FPSPlayerController.Instance != null && !FPSPlayerController.Instance.IsOnFoot;
+                if (isDriving)
+                {
+                    InteractionPromptHUD.Instance.ShowPrompt($"<b>{stationName}</b>: <color=#32FF64>[F]</color> veya <color=#32FF64>[Boşluk]</color> Basılı Tut -> <b>Yakıt Doldur</b> (${pricePerLiter:F0}/L)");
+                }
+                else
+                {
+                    InteractionPromptHUD.Instance.ShowPrompt($"<b>{stationName}</b>: <color=#32FF64>[F]</color> veya <color=#32FF64>[E]</color> Basılı Tut -> <b>Yakıt Doldur</b> (${pricePerLiter:F0}/L)");
+                }
+                wasShowingPrompt = true;
+            }
+        }
+    }
+
+    private DrivableVehicle FindActiveVehicle()
+    {
+        // 1. Is player currently driving a vehicle inside or near the pump?
+        if (FPSPlayerController.Instance != null && !FPSPlayerController.Instance.IsOnFoot && FPSPlayerController.Instance.currentVehicleTransform != null)
+        {
+            DrivableVehicle drivenVeh = FPSPlayerController.Instance.currentVehicleTransform.GetComponent<DrivableVehicle>();
+            if (drivenVeh != null)
+            {
+                if (IsInsideTrigger(drivenVeh.gameObject) || Vector3.Distance(transform.position, drivenVeh.transform.position) <= 12f)
+                {
+                    return drivenVeh;
+                }
+            }
+        }
+
+        // 2. Search inside tracked trigger colliders
+        foreach (Collider col in insideColliders)
+        {
+            if (col == null) continue;
+            DrivableVehicle v = col.GetComponentInParent<DrivableVehicle>();
+            if (v == null) v = col.GetComponent<DrivableVehicle>();
+            if (v != null) return v;
+        }
+
+        // 3. If player is on foot near the pump, find nearest vehicle in vicinity
+        if (IsPlayerNearPump())
+        {
+            DrivableVehicle[] allVehicles = UnityEngine.Object.FindObjectsByType<DrivableVehicle>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            DrivableVehicle closest = null;
+            float minDist = 11.0f; // 11 meters detection bubble around pump
+
+            foreach (var veh in allVehicles)
+            {
+                if (veh == null) continue;
+                float d = Vector3.Distance(transform.position, veh.transform.position);
+                if (d < minDist)
+                {
+                    minDist = d;
+                    closest = veh;
+                }
+            }
+
+            return closest;
+        }
+
+        return null;
+    }
+
+    private bool IsPlayerNearPump()
+    {
+        if (FPSPlayerController.Instance == null) return false;
+
+        // Check if player collider is inside trigger
+        if (IsInsideTrigger(FPSPlayerController.Instance.gameObject)) return true;
+
+        // Proximity fallback
+        float dist = Vector3.Distance(transform.position, FPSPlayerController.Instance.transform.position);
+        return dist <= 8.5f;
+    }
+
+    private bool IsInsideTrigger(GameObject obj)
+    {
+        if (obj == null) return false;
+
+        foreach (var col in insideColliders)
+        {
+            if (col != null && (col.gameObject == obj || col.transform.IsChildOf(obj.transform)))
+            {
+                return true;
+            }
+        }
+
+        if (triggerCollider != null)
+        {
+            return triggerCollider.bounds.Contains(obj.transform.position);
+        }
+
+        return false;
+    }
+
+    private bool CheckRefuelInput()
+    {
+        bool isHolding = false;
+        bool isOnFoot = FPSPlayerController.Instance != null && FPSPlayerController.Instance.IsOnFoot;
+
 #if ENABLE_INPUT_SYSTEM
         if (Keyboard.current != null)
         {
-            if (Keyboard.current.fKey.isPressed || Keyboard.current.spaceKey.isPressed || Keyboard.current.eKey.isPressed)
+            if (Keyboard.current.fKey.isPressed || Keyboard.current.spaceKey.isPressed)
             {
-                isHoldingRefuelKey = true;
+                isHolding = true;
+            }
+            // Only allow E if player is on foot, preventing accidental vehicle exit while driving
+            if (isOnFoot && Keyboard.current.eKey.isPressed)
+            {
+                isHolding = true;
             }
         }
+
         if (Gamepad.current != null && (Gamepad.current.buttonSouth.isPressed || Gamepad.current.buttonWest.isPressed))
         {
-            isHoldingRefuelKey = true;
+            isHolding = true;
         }
+
         if (Mouse.current != null && Mouse.current.leftButton.isPressed)
         {
-            isHoldingRefuelKey = true;
+            isHolding = true;
         }
 #endif
+
 #if ENABLE_LEGACY_INPUT_MANAGER
         try
         {
-            if (Input.GetKey(KeyCode.F) || Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.E) || Input.GetMouseButton(0))
+            if (Input.GetKey(KeyCode.F) || Input.GetKey(KeyCode.Space) || Input.GetMouseButton(0))
             {
-                isHoldingRefuelKey = true;
+                isHolding = true;
+            }
+            if (isOnFoot && Input.GetKey(KeyCode.E))
+            {
+                isHolding = true;
             }
         }
         catch { }
 #endif
 
-        if (isHoldingRefuelKey)
-        {
-            // Execute Refueling
-            isActivelyRefueling = true;
-            SetPumpLightActive(true);
-
-            PlayPumpingAudio();
-
-            float deltaLiters = refuelRateLitersPerSecond * Time.deltaTime;
-            float maxCanAdd = vehicle.maxFuel - vehicle.currentFuel;
-            deltaLiters = Mathf.Min(deltaLiters, maxCanAdd);
-
-            float costThisFrame = deltaLiters * pricePerLiter;
-            accumulatedCost += costThisFrame;
-
-            if (accumulatedCost >= 1f)
-            {
-                int intDeduction = Mathf.FloorToInt(accumulatedCost);
-                if (PlayerEconomyManager.Instance != null)
-                {
-                    PlayerEconomyManager.Instance.DeductCash(intDeduction);
-                }
-                accumulatedCost -= intDeduction;
-            }
-
-            vehicle.Refuel(deltaLiters);
-
-            if (InteractionPromptHUD.Instance != null)
-            {
-                float percent = (vehicle.currentFuel / vehicle.maxFuel) * 100f;
-                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>[YAKIT ALINIYOR...]</color> {vehicle.currentFuel:F1} / {vehicle.maxFuel:F1} L (%{percent:F0}) - ${pricePerLiter}/L");
-            }
-        }
-        else
-        {
-            StopPumpingAudio();
-            SetPumpLightActive(false);
-
-            if (InteractionPromptHUD.Instance != null)
-            {
-                InteractionPromptHUD.Instance.ShowPrompt($"<b>{stationName}</b>: <color=#32FF64>[F]</color> veya <color=#32FF64>[Boşluk]</color> Basılı Tut -> <b>Yakıt Doldur</b> (${pricePerLiter}/L)");
-            }
-        }
+        return isHolding;
     }
 
     private void PlayPumpingAudio()
@@ -212,31 +406,6 @@ public class FuelStationPump : MonoBehaviour
             pumpAudioSource.Stop();
         }
         isActivelyRefueling = false;
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        DrivableVehicle vehicle = other.GetComponentInParent<DrivableVehicle>();
-        if (vehicle != null || other.GetComponentInParent<FPSPlayerController>() != null)
-        {
-            StopPumpingAudio();
-            SetPumpLightActive(false);
-
-            if (accumulatedCost > 0.05f)
-            {
-                int remainingCost = Mathf.CeilToInt(accumulatedCost);
-                if (PlayerEconomyManager.Instance != null)
-                {
-                    PlayerEconomyManager.Instance.DeductCash(remainingCost);
-                }
-                accumulatedCost = 0f;
-            }
-
-            if (InteractionPromptHUD.Instance != null)
-            {
-                InteractionPromptHUD.Instance.HidePrompt();
-            }
-        }
     }
 
     private void SetPumpLightActive(bool active)

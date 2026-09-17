@@ -104,8 +104,8 @@ MonoBehaviour:
   uiMoneySubtractVolume: 0.43
   uiLevelUp: {fileID: 8300000, guid: 544eb5de7f65b2d44ba0b0ce11e1697a, type: 3}
   uiLevelUpVolume: 1
-  backgroundMusic: {fileID: 0}
-  backgroundMusicVolume: 0.5
+  backgroundMusic: {fileID: 8300000, guid: dccbb0c4aee01d043ad1f2e65bd03227, type: 3}
+  backgroundMusicVolume: 0.05
   playMusicOnStart: 1
   ambientDayValleyLoop: {fileID: 8300000, guid: fbac87a475f1c4b459f52cadf4180e89, type: 3}
   ambientDayValleyVolume: 1
