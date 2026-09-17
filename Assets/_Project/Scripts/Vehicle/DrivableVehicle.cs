@@ -83,6 +83,13 @@ public class DrivableVehicle : MonoBehaviour
 
     public float ConditionPercentage => maxCondition > 0 ? Mathf.Clamp01(currentCondition / maxCondition) : 0f;
 
+    [Header("--- DRIVER VISUAL / AVATAR ---")]
+    [Tooltip("Göstermelik sürücü karakter modeli / objesi (DriverSeatPoint altına konulabilir veya otomatik 'DriverVisual' ismiyle bulunur)")]
+    public GameObject driverVisualObject;
+
+    [Tooltip("İç (FPS) kamera modundayken sürücü modelini gizle (kafa görüşü kapatmasın)")]
+    public bool hideDriverInFPS = true;
+
     [Header("--- SPOTS & CAMERA ANCHORS ---")]
     [Tooltip("In-vehicle FPS driver camera anchor point (Transform). If left empty, DriverSeatPoint is searched automatically inside the vehicle.")]
     public Transform driverSeatPoint;
@@ -281,6 +288,26 @@ public class DrivableVehicle : MonoBehaviour
                 exitObj.transform.localPosition = new Vector3(-1.8f, 0.2f, 0.2f);
                 exitObj.transform.localRotation = Quaternion.identity;
                 exitPoint = exitObj.transform;
+            }
+        }
+
+        if (driverVisualObject == null)
+        {
+            driverVisualObject = FindDriverVisual();
+        }
+
+        if (driverVisualObject != null)
+        {
+            // Sürücü modeli saf görsel olduğu için araç fiziklerini etkilememesi adına collider'larını devre dışı bırak
+            Collider[] cols = driverVisualObject.GetComponentsInChildren<Collider>(true);
+            foreach (var col in cols)
+            {
+                if (col != null) col.enabled = false;
+            }
+
+            if (!isPlayerInside)
+            {
+                driverVisualObject.SetActive(false);
             }
         }
 
@@ -758,6 +785,9 @@ public class DrivableVehicle : MonoBehaviour
         // 3. Attach player camera to driver seat
         player.AttachCameraToSeat(seatAnchor);
 
+        // Update driver visual visibility based on initial camera mode
+        UpdateDriverVisibility(player.CurrentVehicleCameraMode);
+
         // 4. Enable vehicle controls only if has fuel
         if (carController != null)
         {
@@ -782,6 +812,82 @@ public class DrivableVehicle : MonoBehaviour
         }
 
         Debug.Log($"[DrivableVehicle] Player entered '{vehicleName}'. Press [E] to exit.");
+    }
+
+    public void UpdateDriverVisibility(VehicleCameraMode cameraMode)
+    {
+        if (driverVisualObject == null)
+        {
+            driverVisualObject = FindDriverVisual();
+        }
+
+        if (driverVisualObject == null) return;
+
+        if (!isPlayerInside)
+        {
+            driverVisualObject.SetActive(false);
+            return;
+        }
+
+        if (cameraMode == VehicleCameraMode.FirstPerson && hideDriverInFPS)
+        {
+            driverVisualObject.SetActive(false);
+        }
+        else
+        {
+            driverVisualObject.SetActive(true);
+        }
+    }
+
+    private GameObject FindDriverVisual()
+    {
+        if (driverVisualObject != null) return driverVisualObject;
+
+        // 1. Check under DriverSeatPoint with standard keywords
+        if (driverSeatPoint != null)
+        {
+            foreach (Transform child in driverSeatPoint)
+            {
+                string n = child.name;
+                if (n.IndexOf("Driver", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("Character", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("Avatar", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("Man", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("Human", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("Courier", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("Person", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("Floreswa", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return child.gameObject;
+                }
+            }
+        }
+
+        // 2. Check direct children of Vehicle Root (Driveable_Pickup etc.)
+        foreach (Transform child in transform)
+        {
+            if (child == driverSeatPoint || child == exitPoint || child == tpsCameraPoint) continue;
+            string n = child.name;
+            if (n.StartsWith("Wheel") || n.StartsWith("Cargo") || n.StartsWith("Body") || n.StartsWith("Light") || n.StartsWith("Collider") || n.StartsWith("Mesh")) continue;
+
+            if (n.IndexOf("Driver", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                n.IndexOf("Character", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                n.IndexOf("Avatar", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                n.IndexOf("Man", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                n.IndexOf("Human", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                n.IndexOf("Courier", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                n.IndexOf("Person", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                n.IndexOf("Boy", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                n.IndexOf("Girl", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                n.IndexOf("Male", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                n.IndexOf("Female", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                n.IndexOf("Floreswa", System.StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return child.gameObject;
+            }
+        }
+
+        return null;
     }
 
     public Vector3 GetSafeExitPosition()
@@ -876,6 +982,11 @@ public class DrivableVehicle : MonoBehaviour
 
         isPlayerInside = false;
         currentPlayer = null;
+
+        if (driverVisualObject != null)
+        {
+            driverVisualObject.SetActive(false);
+        }
 
         if (InteractionPromptHUD.Instance != null)
         {

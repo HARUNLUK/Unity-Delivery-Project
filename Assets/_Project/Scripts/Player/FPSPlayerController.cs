@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
 
+public enum VehicleCameraMode { FirstPerson, ThirdPerson }
+
 [RequireComponent(typeof(CharacterController))]
 public class FPSPlayerController : MonoBehaviour
 {
@@ -35,6 +37,7 @@ public class FPSPlayerController : MonoBehaviour
     private CharacterController controller;
     public CharacterController Controller => controller;
     public bool IsOnFoot => isOnFoot;
+    public VehicleCameraMode CurrentVehicleCameraMode => vehicleCameraMode;
     private Vector3 velocity;
     private float pitch = 0f;
     private bool isOnFoot = true;
@@ -42,8 +45,6 @@ public class FPSPlayerController : MonoBehaviour
     private Transform originalCameraParent;
     private Vector3 originalCameraLocalPos;
     private Quaternion originalCameraLocalRot;
-
-    public enum VehicleCameraMode { FirstPerson, ThirdPerson }
 
     [Header("--- IN-VEHICLE LOOK SETTINGS ---")]
     public VehicleCameraMode vehicleCameraMode = VehicleCameraMode.FirstPerson;
@@ -408,6 +409,11 @@ public class FPSPlayerController : MonoBehaviour
                 vehicleYaw = 0f;
                 vehiclePitch = 0f;
             }
+        }
+
+        if (currentVehicle != null)
+        {
+            currentVehicle.UpdateDriverVisibility(vehicleCameraMode);
         }
     }
 
@@ -1178,6 +1184,11 @@ public class FPSPlayerController : MonoBehaviour
         Vector3 offset = currentVehicle != null ? currentVehicle.fpsCameraOffset : Vector3.zero;
         playerCamera.transform.localPosition = offset;
         playerCamera.transform.localRotation = Quaternion.identity;
+
+        if (currentVehicle != null)
+        {
+            currentVehicle.UpdateDriverVisibility(vehicleCameraMode);
+        }
     }
 
     public void DetachCameraFromSeat()
