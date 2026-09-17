@@ -102,37 +102,62 @@ public class AudioManager : MonoBehaviour
 
     [Header("--- 🖥️ UI & SYSTEM SFX (2D Normal) ---")]
     public AudioClip uiTabletOpen;
+    [Range(0f, 2f), Tooltip("Tablet açılış sesi şiddeti")]
+    public float uiTabletOpenVolume = 0.85f;
+
     public AudioClip uiTabletClose;
+    [Range(0f, 2f), Tooltip("Tablet kapanış sesi şiddeti")]
+    public float uiTabletCloseVolume = 0.75f;
+
     public AudioClip uiTabSwitch;
+    [Range(0f, 2f), Tooltip("Tablet sekme değiştirme sesi şiddeti")]
+    public float uiTabSwitchVolume = 0.75f;
+
     public AudioClip uiButtonClick;
+    [Range(0f, 2f), Tooltip("Buton tıklama sesi şiddeti")]
+    public float uiButtonClickVolume = 0.80f;
+
     public AudioClip uiNotificationPopup;
+    [Range(0f, 2f), Tooltip("Bildirim açılış sesi şiddeti")]
+    public float uiNotificationVolume = 0.80f;
+
     public AudioClip uiErrorBuzzer;
+    [Range(0f, 2f), Tooltip("Hata/uyarı sesi şiddeti")]
+    public float uiErrorVolume = 0.85f;
+
     public AudioClip uiMoneyAdd;
+    [Range(0f, 2f), Tooltip("Para kazanma sesi şiddeti")]
+    public float uiMoneyAddVolume = 0.85f;
+
     public AudioClip uiMoneySubtract;
+    [Range(0f, 2f), Tooltip("Para harcama sesi şiddeti")]
+    public float uiMoneySubtractVolume = 0.80f;
+
     public AudioClip uiLevelUp;
+    [Range(0f, 2f), Tooltip("Seviye atlama sesi şiddeti")]
+    public float uiLevelUpVolume = 1.0f;
 
     [Header("--- 🌲 AMBIENCE & TRAFFIC SFX ---")]
     [Tooltip("2D Looping valley birds & gentle wind")]
     public AudioClip ambientDayValleyLoop;
-    [Tooltip("3D Positional river water stream loop (audible only near water)")]
-    public AudioClip ambientRiverStreamLoop;
+    [Range(0f, 2f), Tooltip("2D Vadi rüzgar ve kuş atmosfer ses şiddeti")]
+    public float ambientDayValleyVolume = 0.40f;
+
+
     public AudioClip aiTrafficHorn;
+    [Range(0f, 2f), Tooltip("Yapay zeka araç korna sesi şiddeti")]
+    public float aiTrafficHornVolume = 0.90f;
 
     [Header("--- VOLUME CHANNELS ---")]
     [Range(0f, 1f)] public float masterVolume = 1.0f;
     [Range(0f, 1f)] public float sfxVolume = 1.0f;
     [Range(0f, 1f)] public float uiVolume = 0.85f;
-    [Range(0f, 1f)] public float ambienceVolume = 0.45f;
+    [Range(0f, 1f)] public float ambienceVolume = 0.50f;
 
     // 2D Audio Sources
     private AudioSource uiAudioSource;
     private AudioSource playerFootstepSource;
     private AudioSource ambienceAudioSource;
-
-    // 3D River Audio Source
-    private AudioSource riverAudioSource;
-    private readonly List<Bounds> cachedWaterBounds = new List<Bounds>();
-    private float waterScanTimer = 0f;
 
     // 3D Audio Source Pool
     private readonly List<AudioSource> audioSourcePool = new List<AudioSource>();
@@ -154,7 +179,6 @@ public class AudioManager : MonoBehaviour
 
     private void Start()
     {
-        ScanSceneWaterBodies();
         PlayAmbientLoops();
     }
 
@@ -191,21 +215,7 @@ public class AudioManager : MonoBehaviour
             ambienceAudioSource.playOnAwake = false;
         }
 
-        // 4. 3D River AudioSource (spatialBlend = 1.0, strictly positional at river boundaries)
-        if (riverAudioSource == null && ambientRiverStreamLoop != null)
-        {
-            GameObject riverObj = new GameObject("Audio_3D_RiverSource");
-            riverObj.transform.SetParent(transform);
-            riverAudioSource = riverObj.AddComponent<AudioSource>();
-            riverAudioSource.spatialBlend = 1.0f; // 3D Spatial
-            riverAudioSource.minDistance = 3.0f;
-            riverAudioSource.maxDistance = 22.0f; // Audible only within 22 meters of water!
-            riverAudioSource.rolloffMode = AudioRolloffMode.Logarithmic;
-            riverAudioSource.loop = true;
-            riverAudioSource.playOnAwake = false;
-        }
-
-        // 5. 3D World SFX Pool (spatialBlend = 1.0)
+        // 4. 3D World SFX Pool (spatialBlend = 1.0)
         if (audioSourcePool.Count == 0)
         {
             for (int i = 0; i < POOL_SIZE; i++)
@@ -223,109 +233,30 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    private void PlayAmbientLoops()
+    public void PlayAmbientLoops()
     {
-        // Temporarily muted to allow clear isolated testing of player movement audio
-        /*
+        EnsureAudioSources();
+
         if (ambienceAudioSource != null && ambientDayValleyLoop != null)
         {
-            ambienceAudioSource.clip = ambientDayValleyLoop;
-            ambienceAudioSource.volume = ambienceVolume * masterVolume;
-            ambienceAudioSource.Play();
+            if (ambienceAudioSource.clip != ambientDayValleyLoop)
+            {
+                ambienceAudioSource.clip = ambientDayValleyLoop;
+            }
+            ambienceAudioSource.volume = ambientDayValleyVolume * ambienceVolume * masterVolume;
+            if (!ambienceAudioSource.isPlaying)
+            {
+                ambienceAudioSource.Play();
+            }
         }
-
-        if (riverAudioSource != null && ambientRiverStreamLoop != null)
-        {
-            riverAudioSource.clip = ambientRiverStreamLoop;
-            riverAudioSource.volume = ambienceVolume * 0.95f * masterVolume;
-            riverAudioSource.Play();
-        }
-        */
     }
 
     private void Update()
     {
-        // Periodically rescan or update river 3D position to closest water surface point
-        waterScanTimer += Time.deltaTime;
-        if (waterScanTimer > 0.5f)
+        // Dynamic volume synchronization for 2D valley ambience loop
+        if (ambienceAudioSource != null && ambienceAudioSource.isPlaying)
         {
-            waterScanTimer = 0f;
-            UpdateRiver3DPosition();
-        }
-    }
-
-    private void ScanSceneWaterBodies()
-    {
-        cachedWaterBounds.Clear();
-
-        // 1. Check WaterRespawnZone colliders
-        WaterRespawnZone[] respawnZones = Object.FindObjectsByType<WaterRespawnZone>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-        foreach (var zone in respawnZones)
-        {
-            if (zone != null)
-            {
-                Collider c = zone.GetComponent<Collider>();
-                if (c != null) cachedWaterBounds.Add(c.bounds);
-                else cachedWaterBounds.Add(new Bounds(zone.transform.position, new Vector3(80f, 4f, 80f)));
-            }
-        }
-
-        // 2. Check MeshRenderers with Water/River in name or materials
-        MeshRenderer[] renderers = Object.FindObjectsByType<MeshRenderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-        foreach (var mr in renderers)
-        {
-            if (mr == null) continue;
-            string objName = mr.gameObject.name.ToLower();
-            if (objName.Contains("water") || objName.Contains("river") || objName.Contains("dere") || objName.Contains("akarsu"))
-            {
-                cachedWaterBounds.Add(mr.bounds);
-            }
-            else if (mr.sharedMaterial != null)
-            {
-                string matName = mr.sharedMaterial.name.ToLower();
-                if (matName.Contains("water") || matName.Contains("river") || matName.Contains("ocean"))
-                {
-                    cachedWaterBounds.Add(mr.bounds);
-                }
-            }
-        }
-    }
-
-    private void UpdateRiver3DPosition()
-    {
-        if (riverAudioSource == null || !riverAudioSource.isPlaying) return;
-
-        FPSPlayerController player = FPSPlayerController.Instance;
-        Vector3 listenerPos = (player != null) ? player.transform.position : (Camera.main != null ? Camera.main.transform.position : Vector3.zero);
-
-        if (cachedWaterBounds.Count == 0)
-        {
-            ScanSceneWaterBodies();
-        }
-
-        if (cachedWaterBounds.Count > 0)
-        {
-            Vector3 closestPoint = cachedWaterBounds[0].ClosestPoint(listenerPos);
-            float minSqrDist = (closestPoint - listenerPos).sqrMagnitude;
-
-            for (int i = 1; i < cachedWaterBounds.Count; i++)
-            {
-                Vector3 pt = cachedWaterBounds[i].ClosestPoint(listenerPos);
-                float sqrDist = (pt - listenerPos).sqrMagnitude;
-                if (sqrDist < minSqrDist)
-                {
-                    minSqrDist = sqrDist;
-                    closestPoint = pt;
-                }
-            }
-
-            // Position the 3D AudioSource exactly on the closest water surface point
-            riverAudioSource.transform.position = closestPoint;
-        }
-        else
-        {
-            // If no water objects exist in the scene, place far away so it doesn't play everywhere
-            riverAudioSource.transform.position = new Vector3(9999f, 9999f, 9999f);
+            ambienceAudioSource.volume = ambientDayValleyVolume * ambienceVolume * masterVolume;
         }
     }
 
@@ -522,7 +453,7 @@ public class AudioManager : MonoBehaviour
     {
         if (aiTrafficHorn != null)
         {
-            Play3DSound(aiTrafficHorn, position, 0.90f, 2.0f, 45.0f, Random.Range(0.95f, 1.05f));
+            Play3DSound(aiTrafficHorn, position, aiTrafficHornVolume, 3.0f, 55.0f, Random.Range(0.95f, 1.05f));
         }
     }
 
@@ -569,47 +500,47 @@ public class AudioManager : MonoBehaviour
 
     public void PlayTabletOpen()
     {
-        if (uiTabletOpen != null) Play2DSound(uiTabletOpen, 0.85f);
+        if (uiTabletOpen != null) Play2DSound(uiTabletOpen, uiTabletOpenVolume);
     }
 
     public void PlayTabletClose()
     {
-        if (uiTabletClose != null) Play2DSound(uiTabletClose, 0.75f);
+        if (uiTabletClose != null) Play2DSound(uiTabletClose, uiTabletCloseVolume);
     }
 
     public void PlayTabSwitch()
     {
-        if (uiTabSwitch != null) Play2DSound(uiTabSwitch, 0.70f);
+        if (uiTabSwitch != null) Play2DSound(uiTabSwitch, uiTabSwitchVolume);
     }
 
     public void PlayButtonClick()
     {
-        if (uiButtonClick != null) Play2DSound(uiButtonClick, 0.80f);
+        if (uiButtonClick != null) Play2DSound(uiButtonClick, uiButtonClickVolume);
     }
 
     public void PlayNotification()
     {
-        if (uiNotificationPopup != null) Play2DSound(uiNotificationPopup, 0.80f);
+        if (uiNotificationPopup != null) Play2DSound(uiNotificationPopup, uiNotificationVolume);
     }
 
     public void PlayError()
     {
-        if (uiErrorBuzzer != null) Play2DSound(uiErrorBuzzer, 0.85f);
+        if (uiErrorBuzzer != null) Play2DSound(uiErrorBuzzer, uiErrorVolume);
     }
 
     public void PlayMoneyAdd()
     {
-        if (uiMoneyAdd != null) Play2DSound(uiMoneyAdd, 0.85f);
+        if (uiMoneyAdd != null) Play2DSound(uiMoneyAdd, uiMoneyAddVolume);
     }
 
     public void PlayMoneySubtract()
     {
-        if (uiMoneySubtract != null) Play2DSound(uiMoneySubtract, 0.80f);
+        if (uiMoneySubtract != null) Play2DSound(uiMoneySubtract, uiMoneySubtractVolume);
     }
 
     public void PlayLevelUp()
     {
-        if (uiLevelUp != null) Play2DSound(uiLevelUp, 1.0f);
+        if (uiLevelUp != null) Play2DSound(uiLevelUp, uiLevelUpVolume);
     }
 
     #endregion

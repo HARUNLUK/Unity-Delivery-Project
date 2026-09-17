@@ -85,20 +85,30 @@ MonoBehaviour:
   garagePaintSpray: {fileID: 8300000, guid: 1af872b56184100448a32e630dee5494, type: 3}
   garagePaintVolume: 0.85
   propertyPurchaseCash: {fileID: 8300000, guid: 863c3a1fda5dd714eb157caa6d2c3cb7, type: 3}
-  propertyPurchaseVolume: 0.9
-  uiTabletOpen: {fileID: 0}
-  uiTabletClose: {fileID: 0}
-  uiTabSwitch: {fileID: 0}
-  uiButtonClick: {fileID: 0}
-  uiNotificationPopup: {fileID: 0}
-  uiErrorBuzzer: {fileID: 0}
-  uiMoneyAdd: {fileID: 0}
-  uiMoneySubtract: {fileID: 0}
-  uiLevelUp: {fileID: 0}
+  propertyPurchaseVolume: 0.46
+  uiTabletOpen: {fileID: 8300000, guid: a1e22dceeed29fa4e90ca4799eb79120, type: 3}
+  uiTabletOpenVolume: 0.08
+  uiTabletClose: {fileID: 8300000, guid: 3cf8290f519d1db4cacba6704746e7b6, type: 3}
+  uiTabletCloseVolume: 0.46
+  uiTabSwitch: {fileID: 8300000, guid: 282772813f4a74b4d9f175fdf6bd2661, type: 3}
+  uiTabSwitchVolume: 0.48
+  uiButtonClick: {fileID: 8300000, guid: 488aab50e8ee9a94c9a5e39c5fc03f42, type: 3}
+  uiButtonClickVolume: 0.58
+  uiNotificationPopup: {fileID: 8300000, guid: 9e291fa88fd4ced409c58cf2bcf8aeeb, type: 3}
+  uiNotificationVolume: 0.61
+  uiErrorBuzzer: {fileID: 8300000, guid: 011edb350b55ba14fab3296f06cc0093, type: 3}
+  uiErrorVolume: 0.64
+  uiMoneyAdd: {fileID: 8300000, guid: f787bc610d93e5246b879ec74cbcc3a7, type: 3}
+  uiMoneyAddVolume: 0.59
+  uiMoneySubtract: {fileID: 8300000, guid: f787bc610d93e5246b879ec74cbcc3a7, type: 3}
+  uiMoneySubtractVolume: 0.43
+  uiLevelUp: {fileID: 8300000, guid: 544eb5de7f65b2d44ba0b0ce11e1697a, type: 3}
+  uiLevelUpVolume: 1
   ambientDayValleyLoop: {fileID: 8300000, guid: fbac87a475f1c4b459f52cadf4180e89, type: 3}
-  ambientRiverStreamLoop: {fileID: 8300000, guid: 654b6412cabc92e41b41448480d4d16a, type: 3}
-  aiTrafficHorn: {fileID: 0}
+  ambientDayValleyVolume: 0.4
+  aiTrafficHorn: {fileID: 8300000, guid: f106d73829e3caf4d8c0086562eef600, type: 3}
+  aiTrafficHornVolume: 0.9
   masterVolume: 1
   sfxVolume: 1
   uiVolume: 0.85
-  ambienceVolume: 0.45
+  ambienceVolume: 0.5

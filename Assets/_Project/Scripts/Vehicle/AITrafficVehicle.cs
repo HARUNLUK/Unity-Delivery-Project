@@ -329,22 +329,23 @@ public class AITrafficVehicle : MonoBehaviour
             engineAudioSource.pitch = baseEnginePitch * Mathf.Lerp(0.85f, 1.35f, speedRatio);
         }
 
-        // Honk horn when blocked by player or obstacle in front
-        if (isObstacleDetected && (isPlayerInFront || closestObstacleDistance <= hardStopDistance + 1.2f))
+        // Honk horn when blocked by player (on-foot or in car) or obstacle in front
+        if (isObstacleDetected && (isPlayerInFront || closestObstacleDistance <= hardStopDistance + 1.5f))
         {
             hornCooldownTimer -= Time.deltaTime;
-            if (hornCooldownTimer <= 0f && currentSpeed < 1.5f)
+            if (hornCooldownTimer <= 0f && currentSpeed < 2.0f)
             {
                 if (AudioManager.Instance != null)
                 {
                     AudioManager.Instance.PlayTrafficHorn(transform.position);
                 }
-                hornCooldownTimer = Random.Range(3.5f, 6.5f);
+                hornCooldownTimer = Random.Range(3.0f, 5.5f);
             }
         }
         else
         {
-            hornCooldownTimer = Mathf.Max(0.5f, hornCooldownTimer);
+            // Ready quick honk reaction time (0.8s - 1.2s) for when blocked next time
+            hornCooldownTimer = Mathf.Min(hornCooldownTimer, Random.Range(0.8f, 1.2f));
         }
 
         // 3. SPEED ADJUSTMENT (ACCELERATION & BRAKING)
@@ -789,14 +790,18 @@ public class AITrafficVehicle : MonoBehaviour
             float playerSide = Mathf.Abs(Vector3.Dot(toPlayer, transform.right));
             float playerY = Mathf.Abs(toPlayer.y);
 
-            // Only consider player if physically inside vehicle's driving path corridor (not on sidewalk or flank)
-            if (playerFwd > 0.1f && playerFwd < sensorDistance && playerSide <= (corridorHalfWidth + 0.20f) && playerY < 3.5f)
+            // Distance measured from front bumper
+            float playerDistFromBumper = playerFwd - forwardExtent;
+
+            // Detect player if inside vehicle's driving path corridor (with safety margin)
+            if (playerDistFromBumper > -0.6f && playerDistFromBumper < sensorDistance && playerSide <= (corridorHalfWidth + 0.65f) && playerY < 3.5f)
             {
                 hitObstacle = true;
                 hitPlayer = true;
-                if (playerFwd < closestDist)
+                float effectiveDist = Mathf.Max(0.05f, playerDistFromBumper);
+                if (effectiveDist < closestDist)
                 {
-                    closestDist = playerFwd;
+                    closestDist = effectiveDist;
                 }
             }
         }
@@ -814,14 +819,17 @@ public class AITrafficVehicle : MonoBehaviour
                 float carSide = Mathf.Abs(Vector3.Dot(toCar, transform.right));
                 float carY = Mathf.Abs(toCar.y);
 
-                // Only consider if car is inside our lane/corridor directly ahead (not on sidewalk, opposite lane, or diagonal)
-                if (carFwd > 0.1f && carFwd < sensorDistance && carSide <= (corridorHalfWidth + 0.35f) && carY < 3.5f)
+                float carDistFromBumper = carFwd - forwardExtent;
+
+                // Only consider if car is inside our lane/corridor directly ahead
+                if (carDistFromBumper > -0.6f && carDistFromBumper < sensorDistance && carSide <= (corridorHalfWidth + 0.50f) && carY < 3.5f)
                 {
                     hitObstacle = true;
                     hitPlayer = true;
-                    if (carFwd < closestDist)
+                    float effectiveDist = Mathf.Max(0.05f, carDistFromBumper);
+                    if (effectiveDist < closestDist)
                     {
-                        closestDist = carFwd;
+                        closestDist = effectiveDist;
                     }
                 }
             }

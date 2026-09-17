@@ -278,11 +278,7 @@ public static class AudioSetupHelper
             case "fanfare":
                 m.uiLevelUp = clip; return true;
 
-            // --- 🌲 AMBIENCE ---
-            case "ambient_river_stream_loop":
-            case "ambient_river_stream":
-            case "river_stream":
-                m.ambientRiverStreamLoop = clip; return true;
+
 
             case "ambient_day_valley_loop":
             case "ambient_day_valley":
