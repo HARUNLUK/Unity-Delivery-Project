@@ -269,8 +269,7 @@ public class CargoTabletUI : MonoBehaviour
             tabletPanelRoot.SetActive(true);
         }
 
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        FPSPlayerController.LockCursor(false);
 
         if (AudioManager.Instance != null)
         {
@@ -290,11 +289,7 @@ public class CargoTabletUI : MonoBehaviour
         isTabletOpen = false;
         if (tabletPanelRoot != null) tabletPanelRoot.SetActive(false);
 
-        if (DaySummaryManager.Instance == null || DaySummaryManager.Instance.summaryPanelRoot == null || !DaySummaryManager.Instance.summaryPanelRoot.activeSelf)
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
+        FPSPlayerController.LockCursor(true);
     }
 
     public void SwitchTab(TabletTab tab)

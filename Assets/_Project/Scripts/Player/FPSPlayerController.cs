@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(CharacterController))]
 public class FPSPlayerController : MonoBehaviour
@@ -221,18 +222,39 @@ public class FPSPlayerController : MonoBehaviour
         }
     }
 
-    public bool IsUIBlockingInput()
+    public static bool IsAnyUIOpen()
     {
+        // 1. Tablet UI
         if (CargoTabletUI.Instance != null && CargoTabletUI.Instance.IsTabletOpen)
             return true;
 
-        if (DaySummaryManager.Instance != null && DaySummaryManager.Instance.summaryPanelRoot != null && DaySummaryManager.Instance.summaryPanelRoot.activeSelf)
+        // 2. Day Summary Screen
+        if (DaySummaryManager.Instance != null && DaySummaryManager.Instance.IsSummaryOpen)
             return true;
 
+        // 3. Shift Ended (Time 18:00 or Hospital Detonation)
+        if (DayTimeManager.Instance != null && DayTimeManager.Instance.IsShiftEnded)
+            return true;
+
+        // 4. Commercial Hub (Garage, Insurance, Dispatch, Property modal)
         if (CommercialHubUIManager.Instance != null && CommercialHubUIManager.Instance.IsAnyPanelOpen)
             return true;
 
+        // 5. Delivery Selection Zone Dropdown
+        if (DeliverySelectionUI.Instance != null && DeliverySelectionUI.Instance.IsOpen)
+            return true;
+
+        // 6. Direct scene hierarchy fallback for DaySummaryPanel
+        GameObject dsp = GameObject.Find("DaySummaryPanel");
+        if (dsp != null && dsp.activeInHierarchy)
+            return true;
+
         return false;
+    }
+
+    public bool IsUIBlockingInput()
+    {
+        return IsAnyUIOpen();
     }
 
     private void Update()
@@ -259,13 +281,29 @@ public class FPSPlayerController : MonoBehaviour
 
         bool isUIOpen = IsUIBlockingInput();
 
-        // Auto re-lock cursor if clicking in game without open UI
-        if (!isUIOpen && isOnFoot && (Cursor.lockState != CursorLockMode.Locked || Cursor.visible))
+        // Enforce unlocked cursor if any UI is open
+        if (isUIOpen)
         {
-            if ((Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame) ||
-                (Keyboard.current != null && (Keyboard.current.wKey.wasPressedThisFrame || Keyboard.current.eKey.wasPressedThisFrame)))
+            if (Cursor.lockState != CursorLockMode.None || !Cursor.visible)
             {
-                LockCursor(true);
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
+        }
+        else
+        {
+            // Auto re-lock cursor if clicking in game world without open UI and pointer not over UI
+            if (isOnFoot && (Cursor.lockState != CursorLockMode.Locked || Cursor.visible))
+            {
+                bool isPointerOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+                if (!isPointerOverUI)
+                {
+                    if ((Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame) ||
+                        (Keyboard.current != null && (Keyboard.current.wKey.wasPressedThisFrame || Keyboard.current.eKey.wasPressedThisFrame)))
+                    {
+                        LockCursor(true);
+                    }
+                }
             }
         }
 
@@ -377,6 +415,7 @@ public class FPSPlayerController : MonoBehaviour
     {
         if (playerCamera == null) return;
         if (IsUIBlockingInput()) return;
+        if (Cursor.lockState != CursorLockMode.Locked || Cursor.visible) return;
 
         float mouseX = 0f;
         float mouseY = 0f;
@@ -405,6 +444,7 @@ public class FPSPlayerController : MonoBehaviour
     private void HandleTPSOrbitInput()
     {
         if (IsUIBlockingInput()) return;
+        if (Cursor.lockState != CursorLockMode.Locked || Cursor.visible) return;
 
         float mouseX = 0f;
         float mouseY = 0f;
@@ -479,6 +519,7 @@ public class FPSPlayerController : MonoBehaviour
     private void HandleMouseLook()
     {
         if (IsUIBlockingInput()) return;
+        if (Cursor.lockState != CursorLockMode.Locked || Cursor.visible) return;
 
         float mouseX = 0f;
         float mouseY = 0f;
@@ -1177,6 +1218,8 @@ public class FPSPlayerController : MonoBehaviour
             DaySummaryManager.Instance.emergencyHospitalReason = "Kargo patlaması nedeniyle ağır yaralanma (Hastaneye Kaldırıldı)";
         }
 
+        LockCursor(false);
+
         if (DayTimeManager.Instance != null)
         {
             DayTimeManager.Instance.EndShift();
@@ -1189,6 +1232,13 @@ public class FPSPlayerController : MonoBehaviour
 
     public static void LockCursor(bool locked)
     {
+        if (locked && IsAnyUIOpen())
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            return;
+        }
+
         Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;
         Cursor.visible = !locked;
     }

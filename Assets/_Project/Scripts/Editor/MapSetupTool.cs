@@ -81,7 +81,7 @@ public class MapSetupTool : MonoBehaviour
                 Undo.RegisterCreatedObjectUndo(pemObj, "Created PlayerEconomyManager");
             }
 
-            if (Object.FindAnyObjectByType<DaySummaryManager>() == null)
+            if (Object.FindAnyObjectByType<DaySummaryManager>() == null && GameObject.Find("DaySummaryPanel") == null)
             {
                 GameObject dsmObj = new GameObject("DaySummaryManager");
                 dsmObj.transform.SetParent(managers.transform);

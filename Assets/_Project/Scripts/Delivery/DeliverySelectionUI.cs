@@ -5,6 +5,9 @@ using TMPro;
 
 public class DeliverySelectionUI : MonoBehaviour
 {
+    public static DeliverySelectionUI Instance { get; private set; }
+    public bool IsOpen => panelRoot != null && panelRoot.activeSelf;
+
     [Header("--- PANEL REFERENCES ---")]
     public GameObject panelRoot;
     public TextMeshProUGUI addressTitleText;
@@ -18,6 +21,7 @@ public class DeliverySelectionUI : MonoBehaviour
 
     private void Awake()
     {
+        Instance = this;
         if (panelRoot != null) panelRoot.SetActive(false);
         if (cargoCardTemplate != null) cargoCardTemplate.SetActive(false);
 
@@ -43,7 +47,7 @@ public class DeliverySelectionUI : MonoBehaviour
 
     private void HandleZoneEntered(DeliveryPoint zone)
     {
-        if (DaySummaryManager.Instance != null && DaySummaryManager.Instance.summaryPanelRoot != null && DaySummaryManager.Instance.summaryPanelRoot.activeSelf)
+        if (FPSPlayerController.IsAnyUIOpen())
         {
             return;
         }
@@ -53,8 +57,7 @@ public class DeliverySelectionUI : MonoBehaviour
 
         if (panelRoot != null) panelRoot.SetActive(true);
 
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        FPSPlayerController.LockCursor(false);
 
         if (addressTitleText != null)
         {
@@ -78,11 +81,7 @@ public class DeliverySelectionUI : MonoBehaviour
 
             if (panelRoot != null) panelRoot.SetActive(false);
 
-            if (DaySummaryManager.Instance == null || DaySummaryManager.Instance.summaryPanelRoot == null || !DaySummaryManager.Instance.summaryPanelRoot.activeSelf)
-            {
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
-            }
+            FPSPlayerController.LockCursor(true);
         }
     }
 
@@ -167,10 +166,6 @@ public class DeliverySelectionUI : MonoBehaviour
         selectedCargoItem = null;
         currentActiveZone = null;
 
-        if (DaySummaryManager.Instance == null || DaySummaryManager.Instance.summaryPanelRoot == null || !DaySummaryManager.Instance.summaryPanelRoot.activeSelf)
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
+        FPSPlayerController.LockCursor(true);
     }
 }

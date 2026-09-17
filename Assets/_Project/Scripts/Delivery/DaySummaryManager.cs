@@ -23,15 +23,37 @@ public class DaySummaryManager : MonoBehaviour
     public string emergencyHospitalReason = "";
 
     private bool isDayFinalized = false;
+    public bool IsSummaryOpen => (summaryPanelRoot != null && summaryPanelRoot.activeSelf) || isDayFinalized;
 
     private void Awake()
     {
-        Instance = this;
+        if (Instance != null && Instance != this)
+        {
+            if (summaryPanelRoot == null && Instance.summaryPanelRoot != null)
+            {
+                Destroy(this);
+                return;
+            }
+            if (Instance.summaryPanelRoot == null && summaryPanelRoot != null)
+            {
+                Destroy(Instance);
+                Instance = this;
+            }
+        }
+        else
+        {
+            Instance = this;
+        }
 
         if (summaryPanelRoot == null)
         {
             Transform t = transform.Find("DaySummaryPanel");
             if (t != null) summaryPanelRoot = t.gameObject;
+            else
+            {
+                GameObject found = GameObject.Find("DaySummaryPanel");
+                if (found != null) summaryPanelRoot = found;
+            }
         }
 
         if (summaryPanelRoot != null) summaryPanelRoot.SetActive(false);
@@ -62,7 +84,7 @@ public class DaySummaryManager : MonoBehaviour
 
     private void Update()
     {
-        if (summaryPanelRoot != null && summaryPanelRoot.activeSelf)
+        if (IsSummaryOpen)
         {
             if (Cursor.lockState != CursorLockMode.None || !Cursor.visible)
             {
@@ -82,6 +104,11 @@ public class DaySummaryManager : MonoBehaviour
         {
             Transform t = transform.Find("DaySummaryPanel");
             if (t != null) summaryPanelRoot = t.gameObject;
+            else
+            {
+                GameObject found = GameObject.Find("DaySummaryPanel");
+                if (found != null) summaryPanelRoot = found;
+            }
         }
 
         if (summaryPanelRoot != null)
@@ -98,8 +125,7 @@ public class DaySummaryManager : MonoBehaviour
             CargoTabletUI.Instance.CloseTablet();
         }
 
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        FPSPlayerController.LockCursor(false);
 
         // 1. Gather all physical cargo packages in the scene
         PhysicalCargoPackage[] scenePackages = Object.FindObjectsByType<PhysicalCargoPackage>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
