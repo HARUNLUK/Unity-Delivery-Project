@@ -51,6 +51,12 @@ public class PhysicalCargoPackage : MonoBehaviour
     public bool isExploded = false;
     public bool isBroken => health <= 0f || isExploded;
     public bool hasBeenHandledByPlayer = false;
+
+    [Header("--- VEHICLE & CARRY STATUS ---")]
+    [Tooltip("True when package is placed inside a vehicle cargo bed trigger area")]
+    public bool isInVehicleBed = false;
+
+    [Tooltip("True when package is currently being held/carried in hands by player")]
     public bool isBeingCarried = false; // Prevents wall/door friction damage while held!
     
     [Tooltip("Minimum collision impact velocity (m/s) required to begin taking damage. Gentle placement < 2.5 m/s, 1.5m drop ~5.0 m/s, high drop > 7.0 m/s.")]
@@ -887,6 +893,9 @@ public class PhysicalCargoPackage : MonoBehaviour
 
     public DeliveryPoint FindNearbyDeliveryPoint()
     {
+        // If package is still in vehicle bed or held by player, it is not yet delivered to drop-off zone
+        if (isInVehicleBed || isBeingCarried) return null;
+
         Collider[] hits = Physics.OverlapSphere(transform.position, 4.5f);
         foreach (var hit in hits)
         {
