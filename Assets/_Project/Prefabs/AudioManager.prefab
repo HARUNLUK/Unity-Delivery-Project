@@ -104,11 +104,15 @@ MonoBehaviour:
   uiMoneySubtractVolume: 0.43
   uiLevelUp: {fileID: 8300000, guid: 544eb5de7f65b2d44ba0b0ce11e1697a, type: 3}
   uiLevelUpVolume: 1
+  backgroundMusic: {fileID: 0}
+  backgroundMusicVolume: 0.5
+  playMusicOnStart: 1
   ambientDayValleyLoop: {fileID: 8300000, guid: fbac87a475f1c4b459f52cadf4180e89, type: 3}
-  ambientDayValleyVolume: 0.4
+  ambientDayValleyVolume: 1
   aiTrafficHorn: {fileID: 8300000, guid: f106d73829e3caf4d8c0086562eef600, type: 3}
   aiTrafficHornVolume: 0.9
   masterVolume: 1
+  musicVolume: 0.8
   sfxVolume: 1
   uiVolume: 0.85
   ambienceVolume: 0.5

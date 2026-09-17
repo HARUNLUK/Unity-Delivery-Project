@@ -51,6 +51,12 @@ public static class AudioSetupHelper
                 assignedCount++;
                 Debug.Log($"<color=#00E5FF>[AudioSetupHelper] Connected: {nameWithoutExt} ({Path.GetExtension(path)})</color>");
             }
+            else if (path.Contains("/Audio/Music") && manager.backgroundMusic == null)
+            {
+                manager.backgroundMusic = clip;
+                assignedCount++;
+                Debug.Log($"<color=#00E5FF>[AudioSetupHelper] Connected Background Music: {nameWithoutExt} ({Path.GetExtension(path)})</color>");
+            }
         }
 
         // Smart Fallbacks for consolidated audio design
@@ -277,9 +283,20 @@ public static class AudioSetupHelper
             case "level_up":
             case "fanfare":
                 m.uiLevelUp = clip; return true;
+            // --- 🎵 BACKGROUND MUSIC ---
+            case "background_music":
+            case "bgm":
+            case "music":
+            case "cozy_music":
+            case "soundtrack":
+            case "main_theme":
+            case "theme_music":
+            case "lofi_music":
+            case "chill_music":
+            case "valley_music":
+                m.backgroundMusic = clip; return true;
 
-
-
+            // --- 🌲 AMBIENCE ---
             case "ambient_day_valley_loop":
             case "ambient_day_valley":
             case "valley_birds_wind":

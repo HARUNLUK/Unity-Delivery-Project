@@ -137,12 +137,19 @@ public class AudioManager : MonoBehaviour
     [Range(0f, 2f), Tooltip("Seviye atlama sesi şiddeti")]
     public float uiLevelUpVolume = 1.0f;
 
+    [Header("--- 🎵 BACKGROUND MUSIC (2D BGM) ---")]
+    [Tooltip("Arka planda çalan ana fon müziği (2D Stereo Loop)")]
+    public AudioClip backgroundMusic;
+    [Range(0f, 2f), Tooltip("Arka plan müzik ses şiddeti (Base Music Volume)")]
+    public float backgroundMusicVolume = 0.50f;
+    [Tooltip("Oyun başladığında müziği otomatik başlat")]
+    public bool playMusicOnStart = true;
+
     [Header("--- 🌲 AMBIENCE & TRAFFIC SFX ---")]
     [Tooltip("2D Looping valley birds & gentle wind")]
     public AudioClip ambientDayValleyLoop;
     [Range(0f, 2f), Tooltip("2D Vadi rüzgar ve kuş atmosfer ses şiddeti")]
     public float ambientDayValleyVolume = 0.40f;
-
 
     public AudioClip aiTrafficHorn;
     [Range(0f, 2f), Tooltip("Yapay zeka araç korna sesi şiddeti")]
@@ -150,6 +157,7 @@ public class AudioManager : MonoBehaviour
 
     [Header("--- VOLUME CHANNELS ---")]
     [Range(0f, 1f)] public float masterVolume = 1.0f;
+    [Range(0f, 1f)] public float musicVolume = 0.80f;
     [Range(0f, 1f)] public float sfxVolume = 1.0f;
     [Range(0f, 1f)] public float uiVolume = 0.85f;
     [Range(0f, 1f)] public float ambienceVolume = 0.50f;
@@ -158,6 +166,7 @@ public class AudioManager : MonoBehaviour
     private AudioSource uiAudioSource;
     private AudioSource playerFootstepSource;
     private AudioSource ambienceAudioSource;
+    private AudioSource musicAudioSource;
 
     // 3D Audio Source Pool
     private readonly List<AudioSource> audioSourcePool = new List<AudioSource>();
@@ -180,6 +189,10 @@ public class AudioManager : MonoBehaviour
     private void Start()
     {
         PlayAmbientLoops();
+        if (playMusicOnStart && backgroundMusic != null)
+        {
+            PlayBackgroundMusic();
+        }
     }
 
     private void EnsureAudioSources()
@@ -215,7 +228,18 @@ public class AudioManager : MonoBehaviour
             ambienceAudioSource.playOnAwake = false;
         }
 
-        // 4. 3D World SFX Pool (spatialBlend = 1.0)
+        // 4. 2D Background Music AudioSource (spatialBlend = 0)
+        if (musicAudioSource == null)
+        {
+            GameObject musicObj = new GameObject("Audio_2D_MusicSource");
+            musicObj.transform.SetParent(transform);
+            musicAudioSource = musicObj.AddComponent<AudioSource>();
+            musicAudioSource.spatialBlend = 0f; // 2D Stereo
+            musicAudioSource.loop = true;
+            musicAudioSource.playOnAwake = false;
+        }
+
+        // 5. 3D World SFX Pool (spatialBlend = 1.0)
         if (audioSourcePool.Count == 0)
         {
             for (int i = 0; i < POOL_SIZE; i++)
@@ -251,12 +275,53 @@ public class AudioManager : MonoBehaviour
         }
     }
 
+    public void PlayBackgroundMusic()
+    {
+        EnsureAudioSources();
+
+        if (musicAudioSource != null && backgroundMusic != null)
+        {
+            if (musicAudioSource.clip != backgroundMusic)
+            {
+                musicAudioSource.clip = backgroundMusic;
+            }
+            musicAudioSource.volume = backgroundMusicVolume * musicVolume * masterVolume;
+            if (!musicAudioSource.isPlaying)
+            {
+                musicAudioSource.Play();
+            }
+        }
+    }
+
+    public void StopBackgroundMusic()
+    {
+        if (musicAudioSource != null && musicAudioSource.isPlaying)
+        {
+            musicAudioSource.Stop();
+        }
+    }
+
+    public void SetMusicTrack(AudioClip newTrack, bool autoPlay = true)
+    {
+        backgroundMusic = newTrack;
+        if (autoPlay && newTrack != null)
+        {
+            PlayBackgroundMusic();
+        }
+    }
+
     private void Update()
     {
         // Dynamic volume synchronization for 2D valley ambience loop
         if (ambienceAudioSource != null && ambienceAudioSource.isPlaying)
         {
             ambienceAudioSource.volume = ambientDayValleyVolume * ambienceVolume * masterVolume;
+        }
+
+        // Dynamic volume synchronization for 2D background music loop
+        if (musicAudioSource != null && musicAudioSource.isPlaying)
+        {
+            musicAudioSource.volume = backgroundMusicVolume * musicVolume * masterVolume;
         }
     }
 
