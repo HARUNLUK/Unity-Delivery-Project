@@ -78,6 +78,23 @@ public class FPSPlayerController : MonoBehaviour
     private float currentDropHoldTime = 0f;
     private float afterGrabSafetyTimer = 0f;
     public float exitVehicleSafetyTimer = 0f;
+    private PhysicalCargoPackage currentlyFocusedPackage = null;
+
+    private void UpdateCargoFocus(PhysicalCargoPackage newTarget)
+    {
+        if (currentlyFocusedPackage != newTarget)
+        {
+            if (currentlyFocusedPackage != null)
+            {
+                currentlyFocusedPackage.SetFocused(false);
+            }
+            currentlyFocusedPackage = newTarget;
+            if (currentlyFocusedPackage != null)
+            {
+                currentlyFocusedPackage.SetFocused(true);
+            }
+        }
+    }
 
     private void Awake()
     {
@@ -538,6 +555,8 @@ public class FPSPlayerController : MonoBehaviour
         // If holding an object
         if (grabber != null && grabber.IsHoldingObject)
         {
+            UpdateCargoFocus(null);
+
             if (afterGrabSafetyTimer > 0f)
             {
                 afterGrabSafetyTimer -= Time.deltaTime;
@@ -616,239 +635,109 @@ public class FPSPlayerController : MonoBehaviour
             System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
         }
 
-        // 0. Check Branch Upgrade Terminal (Direct Hit or Proximity)
-        BranchUpgradeTerminal terminal = null;
+        // STEP 1: Process the closest direct interactable hit along the raycast.
+        // Evaluating sorted hits in order guarantees that looking directly at the vehicle (hood, door, cab)
+        // interacts with the vehicle instead of hidden/background cargo resting in the truck bed behind it.
         if (hits != null)
         {
             foreach (var h in hits)
             {
-                terminal = h.collider.GetComponentInParent<BranchUpgradeTerminal>();
+                if (h.collider == null || h.collider.transform.IsChildOf(transform)) continue;
+
+                // 1. Branch Upgrade Terminal
+                BranchUpgradeTerminal terminal = h.collider.GetComponentInParent<BranchUpgradeTerminal>();
                 if (terminal == null) terminal = h.collider.GetComponent<BranchUpgradeTerminal>();
-                if (terminal != null) break;
-            }
-        }
-
-        if (terminal == null)
-        {
-            Collider[] closeTerminals = Physics.OverlapSphere(playerCamera.transform.position + (playerCamera.transform.forward * 1.0f), 1.2f, interactionLayers, QueryTriggerInteraction.Collide);
-            foreach (var ct in closeTerminals)
-            {
-                if (ct.transform.IsChildOf(transform)) continue;
-                BranchUpgradeTerminal t = ct.GetComponentInParent<BranchUpgradeTerminal>();
-                if (t == null) t = ct.GetComponent<BranchUpgradeTerminal>();
-                if (t != null)
+                if (terminal != null)
                 {
-                    terminal = t;
-                    break;
-                }
-            }
-        }
-
-        if (terminal != null)
-        {
-            if (InteractionPromptHUD.Instance != null)
-            {
-                InteractionPromptHUD.Instance.ShowPrompt(terminal.GetPromptText());
-            }
-
-            if (interactPressed)
-            {
-                terminal.InteractTerminal();
-            }
-            return;
-        }
-
-        // 1. Check Locked Purchasable Commercial Property
-        PurchasableProperty lockedProperty = null;
-        if (hits != null)
-        {
-            foreach (var h in hits)
-            {
-                PurchasableProperty p = h.collider.GetComponentInParent<PurchasableProperty>();
-                if (p == null) p = h.collider.GetComponent<PurchasableProperty>();
-                if (p != null && !p.IsUnlocked && !p.disablePurchase)
-                {
-                    Vector3 anchorPos = p.interactionAnchor != null ? p.interactionAnchor.position : p.transform.position;
-                    float d = Vector3.Distance(transform.position, anchorPos);
-                    if (d <= p.interactionDistance || h.distance <= p.interactionDistance)
-                    {
-                        lockedProperty = p;
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (lockedProperty == null)
-        {
-            Collider[] closeProps = Physics.OverlapSphere(transform.position, 5.5f, interactionLayers, QueryTriggerInteraction.Collide);
-            foreach (var cp in closeProps)
-            {
-                if (cp.transform.IsChildOf(transform)) continue;
-                PurchasableProperty p = cp.GetComponentInParent<PurchasableProperty>();
-                if (p == null) p = cp.GetComponent<PurchasableProperty>();
-                if (p != null && !p.IsUnlocked && !p.disablePurchase)
-                {
-                    Vector3 anchorPos = p.interactionAnchor != null ? p.interactionAnchor.position : p.transform.position;
-                    float d = Vector3.Distance(transform.position, anchorPos);
-                    if (d <= p.interactionDistance)
-                    {
-                        lockedProperty = p;
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (lockedProperty != null && !lockedProperty.IsUnlocked && !lockedProperty.disablePurchase)
-        {
-            if (InteractionPromptHUD.Instance != null)
-            {
-                InteractionPromptHUD.Instance.ShowPrompt(lockedProperty.GetPromptText());
-            }
-
-            if (interactPressed)
-            {
-                if (CommercialHubUIManager.Instance != null)
-                {
-                    CommercialHubUIManager.Instance.OpenPropertyPurchaseModal(lockedProperty);
-                }
-                else
-                {
-                    lockedProperty.TryPurchase();
-                }
-            }
-            return;
-        }
-
-        // 1.1 Check Unlocked Insurance Agency & Passive Dispatch Hub In-World Terminal Upgrades
-        if (hits != null)
-        {
-            foreach (var h in hits)
-            {
-                if (h.distance > interactionDistance + 0.5f) continue;
-
-                InsuranceAgencyManager ins = h.collider.GetComponentInParent<InsuranceAgencyManager>();
-                if (ins == null) ins = h.collider.GetComponent<InsuranceAgencyManager>();
-                if (ins != null && ins.IsAgencyUnlocked())
-                {
+                    UpdateCargoFocus(null);
                     if (InteractionPromptHUD.Instance != null)
                     {
-                        InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Kargo Sigorta Acentesi Menüsünü Aç ({ins.GetTierName()})</color>");
+                        InteractionPromptHUD.Instance.ShowPrompt(terminal.GetPromptText());
                     }
 
                     if (interactPressed)
                     {
-                        if (CommercialHubUIManager.Instance != null)
-                            CommercialHubUIManager.Instance.OpenInsurancePanel();
-                        else
-                            ins.TryUpgradeTier();
+                        terminal.InteractTerminal();
                     }
                     return;
                 }
 
-                PassiveDispatchManager hub = h.collider.GetComponentInParent<PassiveDispatchManager>();
-                if (hub == null) hub = h.collider.GetComponent<PassiveDispatchManager>();
-                if (hub != null && hub.IsHubUnlocked())
+                // 2. Locked Purchasable Commercial Property
+                PurchasableProperty lockedProperty = h.collider.GetComponentInParent<PurchasableProperty>();
+                if (lockedProperty == null) lockedProperty = h.collider.GetComponent<PurchasableProperty>();
+                if (lockedProperty != null && !lockedProperty.IsUnlocked && !lockedProperty.disablePurchase)
                 {
-                    if (InteractionPromptHUD.Instance != null)
+                    Vector3 anchorPos = lockedProperty.interactionAnchor != null ? lockedProperty.interactionAnchor.position : lockedProperty.transform.position;
+                    float d = Vector3.Distance(transform.position, anchorPos);
+                    if (d <= lockedProperty.interactionDistance || h.distance <= lockedProperty.interactionDistance)
                     {
-                        InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Bölge Dağıtım Şubesi Menüsünü Aç (Seviye {hub.DispatchHubLevel} - {hub.GetCourierCount()} Kurye)</color>");
-                    }
+                        UpdateCargoFocus(null);
+                        if (InteractionPromptHUD.Instance != null)
+                        {
+                            InteractionPromptHUD.Instance.ShowPrompt(lockedProperty.GetPromptText());
+                        }
 
-                    if (interactPressed)
-                    {
-                        if (CommercialHubUIManager.Instance != null)
-                            CommercialHubUIManager.Instance.OpenDispatchHubPanel();
-                        else
-                            hub.TryUpgradeHub();
-                    }
-                    return;
-                }
-            }
-        }
-
-        // 2. Physical Cargo Package or Rigidbody Object Detection (High Priority)
-        PhysicalCargoPackage pkg = null;
-        Rigidbody targetRb = null;
-
-        if (hits != null)
-        {
-            foreach (var h in hits)
-            {
-                PhysicalCargoPackage p = h.collider.GetComponentInParent<PhysicalCargoPackage>();
-                if (p == null) p = h.collider.GetComponent<PhysicalCargoPackage>();
-                if (p != null)
-                {
-                    pkg = p;
-                    targetRb = p.GetComponent<Rigidbody>();
-                    break;
-                }
-
-                Rigidbody rb = h.collider.attachedRigidbody;
-                if (rb != null && !rb.isKinematic && h.collider.GetComponentInParent<DrivableVehicle>() == null)
-                {
-                    targetRb = rb;
-                    break;
-                }
-            }
-        }
-
-        // Proximity scan fallback for packages directly under or in front of the player
-        if (pkg == null && targetRb == null)
-        {
-            Collider[] closeHits = Physics.OverlapSphere(playerCamera.transform.position + (playerCamera.transform.forward * 1.2f), 0.95f, interactionLayers, QueryTriggerInteraction.Ignore);
-            float closestDist = float.MaxValue;
-
-            foreach (var ch in closeHits)
-            {
-                if (ch.transform.IsChildOf(transform)) continue;
-
-                PhysicalCargoPackage p = ch.GetComponentInParent<PhysicalCargoPackage>();
-                if (p != null)
-                {
-                    float d = Vector3.Distance(playerCamera.transform.position, p.transform.position);
-                    if (d < closestDist)
-                    {
-                        closestDist = d;
-                        pkg = p;
-                        targetRb = p.GetComponent<Rigidbody>();
+                        if (interactPressed)
+                        {
+                            if (CommercialHubUIManager.Instance != null)
+                                CommercialHubUIManager.Instance.OpenPropertyPurchaseModal(lockedProperty);
+                            else
+                                lockedProperty.TryPurchase();
+                        }
+                        return;
                     }
                 }
-            }
-        }
 
-        if (pkg != null || (targetRb != null && !targetRb.isKinematic))
-        {
-            if (InteractionPromptHUD.Instance != null)
-            {
-                string targetName = (pkg != null) ? $"Cargo #{pkg.targetPointId} (${pkg.deliveryReward})" : "Object";
-                InteractionPromptHUD.Instance.ShowPrompt($"[E] Pick up {targetName}");
-            }
-
-            if (interactPressed && grabber != null)
-            {
-                Rigidbody rbToGrab = pkg != null ? pkg.GetComponent<Rigidbody>() : targetRb;
-                if (rbToGrab != null)
+                // 3. Unlocked Insurance Agency & Passive Dispatch Hub Terminals
+                if (h.distance <= interactionDistance + 0.5f)
                 {
-                    grabber.GrabObject(rbToGrab);
-                    afterGrabSafetyTimer = 0.22f;
-                    currentDropHoldTime = 0f;
-                }
-            }
-            return;
-        }
+                    InsuranceAgencyManager ins = h.collider.GetComponentInParent<InsuranceAgencyManager>();
+                    if (ins == null) ins = h.collider.GetComponent<InsuranceAgencyManager>();
+                    if (ins != null && ins.IsAgencyUnlocked())
+                    {
+                        UpdateCargoFocus(null);
+                        if (InteractionPromptHUD.Instance != null)
+                        {
+                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Kargo Sigorta Acentesi Menüsünü Aç ({ins.GetTierName()})</color>");
+                        }
 
-        // 3. Vehicle Tailgate Interaction
-        if (hits != null)
-        {
-            foreach (var h in hits)
-            {
+                        if (interactPressed)
+                        {
+                            if (CommercialHubUIManager.Instance != null)
+                                CommercialHubUIManager.Instance.OpenInsurancePanel();
+                            else
+                                ins.TryUpgradeTier();
+                        }
+                        return;
+                    }
+
+                    PassiveDispatchManager hub = h.collider.GetComponentInParent<PassiveDispatchManager>();
+                    if (hub == null) hub = h.collider.GetComponent<PassiveDispatchManager>();
+                    if (hub != null && hub.IsHubUnlocked())
+                    {
+                        UpdateCargoFocus(null);
+                        if (InteractionPromptHUD.Instance != null)
+                        {
+                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Bölge Dağıtım Şubesi Menüsünü Aç (Seviye {hub.DispatchHubLevel} - {hub.GetCourierCount()} Kurye)</color>");
+                        }
+
+                        if (interactPressed)
+                        {
+                            if (CommercialHubUIManager.Instance != null)
+                                CommercialHubUIManager.Instance.OpenDispatchHubPanel();
+                            else
+                                hub.TryUpgradeHub();
+                        }
+                        return;
+                    }
+                }
+
+                // 4. Vehicle Tailgate (Direct Collider Hit)
                 VehicleTailgate directTailgate = h.collider.GetComponent<VehicleTailgate>();
                 if (directTailgate == null) directTailgate = h.collider.GetComponentInParent<VehicleTailgate>();
-
                 if (directTailgate != null)
                 {
+                    UpdateCargoFocus(null);
                     if (InteractionPromptHUD.Instance != null)
                     {
                         InteractionPromptHUD.Instance.ShowPrompt(directTailgate.GetPromptText());
@@ -860,17 +749,55 @@ public class FPSPlayerController : MonoBehaviour
                     }
                     return;
                 }
-            }
-        }
 
-        // 4. Vehicle Drive & Service Garage Interaction
-        if (hits != null)
-        {
-            foreach (var h in hits)
-            {
+                // 5. Physical Cargo Package or Grabbable Dynamic Rigidbody
+                PhysicalCargoPackage pkg = h.collider.GetComponentInParent<PhysicalCargoPackage>();
+                if (pkg == null) pkg = h.collider.GetComponent<PhysicalCargoPackage>();
+                Rigidbody targetRb = null;
+
+                if (pkg != null)
+                {
+                    targetRb = pkg.GetComponent<Rigidbody>();
+                }
+                else
+                {
+                    Rigidbody rb = h.collider.attachedRigidbody;
+                    if (rb != null && !rb.isKinematic && h.collider.GetComponentInParent<DrivableVehicle>() == null)
+                    {
+                        targetRb = rb;
+                    }
+                }
+
+                if (pkg != null || (targetRb != null && !targetRb.isKinematic))
+                {
+                    UpdateCargoFocus(pkg);
+
+                    if (InteractionPromptHUD.Instance != null)
+                    {
+                        string targetName = (pkg != null) ? $"Cargo #{pkg.targetPointId} (${pkg.deliveryReward})" : "Object";
+                        InteractionPromptHUD.Instance.ShowPrompt($"[E] Pick up {targetName}");
+                    }
+
+                    if (interactPressed && grabber != null)
+                    {
+                        UpdateCargoFocus(null);
+                        Rigidbody rbToGrab = pkg != null ? pkg.GetComponent<Rigidbody>() : targetRb;
+                        if (rbToGrab != null)
+                        {
+                            grabber.GrabObject(rbToGrab);
+                            afterGrabSafetyTimer = 0.22f;
+                            currentDropHoldTime = 0f;
+                        }
+                    }
+                    return;
+                }
+
+                // 6. Drivable Vehicle (Drive, Tailgate Area, Purchase, or Service Garage)
                 DrivableVehicle vehicle = h.collider.GetComponentInParent<DrivableVehicle>();
                 if (vehicle != null && !vehicle.isPlayerInside)
                 {
+                    UpdateCargoFocus(null);
+
                     if (!vehicle.IsUnlocked)
                     {
                         int branchLevel = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : (PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.WarehouseLevel : 1);
@@ -977,12 +904,116 @@ public class FPSPlayerController : MonoBehaviour
             }
         }
 
-        // 5. Check if standing near a vehicle inside the service garage bay without aiming directly at it
+        // STEP 2: Proximity scans (Fallback ONLY if direct raycast hits did not find any interactable object)
+
+        // 2.1 Branch Upgrade Terminal Proximity Scan
+        Collider[] closeTerminals = Physics.OverlapSphere(playerCamera.transform.position + (playerCamera.transform.forward * 1.0f), 1.2f, interactionLayers, QueryTriggerInteraction.Collide);
+        foreach (var ct in closeTerminals)
+        {
+            if (ct.transform.IsChildOf(transform)) continue;
+            BranchUpgradeTerminal t = ct.GetComponentInParent<BranchUpgradeTerminal>();
+            if (t == null) t = ct.GetComponent<BranchUpgradeTerminal>();
+            if (t != null)
+            {
+                UpdateCargoFocus(null);
+                if (InteractionPromptHUD.Instance != null)
+                {
+                    InteractionPromptHUD.Instance.ShowPrompt(t.GetPromptText());
+                }
+
+                if (interactPressed)
+                {
+                    t.InteractTerminal();
+                }
+                return;
+            }
+        }
+
+        // 2.2 Locked Purchasable Property Proximity Scan
+        Collider[] closeProps = Physics.OverlapSphere(transform.position, 5.5f, interactionLayers, QueryTriggerInteraction.Collide);
+        foreach (var cp in closeProps)
+        {
+            if (cp.transform.IsChildOf(transform)) continue;
+            PurchasableProperty p = cp.GetComponentInParent<PurchasableProperty>();
+            if (p == null) p = cp.GetComponent<PurchasableProperty>();
+            if (p != null && !p.IsUnlocked && !p.disablePurchase)
+            {
+                Vector3 anchorPos = p.interactionAnchor != null ? p.interactionAnchor.position : p.transform.position;
+                float d = Vector3.Distance(transform.position, anchorPos);
+                if (d <= p.interactionDistance)
+                {
+                    UpdateCargoFocus(null);
+                    if (InteractionPromptHUD.Instance != null)
+                    {
+                        InteractionPromptHUD.Instance.ShowPrompt(p.GetPromptText());
+                    }
+
+                    if (interactPressed)
+                    {
+                        if (CommercialHubUIManager.Instance != null)
+                            CommercialHubUIManager.Instance.OpenPropertyPurchaseModal(p);
+                        else
+                            p.TryPurchase();
+                    }
+                    return;
+                }
+            }
+        }
+
+        // 2.3 Proximity scan fallback for cargo packages directly under or near player's feet
+        Collider[] closeHits = Physics.OverlapSphere(playerCamera.transform.position + (playerCamera.transform.forward * 1.0f), 0.85f, interactionLayers, QueryTriggerInteraction.Ignore);
+        float closestDist = float.MaxValue;
+        PhysicalCargoPackage proxPkg = null;
+        Rigidbody proxRb = null;
+
+        foreach (var ch in closeHits)
+        {
+            if (ch.transform.IsChildOf(transform)) continue;
+
+            PhysicalCargoPackage p = ch.GetComponentInParent<PhysicalCargoPackage>();
+            if (p != null)
+            {
+                float d = Vector3.Distance(playerCamera.transform.position, p.transform.position);
+                if (d < closestDist)
+                {
+                    closestDist = d;
+                    proxPkg = p;
+                    proxRb = p.GetComponent<Rigidbody>();
+                }
+            }
+        }
+
+        if (proxPkg != null || (proxRb != null && !proxRb.isKinematic))
+        {
+            UpdateCargoFocus(proxPkg);
+
+            if (InteractionPromptHUD.Instance != null)
+            {
+                string targetName = (proxPkg != null) ? $"Cargo #{proxPkg.targetPointId} (${proxPkg.deliveryReward})" : "Object";
+                InteractionPromptHUD.Instance.ShowPrompt($"[E] Pick up {targetName}");
+            }
+
+            if (interactPressed && grabber != null)
+            {
+                UpdateCargoFocus(null);
+                Rigidbody rbToGrab = proxPkg != null ? proxPkg.GetComponent<Rigidbody>() : proxRb;
+                if (rbToGrab != null)
+                {
+                    grabber.GrabObject(rbToGrab);
+                    afterGrabSafetyTimer = 0.22f;
+                    currentDropHoldTime = 0f;
+                }
+            }
+            return;
+        }
+
+        // 2.4 Service garage bay vehicle proximity fallback
         if (VehicleServiceGarage.Instance != null && VehicleServiceGarage.Instance.IsGarageUnlocked())
         {
             DrivableVehicle bayVehicle = VehicleServiceGarage.Instance.FindActiveVehicleInBay();
             if (bayVehicle != null && Vector3.Distance(transform.position, bayVehicle.transform.position) <= 6.0f)
             {
+                UpdateCargoFocus(null);
                 VehicleServiceGarage.Instance.CheckGarageShortcutInputs(bayVehicle);
 
                 bool fPressed = false;
@@ -1016,6 +1047,8 @@ public class FPSPlayerController : MonoBehaviour
         }
 
         // No interactive target hit
+        UpdateCargoFocus(null);
+
         if (InteractionPromptHUD.Instance != null)
         {
             InteractionPromptHUD.Instance.HidePrompt();
@@ -1026,6 +1059,7 @@ public class FPSPlayerController : MonoBehaviour
     {
         isOnFoot = active;
         velocity = Vector3.zero;
+        if (!active) UpdateCargoFocus(null);
         if (controller != null) controller.enabled = active;
     }
 

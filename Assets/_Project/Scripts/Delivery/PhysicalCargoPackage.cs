@@ -91,10 +91,123 @@ public class PhysicalCargoPackage : MonoBehaviour
 
     public bool isCustomPrefab = false;
 
+    [Header("--- FOCUS INDICATOR ---")]
+    private GameObject focusIndicatorObj;
+    private TextMeshPro focusIndicatorText;
+    private bool isCurrentlyFocused = false;
+    private float focusVisualScale = 0f;
+
     private void Awake()
     {
         EnsurePhysicsComponents();
         spawnImmunityUntil = Time.time + spawnImmunityDuration;
+    }
+
+    private void Update()
+    {
+        UpdateFocusIndicator();
+    }
+
+    private void OnDisable()
+    {
+        isCurrentlyFocused = false;
+        if (focusIndicatorObj != null)
+        {
+            focusIndicatorObj.SetActive(false);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (focusIndicatorObj != null)
+        {
+            Destroy(focusIndicatorObj);
+        }
+    }
+
+    public void SetFocused(bool focused)
+    {
+        isCurrentlyFocused = focused;
+    }
+
+    private void CreateFocusIndicator()
+    {
+        if (focusIndicatorObj != null) return;
+
+        focusIndicatorObj = new GameObject($"FocusIndicator_{gameObject.name}");
+        focusIndicatorObj.transform.SetParent(null); // Keep unparented in world space to avoid non-uniform scale distortion
+
+        focusIndicatorText = focusIndicatorObj.AddComponent<TextMeshPro>();
+        focusIndicatorText.alignment = TextAlignmentOptions.Center;
+        focusIndicatorText.fontSize = 2.4f;
+        focusIndicatorText.fontStyle = FontStyles.Bold;
+        focusIndicatorText.enableWordWrapping = false;
+        focusIndicatorText.margin = Vector4.zero;
+
+        string hexColor = "#00E5FF";
+        if (cargoType == CargoType.Fragile) hexColor = "#FF9900";
+        else if (cargoType == CargoType.Express) hexColor = "#00B4FF";
+        else if (cargoType == CargoType.Explosive) hexColor = "#FF3300";
+
+        focusIndicatorText.text = $"<color={hexColor}><b>▼</b></color>";
+    }
+
+    private void UpdateFocusIndicator()
+    {
+        bool shouldShow = isCurrentlyFocused && !isBeingCarried && !isBroken && !isExploded;
+        float targetScale = shouldShow ? 1f : 0f;
+
+        if (focusVisualScale <= 0.01f && !shouldShow)
+        {
+            if (focusIndicatorObj != null && focusIndicatorObj.activeSelf)
+            {
+                focusIndicatorObj.SetActive(false);
+            }
+            return;
+        }
+
+        if (focusIndicatorObj == null)
+        {
+            CreateFocusIndicator();
+        }
+
+        if (focusIndicatorObj != null && !focusIndicatorObj.activeSelf)
+        {
+            focusIndicatorObj.SetActive(true);
+        }
+
+        focusVisualScale = Mathf.MoveTowards(focusVisualScale, targetScale, Time.deltaTime * 12f);
+
+        Camera cam = Camera.main;
+        if (cam == null) cam = Object.FindAnyObjectByType<Camera>();
+
+        if (cam != null && focusIndicatorObj != null)
+        {
+            // Use world-space bounding box so indicator is always on the true physical top (highest point)
+            // regardless of whether the box is upside down, sideways, or tilted
+            Vector3 topPos = transform.position;
+            if (col != null)
+            {
+                Bounds b = col.bounds;
+                topPos = new Vector3(b.center.x, b.max.y, b.center.z);
+            }
+            else if (boxRenderer != null)
+            {
+                Bounds b = boxRenderer.bounds;
+                topPos = new Vector3(b.center.x, b.max.y, b.center.z);
+            }
+
+            float bob = Mathf.Sin(Time.time * 5.5f) * 0.012f;
+            focusIndicatorObj.transform.position = topPos + new Vector3(0f, 0.07f + bob, 0f);
+
+            Vector3 dirToCam = focusIndicatorObj.transform.position - cam.transform.position;
+            if (dirToCam.sqrMagnitude > 0.001f)
+            {
+                focusIndicatorObj.transform.rotation = Quaternion.LookRotation(dirToCam);
+            }
+
+            focusIndicatorObj.transform.localScale = Vector3.one * (focusVisualScale * 0.40f);
+        }
     }
 
     public void EnsurePhysicsComponents()
