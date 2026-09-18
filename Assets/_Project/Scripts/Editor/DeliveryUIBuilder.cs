@@ -1110,8 +1110,11 @@ public static class DeliveryUIBuilder
         // Commercial Hub Shop UIs (Garage Workshop, Insurance Agency, Passive Dispatch, Property Modal)
         CommercialHubUIManager.CreateCommercialHubUITool();
 
+        // Apply complete Glassmorphic 9-slice textures, glows, and rounded styling
+        GlassUIAssetGenerator.ApplyGlassmorphicStyleToAllUI();
+
         EditorUtility.SetDirty(canvas.gameObject);
-        Debug.Log("<color=#32FF64>[DeliveryUIBuilder] Professional Tablet, HUD, and Commercial Shop UI Panels successfully generated!</color>");
+        Debug.Log("<color=#32FF64>[DeliveryUIBuilder] Professional Glassmorphic Tablet, HUD, and Commercial Shop UI Panels successfully generated!</color>");
     }
 
     private static TextMeshProUGUI AddTextMeshPro(GameObject target, string text, float fontSize, FontStyles style, TextAlignmentOptions alignment, Color color)

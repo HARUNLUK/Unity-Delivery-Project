@@ -301,7 +301,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  - {fileID: 8964942783168824448, guid: 120f6b4e1706a23419ba0c206d703b5f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -348,8 +348,8 @@ MonoBehaviour:
   m_text: "\U0001F4E6 B\xD6LGE KARGO DA\u011EITIM \u015EUBES\u0130 & LOJ\u0130ST\u0130K
     \U0001F69A"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 120f6b4e1706a23419ba0c206d703b5f, type: 2}
+  m_sharedMaterial: {fileID: 8964942783168824448, guid: 120f6b4e1706a23419ba0c206d703b5f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1814,7 +1814,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  - {fileID: 8964942783168824448, guid: 120f6b4e1706a23419ba0c206d703b5f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1861,8 +1861,8 @@ MonoBehaviour:
   m_text: "PAS\u0130F B\xD6LGE DA\u011EITIM \u015EUBES\u0130\n\n<color=green>Fiyat:
     $1000</color> \n\n<color=yellow>Seviye: 2 Gerekli</color>"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 120f6b4e1706a23419ba0c206d703b5f, type: 2}
+  m_sharedMaterial: {fileID: 8964942783168824448, guid: 120f6b4e1706a23419ba0c206d703b5f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
