@@ -46,8 +46,9 @@ public class InteractionPromptHUD : MonoBehaviour
     [Header("--- HELD CARGO SIDE PANEL ---")]
     public GameObject heldCargoPanel;
     public TextMeshProUGUI heldCargoHeaderText;
-    public TextMeshProUGUI heldCargoTrackingText;
     public TextMeshProUGUI heldCargoTypeText;
+    public TextMeshProUGUI heldCargoStatusText;
+    public TextMeshProUGUI heldCargoPercentageText;
     public TextMeshProUGUI heldCargoRecipientText;
     public TextMeshProUGUI heldCargoAddressText;
     public TextMeshProUGUI heldCargoAddressDescText;
@@ -230,97 +231,24 @@ public class InteractionPromptHUD : MonoBehaviour
             }
         }
 
-        // 3. Held Cargo Side Details Panel
+        // 3. Held Cargo Side Details Panel (Strictly bind to existing scene object, NEVER modify design)
         Transform existingSide = canvas.transform.Find("HeldCargoSideCard");
-        if (existingSide != null && forceRecreate)
+        if (existingSide == null)
         {
-            DestroyImmediate(existingSide.gameObject);
-            existingSide = null;
-            heldCargoPanel = null;
+            var allT = canvas.GetComponentsInChildren<Transform>(true);
+            foreach (var t in allT)
+            {
+                if (t != null && t.name.Equals("HeldCargoSideCard", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    existingSide = t;
+                    break;
+                }
+            }
         }
 
         if (existingSide != null)
         {
             BindHeldCargoReferences(existingSide);
-        }
-
-        if (heldCargoPanel == null)
-        {
-            if (existingSide != null)
-            {
-                DestroyImmediate(existingSide.gameObject);
-            }
-
-            heldCargoPanel = new GameObject("HeldCargoSideCard");
-            heldCargoPanel.transform.SetParent(canvas.transform, false);
-
-            RectTransform sideRect = heldCargoPanel.AddComponent<RectTransform>();
-            sideRect.anchorMin = new Vector2(1f, 0.5f);
-            sideRect.anchorMax = new Vector2(1f, 0.5f);
-            sideRect.pivot = new Vector2(1f, 0.5f);
-            sideRect.anchoredPosition = new Vector2(-40, 0);
-            sideRect.sizeDelta = new Vector2(560, 530);
-
-            Image sideBg = heldCargoPanel.AddComponent<Image>();
-            sideBg.color = new Color(0.06f, 0.08f, 0.13f, 0.96f);
-            sideBg.raycastTarget = false;
-
-            VerticalLayoutGroup vLayout = heldCargoPanel.AddComponent<VerticalLayoutGroup>();
-            vLayout.padding = new RectOffset(24, 24, 20, 20);
-            vLayout.spacing = 9;
-            vLayout.childControlHeight = true;
-            vLayout.childControlWidth = true;
-            vLayout.childForceExpandHeight = false;
-
-            // Header
-            heldCargoHeaderText = CreateTMPChild(heldCargoPanel, "Header", "HELD PACKAGE", 24, FontStyles.Bold, new Color(1f, 0.82f, 0.2f), TextAlignmentOptions.Left);
-
-            // Tracking
-            heldCargoTrackingText = CreateTMPChild(heldCargoPanel, "Tracking", "Tracking #: #1", 20, FontStyles.Bold, Color.white, TextAlignmentOptions.Left);
-
-            // Type
-            heldCargoTypeText = CreateTMPChild(heldCargoPanel, "Type", "[STANDARD PARCEL]", 19, FontStyles.Bold, new Color(1f, 0.6f, 0.2f), TextAlignmentOptions.Left);
-
-            // Recipient Name
-            heldCargoRecipientText = CreateTMPChild(heldCargoPanel, "Recipient", "Recipient: Resident", 20, FontStyles.Bold, new Color(0.95f, 0.85f, 0.45f), TextAlignmentOptions.Left);
-
-            // Destination Address
-            heldCargoAddressText = CreateTMPChild(heldCargoPanel, "Address", "Address: Main Street", 21, FontStyles.Bold, new Color(0.35f, 0.88f, 1f), TextAlignmentOptions.Left);
-
-            // --- PROMINENT LARGE ADDRESS CLUE & DESCRIPTION BOX ---
-            GameObject clueBoxObj = new GameObject("ClueBox");
-            clueBoxObj.transform.SetParent(heldCargoPanel.transform, false);
-            RectTransform clueBoxRect = clueBoxObj.AddComponent<RectTransform>();
-            clueBoxRect.sizeDelta = new Vector2(0, 160);
-
-            Image clueBoxBg = clueBoxObj.AddComponent<Image>();
-            clueBoxBg.color = new Color(0.04f, 0.06f, 0.09f, 0.98f);
-            clueBoxBg.raycastTarget = false;
-
-            VerticalLayoutGroup cbLayout = clueBoxObj.AddComponent<VerticalLayoutGroup>();
-            cbLayout.padding = new RectOffset(16, 16, 14, 14);
-            cbLayout.spacing = 6;
-            cbLayout.childControlWidth = true;
-            cbLayout.childControlHeight = true;
-            cbLayout.childForceExpandHeight = false;
-
-            CreateTMPChild(clueBoxObj, "ClueTitle", "<b>DESTINATION & VISUAL CLUE:</b>", 19, FontStyles.Bold, new Color(1f, 0.85f, 0.25f), TextAlignmentOptions.Left);
-
-            heldCargoAddressDescText = CreateTMPChild(clueBoxObj, "AddressDescription", "\"Look for the house at the corner...\"", 24, FontStyles.Bold, new Color(1f, 0.96f, 0.78f), TextAlignmentOptions.Left);
-            if (heldCargoAddressDescText != null)
-            {
-                heldCargoAddressDescText.enableWordWrapping = true;
-                heldCargoAddressDescText.lineSpacing = 1.25f;
-            }
-
-            // Reward Line
-            heldCargoRewardText = CreateTMPChild(heldCargoPanel, "Reward", "Reward: +$100", 20, FontStyles.Bold, new Color(0.3f, 1f, 0.4f), TextAlignmentOptions.Left);
-
-            // Penalty Line
-            heldCargoPenaltyText = CreateTMPChild(heldCargoPanel, "Penalty", "Penalty: -$30", 19, FontStyles.Bold, new Color(1f, 0.4f, 0.4f), TextAlignmentOptions.Left);
-
-            // Action Hint
-            heldCargoActionHintText = CreateTMPChild(heldCargoPanel, "ActionHint", "<b>[E]</b> Drop  |  <b>Hold:</b> Throw", 18, FontStyles.Normal, new Color(0.85f, 0.85f, 0.85f), TextAlignmentOptions.Left);
         }
 
         // 4. In-Vehicle Fuel & Condition Dashboard Panels (Bottom Right)
@@ -705,8 +633,9 @@ public class InteractionPromptHUD : MonoBehaviour
         if (sideCard == null) return;
         heldCargoPanel = sideCard.gameObject;
         heldCargoHeaderText = FindTMPRecursive(sideCard, "Header", "Title", "PackageHeader", "HeldHeader");
-        heldCargoTrackingText = FindTMPRecursive(sideCard, "Tracking", "Track", "TrackingNumber", "Id");
         heldCargoTypeText = FindTMPRecursive(sideCard, "Type", "CargoType", "Badge", "ParcelType");
+        heldCargoStatusText = FindTMPRecursive(sideCard, "Status", "Durum", "Condition", "TimeStatus");
+        heldCargoPercentageText = FindTMPRecursive(sideCard, "Percentage", "Percent", "Yuzde", "HealthPercentage", "Ratio");
         heldCargoRecipientText = FindTMPRecursive(sideCard, "Recipient", "Alici", "Customer", "Name");
         heldCargoAddressText = FindTMPRecursive(sideCard, "Address", "Adres", "TargetAddress", "Destination");
         heldCargoAddressDescText = FindTMPRecursive(sideCard, "AddressDescription", "Description", "Clue", "VisualClue", "Ipucu", "Desc");
@@ -739,87 +668,70 @@ public class InteractionPromptHUD : MonoBehaviour
         string address = !string.IsNullOrEmpty(pkg.EffectiveAddressName) ? pkg.EffectiveAddressName : pkg.targetAddressName;
         string desc = !string.IsNullOrEmpty(pkg.EffectiveAddressDescription) ? pkg.EffectiveAddressDescription : pkg.targetAddressDescription;
 
-        if (heldCargoTrackingText != null)
-        {
-            heldCargoTrackingText.text = $"<b>Tracking #:</b> #{pkg.targetPointId}";
-            heldCargoTrackingText.SetVerticesDirty();
-            heldCargoTrackingText.SetLayoutDirty();
-        }
-
         if (heldCargoRecipientText != null)
         {
             heldCargoRecipientText.text = $"<b>Recipient:</b> {recipient}";
-            heldCargoRecipientText.SetVerticesDirty();
-            heldCargoRecipientText.SetLayoutDirty();
         }
 
         if (heldCargoAddressText != null)
         {
             heldCargoAddressText.text = $"<b>Address:</b> {address}";
-            heldCargoAddressText.SetVerticesDirty();
-            heldCargoAddressText.SetLayoutDirty();
         }
         
         if (heldCargoAddressDescText != null)
         {
             heldCargoAddressDescText.text = !string.IsNullOrEmpty(desc) ? $"\"{desc}\"" : "\"(No address visual clue available)\"";
-            heldCargoAddressDescText.SetVerticesDirty();
-            heldCargoAddressDescText.SetLayoutDirty();
-
-            // Rebuild content layout so ScrollRect recognizes the new text height immediately
-            Canvas.ForceUpdateCanvases();
-            if (heldCargoAddressDescText.transform.parent is RectTransform parentRect)
-            {
-                LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect);
-            }
-            ScrollRect sr = heldCargoAddressDescText.GetComponentInParent<ScrollRect>();
-            if (sr != null && sr.content != null)
-            {
-                LayoutRebuilder.ForceRebuildLayoutImmediate(sr.content);
-                sr.verticalNormalizedPosition = 1f;
-                Vector2 p = sr.content.anchoredPosition;
-                p.y = 0f;
-                sr.content.anchoredPosition = p;
-            }
         }
 
         if (heldCargoRewardText != null)
         {
             heldCargoRewardText.text = $"<b>Reward:</b> +${pkg.deliveryReward}";
-            heldCargoRewardText.SetVerticesDirty();
-            heldCargoRewardText.SetLayoutDirty();
         }
 
         if (heldCargoPenaltyText != null)
         {
             heldCargoPenaltyText.text = $"<b>Penalty:</b> -${pkg.wrongPenalty}";
-            heldCargoPenaltyText.SetVerticesDirty();
-            heldCargoPenaltyText.SetLayoutDirty();
         }
 
+        // Cargo Type Row Handling (Type, Status, Percentage)
         if (heldCargoTypeText != null)
         {
             switch (pkg.cargoType)
             {
-                case CargoType.Fragile:
-                    heldCargoTypeText.text = pkg.isBroken ?
-                        "<color=#FF4444>[FRAGILE] (BROKEN! - Reward Cancelled)</color>" :
-                        $"<color=#FFAA33>[FRAGILE] (Condition: {pkg.health:F0}%)</color>";
+                case CargoType.Standard:
+                    // Standard: Sadece STANDARD yazar, Status ve Percentage boş
+                    heldCargoTypeText.text = "STANDARD";
+                    if (heldCargoStatusText != null) heldCargoStatusText.text = "";
+                    if (heldCargoPercentageText != null) heldCargoPercentageText.text = "";
                     break;
+
                 case CargoType.Express:
-                    heldCargoTypeText.text = $"<color=#32FFFF>[EXPRESS] (Before {pkg.GetFormattedTargetDeliveryTime()} +40% Bonus)</color>";
+                    // Express: EXPRESS ve Status'te teslimat saati (Örn: 13:00), Percentage boş
+                    heldCargoTypeText.text = "EXPRESS";
+                    if (heldCargoStatusText != null) heldCargoStatusText.text = pkg.GetFormattedTargetDeliveryTime();
+                    if (heldCargoPercentageText != null) heldCargoPercentageText.text = "";
                     break;
+
+                case CargoType.Fragile:
+                    // Fragile: FRAGILE, Status'te "Broken" / "Condition", Percentage'da "0%" / "%100"
+                    heldCargoTypeText.text = "FRAGILE";
+                    if (heldCargoStatusText != null) heldCargoStatusText.text = pkg.isBroken ? "Broken" : "Condition";
+                    if (heldCargoPercentageText != null) heldCargoPercentageText.text = pkg.isBroken ? "0%" : $"{pkg.health:F0}%";
+                    break;
+
                 case CargoType.Explosive:
-                    heldCargoTypeText.text = pkg.isBroken ?
-                        "<color=#FF2222>💥 [EXPLOSIVE] (DETONATED / DESTROYED)</color>" :
-                        $"<color=#FF5500>🔥 [EXPLOSIVE HAZARD] (Stability: {pkg.health:F0}%)</color>";
+                    // Explosive: EXPLOSIVE, Status'te "Detonated" / "Stability", Percentage'da "0%" / "50%"
+                    heldCargoTypeText.text = "EXPLOSIVE";
+                    if (heldCargoStatusText != null) heldCargoStatusText.text = pkg.isBroken ? "Detonated" : "Stability";
+                    if (heldCargoPercentageText != null) heldCargoPercentageText.text = pkg.isBroken ? "0%" : $"{pkg.health:F0}%";
                     break;
+
                 default:
-                    heldCargoTypeText.text = "<color=#AAAAAA>[STANDARD PARCEL]</color>";
+                    heldCargoTypeText.text = "STANDARD";
+                    if (heldCargoStatusText != null) heldCargoStatusText.text = "";
+                    if (heldCargoPercentageText != null) heldCargoPercentageText.text = "";
                     break;
             }
-            heldCargoTypeText.SetVerticesDirty();
-            heldCargoTypeText.SetLayoutDirty();
         }
     }
 

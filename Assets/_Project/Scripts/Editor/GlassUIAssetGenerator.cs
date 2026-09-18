@@ -542,14 +542,7 @@ public static class GlassUIAssetGenerator
         Transform prompt = canvas.transform.Find("InteractionPromptBox");
         if (prompt != null) SetImageSprite(prompt.gameObject, promptBox, Color.white);
 
-        // 4. Held Cargo Side Card
-        Transform sideCard = canvas.transform.Find("HeldCargoSideCard");
-        if (sideCard != null)
-        {
-            SetImageSprite(sideCard.gameObject, panelMedium, Color.white);
-            Transform cb = sideCard.Find("ClueBox");
-            if (cb != null) SetImageSprite(cb.gameObject, clueBox, Color.white);
-        }
+        // 4. Held Cargo Side Card (Untouched - user custom styled)
 
         // 5. Vehicle Dashboard (Fuel & Condition)
         Transform dash = canvas.transform.Find("VehicleDashboardPanel");
