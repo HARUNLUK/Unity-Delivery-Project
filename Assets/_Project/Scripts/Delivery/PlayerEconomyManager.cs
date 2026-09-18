@@ -136,6 +136,11 @@ public class PlayerEconomyManager : MonoBehaviour
             DeductCash(amount);
             return true;
         }
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayError();
+        }
         return false;
     }
 

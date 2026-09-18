@@ -125,6 +125,10 @@ public class PurchasableProperty : MonoBehaviour
         int branchLevel = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : (PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.WarehouseLevel : 1);
         if (branchLevel < requiredPlayerLevel)
         {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayError();
+            }
             if (InteractionPromptHUD.Instance != null)
                 InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF3333>Şube seviyeniz yetersiz! (Gereken: Level {requiredPlayerLevel})</color>");
             return false;

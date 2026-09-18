@@ -563,12 +563,20 @@ public class DrivableVehicle : MonoBehaviour
 
         if (branchLevel < requiredPlayerLevel)
         {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayError();
+            }
             Debug.LogWarning($"[DrivableVehicle] Branch Level {branchLevel} is too low. Required Level {requiredPlayerLevel}.");
             return false;
         }
 
         if (balance < purchasePrice)
         {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayError();
+            }
             Debug.LogWarning($"[DrivableVehicle] Insufficient funds (${balance}) to purchase '{vehicleName}' (${purchasePrice}).");
             return false;
         }

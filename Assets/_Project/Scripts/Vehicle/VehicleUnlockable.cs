@@ -128,6 +128,10 @@ public class VehicleUnlockable : MonoBehaviour
         int branchLvl = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : (PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.WarehouseLevel : 1);
         if (branchLvl < requiredPlayerLevel)
         {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayError();
+            }
             Debug.LogWarning($"[VehicleUnlockable] Insufficient branch level! Required: {requiredPlayerLevel}, Current: {branchLvl}");
             return false;
         }
@@ -135,6 +139,10 @@ public class VehicleUnlockable : MonoBehaviour
         int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
         if (balance < purchasePrice)
         {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayError();
+            }
             Debug.LogWarning($"[VehicleUnlockable] Insufficient balance! Required: {purchasePrice}, Current: {balance}");
             return false;
         }

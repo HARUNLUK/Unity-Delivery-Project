@@ -25,6 +25,7 @@ public class FuelStationPump : MonoBehaviour
     private AudioSource pumpAudioSource;
     private readonly HashSet<Collider> insideColliders = new HashSet<Collider>();
     private bool wasShowingPrompt = false;
+    private float lastErrorSoundTime = 0f;
 
     private void Awake()
     {
@@ -162,11 +163,22 @@ public class FuelStationPump : MonoBehaviour
 
         // 5. Check economy balance
         int playerBalance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 99999;
+        bool isHoldingRefuelKey = CheckRefuelInput();
+
         if (playerBalance <= 0 && pricePerLiter > 0)
         {
             if (isActivelyRefueling)
             {
                 StopPumpingAudio();
+            }
+
+            if (isHoldingRefuelKey && Time.time - lastErrorSoundTime > 0.8f)
+            {
+                lastErrorSoundTime = Time.time;
+                if (AudioManager.Instance != null)
+                {
+                    AudioManager.Instance.PlayError();
+                }
             }
 
             if (InteractionPromptHUD.Instance != null)
@@ -179,14 +191,8 @@ public class FuelStationPump : MonoBehaviour
         }
 
         // 6. Check hold-to-refuel inputs
-        bool isHoldingRefuelKey = CheckRefuelInput();
-
         if (isHoldingRefuelKey)
         {
-            isActivelyRefueling = true;
-            SetPumpLightActive(true);
-            PlayPumpingAudio();
-
             float deltaLiters = refuelRateLitersPerSecond * Time.deltaTime;
             float maxCanAdd = targetVehicle.maxFuel - targetVehicle.currentFuel;
 
@@ -196,6 +202,22 @@ public class FuelStationPump : MonoBehaviour
                 float affordableLiters = playerBalance / pricePerLiter;
                 maxCanAdd = Mathf.Min(maxCanAdd, affordableLiters);
             }
+
+            if (maxCanAdd <= 0.01f && playerBalance <= 0)
+            {
+                if (isActivelyRefueling) StopPumpingAudio();
+                if (Time.time - lastErrorSoundTime > 0.8f)
+                {
+                    lastErrorSoundTime = Time.time;
+                    if (AudioManager.Instance != null) AudioManager.Instance.PlayError();
+                }
+                SetPumpLightActive(false);
+                return;
+            }
+
+            isActivelyRefueling = true;
+            SetPumpLightActive(true);
+            PlayPumpingAudio();
 
             deltaLiters = Mathf.Clamp(deltaLiters, 0f, maxCanAdd);
 

@@ -294,13 +294,13 @@ public class FPSPlayerController : MonoBehaviour
         else
         {
             // Auto re-lock cursor if clicking in game world without open UI and pointer not over UI
-            if (isOnFoot && (Cursor.lockState != CursorLockMode.Locked || Cursor.visible))
+            if (Cursor.lockState != CursorLockMode.Locked || Cursor.visible)
             {
                 bool isPointerOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
                 if (!isPointerOverUI)
                 {
                     if ((Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame) ||
-                        (Keyboard.current != null && (Keyboard.current.wKey.wasPressedThisFrame || Keyboard.current.eKey.wasPressedThisFrame)))
+                        (Keyboard.current != null && (Keyboard.current.wKey.wasPressedThisFrame || Keyboard.current.eKey.wasPressedThisFrame || Keyboard.current.aKey.wasPressedThisFrame || Keyboard.current.sKey.wasPressedThisFrame || Keyboard.current.dKey.wasPressedThisFrame)))
                     {
                         LockCursor(true);
                     }
@@ -912,12 +912,22 @@ public class FPSPlayerController : MonoBehaviour
                             {
                                 InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF5555>[LOCKED] {vehicle.vehicleName}</color> (Requires Branch Level {vehicle.requiredPlayerLevel} - ${vehicle.purchasePrice})");
                             }
+
+                            if (interactPressed && AudioManager.Instance != null)
+                            {
+                                AudioManager.Instance.PlayError();
+                            }
                         }
                         else if (currentBalance < vehicle.purchasePrice)
                         {
                             if (InteractionPromptHUD.Instance != null)
                             {
                                 InteractionPromptHUD.Instance.ShowPrompt($"<color=#FFAA33>[LOCKED] {vehicle.vehicleName}</color> (${vehicle.purchasePrice} - Balance: ${currentBalance})");
+                            }
+
+                            if (interactPressed && AudioManager.Instance != null)
+                            {
+                                AudioManager.Instance.PlayError();
                             }
                         }
                         else

@@ -113,18 +113,18 @@ public class CommercialHubUIManager : MonoBehaviour
                 Cursor.visible = true;
             }
 
-            bool escPressed = false;
+            bool closePressed = false;
 #if ENABLE_INPUT_SYSTEM
-            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            if (Keyboard.current != null && (Keyboard.current.escapeKey.wasPressedThisFrame || Keyboard.current.tabKey.wasPressedThisFrame))
             {
-                escPressed = true;
+                closePressed = true;
             }
 #endif
 #if ENABLE_LEGACY_INPUT_MANAGER
-            try { if (Input.GetKeyDown(KeyCode.Escape)) escPressed = true; } catch { }
+            try { if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Tab)) closePressed = true; } catch { }
 #endif
 
-            if (escPressed)
+            if (closePressed)
             {
                 CloseAllPanels();
             }
@@ -211,6 +211,10 @@ public class CommercialHubUIManager : MonoBehaviour
         {
             RefreshGarageUI();
         }
+        else
+        {
+            FlashButtonError(garageRepairBtn, new Color(0.12f, 0.55f, 0.35f));
+        }
     }
 
     private void OnGarageTuneClicked()
@@ -219,6 +223,10 @@ public class CommercialHubUIManager : MonoBehaviour
         if (VehicleServiceGarage.Instance.TryTuneVehicle(activeGarageVehicle))
         {
             RefreshGarageUI();
+        }
+        else
+        {
+            FlashButtonError(garageTuneBtn, new Color(0.85f, 0.55f, 0.12f));
         }
     }
 
@@ -306,7 +314,7 @@ public class CommercialHubUIManager : MonoBehaviour
             else
             {
                 if (txt != null) txt.text = $"🛡️ Gümüş Kasko Satın Al (${ins.tier2UpgradeCost:N0})";
-                insuranceTier2UpgradeBtn.interactable = (balance >= ins.tier2UpgradeCost);
+                insuranceTier2UpgradeBtn.interactable = true;
             }
         }
 
@@ -321,7 +329,7 @@ public class CommercialHubUIManager : MonoBehaviour
             else
             {
                 if (txt != null) txt.text = $"🛡️ Altın Tam Kasko Satın Al (${ins.tier3UpgradeCost:N0})";
-                insuranceTier3UpgradeBtn.interactable = (tier == 2 && balance >= ins.tier3UpgradeCost);
+                insuranceTier3UpgradeBtn.interactable = (tier >= 2);
             }
         }
     }
@@ -332,6 +340,13 @@ public class CommercialHubUIManager : MonoBehaviour
         if (InsuranceAgencyManager.Instance.TryUpgradeTier())
         {
             RefreshInsuranceUI();
+        }
+        else
+        {
+            int tier = InsuranceAgencyManager.Instance.InsuranceTier;
+            Button targetBtn = tier == 1 ? insuranceTier2UpgradeBtn : insuranceTier3UpgradeBtn;
+            Color normalCol = tier == 1 ? new Color(0.2f, 0.5f, 0.7f) : new Color(0.85f, 0.65f, 0.1f);
+            FlashButtonError(targetBtn, normalCol);
         }
     }
 
@@ -392,7 +407,7 @@ public class CommercialHubUIManager : MonoBehaviour
             else
             {
                 if (txt != null) txt.text = $"📦 Seviye 2'ye Yükselt ({hub.level2Couriers} Kurye - +${hub.level2DailyRevenue:N0}/Gün) [${hub.level2UpgradeCost:N0}]";
-                dispatchTier2UpgradeBtn.interactable = (balance >= hub.level2UpgradeCost);
+                dispatchTier2UpgradeBtn.interactable = true;
             }
         }
 
@@ -407,7 +422,7 @@ public class CommercialHubUIManager : MonoBehaviour
             else
             {
                 if (txt != null) txt.text = $"📦 Seviye 3'e Yükselt ({hub.level3Couriers} Kurye - +${hub.level3DailyRevenue:N0}/Gün) [${hub.level3UpgradeCost:N0}]";
-                dispatchTier3UpgradeBtn.interactable = (level == 2 && balance >= hub.level3UpgradeCost);
+                dispatchTier3UpgradeBtn.interactable = (level >= 2);
             }
         }
     }
@@ -418,6 +433,13 @@ public class CommercialHubUIManager : MonoBehaviour
         if (PassiveDispatchManager.Instance.TryUpgradeHub())
         {
             RefreshDispatchUI();
+        }
+        else
+        {
+            int lvl = PassiveDispatchManager.Instance.DispatchHubLevel;
+            Button targetBtn = lvl == 1 ? dispatchTier2UpgradeBtn : dispatchTier3UpgradeBtn;
+            Color normalCol = lvl == 1 ? new Color(0.2f, 0.65f, 0.4f) : new Color(0.85f, 0.65f, 0.1f);
+            FlashButtonError(targetBtn, normalCol);
         }
     }
 
@@ -455,12 +477,11 @@ public class CommercialHubUIManager : MonoBehaviour
 
         if (propertyModalBuyBtn != null)
         {
-            bool canAfford = balance >= prop.purchaseCost && branchLevel >= prop.requiredPlayerLevel;
-            propertyModalBuyBtn.interactable = canAfford;
+            propertyModalBuyBtn.interactable = true;
             TextMeshProUGUI bTxt = propertyModalBuyBtn.GetComponentInChildren<TextMeshProUGUI>();
             if (bTxt != null)
             {
-                bTxt.text = canAfford ? $"Satın Al (${prop.purchaseCost:N0})" : "Yetersiz Şartlar";
+                bTxt.text = $"Satın Al (${prop.purchaseCost:N0})";
             }
         }
     }
@@ -471,6 +492,10 @@ public class CommercialHubUIManager : MonoBehaviour
         if (activePropertyToBuy.TryPurchase())
         {
             CloseAllPanels();
+        }
+        else
+        {
+            FlashButtonError(propertyModalBuyBtn, new Color(0.12f, 0.65f, 0.35f));
         }
     }
 
@@ -491,10 +516,7 @@ public class CommercialHubUIManager : MonoBehaviour
             AudioManager.Instance.PlayTabletClose();
         }
 
-        if (FPSPlayerController.Instance != null && FPSPlayerController.Instance.IsOnFoot)
-        {
-            FPSPlayerController.LockCursor(true);
-        }
+        FPSPlayerController.LockCursor(true);
     }
 
     // ==========================================
@@ -1099,6 +1121,26 @@ public class CommercialHubUIManager : MonoBehaviour
         rt.anchorMax = aMax;
         rt.anchoredPosition = pos;
         rt.sizeDelta = size;
+    }
+
+    public void FlashButtonError(Button btn, Color normalColor)
+    {
+        if (btn == null) return;
+        StartCoroutine(FlashButtonRoutine(btn, normalColor));
+    }
+
+    private System.Collections.IEnumerator FlashButtonRoutine(Button btn, Color normalColor)
+    {
+        Image img = btn.GetComponent<Image>();
+        if (img == null) yield break;
+
+        Color errorColor = new Color(0.85f, 0.2f, 0.2f, 1f);
+        img.color = errorColor;
+        yield return new WaitForSecondsRealtime(0.45f);
+        if (img != null)
+        {
+            img.color = normalColor;
+        }
     }
 
 #if UNITY_EDITOR

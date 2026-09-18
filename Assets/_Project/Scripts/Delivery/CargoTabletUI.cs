@@ -203,6 +203,12 @@ public class CargoTabletUI : MonoBehaviour
             return;
         }
 
+        if (CommercialHubUIManager.Instance != null && CommercialHubUIManager.Instance.IsAnyPanelOpen)
+        {
+            if (isTabletOpen) CloseTablet();
+            return;
+        }
+
         if (CheckToggleInput())
         {
             ToggleTablet();
@@ -763,15 +769,14 @@ public class CargoTabletUI : MonoBehaviour
             else
             {
                 vehicleBuyButton.gameObject.SetActive(true);
-                bool canAfford = (branchLvl >= v.requiredPlayerLevel) && (balance >= v.purchasePrice);
-                vehicleBuyButton.interactable = canAfford;
+                vehicleBuyButton.interactable = true;
 
                 Image btnImg = vehicleBuyButton.GetComponent<Image>();
-                if (btnImg != null) btnImg.color = canAfford ? new Color(0.1f, 0.7f, 0.35f) : new Color(0.3f, 0.3f, 0.35f);
+                if (btnImg != null) btnImg.color = new Color(0.1f, 0.7f, 0.35f);
 
                 if (vehicleBuyButtonText != null)
                 {
-                    vehicleBuyButtonText.text = canAfford ? $"PURCHASE VEHICLE (${v.purchasePrice})" : $"INSUFFICIENT FUNDS (${v.purchasePrice})";
+                    vehicleBuyButtonText.text = $"PURCHASE VEHICLE (${v.purchasePrice})";
                 }
 
                 vehicleBuyButton.onClick.RemoveAllListeners();
@@ -781,6 +786,10 @@ public class CargoTabletUI : MonoBehaviour
                     {
                         DisplayVehicleDetail(v);
                         PopulateVehicleList();
+                    }
+                    else
+                    {
+                        FlashButtonError(vehicleBuyButton, new Color(0.1f, 0.7f, 0.35f));
                     }
                 });
             }
@@ -796,12 +805,12 @@ public class CargoTabletUI : MonoBehaviour
             else
             {
                 vehicleRefuelButton.gameObject.SetActive(true);
+                vehicleRefuelButton.interactable = true;
                 float fuelToAdd = Mathf.Min(15f, v.maxFuel - v.currentFuel);
                 int fuelCost = Mathf.RoundToInt(fuelToAdd * 3f); // $3 per liter roadside delivery
 
                 if (fuelToAdd <= 0.2f)
                 {
-                    vehicleRefuelButton.interactable = false;
                     Image rImg = vehicleRefuelButton.GetComponent<Image>();
                     if (rImg != null) rImg.color = new Color(0.25f, 0.25f, 0.3f);
 
@@ -809,20 +818,24 @@ public class CargoTabletUI : MonoBehaviour
                     {
                         vehicleRefuelButtonText.text = "FUEL TANK FULL (100%)";
                     }
+
+                    vehicleRefuelButton.onClick.RemoveAllListeners();
+                    vehicleRefuelButton.onClick.AddListener(() => {
+                        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+                        if (InteractionPromptHUD.Instance != null)
+                        {
+                            InteractionPromptHUD.Instance.ShowPrompt("<color=#32FF64>[DEPO DOLU] Aracın yakıt deposu zaten %100 dolu!</color>");
+                        }
+                    });
                 }
                 else
                 {
-                    bool canAffordFuel = balance >= fuelCost;
-                    vehicleRefuelButton.interactable = canAffordFuel;
-
                     Image rImg = vehicleRefuelButton.GetComponent<Image>();
-                    if (rImg != null) rImg.color = canAffordFuel ? new Color(0.12f, 0.65f, 0.35f) : new Color(0.45f, 0.25f, 0.25f);
+                    if (rImg != null) rImg.color = new Color(0.12f, 0.65f, 0.35f);
 
                     if (vehicleRefuelButtonText != null)
                     {
-                        vehicleRefuelButtonText.text = canAffordFuel ?
-                            $"ORDER EMERGENCY REFUEL (+{fuelToAdd:F0}L / ${fuelCost})" :
-                            $"INSUFFICIENT FUNDS (+{fuelToAdd:F0}L / ${fuelCost})";
+                        vehicleRefuelButtonText.text = $"ORDER EMERGENCY REFUEL (+{fuelToAdd:F0}L / ${fuelCost})";
                     }
 
                     vehicleRefuelButton.onClick.RemoveAllListeners();
@@ -840,6 +853,7 @@ public class CargoTabletUI : MonoBehaviour
                         }
                         else
                         {
+                            FlashButtonError(vehicleRefuelButton, new Color(0.12f, 0.65f, 0.35f));
                             if (InteractionPromptHUD.Instance != null)
                             {
                                 InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF5555>[INSUFFICIENT FUNDS] Need ${fuelCost} for emergency fuel delivery!</color>");
@@ -863,13 +877,11 @@ public class CargoTabletUI : MonoBehaviour
                 vehicleRecallButton.interactable = true;
 
                 int fee = v.GetRecallFee();
-                int playerBalance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
-                bool canAfford = playerBalance >= fee || fee == 0;
 
                 Image recImg = vehicleRecallButton.GetComponent<Image>();
                 if (recImg != null)
                 {
-                    recImg.color = canAfford ? new Color(0.15f, 0.45f, 0.75f) : new Color(0.45f, 0.20f, 0.20f);
+                    recImg.color = new Color(0.15f, 0.45f, 0.75f);
                 }
 
                 if (vehicleRecallButtonText != null)
@@ -887,6 +899,7 @@ public class CargoTabletUI : MonoBehaviour
                     {
                         if (PlayerEconomyManager.Instance == null || !PlayerEconomyManager.Instance.SpendMoney(currentFee))
                         {
+                            FlashButtonError(vehicleRecallButton, new Color(0.15f, 0.45f, 0.75f));
                             if (InteractionPromptHUD.Instance != null)
                             {
                                 InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF4444>[INSUFFICIENT FUNDS] Need ${currentFee} to recall {v.vehicleName}! (Balance: ${curBalance})</color>");
@@ -958,20 +971,17 @@ public class CargoTabletUI : MonoBehaviour
             if (branchUpgradeButton != null)
             {
                 branchUpgradeButton.gameObject.SetActive(true);
-                bool canAfford = balance >= next.upgradeCost;
-
-                branchUpgradeButton.interactable = canAfford;
+                branchUpgradeButton.interactable = true;
 
                 Image btnImg = branchUpgradeButton.GetComponent<Image>();
                 if (btnImg != null)
                 {
-                    btnImg.color = canAfford ? new Color(0.1f, 0.7f, 0.35f) : new Color(0.3f, 0.3f, 0.35f);
+                    btnImg.color = new Color(0.1f, 0.7f, 0.35f);
                 }
 
                 if (branchUpgradeButtonText != null)
                 {
-                    if (!canAfford) branchUpgradeButtonText.text = $"INSUFFICIENT FUNDS (${next.upgradeCost})";
-                    else branchUpgradeButtonText.text = $"UPGRADE BRANCH (${next.upgradeCost})";
+                    branchUpgradeButtonText.text = $"UPGRADE BRANCH (${next.upgradeCost})";
                 }
             }
 
@@ -1003,6 +1013,10 @@ public class CargoTabletUI : MonoBehaviour
                 {
                     InteractionPromptHUD.Instance.ShowPrompt("<color=#32FFFF>[BRANCH SUCCESSFULLY UPGRADED!]</color>");
                 }
+            }
+            else
+            {
+                FlashButtonError(branchUpgradeButton, new Color(0.1f, 0.7f, 0.35f));
             }
         }
     }
@@ -1228,5 +1242,25 @@ public class CargoTabletUI : MonoBehaviour
             es.gameObject.AddComponent<StandaloneInputModule>();
         }
 #endif
+    }
+
+    public void FlashButtonError(Button btn, Color normalColor)
+    {
+        if (btn == null) return;
+        StartCoroutine(FlashButtonRoutine(btn, normalColor));
+    }
+
+    private System.Collections.IEnumerator FlashButtonRoutine(Button btn, Color normalColor)
+    {
+        Image img = btn.GetComponent<Image>();
+        if (img == null) yield break;
+
+        Color errorColor = new Color(0.85f, 0.2f, 0.2f, 1f);
+        img.color = errorColor;
+        yield return new WaitForSecondsRealtime(0.45f);
+        if (img != null)
+        {
+            img.color = normalColor;
+        }
     }
 }
