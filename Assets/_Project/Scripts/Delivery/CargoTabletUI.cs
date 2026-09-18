@@ -312,26 +312,6 @@ public class CargoTabletUI : MonoBehaviour
         if (vehicleViewRoot != null) vehicleViewRoot.SetActive(currentTab == TabletTab.VehicleDealership);
         if (branchViewRoot != null) branchViewRoot.SetActive(currentTab == TabletTab.BranchOffice);
 
-        Color activeColor = new Color(0.12f, 0.53f, 0.9f, 1f); // Vibrant Cyan/Blue #1E88E5
-        Color inactiveColor = new Color(0.09f, 0.13f, 0.19f, 0.95f); // Dark Slate
-
-        // Update tab buttons appearance
-        if (tabCargoButton != null)
-        {
-            Image img = tabCargoButton.GetComponent<Image>();
-            if (img != null) img.color = (currentTab == TabletTab.CargoInventory) ? activeColor : inactiveColor;
-        }
-        if (tabVehicleButton != null)
-        {
-            Image img = tabVehicleButton.GetComponent<Image>();
-            if (img != null) img.color = (currentTab == TabletTab.VehicleDealership) ? activeColor : inactiveColor;
-        }
-        if (tabBranchButton != null)
-        {
-            Image img = tabBranchButton.GetComponent<Image>();
-            if (img != null) img.color = (currentTab == TabletTab.BranchOffice) ? activeColor : inactiveColor;
-        }
-
         RefreshUI();
     }
 
@@ -354,10 +334,11 @@ public class CargoTabletUI : MonoBehaviour
     }
 
     // ==========================================
-    // CARGO INVENTORY TAB
+    // 1. CARGO INVENTORY TAB
     // ==========================================
     private void PopulateCargoList()
     {
+        if (cargoListContent == null || cargoCardTemplate == null) EnsureTabletStructure();
         if (cargoListContent == null || cargoCardTemplate == null) return;
 
         foreach (Transform child in cargoListContent)
@@ -375,7 +356,7 @@ public class CargoTabletUI : MonoBehaviour
             if (emptyListText != null)
             {
                 emptyListText.gameObject.SetActive(true);
-                emptyListText.text = "No delivery packages found in warehouse or field for today.";
+                emptyListText.text = "No packages in vehicle to deliver.";
             }
             if (detailCardRoot != null) detailCardRoot.SetActive(false);
             return;
@@ -406,52 +387,35 @@ public class CargoTabletUI : MonoBehaviour
             GameObject cardObj = Instantiate(cargoCardTemplate, cargoListContent);
             cardObj.SetActive(true);
 
-            Image cardImg = cardObj.GetComponent<Image>();
-            if (cardImg != null) cardImg.raycastTarget = true;
-
             DeliveryPoint nearbyPoint = pkg.FindNearbyDeliveryPoint();
             bool isAtDeliveryZone = nearbyPoint != null;
             bool isBroken = pkg.isBroken;
 
-            // Status color & badge
-            string statusBadge;
-            Color cardBgColor;
+            var recText = FindTMPRecursive(cardObj.transform, "RecipientName", "Recipient", "Name");
+            var addrText = FindTMPRecursive(cardObj.transform, "Address", "TargetAddress");
+            var hintText = FindTMPRecursive(cardObj.transform, "Hint", "Status", "Badge", "Type");
 
-            if (isBroken)
+            if (recText != null) recText.text = pkg.EffectiveRecipientName;
+            if (addrText != null) addrText.text = pkg.EffectiveAddressName;
+            if (hintText != null)
             {
-                cardBgColor = new Color(0.38f, 0.10f, 0.10f, 0.95f); // Red
-                statusBadge = "<color=#FF5555>[DAMAGED / BROKEN]</color>";
-            }
-            else if (isAtDeliveryZone)
-            {
-                cardBgColor = new Color(0.38f, 0.28f, 0.05f, 0.95f); // Amber / Yellow
-                statusBadge = "<color=#FFD700>[AT DROP-OFF ZONE - Pending Day End]</color>";
-            }
-            else
-            {
-                cardBgColor = new Color(0.12f, 0.17f, 0.24f, 0.95f); // Slate Blue
-                statusBadge = "<color=#64B5F6>[IN TRANSIT / IN VEHICLE]</color>";
+                if (isBroken) hintText.text = "<color=#FF5555>DAMAGED</color>";
+                else if (isAtDeliveryZone) hintText.text = "<color=#FFD700>AT ZONE</color>";
+                else if (pkg.cargoType == CargoType.Express) hintText.text = $"<color=#33E0FF>EXP {pkg.GetFormattedTargetDeliveryTime()}</color>";
+                else if (pkg.cargoType == CargoType.Fragile) hintText.text = "<color=#FFAA44>FRAGILE</color>";
+                else if (pkg.cargoType == CargoType.Explosive) hintText.text = "<color=#FF3300>EXPLOSIVE</color>";
+                else hintText.text = "IN TRANSIT";
             }
 
-            if (cardImg != null)
+            // Fallback for single text label card template
+            if (recText == null && addrText == null && hintText == null)
             {
-                cardImg.color = cardBgColor;
-            }
-
-            string typeTag = "";
-            if (pkg.cargoType == CargoType.Fragile) typeTag = " <color=#FFAA44>[FRAGILE]</color>";
-            else if (pkg.cargoType == CargoType.Express) typeTag = $" <color=#33E0FF>[EXPRESS {pkg.GetFormattedTargetDeliveryTime()}]</color>";
-            else if (pkg.cargoType == CargoType.Explosive) typeTag = " <color=#FF3300>[EXPLOSIVE 🔥]</color>";
-
-            string tracking = pkg.cargoData != null && !string.IsNullOrEmpty(pkg.cargoData.trackingNumber)
-                ? pkg.cargoData.trackingNumber
-                : $"PKG-{pkg.targetPointId}";
-
-            TextMeshProUGUI label = cardObj.GetComponentInChildren<TextMeshProUGUI>();
-            if (label != null)
-            {
-                label.text = $"<b>{tracking}</b> - {pkg.recipientName}{typeTag}\n<size=85%>Address: {pkg.targetAddressName}</size>\n<size=80%>{statusBadge}</size>";
-                label.raycastTarget = false;
+                TextMeshProUGUI label = cardObj.GetComponentInChildren<TextMeshProUGUI>();
+                if (label != null)
+                {
+                    string statusBadge = isBroken ? "[DAMAGED]" : (isAtDeliveryZone ? "[AT ZONE]" : "[IN TRANSIT]");
+                    label.text = $"<b>{pkg.EffectiveRecipientName}</b>\n<size=85%>{pkg.EffectiveAddressName}</size>\n<size=80%>{statusBadge}</size>";
+                }
             }
 
             Button btn = cardObj.GetComponent<Button>();
@@ -494,54 +458,20 @@ public class CargoTabletUI : MonoBehaviour
 
         if (detailCardRoot != null) detailCardRoot.SetActive(true);
 
-        string tracking = pkg.cargoData != null && !string.IsNullOrEmpty(pkg.cargoData.trackingNumber)
-            ? pkg.cargoData.trackingNumber
-            : $"PKG-{pkg.targetPointId}";
-
-        string typeTag = "";
-        if (pkg.cargoType == CargoType.Fragile) typeTag = " <color=#FFAA44>(Fragile)</color>";
-        else if (pkg.cargoType == CargoType.Express) typeTag = $" <color=#33E0FF>(Express - Before {pkg.GetFormattedTargetDeliveryTime()} +40% Bonus)</color>";
-        else if (pkg.cargoType == CargoType.Explosive) typeTag = " <color=#FF3300>(Explosive - Extreme Danger & Huge Reward)</color>";
-
-        if (trackingNumberText != null)
-        {
-            trackingNumberText.text = $"Tracking #: <b>{tracking}</b>{typeTag}";
-        }
-
         if (recipientNameText != null)
         {
-            recipientNameText.text = $"Recipient: <b>{pkg.EffectiveRecipientName}</b>  <color=#32FF64>(Reward: ${pkg.deliveryReward})</color>";
+            recipientNameText.text = $"Recipient: {pkg.EffectiveRecipientName}";
         }
-
-        DeliveryPoint nearbyPoint = pkg.FindNearbyDeliveryPoint();
-        bool isAtDeliveryZone = nearbyPoint != null;
-        bool isBroken = pkg.isBroken;
 
         if (targetAddressText != null)
         {
-            string statusInfo;
-            if (isBroken)
-            {
-                statusInfo = $"<color=#FF4444>[Status: PACKAGE SEVERELY DAMAGED & BROKEN! (Penalty: -${pkg.wrongPenalty * 2})]</color>";
-            }
-            else if (isAtDeliveryZone)
-            {
-                string zoneAddr = nearbyPoint.EffectiveAddressName;
-                statusInfo = $"<color=#FFD700>[Status: Placed at drop-off zone ({zoneAddr}).\nAccuracy will be verified at end of shift (18:00 / End Day).]</color>";
-            }
-            else
-            {
-                statusInfo = $"<color=#64B5F6>[Status: In Transit / Not yet placed at destination.\nReward: +${pkg.deliveryReward} | Incorrect Penalty: -${pkg.wrongPenalty}]</color>";
-            }
-
-            targetAddressText.text = $"Destination: <b>{pkg.EffectiveAddressName}</b> (Door #{pkg.targetPointId})\n{statusInfo}";
+            targetAddressText.text = $"Address: {pkg.EffectiveAddressName}";
         }
 
         if (addressDescriptionText != null)
         {
             string desc = pkg.EffectiveAddressDescription;
-            if (string.IsNullOrEmpty(desc)) desc = "No specific visual clue available for this address.";
-            addressDescriptionText.text = $"<b>Address Hint & Description:</b>\n\n\"{desc}\"";
+            addressDescriptionText.text = !string.IsNullOrEmpty(desc) ? desc : "No specific visual clue available for this address.";
         }
     }
 
@@ -553,11 +483,11 @@ public class CargoTabletUI : MonoBehaviour
         if (trackingNumberText != null) trackingNumberText.text = $"Tracking #: {cargo.trackingNumber}";
         if (recipientNameText != null) recipientNameText.text = $"Recipient: {cargo.recipientName}";
         if (targetAddressText != null) targetAddressText.text = $"Address: {cargo.targetAddress}";
-        
+
         if (addressDescriptionText != null)
         {
             string desc = AddressLocalizationManager.GetDescription(cargo.targetPointId, cargo.targetAddressDescription);
-            addressDescriptionText.text = $"<b>Address Hint & Description:</b>\n\n\"{desc}\"";
+            addressDescriptionText.text = !string.IsNullOrEmpty(desc) ? desc : "No specific visual clue available for this address.";
         }
     }
 
@@ -570,22 +500,12 @@ public class CargoTabletUI : MonoBehaviour
         }
     }
 
-    private void OnDropCargoClicked()
-    {
-        if (currentSelectedCargo == null || VanInventory.Instance == null) return;
-
-        CargoItem toDrop = currentSelectedCargo;
-        currentSelectedCargo = null;
-
-        VanInventory.Instance.DropCargoFromVan(toDrop);
-        CloseTablet();
-    }
-
     // ==========================================
-    // VEHICLE DEALERSHIP & GARAGE TAB
+    // 2. VEHICLE DEALERSHIP & GARAGE TAB
     // ==========================================
     public void PopulateVehicleList()
     {
+        if (vehicleListContent == null || vehicleCardTemplate == null) EnsureTabletStructure();
         if (vehicleListContent == null || vehicleCardTemplate == null) return;
 
         foreach (Transform child in vehicleListContent)
@@ -613,25 +533,17 @@ public class CargoTabletUI : MonoBehaviour
             GameObject cardObj = Instantiate(vehicleCardTemplate, vehicleListContent);
             cardObj.SetActive(true);
 
-            Image cardImg = cardObj.GetComponent<Image>();
-            if (cardImg != null)
-            {
-                cardImg.raycastTarget = true;
-                cardImg.color = v.IsUnlocked ? new Color(0.1f, 0.22f, 0.15f, 0.95f) : new Color(0.15f, 0.15f, 0.18f, 0.95f);
-            }
-
             TextMeshProUGUI label = cardObj.GetComponentInChildren<TextMeshProUGUI>();
             if (label != null)
             {
                 if (v.IsUnlocked)
                 {
                     float fuelPct = v.maxFuel > 0 ? (v.currentFuel / v.maxFuel) * 100f : 0f;
-                    string fuelTag = v.currentFuel <= 0.05f ? "<color=#FF4444>[EMPTY]</color>" : (fuelPct < 25f ? "<color=#FFAA33>[LOW]</color>" : "<color=#32FF64>[OK]</color>");
-                    label.text = $"<b>{v.vehicleName}</b>\n<color=#32FF64>[OWNED]</color> • Fuel: {fuelPct:F0}% {fuelTag}";
+                    label.text = $"<b>{v.vehicleName}</b>\n<color=#32FF64>[OWNED]</color> • Fuel: {fuelPct:F0}%";
                 }
                 else
                 {
-                    label.text = $"<b>{v.vehicleName}</b>\n<color=#FFAA33>${v.purchasePrice}</color> (Lvl {v.requiredPlayerLevel})";
+                    label.text = $"<b>{v.vehicleName}</b>\n<color=#FFAA33>${v.purchasePrice:N0}</color> (Lvl {v.requiredPlayerLevel})";
                 }
                 label.raycastTarget = false;
             }
@@ -678,12 +590,8 @@ public class CargoTabletUI : MonoBehaviour
 
         if (vehicleDetailRoot != null) vehicleDetailRoot.SetActive(true);
 
-        int branchLvl = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : (PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.WarehouseLevel : 1);
-        int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
-
         if (vehicleNameText != null) vehicleNameText.text = v.vehicleName;
-        if (vehicleDescText != null) vehicleDescText.text = $"<b>Description:</b>\n{v.description}";
-        if (vehicleCapacityText != null) vehicleCapacityText.text = $"<b>Cargo Capacity:</b> {v.cargoCapacity} Packages";
+        if (vehicleDescText != null) vehicleDescText.text = v.description;
 
         float fuelPct = v.maxFuel > 0 ? (v.currentFuel / v.maxFuel) * 100f : 0f;
         string fuelColor = v.currentFuel <= 0.05f ? "#FF4444" : (fuelPct < 25f ? "#FFAA33" : "#32FF64");
@@ -692,71 +600,8 @@ public class CargoTabletUI : MonoBehaviour
 
         if (vehicleFuelStatusText != null)
         {
-            vehicleFuelStatusText.gameObject.SetActive(true);
             string fuelTag = v.currentFuel <= 0.05f ? "<color=#FF4444>[EMPTY]</color>" : (fuelPct < 25f ? "<color=#FFAA33>[LOW]</color>" : "<color=#32FF64>[OK]</color>");
             vehicleFuelStatusText.text = $"<b>Fuel Tank:</b> <color={fuelColor}>{v.currentFuel:F1} / {v.maxFuel:F1} L ({fuelPct:F0}%)</color> {fuelTag}  |  <b>Condition:</b> <color={condColor}>%{condPct:F0}</color>";
-        }
-        
-        if (vehicleLevelReqText != null)
-        {
-            if (v.IsUnlocked)
-            {
-                vehicleLevelReqText.text = "<b>Fleet Status:</b> <color=#32FF64>PURCHASED & REGISTERED TO FLEET</color>";
-            }
-            else
-            {
-                bool lvlOk = branchLvl >= v.requiredPlayerLevel;
-                string lvlColor = lvlOk ? "#32FF64" : "#FF5555";
-                vehicleLevelReqText.text = $"<b>Required Branch Level:</b> <color={lvlColor}>Level {v.requiredPlayerLevel}</color> (Current: Level {branchLvl})";
-            }
-        }
-
-        if (vehiclePriceText != null)
-        {
-            if (v.IsUnlocked)
-            {
-                vehiclePriceText.text = $"<b>Vehicle Condition:</b> <color={condColor}>%{condPct:F0}</color> (Visit Service Garage to Repair)";
-            }
-            else
-            {
-                bool cashOk = balance >= v.purchasePrice;
-                string cashColor = cashOk ? "#32FF64" : "#FF5555";
-                vehiclePriceText.text = $"<b>Purchase Price:</b> <color={cashColor}>${v.purchasePrice}</color> (Balance: ${balance})";
-            }
-        }
-
-        if (vehicleStatusText != null)
-        {
-            if (v.IsUnlocked)
-            {
-                if (v.currentFuel <= 0.05f)
-                {
-                    vehicleStatusText.text = "<color=#FF4444>[OUT OF FUEL] Vehicle cannot start! Use Emergency Refuel button below to add gas.</color>";
-                }
-                else if (fuelPct < 25f)
-                {
-                    vehicleStatusText.text = "<color=#FFAA33>[LOW FUEL] Tank is almost empty. Refuel at a gas station or order emergency fuel.</color>";
-                }
-                else
-                {
-                    vehicleStatusText.text = "<color=#32FF64>[OWNED] Ready to drive or recall to warehouse garage.</color>";
-                }
-            }
-            else
-            {
-                if (branchLvl < v.requiredPlayerLevel)
-                {
-                    vehicleStatusText.text = $"<color=#FF5555>[LOCKED] Upgrade Branch to Level {v.requiredPlayerLevel} to purchase.</color>";
-                }
-                else if (balance < v.purchasePrice)
-                {
-                    vehicleStatusText.text = $"<color=#FFAA33>[LOCKED] Insufficient funds! Need ${(v.purchasePrice - balance)} more.</color>";
-                }
-                else
-                {
-                    vehicleStatusText.text = "<color=#32FFFF>[AVAILABLE] Ready for immediate purchase!</color>";
-                }
-            }
         }
 
         // Buy Button
@@ -771,12 +616,9 @@ public class CargoTabletUI : MonoBehaviour
                 vehicleBuyButton.gameObject.SetActive(true);
                 vehicleBuyButton.interactable = true;
 
-                Image btnImg = vehicleBuyButton.GetComponent<Image>();
-                if (btnImg != null) btnImg.color = new Color(0.1f, 0.7f, 0.35f);
-
                 if (vehicleBuyButtonText != null)
                 {
-                    vehicleBuyButtonText.text = $"PURCHASE VEHICLE (${v.purchasePrice})";
+                    vehicleBuyButtonText.text = $"PURCHASE VEHICLE (${v.purchasePrice:N0})";
                 }
 
                 vehicleBuyButton.onClick.RemoveAllListeners();
@@ -807,13 +649,10 @@ public class CargoTabletUI : MonoBehaviour
                 vehicleRefuelButton.gameObject.SetActive(true);
                 vehicleRefuelButton.interactable = true;
                 float fuelToAdd = Mathf.Min(15f, v.maxFuel - v.currentFuel);
-                int fuelCost = Mathf.RoundToInt(fuelToAdd * 3f); // $3 per liter roadside delivery
+                int fuelCost = Mathf.RoundToInt(fuelToAdd * 3f);
 
                 if (fuelToAdd <= 0.2f)
                 {
-                    Image rImg = vehicleRefuelButton.GetComponent<Image>();
-                    if (rImg != null) rImg.color = new Color(0.25f, 0.25f, 0.3f);
-
                     if (vehicleRefuelButtonText != null)
                     {
                         vehicleRefuelButtonText.text = "FUEL TANK FULL (100%)";
@@ -830,9 +669,6 @@ public class CargoTabletUI : MonoBehaviour
                 }
                 else
                 {
-                    Image rImg = vehicleRefuelButton.GetComponent<Image>();
-                    if (rImg != null) rImg.color = new Color(0.12f, 0.65f, 0.35f);
-
                     if (vehicleRefuelButtonText != null)
                     {
                         vehicleRefuelButtonText.text = $"ORDER EMERGENCY REFUEL (+{fuelToAdd:F0}L / ${fuelCost})";
@@ -875,18 +711,11 @@ public class CargoTabletUI : MonoBehaviour
             {
                 vehicleRecallButton.gameObject.SetActive(true);
                 vehicleRecallButton.interactable = true;
-
                 int fee = v.GetRecallFee();
-
-                Image recImg = vehicleRecallButton.GetComponent<Image>();
-                if (recImg != null)
-                {
-                    recImg.color = new Color(0.15f, 0.45f, 0.75f);
-                }
 
                 if (vehicleRecallButtonText != null)
                 {
-                    vehicleRecallButtonText.text = fee > 0 ? $"RECALL TO GARAGE (${fee})" : "RECALL TO GARAGE (FREE)";
+                    vehicleRecallButtonText.text = fee > 0 ? $"RECALL TO GARAGE (${fee})" : "RECALL TO WAREHOUSE GARAGE";
                 }
 
                 vehicleRecallButton.onClick.RemoveAllListeners();
@@ -921,7 +750,7 @@ public class CargoTabletUI : MonoBehaviour
     }
 
     // ==========================================
-    // BRANCH OFFICE UPGRADE TAB
+    // 3. BRANCH OFFICE UPGRADE TAB
     // ==========================================
     private void PopulateBranchInfo()
     {
@@ -932,18 +761,19 @@ public class CargoTabletUI : MonoBehaviour
 
         if (current != null)
         {
-            if (currentBranchTitleText != null) currentBranchTitleText.text = $"<b>{current.tierName}</b> <color=#32FFFF>(Level {current.tierLevel})</color>";
+            if (currentBranchTitleText != null) currentBranchTitleText.text = $"<b>{current.tierName}</b> (Level {current.tierLevel})";
             if (currentBranchDescText != null) currentBranchDescText.text = current.description;
-            if (currentBranchCapacityText != null) currentBranchCapacityText.text = $"<b>Daily Package Limit:</b> {current.dailyPackageCapacity} Packages";
-            if (currentBranchRentText != null) currentBranchRentText.text = $"<b>Daily Operational Rent:</b> ${current.dailyRent} / day";
+            if (currentBranchCapacityText != null) currentBranchCapacityText.text = $"<b>Daily Parcel Limit:</b> {current.dailyPackageCapacity} Packages / Day";
+            if (currentBranchRentText != null) currentBranchRentText.text = $"<b>Daily Rent:</b> ${current.dailyRent} / Day";
         }
 
         if (next != null)
         {
+            if (nextBranchInfoRoot != null) nextBranchInfoRoot.SetActive(true);
             if (nextBranchTitleText != null)
             {
                 nextBranchTitleText.gameObject.SetActive(true);
-                nextBranchTitleText.text = $"<b>{next.tierName}</b> <color=#32FF64>(Level {next.tierLevel})</color>";
+                nextBranchTitleText.text = $"<b>{next.tierName}</b> (Level {next.tierLevel})";
             }
             if (nextBranchDescText != null)
             {
@@ -953,35 +783,21 @@ public class CargoTabletUI : MonoBehaviour
             if (nextBranchCapacityText != null)
             {
                 nextBranchCapacityText.gameObject.SetActive(true);
-                nextBranchCapacityText.text = $"<b>New Package Quota:</b> {current.dailyPackageCapacity} -> <color=#32FF64>{next.dailyPackageCapacity} Packages</color> (+{next.dailyPackageCapacity - current.dailyPackageCapacity})";
+                nextBranchCapacityText.text = $"<b>New Parcel Limit:</b> {current.dailyPackageCapacity} -> <color=#32FF64>{next.dailyPackageCapacity} Packages (+{next.dailyPackageCapacity - current.dailyPackageCapacity})</color>";
             }
             if (nextBranchRentText != null)
             {
                 nextBranchRentText.gameObject.SetActive(true);
-                nextBranchRentText.text = $"<b>New Rent Fee:</b> ${current.dailyRent} -> <color=#FFAA33>${next.dailyRent}</color>";
-            }
-
-            int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
-
-            if (nextBranchLevelReqText != null)
-            {
-                nextBranchLevelReqText.gameObject.SetActive(false);
+                nextBranchRentText.text = $"<b>New Daily Rent:</b> ${current.dailyRent} -> <color=#FFAA33>${next.dailyRent}</color>";
             }
 
             if (branchUpgradeButton != null)
             {
                 branchUpgradeButton.gameObject.SetActive(true);
                 branchUpgradeButton.interactable = true;
-
-                Image btnImg = branchUpgradeButton.GetComponent<Image>();
-                if (btnImg != null)
-                {
-                    btnImg.color = new Color(0.1f, 0.7f, 0.35f);
-                }
-
                 if (branchUpgradeButtonText != null)
                 {
-                    branchUpgradeButtonText.text = $"UPGRADE BRANCH (${next.upgradeCost})";
+                    branchUpgradeButtonText.text = $"UPGRADE BRANCH (${next.upgradeCost:N0})";
                 }
             }
 
@@ -994,7 +810,6 @@ public class CargoTabletUI : MonoBehaviour
             if (nextBranchDescText != null) nextBranchDescText.gameObject.SetActive(false);
             if (nextBranchCapacityText != null) nextBranchCapacityText.gameObject.SetActive(false);
             if (nextBranchRentText != null) nextBranchRentText.gameObject.SetActive(false);
-            if (nextBranchLevelReqText != null) nextBranchLevelReqText.gameObject.SetActive(false);
             if (branchUpgradeButton != null) branchUpgradeButton.gameObject.SetActive(false);
             if (branchMaxLevelBadge != null) branchMaxLevelBadge.gameObject.SetActive(true);
         }
@@ -1021,66 +836,37 @@ public class CargoTabletUI : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Binds UI references and button listeners from the scene hierarchy without overriding layout or transforms.
-    /// </summary>
+    // ==========================================
+    // RECURSIVE BINDING & HELPERS
+    // ==========================================
     public void EnsureTabletStructure()
     {
         if (tabletPanelRoot == null)
         {
             Transform t = transform.Find("CargoTabletPanel");
+            if (t == null)
+            {
+                var canvas = GetComponentInParent<Canvas>();
+                if (canvas != null) t = canvas.transform.Find("CargoTabletPanel");
+            }
             if (t != null) tabletPanelRoot = t.gameObject;
         }
 
         if (tabletPanelRoot == null) return;
 
-        // Find or locate TabletTopBar
+        // 1. TabletTopBar & Buttons
         Transform topBarTransform = tabletPanelRoot.transform.Find("TabletTopBar");
-        if (topBarTransform == null)
-        {
-            Transform oldBar = tabletPanelRoot.transform.Find("TabletTabBar");
-            if (oldBar == null) oldBar = tabletPanelRoot.transform.Find("TabBar");
-            if (oldBar != null) topBarTransform = oldBar;
-        }
+        if (topBarTransform == null) topBarTransform = tabletPanelRoot.transform.Find("TabBar");
 
-        // Hook up tab buttons if present in TopBar
         if (topBarTransform != null)
         {
-            if (tabCargoButton == null)
-            {
-                Transform b = topBarTransform.Find("TabBar/Tab_Cargo");
-                if (b == null) b = topBarTransform.Find("Tab_Cargo");
-                if (b != null) tabCargoButton = b.GetComponent<Button>();
-            }
-
-            if (tabVehicleButton == null)
-            {
-                Transform b = topBarTransform.Find("TabBar/Tab_Vehicles");
-                if (b == null) b = topBarTransform.Find("Tab_Vehicles");
-                if (b != null) tabVehicleButton = b.GetComponent<Button>();
-            }
-
-            if (tabBranchButton == null)
-            {
-                Transform b = topBarTransform.Find("TabBar/Tab_Branch");
-                if (b == null) b = topBarTransform.Find("Tab_Branch");
-                if (b != null) tabBranchButton = b.GetComponent<Button>();
-            }
-
-            if (endShiftButton == null)
-            {
-                Transform b = topBarTransform.Find("EndShiftButton");
-                if (b != null) endShiftButton = b.GetComponent<Button>();
-            }
-
-            if (closeTabletButton == null)
-            {
-                Transform b = topBarTransform.Find("CloseButton");
-                if (b != null) closeTabletButton = b.GetComponent<Button>();
-            }
+            if (tabCargoButton == null) tabCargoButton = FindButtonRecursive(topBarTransform, "Tab_Cargo", "TabCargo");
+            if (tabVehicleButton == null) tabVehicleButton = FindButtonRecursive(topBarTransform, "Tab_Vehicles", "TabVehicles");
+            if (tabBranchButton == null) tabBranchButton = FindButtonRecursive(topBarTransform, "Tab_Branch", "TabBranch");
+            if (endShiftButton == null) endShiftButton = FindButtonRecursive(topBarTransform, "EndShiftButton", "EndShift");
+            if (closeTabletButton == null) closeTabletButton = FindButtonRecursive(topBarTransform, "CloseButton", "Close");
         }
 
-        // Bind button listeners safely
         if (endShiftButton != null)
         {
             endShiftButton.onClick.RemoveAllListeners();
@@ -1111,95 +897,97 @@ public class CargoTabletUI : MonoBehaviour
             closeTabletButton.onClick.AddListener(CloseTablet);
         }
 
-        // Locate views
-        if (cargoViewRoot == null)
+        // 2. Cargo View Root
+        Transform cView = FindTransformRecursive(tabletPanelRoot.transform, "CargoViewRoot");
+        if (cView != null)
         {
-            Transform v = tabletPanelRoot.transform.Find("TabletContentArea/CargoViewRoot");
-            if (v == null) v = tabletPanelRoot.transform.Find("CargoViewRoot");
-            if (v != null) cargoViewRoot = v.gameObject;
-        }
+            cargoViewRoot = cView.gameObject;
+            Transform cContent = FindTransformRecursive(cView, "Content");
+            if (cContent != null) cargoListContent = cContent;
 
-        if (vehicleViewRoot == null)
-        {
-            Transform v = tabletPanelRoot.transform.Find("TabletContentArea/VehicleViewRoot");
-            if (v == null) v = tabletPanelRoot.transform.Find("VehicleDealershipView");
-            if (v == null) v = tabletPanelRoot.transform.Find("VehicleViewRoot");
-            if (v != null) vehicleViewRoot = v.gameObject;
-        }
-
-        if (vehicleViewRoot != null)
-        {
-            if (vehicleListContent == null)
+            if (cargoCardTemplate == null && cargoListContent != null)
             {
-                Transform c = vehicleViewRoot.transform.Find("LeftColumn_Vehicles/VehicleScrollView/Viewport/Content");
-                if (c != null) vehicleListContent = c;
+                Transform ct = cargoListContent.Find("CargoCardTemplate");
+                if (ct != null) cargoCardTemplate = ct.gameObject;
             }
+
+            emptyListText = FindTMPRecursive(cView, "EmptyListText", "EmptyText");
+
+            Transform rDetail = FindTransformRecursive(cView, "RightColumn_Detail");
+            if (rDetail != null)
+            {
+                detailCardRoot = rDetail.gameObject;
+                recipientNameText = FindTMPRecursive(rDetail, "RecipientNameText", "RecipientName", "Recipient");
+                targetAddressText = FindTMPRecursive(rDetail, "TargetAddressText", "TargetAddress", "Address");
+                addressDescriptionText = FindTMPRecursive(rDetail, "AddressDescriptionText", "AddressDescription", "DescText", "Description");
+            }
+        }
+
+        // 3. Vehicle View Root
+        Transform vView = FindTransformRecursive(tabletPanelRoot.transform, "VehicleViewRoot");
+        if (vView != null)
+        {
+            vehicleViewRoot = vView.gameObject;
+            Transform vContent = FindTransformRecursive(vView, "Content");
+            if (vContent != null) vehicleListContent = vContent;
 
             if (vehicleCardTemplate == null && vehicleListContent != null)
             {
-                Transform ct = vehicleListContent.Find("VehicleCardTemplate");
-                if (ct != null) vehicleCardTemplate = ct.gameObject;
+                Transform vt = vehicleListContent.Find("VehicleCardTemplate");
+                if (vt != null) vehicleCardTemplate = vt.gameObject;
             }
 
-            Transform detailCol = vehicleViewRoot.transform.Find("RightColumn_VehicleDetail");
-            if (detailCol != null)
+            Transform vDetail = FindTransformRecursive(vView, "RightColumn_VehicleDetail");
+            if (vDetail != null)
             {
-                if (vehicleDetailRoot == null) vehicleDetailRoot = detailCol.gameObject;
-                if (vehicleNameText == null) vehicleNameText = detailCol.Find("VehicleName")?.GetComponent<TextMeshProUGUI>();
-                if (vehicleCapacityText == null) vehicleCapacityText = detailCol.Find("CapacityText")?.GetComponent<TextMeshProUGUI>();
-                if (vehicleFuelStatusText == null) vehicleFuelStatusText = detailCol.Find("FuelStatusText")?.GetComponent<TextMeshProUGUI>();
-                if (vehicleLevelReqText == null) vehicleLevelReqText = detailCol.Find("LevelReqText")?.GetComponent<TextMeshProUGUI>();
-                if (vehiclePriceText == null) vehiclePriceText = detailCol.Find("PriceText")?.GetComponent<TextMeshProUGUI>();
-                if (vehicleDescText == null) vehicleDescText = detailCol.Find("DescBox/DescText")?.GetComponent<TextMeshProUGUI>();
-                if (vehicleStatusText == null) vehicleStatusText = detailCol.Find("StatusText")?.GetComponent<TextMeshProUGUI>();
+                vehicleDetailRoot = vDetail.gameObject;
+                vehicleNameText = FindTMPRecursive(vDetail, "VehicleName", "Name");
+                vehicleFuelStatusText = FindTMPRecursive(vDetail, "FuelStatusText", "FuelStatus", "FuelText", "StatusText");
+                vehicleDescText = FindTMPRecursive(vDetail, "DescText", "Description", "Desc");
+                vehicleBuyButton = FindButtonRecursive(vDetail, "BuyButton", "PurchaseButton");
+                vehicleBuyButtonText = vehicleBuyButton != null ? vehicleBuyButton.GetComponentInChildren<TextMeshProUGUI>() : null;
+                vehicleRefuelButton = FindButtonRecursive(vDetail, "RefuelButton", "EmergencyRefuelButton");
+                vehicleRefuelButtonText = vehicleRefuelButton != null ? vehicleRefuelButton.GetComponentInChildren<TextMeshProUGUI>() : null;
+                vehicleRecallButton = FindButtonRecursive(vDetail, "RecallButton", "GarageRecallButton");
+                vehicleRecallButtonText = vehicleRecallButton != null ? vehicleRecallButton.GetComponentInChildren<TextMeshProUGUI>() : null;
+            }
+        }
 
-                if (vehicleBuyButton == null)
-                {
-                    Transform b = detailCol.Find("BuyButton");
-                    if (b != null)
-                    {
-                        vehicleBuyButton = b.GetComponent<Button>();
-                        vehicleBuyButtonText = b.GetComponentInChildren<TextMeshProUGUI>();
-                    }
-                }
+        // 4. Branch View Root
+        Transform bView = FindTransformRecursive(tabletPanelRoot.transform, "BranchViewRoot");
+        if (bView != null)
+        {
+            branchViewRoot = bView.gameObject;
+            Transform lBranch = FindTransformRecursive(bView, "LeftColumn_CurrentBranch");
+            if (lBranch != null)
+            {
+                currentBranchTitleText = FindTMPRecursive(lBranch, "BranchTitle", "Title");
+                currentBranchCapacityText = FindTMPRecursive(lBranch, "CapText", "CapacityText", "Capacity");
+                currentBranchRentText = FindTMPRecursive(lBranch, "RentText", "DailyRentText", "Rent");
+                currentBranchDescText = FindTMPRecursive(lBranch, "DescText", "Description");
+            }
 
-                if (vehicleRefuelButton == null)
-                {
-                    Transform b = detailCol.Find("RefuelButton");
-                    if (b != null)
-                    {
-                        vehicleRefuelButton = b.GetComponent<Button>();
-                        vehicleRefuelButtonText = b.GetComponentInChildren<TextMeshProUGUI>();
-                    }
-                }
+            Transform rBranch = FindTransformRecursive(bView, "RightColumn_NextTier");
+            if (rBranch != null)
+            {
+                nextBranchInfoRoot = rBranch.gameObject;
+                nextBranchTitleText = FindTMPRecursive(rBranch, "NextTitle", "NextBranchTitle");
+                nextBranchCapacityText = FindTMPRecursive(rBranch, "NextCapText", "NextCapacityText");
+                nextBranchRentText = FindTMPRecursive(rBranch, "NextRentText", "NextRent");
+                nextBranchDescText = FindTMPRecursive(rBranch, "DescText", "Description");
+                branchUpgradeButton = FindButtonRecursive(rBranch, "UpgradeButton", "BranchUpgradeButton");
+                branchUpgradeButtonText = branchUpgradeButton != null ? branchUpgradeButton.GetComponentInChildren<TextMeshProUGUI>() : null;
+                branchMaxLevelBadge = FindTMPRecursive(rBranch, "MaxLevelBadge", "MaxBadge");
 
-                if (vehicleRecallButton == null)
+                if (branchUpgradeButton != null)
                 {
-                    Transform b = detailCol.Find("RecallButton");
-                    if (b != null)
-                    {
-                        vehicleRecallButton = b.GetComponent<Button>();
-                        vehicleRecallButtonText = b.GetComponentInChildren<TextMeshProUGUI>();
-                    }
+                    branchUpgradeButton.onClick.RemoveAllListeners();
+                    branchUpgradeButton.onClick.AddListener(OnUpgradeBranchClicked);
                 }
             }
         }
 
-        if (branchViewRoot == null)
-        {
-            Transform v = tabletPanelRoot.transform.Find("TabletContentArea/BranchViewRoot");
-            if (v == null) v = tabletPanelRoot.transform.Find("BranchViewRoot");
-            if (v != null) branchViewRoot = v.gameObject;
-        }
-
-        // Bind branch upgrade button listener if not already bound
-        if (branchUpgradeButton != null)
-        {
-            branchUpgradeButton.onClick.RemoveAllListeners();
-            branchUpgradeButton.onClick.AddListener(OnUpgradeBranchClicked);
-        }
-
-        // Disable legacy cargo drop button
+        // Disable legacy cargo drop button if still hanging
         if (dropCargoButton != null)
         {
             dropCargoButton.onClick.RemoveAllListeners();
@@ -1207,9 +995,65 @@ public class CargoTabletUI : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// EventSystem and GraphicRaycaster verification
-    /// </summary>
+    private TextMeshProUGUI FindTMPRecursive(Transform root, params string[] searchNames)
+    {
+        if (root == null) return null;
+        var allTexts = root.GetComponentsInChildren<TextMeshProUGUI>(true);
+        foreach (var name in searchNames)
+        {
+            foreach (var t in allTexts)
+            {
+                if (t != null && t.gameObject.name.Equals(name, System.StringComparison.OrdinalIgnoreCase))
+                    return t;
+            }
+        }
+        foreach (var name in searchNames)
+        {
+            foreach (var t in allTexts)
+            {
+                if (t != null && t.gameObject.name.IndexOf(name, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    return t;
+            }
+        }
+        return null;
+    }
+
+    private Button FindButtonRecursive(Transform root, params string[] searchNames)
+    {
+        if (root == null) return null;
+        var allBtns = root.GetComponentsInChildren<Button>(true);
+        foreach (var name in searchNames)
+        {
+            foreach (var b in allBtns)
+            {
+                if (b != null && b.gameObject.name.Equals(name, System.StringComparison.OrdinalIgnoreCase))
+                    return b;
+            }
+        }
+        foreach (var name in searchNames)
+        {
+            foreach (var b in allBtns)
+            {
+                if (b != null && b.gameObject.name.IndexOf(name, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    return b;
+            }
+        }
+        return null;
+    }
+
+    private Transform FindTransformRecursive(Transform root, string childName)
+    {
+        if (root == null) return null;
+        if (root.gameObject.name.Equals(childName, System.StringComparison.OrdinalIgnoreCase)) return root;
+        var allTransforms = root.GetComponentsInChildren<Transform>(true);
+        foreach (var t in allTransforms)
+        {
+            if (t != null && t.gameObject.name.Equals(childName, System.StringComparison.OrdinalIgnoreCase))
+                return t;
+        }
+        return null;
+    }
+
     public void EnsureEventSystemAndRaycaster()
     {
         Canvas canvas = GetComponentInParent<Canvas>();

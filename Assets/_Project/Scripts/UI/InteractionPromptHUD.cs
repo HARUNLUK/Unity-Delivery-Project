@@ -252,216 +252,23 @@ public class InteractionPromptHUD : MonoBehaviour
         }
 
         // 4. In-Vehicle Fuel & Condition Dashboard Panels (Bottom Right)
-        if (vehicleDashboardRoot == null || fuelGaugePanel == null || conditionGaugePanel == null || forceRecreate)
+        Transform existingDash = canvas.transform.Find("VehicleDashboardPanel");
+        if (existingDash == null)
         {
-            if (forceRecreate)
+            var allT = canvas.GetComponentsInChildren<Transform>(true);
+            foreach (var t in allT)
             {
-                Transform oldSinglePanel = canvas.transform.Find("VehicleFuelGaugePanel");
-                if (oldSinglePanel != null) DestroyImmediate(oldSinglePanel.gameObject);
-
-                Transform oldDash = canvas.transform.Find("VehicleDashboardPanel");
-                if (oldDash != null) DestroyImmediate(oldDash.gameObject);
-            }
-
-            Transform existingDash = canvas.transform.Find("VehicleDashboardPanel");
-            if (existingDash != null && !forceRecreate)
-            {
-                vehicleDashboardRoot = existingDash.gameObject;
-                Transform fCard = vehicleDashboardRoot.transform.Find("FuelGaugeCard");
-                if (fCard != null)
+                if (t != null && t.name.Equals("VehicleDashboardPanel", System.StringComparison.OrdinalIgnoreCase))
                 {
-                    fuelGaugePanel = fCard.gameObject;
-                    fuelBarFill = fCard.Find("FuelBarBg/FuelBarFill")?.GetComponent<Image>();
-                    fuelValueText = fCard.Find("FuelValue")?.GetComponent<TextMeshProUGUI>();
-                }
-
-                Transform cCard = vehicleDashboardRoot.transform.Find("ConditionGaugeCard");
-                if (cCard != null)
-                {
-                    conditionGaugePanel = cCard.gameObject;
-                    conditionBarFill = cCard.Find("CondBarBg/CondBarFill")?.GetComponent<Image>();
-                    conditionValueText = cCard.Find("CondValue")?.GetComponent<TextMeshProUGUI>();
+                    existingDash = t;
+                    break;
                 }
             }
-            else
-            {
-                // Root Container
-                vehicleDashboardRoot = new GameObject("VehicleDashboardPanel");
-                vehicleDashboardRoot.transform.SetParent(canvas.transform, false);
+        }
 
-                RectTransform dashRect = vehicleDashboardRoot.AddComponent<RectTransform>();
-                dashRect.anchorMin = new Vector2(1f, 0f);
-                dashRect.anchorMax = new Vector2(1f, 0f);
-                dashRect.pivot = new Vector2(1f, 0f);
-                dashRect.anchoredPosition = new Vector2(-40, 40);
-                dashRect.sizeDelta = new Vector2(340, 160);
-
-                VerticalLayoutGroup vLayout = vehicleDashboardRoot.AddComponent<VerticalLayoutGroup>();
-                vLayout.padding = new RectOffset(0, 0, 0, 0);
-                vLayout.spacing = 10;
-                vLayout.childControlWidth = true;
-                vLayout.childControlHeight = false;
-                vLayout.childForceExpandWidth = true;
-                vLayout.childForceExpandHeight = false;
-
-                // --- 1. SEPARATE FUEL CARD ---
-                fuelGaugePanel = new GameObject("FuelGaugeCard");
-                fuelGaugePanel.transform.SetParent(vehicleDashboardRoot.transform, false);
-
-                LayoutElement fuelLayout = fuelGaugePanel.AddComponent<LayoutElement>();
-                fuelLayout.preferredHeight = 72;
-                fuelLayout.minHeight = 72;
-                fuelLayout.flexibleHeight = 0;
-
-                Image fuelBg = fuelGaugePanel.AddComponent<Image>();
-                fuelBg.color = new Color(0.06f, 0.08f, 0.12f, 0.94f);
-                fuelBg.raycastTarget = false;
-
-                // Fuel Title (Left)
-                GameObject fuelTitleObj = new GameObject("FuelTitle");
-                fuelTitleObj.transform.SetParent(fuelGaugePanel.transform, false);
-                RectTransform ftTitleRect = fuelTitleObj.AddComponent<RectTransform>();
-                ftTitleRect.anchorMin = new Vector2(0f, 0.5f);
-                ftTitleRect.anchorMax = new Vector2(0.45f, 1f);
-                ftTitleRect.anchoredPosition = new Vector2(14, -2);
-                ftTitleRect.sizeDelta = new Vector2(0, 0);
-
-                TextMeshProUGUI ftTitleTmp = fuelTitleObj.AddComponent<TextMeshProUGUI>();
-                ftTitleTmp.text = "⛽ YAKIT";
-                ftTitleTmp.fontSize = 15;
-                ftTitleTmp.fontStyle = FontStyles.Bold;
-                ftTitleTmp.alignment = TextAlignmentOptions.MidlineLeft;
-                ftTitleTmp.color = new Color(1f, 0.85f, 0.25f);
-                ftTitleTmp.raycastTarget = false;
-
-                // Fuel Value (Right)
-                GameObject fuelValObj = new GameObject("FuelValue");
-                fuelValObj.transform.SetParent(fuelGaugePanel.transform, false);
-                RectTransform ftValRect = fuelValObj.AddComponent<RectTransform>();
-                ftValRect.anchorMin = new Vector2(0.45f, 0.5f);
-                ftValRect.anchorMax = new Vector2(1f, 1f);
-                ftValRect.anchoredPosition = new Vector2(-14, -2);
-                ftValRect.sizeDelta = new Vector2(0, 0);
-
-                fuelValueText = fuelValObj.AddComponent<TextMeshProUGUI>();
-                fuelValueText.text = "50.0 / 50.0 L (100%)";
-                fuelValueText.fontSize = 15;
-                fuelValueText.fontStyle = FontStyles.Bold;
-                fuelValueText.alignment = TextAlignmentOptions.MidlineRight;
-                fuelValueText.color = Color.white;
-                fuelValueText.raycastTarget = false;
-
-                // Fuel Bar Background
-                GameObject fuelBarBgObj = new GameObject("FuelBarBg");
-                fuelBarBgObj.transform.SetParent(fuelGaugePanel.transform, false);
-                RectTransform fbbgRect = fuelBarBgObj.AddComponent<RectTransform>();
-                fbbgRect.anchorMin = new Vector2(0f, 0f);
-                fbbgRect.anchorMax = new Vector2(1f, 0f);
-                fbbgRect.pivot = new Vector2(0.5f, 0f);
-                fbbgRect.anchoredPosition = new Vector2(0, 12);
-                fbbgRect.sizeDelta = new Vector2(-28, 10);
-
-                Image fBarBgImg = fuelBarBgObj.AddComponent<Image>();
-                fBarBgImg.color = new Color(0.12f, 0.16f, 0.22f, 0.95f);
-                fBarBgImg.raycastTarget = false;
-
-                // Fuel Bar Fill
-                GameObject fuelBarFillObj = new GameObject("FuelBarFill");
-                fuelBarFillObj.transform.SetParent(fuelBarBgObj.transform, false);
-                RectTransform fbFillRect = fuelBarFillObj.AddComponent<RectTransform>();
-                fbFillRect.anchorMin = Vector2.zero;
-                fbFillRect.anchorMax = Vector2.one;
-                fbFillRect.sizeDelta = Vector2.zero;
-
-                fuelBarFill = fuelBarFillObj.AddComponent<Image>();
-                fuelBarFill.sprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f));
-                fuelBarFill.color = new Color(0.2f, 0.9f, 0.45f, 1f);
-                fuelBarFill.type = Image.Type.Filled;
-                fuelBarFill.fillMethod = Image.FillMethod.Horizontal;
-                fuelBarFill.fillOrigin = 0;
-                fuelBarFill.fillAmount = 1f;
-                fuelBarFill.raycastTarget = false;
-
-                // --- 2. SEPARATE CONDITION CARD ---
-                conditionGaugePanel = new GameObject("ConditionGaugeCard");
-                conditionGaugePanel.transform.SetParent(vehicleDashboardRoot.transform, false);
-
-                LayoutElement condLayout = conditionGaugePanel.AddComponent<LayoutElement>();
-                condLayout.preferredHeight = 72;
-                condLayout.minHeight = 72;
-                condLayout.flexibleHeight = 0;
-
-                Image condBg = conditionGaugePanel.AddComponent<Image>();
-                condBg.color = new Color(0.06f, 0.08f, 0.12f, 0.94f);
-                condBg.raycastTarget = false;
-
-                // Condition Title (Left)
-                GameObject condTitleObj = new GameObject("CondTitle");
-                condTitleObj.transform.SetParent(conditionGaugePanel.transform, false);
-                RectTransform ctTitleRect = condTitleObj.AddComponent<RectTransform>();
-                ctTitleRect.anchorMin = new Vector2(0f, 0.5f);
-                ctTitleRect.anchorMax = new Vector2(0.45f, 1f);
-                ctTitleRect.anchoredPosition = new Vector2(14, -2);
-                ctTitleRect.sizeDelta = new Vector2(0, 0);
-
-                TextMeshProUGUI ctTitleTmp = condTitleObj.AddComponent<TextMeshProUGUI>();
-                ctTitleTmp.text = "🔧 KONDİSYON";
-                ctTitleTmp.fontSize = 15;
-                ctTitleTmp.fontStyle = FontStyles.Bold;
-                ctTitleTmp.alignment = TextAlignmentOptions.MidlineLeft;
-                ctTitleTmp.color = new Color(0.0f, 0.9f, 0.64f);
-                ctTitleTmp.raycastTarget = false;
-
-                // Condition Value (Right)
-                GameObject condValObj = new GameObject("CondValue");
-                condValObj.transform.SetParent(conditionGaugePanel.transform, false);
-                RectTransform ctValRect = condValObj.AddComponent<RectTransform>();
-                ctValRect.anchorMin = new Vector2(0.45f, 0.5f);
-                ctValRect.anchorMax = new Vector2(1f, 1f);
-                ctValRect.anchoredPosition = new Vector2(-14, -2);
-                ctValRect.sizeDelta = new Vector2(0, 0);
-
-                conditionValueText = condValObj.AddComponent<TextMeshProUGUI>();
-                conditionValueText.text = "%100 [İYİ]";
-                conditionValueText.fontSize = 15;
-                conditionValueText.fontStyle = FontStyles.Bold;
-                conditionValueText.alignment = TextAlignmentOptions.MidlineRight;
-                conditionValueText.color = new Color(0.3f, 0.95f, 0.45f);
-                conditionValueText.raycastTarget = false;
-
-                // Condition Bar Background
-                GameObject condBarBgObj = new GameObject("CondBarBg");
-                condBarBgObj.transform.SetParent(conditionGaugePanel.transform, false);
-                RectTransform cbbgRect = condBarBgObj.AddComponent<RectTransform>();
-                cbbgRect.anchorMin = new Vector2(0f, 0f);
-                cbbgRect.anchorMax = new Vector2(1f, 0f);
-                cbbgRect.pivot = new Vector2(0.5f, 0f);
-                cbbgRect.anchoredPosition = new Vector2(0, 12);
-                cbbgRect.sizeDelta = new Vector2(-28, 10);
-
-                Image cBarBgImg = condBarBgObj.AddComponent<Image>();
-                cBarBgImg.color = new Color(0.12f, 0.16f, 0.22f, 0.95f);
-                cBarBgImg.raycastTarget = false;
-
-                // Condition Bar Fill
-                GameObject condBarFillObj = new GameObject("CondBarFill");
-                condBarFillObj.transform.SetParent(condBarBgObj.transform, false);
-                RectTransform cbFillRect = condBarFillObj.AddComponent<RectTransform>();
-                cbFillRect.anchorMin = Vector2.zero;
-                cbFillRect.anchorMax = Vector2.one;
-                cbFillRect.sizeDelta = Vector2.zero;
-
-                conditionBarFill = condBarFillObj.AddComponent<Image>();
-                conditionBarFill.sprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f));
-                conditionBarFill.color = new Color(0.0f, 0.9f, 0.64f, 1f);
-                conditionBarFill.type = Image.Type.Filled;
-                conditionBarFill.fillMethod = Image.FillMethod.Horizontal;
-                conditionBarFill.fillOrigin = 0;
-                conditionBarFill.fillAmount = 1f;
-                conditionBarFill.raycastTarget = false;
-
-                vehicleDashboardRoot.SetActive(false);
-            }
+        if (existingDash != null)
+        {
+            BindVehicleDashboardReferences(existingDash);
         }
     }
 
@@ -512,7 +319,10 @@ public class InteractionPromptHUD : MonoBehaviour
 
     public void UpdateVehicleHUD(float currentFuel, float maxFuel, bool isLow, float currentCondition, float maxCondition)
     {
-        if (vehicleDashboardRoot == null || fuelGaugePanel == null || conditionGaugePanel == null) EnsureUI();
+        if (vehicleDashboardRoot == null || fuelValueText == null || fuelBarFill == null || conditionValueText == null || conditionBarFill == null)
+        {
+            EnsureUI();
+        }
 
         if (vehicleDashboardRoot != null && !vehicleDashboardRoot.activeSelf)
         {
@@ -530,44 +340,28 @@ public class InteractionPromptHUD : MonoBehaviour
         float fuelPct = maxFuel > 0 ? Mathf.Clamp01(currentFuel / maxFuel) : 0f;
         float condPct = maxCondition > 0 ? Mathf.Clamp01(currentCondition / maxCondition) : 0f;
 
-        // 1. Fuel Bar & Text
+        // 1. Fuel Bar & Value
         if (fuelBarFill != null)
         {
-            if (fuelBarFill.sprite == null)
-            {
-                fuelBarFill.sprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f));
-            }
+            AlignFillToParent(fuelBarFill);
             fuelBarFill.fillAmount = fuelPct;
-
-            if (fuelPct > 0.40f) fuelBarFill.color = new Color(0.2f, 0.9f, 0.45f);
-            else if (fuelPct > 0.15f) fuelBarFill.color = new Color(1f, 0.75f, 0.2f);
-            else fuelBarFill.color = new Color(1f, 0.25f, 0.25f);
         }
 
         if (fuelValueText != null)
         {
-            string colorTag = isLow ? "<color=#FF4444>" : "<color=#FFFFFF>";
-            fuelValueText.text = $"{colorTag}{currentFuel:F1} / {maxFuel:F1} L ({(fuelPct * 100):F0}%)</color>";
+            fuelValueText.text = $"{currentFuel:F1}/{maxFuel:F1}L";
         }
 
-        // 2. Condition Bar & Text
+        // 2. Condition Bar & Value
         if (conditionBarFill != null)
         {
-            if (conditionBarFill.sprite == null)
-            {
-                conditionBarFill.sprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f));
-            }
+            AlignFillToParent(conditionBarFill);
             conditionBarFill.fillAmount = condPct;
-
-            if (condPct > 0.60f) conditionBarFill.color = new Color(0.0f, 0.9f, 0.64f);
-            else if (condPct > 0.25f) conditionBarFill.color = new Color(1f, 0.65f, 0.15f);
-            else conditionBarFill.color = new Color(1f, 0.25f, 0.25f);
         }
 
         if (conditionValueText != null)
         {
-            string condTag = condPct <= 0.25f ? "<color=#FF4444>[AĞIR HASARLI]</color>" : (condPct <= 0.60f ? "<color=#FFAA33>[ORTA]</color>" : "<color=#32FF64>[İYİ]</color>");
-            conditionValueText.text = $"%{(condPct * 100):F0}  {condTag}";
+            conditionValueText.text = $"{(condPct * 100f):F0}%";
         }
     }
 
@@ -628,6 +422,29 @@ public class InteractionPromptHUD : MonoBehaviour
         return null;
     }
 
+    private Image FindImageRecursive(Transform root, params string[] searchNames)
+    {
+        if (root == null) return null;
+        var allImages = root.GetComponentsInChildren<Image>(true);
+        foreach (var name in searchNames)
+        {
+            foreach (var img in allImages)
+            {
+                if (img != null && img.gameObject.name.Equals(name, System.StringComparison.OrdinalIgnoreCase))
+                    return img;
+            }
+        }
+        foreach (var name in searchNames)
+        {
+            foreach (var img in allImages)
+            {
+                if (img != null && img.gameObject.name.IndexOf(name, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    return img;
+            }
+        }
+        return null;
+    }
+
     private void BindHeldCargoReferences(Transform sideCard)
     {
         if (sideCard == null) return;
@@ -642,6 +459,70 @@ public class InteractionPromptHUD : MonoBehaviour
         heldCargoRewardText = FindTMPRecursive(sideCard, "Reward", "Odul", "Earnings", "Price", "Money", "Income");
         heldCargoPenaltyText = FindTMPRecursive(sideCard, "Penalty", "Ceza", "Fine");
         heldCargoActionHintText = FindTMPRecursive(sideCard, "ActionHint", "Hint", "Prompt", "Controls", "KeyHint");
+    }
+
+    private void AlignFillToParent(Image fillImg)
+    {
+        if (fillImg == null) return;
+        RectTransform rt = fillImg.rectTransform;
+        if (rt != null)
+        {
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+            rt.pivot = new Vector2(0.5f, 0.5f);
+        }
+        if (fillImg.type != Image.Type.Filled)
+        {
+            fillImg.type = Image.Type.Filled;
+            fillImg.fillMethod = Image.FillMethod.Horizontal;
+            fillImg.fillOrigin = 0;
+        }
+    }
+
+    private void BindVehicleDashboardReferences(Transform dashRoot)
+    {
+        if (dashRoot == null) return;
+        vehicleDashboardRoot = dashRoot.gameObject;
+
+        // Fuel Card & Components
+        Transform fCard = dashRoot.Find("FuelGaugeCard");
+        if (fCard == null)
+        {
+            var allT = dashRoot.GetComponentsInChildren<Transform>(true);
+            foreach (var t in allT)
+            {
+                if (t != null && t.name.Equals("FuelGaugeCard", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    fCard = t;
+                    break;
+                }
+            }
+        }
+        fuelGaugePanel = fCard != null ? fCard.gameObject : vehicleDashboardRoot;
+        fuelValueText = FindTMPRecursive(fCard ?? dashRoot, "FuelValue", "FuelVal", "FuelAmount", "FuelText");
+        fuelBarFill = FindImageRecursive(fCard ?? dashRoot, "FuelBarFill", "FuelFill", "FuelBar");
+        AlignFillToParent(fuelBarFill);
+
+        // Condition Card & Components
+        Transform cCard = dashRoot.Find("ConditionGaugeCard");
+        if (cCard == null)
+        {
+            var allT = dashRoot.GetComponentsInChildren<Transform>(true);
+            foreach (var t in allT)
+            {
+                if (t != null && t.name.Equals("ConditionGaugeCard", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    cCard = t;
+                    break;
+                }
+            }
+        }
+        conditionGaugePanel = cCard != null ? cCard.gameObject : vehicleDashboardRoot;
+        conditionValueText = FindTMPRecursive(cCard ?? dashRoot, "CondValue", "ConditionValue", "CondVal", "ConditionText", "CondText");
+        conditionBarFill = FindImageRecursive(cCard ?? dashRoot, "CondBarFill", "ConditionBarFill", "CondFill", "ConditionFill");
+        AlignFillToParent(conditionBarFill);
     }
 
     public void ShowHeldCargoInfo(PhysicalCargoPackage pkg)
