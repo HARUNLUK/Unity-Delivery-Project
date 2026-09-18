@@ -36,7 +36,7 @@ public class MainHUDController : MonoBehaviour
     {
         if (clockText != null && DayTimeManager.Instance != null)
         {
-            clockText.text = $"TIME: {DayTimeManager.Instance.GetFormattedTime()}";
+            clockText.text = $"<mspace=0.6em>{DayTimeManager.Instance.GetFormattedTime()}</mspace>";
         }
 
         if (Time.frameCount % 30 == 0)
@@ -65,13 +65,13 @@ public class MainHUDController : MonoBehaviour
                     remaining++;
                 }
             }
-            remainingCargoText.text = $"REMAINING: {remaining} / {scenePackages.Length}";
+            remainingCargoText.text = $"{remaining} / {scenePackages.Length}";
             return;
         }
 
         if (VanInventory.Instance != null)
         {
-            remainingCargoText.text = $"REMAINING: {VanInventory.Instance.RemainingCargoCount} / {VanInventory.Instance.dailyPackageCount}";
+            remainingCargoText.text = $"{VanInventory.Instance.RemainingCargoCount} / {VanInventory.Instance.dailyPackageCount}";
         }
     }
 
@@ -79,16 +79,14 @@ public class MainHUDController : MonoBehaviour
     {
         if (balanceEarningsText != null)
         {
-            string dailySign = todayNet >= 0 ? $"(+{todayNet} $)" : $"({todayNet} $)";
-            
             if (liveBalance >= 0)
             {
-                balanceEarningsText.text = $"BALANCE: {liveBalance} $ {dailySign}";
+                balanceEarningsText.text = $"${liveBalance:N0}";
                 balanceEarningsText.color = new Color(0.2f, 1f, 0.4f); // Green
             }
             else
             {
-                balanceEarningsText.text = $"BALANCE: {liveBalance} $ {dailySign}";
+                balanceEarningsText.text = $"-${Mathf.Abs(liveBalance):N0}";
                 balanceEarningsText.color = new Color(1f, 0.25f, 0.25f); // Red
             }
         }

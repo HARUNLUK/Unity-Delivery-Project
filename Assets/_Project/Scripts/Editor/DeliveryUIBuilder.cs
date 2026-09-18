@@ -166,7 +166,7 @@ public static class DeliveryUIBuilder
         clockTextRect.anchorMin = Vector2.zero;
         clockTextRect.anchorMax = Vector2.one;
         clockTextRect.sizeDelta = Vector2.zero;
-        TextMeshProUGUI clockText = AddTextMeshPro(clockTextObj, "TIME: 09:00", 28, FontStyles.Bold, TextAlignmentOptions.Center, new Color(1f, 0.85f, 0.2f));
+        TextMeshProUGUI clockText = AddTextMeshPro(clockTextObj, "09:00", 28, FontStyles.Bold, TextAlignmentOptions.Center, new Color(1f, 0.85f, 0.2f));
 
         // 2. Remaining Cargo Card
         GameObject cargoCard = new GameObject("CargoCard");
@@ -179,7 +179,7 @@ public static class DeliveryUIBuilder
         cargoTextRect.anchorMin = Vector2.zero;
         cargoTextRect.anchorMax = Vector2.one;
         cargoTextRect.sizeDelta = Vector2.zero;
-        TextMeshProUGUI remainingText = AddTextMeshPro(cargoTextObj, "REMAINING: 10 / 10", 28, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        TextMeshProUGUI remainingText = AddTextMeshPro(cargoTextObj, "10 / 10", 28, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
 
         // 3. Balance Card
         GameObject balanceCard = new GameObject("BalanceCard");
@@ -192,7 +192,7 @@ public static class DeliveryUIBuilder
         balanceTextRect.anchorMin = Vector2.zero;
         balanceTextRect.anchorMax = Vector2.one;
         balanceTextRect.sizeDelta = Vector2.zero;
-        TextMeshProUGUI balanceText = AddTextMeshPro(balanceTextObj, "BALANCE: 0 $ (+0 $)", 26, FontStyles.Bold, TextAlignmentOptions.Center, new Color(0.2f, 1f, 0.4f));
+        TextMeshProUGUI balanceText = AddTextMeshPro(balanceTextObj, "$0", 26, FontStyles.Bold, TextAlignmentOptions.Center, new Color(0.2f, 1f, 0.4f));
 
         // MainHUDController
         MainHUDController hudController = canvas.GetComponent<MainHUDController>();
