@@ -241,19 +241,10 @@ public class InteractionPromptHUD : MonoBehaviour
 
         if (existingSide != null)
         {
-            heldCargoPanel = existingSide.gameObject;
-            heldCargoHeaderText = existingSide.Find("Header")?.GetComponent<TextMeshProUGUI>();
-            heldCargoTrackingText = existingSide.Find("Tracking")?.GetComponent<TextMeshProUGUI>();
-            heldCargoTypeText = existingSide.Find("Type")?.GetComponent<TextMeshProUGUI>();
-            heldCargoRecipientText = existingSide.Find("Recipient")?.GetComponent<TextMeshProUGUI>();
-            heldCargoAddressText = existingSide.Find("Address")?.GetComponent<TextMeshProUGUI>();
-            heldCargoAddressDescText = existingSide.Find("ClueBox/AddressDescription")?.GetComponent<TextMeshProUGUI>();
-            heldCargoRewardText = existingSide.Find("Reward")?.GetComponent<TextMeshProUGUI>();
-            heldCargoPenaltyText = existingSide.Find("Penalty")?.GetComponent<TextMeshProUGUI>();
-            heldCargoActionHintText = existingSide.Find("ActionHint")?.GetComponent<TextMeshProUGUI>();
+            BindHeldCargoReferences(existingSide);
         }
 
-        if (heldCargoPanel == null || heldCargoTrackingText == null || heldCargoRecipientText == null || heldCargoAddressText == null || heldCargoAddressDescText == null)
+        if (heldCargoPanel == null)
         {
             if (existingSide != null)
             {
@@ -686,6 +677,44 @@ public class InteractionPromptHUD : MonoBehaviour
         return tmp;
     }
 
+    private TextMeshProUGUI FindTMPRecursive(Transform root, params string[] searchNames)
+    {
+        if (root == null) return null;
+        var allTexts = root.GetComponentsInChildren<TextMeshProUGUI>(true);
+        foreach (var name in searchNames)
+        {
+            foreach (var t in allTexts)
+            {
+                if (t != null && t.gameObject.name.Equals(name, System.StringComparison.OrdinalIgnoreCase))
+                    return t;
+            }
+        }
+        foreach (var name in searchNames)
+        {
+            foreach (var t in allTexts)
+            {
+                if (t != null && t.gameObject.name.IndexOf(name, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    return t;
+            }
+        }
+        return null;
+    }
+
+    private void BindHeldCargoReferences(Transform sideCard)
+    {
+        if (sideCard == null) return;
+        heldCargoPanel = sideCard.gameObject;
+        heldCargoHeaderText = FindTMPRecursive(sideCard, "Header", "Title", "PackageHeader", "HeldHeader");
+        heldCargoTrackingText = FindTMPRecursive(sideCard, "Tracking", "Track", "TrackingNumber", "Id");
+        heldCargoTypeText = FindTMPRecursive(sideCard, "Type", "CargoType", "Badge", "ParcelType");
+        heldCargoRecipientText = FindTMPRecursive(sideCard, "Recipient", "Alici", "Customer", "Name");
+        heldCargoAddressText = FindTMPRecursive(sideCard, "Address", "Adres", "TargetAddress", "Destination");
+        heldCargoAddressDescText = FindTMPRecursive(sideCard, "AddressDescription", "Description", "Clue", "VisualClue", "Ipucu", "Desc");
+        heldCargoRewardText = FindTMPRecursive(sideCard, "Reward", "Odul", "Earnings", "Price", "Money", "Income");
+        heldCargoPenaltyText = FindTMPRecursive(sideCard, "Penalty", "Ceza", "Fine");
+        heldCargoActionHintText = FindTMPRecursive(sideCard, "ActionHint", "Hint", "Prompt", "Controls", "KeyHint");
+    }
+
     public void ShowHeldCargoInfo(PhysicalCargoPackage pkg)
     {
         currentHeldPackage = pkg;
@@ -695,7 +724,7 @@ public class InteractionPromptHUD : MonoBehaviour
             return;
         }
 
-        if (heldCargoPanel == null || heldCargoTrackingText == null || heldCargoAddressText == null || heldCargoAddressDescText == null)
+        if (heldCargoPanel == null)
         {
             EnsureUI();
         }
@@ -703,16 +732,7 @@ public class InteractionPromptHUD : MonoBehaviour
         if (heldCargoPanel != null)
         {
             heldCargoPanel.SetActive(true);
-
-            // Re-bind fallbacks if any field is still unassigned
-            if (heldCargoTrackingText == null) heldCargoTrackingText = heldCargoPanel.transform.Find("Tracking")?.GetComponent<TextMeshProUGUI>();
-            if (heldCargoRecipientText == null) heldCargoRecipientText = heldCargoPanel.transform.Find("Recipient")?.GetComponent<TextMeshProUGUI>();
-            if (heldCargoAddressText == null) heldCargoAddressText = heldCargoPanel.transform.Find("Address")?.GetComponent<TextMeshProUGUI>();
-            if (heldCargoAddressDescText == null) heldCargoAddressDescText = heldCargoPanel.transform.Find("ClueBox/AddressDescription")?.GetComponent<TextMeshProUGUI>();
-            if (heldCargoRewardText == null) heldCargoRewardText = heldCargoPanel.transform.Find("Reward")?.GetComponent<TextMeshProUGUI>();
-            if (heldCargoPenaltyText == null) heldCargoPenaltyText = heldCargoPanel.transform.Find("Penalty")?.GetComponent<TextMeshProUGUI>();
-            if (heldCargoTypeText == null) heldCargoTypeText = heldCargoPanel.transform.Find("Type")?.GetComponent<TextMeshProUGUI>();
-            if (heldCargoActionHintText == null) heldCargoActionHintText = heldCargoPanel.transform.Find("ActionHint")?.GetComponent<TextMeshProUGUI>();
+            BindHeldCargoReferences(heldCargoPanel.transform);
         }
 
         string recipient = !string.IsNullOrEmpty(pkg.EffectiveRecipientName) ? pkg.EffectiveRecipientName : pkg.recipientName;
@@ -745,6 +765,22 @@ public class InteractionPromptHUD : MonoBehaviour
             heldCargoAddressDescText.text = !string.IsNullOrEmpty(desc) ? $"\"{desc}\"" : "\"(No address visual clue available)\"";
             heldCargoAddressDescText.SetVerticesDirty();
             heldCargoAddressDescText.SetLayoutDirty();
+
+            // Rebuild content layout so ScrollRect recognizes the new text height immediately
+            Canvas.ForceUpdateCanvases();
+            if (heldCargoAddressDescText.transform.parent is RectTransform parentRect)
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect);
+            }
+            ScrollRect sr = heldCargoAddressDescText.GetComponentInParent<ScrollRect>();
+            if (sr != null && sr.content != null)
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(sr.content);
+                sr.verticalNormalizedPosition = 1f;
+                Vector2 p = sr.content.anchoredPosition;
+                p.y = 0f;
+                sr.content.anchoredPosition = p;
+            }
         }
 
         if (heldCargoRewardText != null)
