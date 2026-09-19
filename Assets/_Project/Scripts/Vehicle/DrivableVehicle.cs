@@ -818,15 +818,7 @@ public class DrivableVehicle : MonoBehaviour
                             VehicleServiceGarage.Instance.IsVehicleInServiceBay(this);
 
             wasInGarageBayLastFrame = inGarage;
-
-            if (inGarage)
-            {
-                InteractionPromptHUD.Instance.ShowPrompt("<color=#FFD232>[F] Menüyü Aç</color>", 2.0f);
-            }
-            else
-            {
-                InteractionPromptHUD.Instance.ShowPrompt("[E] Exit  |  [V] Change Camera", 2.0f);
-            }
+            InteractionPromptHUD.Instance.HidePrompt();
             InteractionPromptHUD.Instance.UpdateVehicleHUD(currentFuel, maxFuel, currentFuel < (maxFuel * 0.18f), currentCondition, maxCondition);
         }
 
@@ -1010,7 +1002,7 @@ public class DrivableVehicle : MonoBehaviour
 
         if (InteractionPromptHUD.Instance != null)
         {
-            InteractionPromptHUD.Instance.HidePrompt();
+            InteractionPromptHUD.Instance.SuppressPrompts(0.4f);
             InteractionPromptHUD.Instance.HideFuelHUD();
         }
 

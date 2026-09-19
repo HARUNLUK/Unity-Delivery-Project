@@ -112,17 +112,7 @@ public static class DeliveryUIBuilder
         Transform oldDash = canvas.transform.Find("VehicleDashboardPanel");
         if (oldDash != null) Object.DestroyImmediate(oldDash.gameObject);
 
-        Transform oldGarage = canvas.transform.Find("GarageWorkshopPanel");
-        if (oldGarage != null) Object.DestroyImmediate(oldGarage.gameObject);
-
-        Transform oldInsurance = canvas.transform.Find("InsuranceAgencyPanel");
-        if (oldInsurance != null) Object.DestroyImmediate(oldInsurance.gameObject);
-
-        Transform oldDispatch = canvas.transform.Find("PassiveDispatchPanel");
-        if (oldDispatch != null) Object.DestroyImmediate(oldDispatch.gameObject);
-
-        Transform oldPropModal = canvas.transform.Find("PropertyPurchaseModal");
-        if (oldPropModal != null) Object.DestroyImmediate(oldPropModal.gameObject);
+        // Preserve custom-designed Shop UI panels in Hierarchy (GarageWorkshopPanel, InsuranceAgencyPanel, PassiveDispatchPanel, PropertyPurchaseModal)
 
         // ==========================================
         // 0. MAIN TOP STATUS BAR (PERMANENT HUD)

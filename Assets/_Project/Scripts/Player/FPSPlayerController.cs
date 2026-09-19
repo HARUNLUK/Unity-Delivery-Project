@@ -282,6 +282,11 @@ public class FPSPlayerController : MonoBehaviour
 
         bool isUIOpen = IsUIBlockingInput();
 
+        if (isUIOpen && InteractionPromptHUD.Instance != null)
+        {
+            InteractionPromptHUD.Instance.HidePrompt();
+        }
+
         // Enforce unlocked cursor if any UI is open
         if (isUIOpen)
         {
@@ -652,8 +657,13 @@ public class FPSPlayerController : MonoBehaviour
 
     private void HandleInteraction()
     {
-        bool interactPressed = (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame);
-        bool leftClickPressed = (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame);
+        bool interactPressed = false;
+#if ENABLE_INPUT_SYSTEM
+        if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame) interactPressed = true;
+#endif
+#if ENABLE_LEGACY_INPUT_MANAGER
+        try { if (Input.GetKeyDown(KeyCode.E)) interactPressed = true; } catch { }
+#endif
 
         // If holding an object
         if (grabber != null && grabber.IsHoldingObject)
@@ -665,35 +675,46 @@ public class FPSPlayerController : MonoBehaviour
                 afterGrabSafetyTimer -= Time.deltaTime;
                 if (InteractionPromptHUD.Instance != null)
                 {
-                    InteractionPromptHUD.Instance.ShowPrompt("[E] or [LMB] Drop (Hold to Throw)");
+                    InteractionPromptHUD.Instance.HideThrowCharge();
+                    InteractionPromptHUD.Instance.HidePrompt();
                 }
                 return;
             }
 
-            bool isHoldingDropKey = (Keyboard.current != null && Keyboard.current.eKey.isPressed) ||
-                                    (Mouse.current != null && Mouse.current.leftButton.isPressed);
+            bool isHoldingDropKey = false;
+            bool dropKeyReleased = false;
 
-            bool dropKeyReleased = (Keyboard.current != null && Keyboard.current.eKey.wasReleasedThisFrame) ||
-                                   (Mouse.current != null && Mouse.current.leftButton.wasReleasedThisFrame);
+#if ENABLE_INPUT_SYSTEM
+            if (Keyboard.current != null && Keyboard.current.eKey.isPressed) isHoldingDropKey = true;
+            if (Mouse.current != null && Mouse.current.leftButton.isPressed) isHoldingDropKey = true;
+            if (Keyboard.current != null && Keyboard.current.eKey.wasReleasedThisFrame) dropKeyReleased = true;
+            if (Mouse.current != null && Mouse.current.leftButton.wasReleasedThisFrame) dropKeyReleased = true;
+#endif
+#if ENABLE_LEGACY_INPUT_MANAGER
+            try
+            {
+                if (Input.GetKey(KeyCode.E) || Input.GetMouseButton(0)) isHoldingDropKey = true;
+                if (Input.GetKeyUp(KeyCode.E) || Input.GetMouseButtonUp(0)) dropKeyReleased = true;
+            }
+            catch { }
+#endif
 
             if (isHoldingDropKey)
             {
                 currentDropHoldTime += Time.deltaTime;
                 float chargePercent = Mathf.Clamp01(currentDropHoldTime / throwChargeDuration);
 
-                if (currentDropHoldTime > 0.18f)
+                if (InteractionPromptHUD.Instance != null)
                 {
-                    if (InteractionPromptHUD.Instance != null)
-                    {
-                        InteractionPromptHUD.Instance.ShowPrompt($"Throw Power: {(int)(chargePercent * 100)}% (Release to Throw)");
-                    }
+                    InteractionPromptHUD.Instance.SetThrowCharge(chargePercent);
                 }
-                else
+            }
+            else
+            {
+                if (InteractionPromptHUD.Instance != null)
                 {
-                    if (InteractionPromptHUD.Instance != null)
-                    {
-                        InteractionPromptHUD.Instance.ShowPrompt("[E] / [LMB] Drop (Hold: Throw)");
-                    }
+                    InteractionPromptHUD.Instance.HideThrowCharge();
+                    InteractionPromptHUD.Instance.HidePrompt();
                 }
             }
 
@@ -714,9 +735,11 @@ public class FPSPlayerController : MonoBehaviour
                 }
 
                 currentDropHoldTime = 0f;
+                afterGrabSafetyTimer = 0.35f;
                 if (InteractionPromptHUD.Instance != null)
                 {
-                    InteractionPromptHUD.Instance.HidePrompt();
+                    InteractionPromptHUD.Instance.HideThrowCharge();
+                    InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
                 }
             }
 
@@ -727,10 +750,10 @@ public class FPSPlayerController : MonoBehaviour
 
         // Perform raycast / spherecast with RaycastAll to avoid static shop/building geometry blocking interactables
         Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
-        RaycastHit[] hits = Physics.RaycastAll(ray, interactionDistance, interactionLayers, QueryTriggerInteraction.Ignore);
+        RaycastHit[] hits = Physics.RaycastAll(ray, interactionDistance, interactionLayers, QueryTriggerInteraction.Collide);
         if (hits == null || hits.Length == 0)
         {
-            hits = Physics.SphereCastAll(ray, 0.25f, interactionDistance, interactionLayers, QueryTriggerInteraction.Ignore);
+            hits = Physics.SphereCastAll(ray, 0.35f, interactionDistance, interactionLayers, QueryTriggerInteraction.Collide);
         }
 
         if (hits != null && hits.Length > 1)
@@ -739,8 +762,6 @@ public class FPSPlayerController : MonoBehaviour
         }
 
         // STEP 1: Process the closest direct interactable hit along the raycast.
-        // Evaluating sorted hits in order guarantees that looking directly at the vehicle (hood, door, cab)
-        // interacts with the vehicle instead of hidden/background cargo resting in the truck bed behind it.
         if (hits != null)
         {
             foreach (var h in hits)
@@ -753,14 +774,16 @@ public class FPSPlayerController : MonoBehaviour
                 if (terminal != null)
                 {
                     UpdateCargoFocus(null);
+                    if (interactPressed)
+                    {
+                        if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+                        terminal.InteractTerminal();
+                        return;
+                    }
+
                     if (InteractionPromptHUD.Instance != null)
                     {
                         InteractionPromptHUD.Instance.ShowPrompt(terminal.GetPromptText());
-                    }
-
-                    if (interactPressed)
-                    {
-                        terminal.InteractTerminal();
                     }
                     return;
                 }
@@ -772,20 +795,25 @@ public class FPSPlayerController : MonoBehaviour
                 {
                     Vector3 anchorPos = lockedProperty.interactionAnchor != null ? lockedProperty.interactionAnchor.position : lockedProperty.transform.position;
                     float d = Vector3.Distance(transform.position, anchorPos);
-                    if (d <= lockedProperty.interactionDistance || h.distance <= lockedProperty.interactionDistance)
+                    Vector3 dirToAnchor = (anchorPos - playerCamera.transform.position).normalized;
+                    bool isFacingShop = lockedProperty.interactionAnchor == null || Vector3.Dot(playerCamera.transform.forward, dirToAnchor) > 0.20f;
+
+                    if ((d <= lockedProperty.interactionDistance || h.distance <= lockedProperty.interactionDistance) && isFacingShop)
                     {
                         UpdateCargoFocus(null);
-                        if (InteractionPromptHUD.Instance != null)
-                        {
-                            InteractionPromptHUD.Instance.ShowPrompt(lockedProperty.GetPromptText());
-                        }
-
                         if (interactPressed)
                         {
+                            if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
                             if (CommercialHubUIManager.Instance != null)
                                 CommercialHubUIManager.Instance.OpenPropertyPurchaseModal(lockedProperty);
                             else
                                 lockedProperty.TryPurchase();
+                            return;
+                        }
+
+                        if (InteractionPromptHUD.Instance != null)
+                        {
+                            InteractionPromptHUD.Instance.ShowPrompt(lockedProperty.GetPromptText());
                         }
                         return;
                     }
@@ -799,17 +827,19 @@ public class FPSPlayerController : MonoBehaviour
                     if (ins != null && ins.IsAgencyUnlocked())
                     {
                         UpdateCargoFocus(null);
-                        if (InteractionPromptHUD.Instance != null)
-                        {
-                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Kargo Sigorta Acentesi Menüsünü Aç ({ins.GetTierName()})</color>");
-                        }
-
                         if (interactPressed)
                         {
+                            if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
                             if (CommercialHubUIManager.Instance != null)
                                 CommercialHubUIManager.Instance.OpenInsurancePanel();
                             else
                                 ins.TryUpgradeTier();
+                            return;
+                        }
+
+                        if (InteractionPromptHUD.Instance != null)
+                        {
+                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Kargo Sigorta Acentesi Menüsünü Aç ({ins.GetTierName()})</color>");
                         }
                         return;
                     }
@@ -819,17 +849,19 @@ public class FPSPlayerController : MonoBehaviour
                     if (hub != null && hub.IsHubUnlocked())
                     {
                         UpdateCargoFocus(null);
-                        if (InteractionPromptHUD.Instance != null)
-                        {
-                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Bölge Dağıtım Şubesi Menüsünü Aç (Seviye {hub.DispatchHubLevel} - {hub.GetCourierCount()} Kurye)</color>");
-                        }
-
                         if (interactPressed)
                         {
+                            if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
                             if (CommercialHubUIManager.Instance != null)
                                 CommercialHubUIManager.Instance.OpenDispatchHubPanel();
                             else
                                 hub.TryUpgradeHub();
+                            return;
+                        }
+
+                        if (InteractionPromptHUD.Instance != null)
+                        {
+                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Bölge Dağıtım Şubesi Menüsünü Aç (Seviye {hub.DispatchHubLevel} - {hub.GetCourierCount()} Kurye)</color>");
                         }
                         return;
                     }
@@ -841,14 +873,16 @@ public class FPSPlayerController : MonoBehaviour
                 if (directTailgate != null)
                 {
                     UpdateCargoFocus(null);
+                    if (interactPressed)
+                    {
+                        if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+                        directTailgate.ToggleDoor();
+                        return;
+                    }
+
                     if (InteractionPromptHUD.Instance != null)
                     {
                         InteractionPromptHUD.Instance.ShowPrompt(directTailgate.GetPromptText());
-                    }
-
-                    if (interactPressed)
-                    {
-                        directTailgate.ToggleDoor();
                     }
                     return;
                 }
@@ -874,23 +908,24 @@ public class FPSPlayerController : MonoBehaviour
                 if (pkg != null || (targetRb != null && !targetRb.isKinematic))
                 {
                     UpdateCargoFocus(pkg);
-
-                    if (InteractionPromptHUD.Instance != null)
-                    {
-                        string targetName = (pkg != null) ? $"Cargo #{pkg.targetPointId} (${pkg.deliveryReward})" : "Object";
-                        InteractionPromptHUD.Instance.ShowPrompt($"[E] Pick up {targetName}");
-                    }
-
                     if (interactPressed && grabber != null)
                     {
                         UpdateCargoFocus(null);
                         Rigidbody rbToGrab = pkg != null ? pkg.GetComponent<Rigidbody>() : targetRb;
                         if (rbToGrab != null)
                         {
+                            if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
                             grabber.GrabObject(rbToGrab);
-                            afterGrabSafetyTimer = 0.22f;
+                            afterGrabSafetyTimer = 0.25f;
                             currentDropHoldTime = 0f;
                         }
+                        return;
+                    }
+
+                    if (InteractionPromptHUD.Instance != null)
+                    {
+                        string targetName = (pkg != null) ? "Cargo" : "Object";
+                        InteractionPromptHUD.Instance.ShowPrompt($"[E] Pick up {targetName}");
                     }
                     return;
                 }
@@ -908,42 +943,48 @@ public class FPSPlayerController : MonoBehaviour
 
                         if (branchLevel < vehicle.requiredPlayerLevel)
                         {
+                            if (interactPressed)
+                            {
+                                if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+                                if (AudioManager.Instance != null) AudioManager.Instance.PlayError();
+                                return;
+                            }
+
                             if (InteractionPromptHUD.Instance != null)
                             {
                                 InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF5555>[LOCKED] {vehicle.vehicleName}</color> (Requires Branch Level {vehicle.requiredPlayerLevel} - ${vehicle.purchasePrice})");
                             }
-
-                            if (interactPressed && AudioManager.Instance != null)
-                            {
-                                AudioManager.Instance.PlayError();
-                            }
                         }
                         else if (currentBalance < vehicle.purchasePrice)
                         {
+                            if (interactPressed)
+                            {
+                                if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+                                if (AudioManager.Instance != null) AudioManager.Instance.PlayError();
+                                return;
+                            }
+
                             if (InteractionPromptHUD.Instance != null)
                             {
                                 InteractionPromptHUD.Instance.ShowPrompt($"<color=#FFAA33>[LOCKED] {vehicle.vehicleName}</color> (${vehicle.purchasePrice} - Balance: ${currentBalance})");
                             }
-
-                            if (interactPressed && AudioManager.Instance != null)
-                            {
-                                AudioManager.Instance.PlayError();
-                            }
                         }
                         else
                         {
-                            if (InteractionPromptHUD.Instance != null)
-                            {
-                                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Purchase: {vehicle.vehicleName}</color> (${vehicle.purchasePrice})");
-                            }
-
                             if (interactPressed)
                             {
+                                if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
                                 bool bought = vehicle.TryPurchase();
                                 if (bought && InteractionPromptHUD.Instance != null)
                                 {
-                                    InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>[PURCHASED] {vehicle.vehicleName} Successfully Purchased!</color>");
+                                    InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>[PURCHASED] {vehicle.vehicleName} Successfully Purchased!</color>", 2.5f);
                                 }
+                                return;
+                            }
+
+                            if (InteractionPromptHUD.Instance != null)
+                            {
+                                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Purchase: {vehicle.vehicleName}</color> (${vehicle.purchasePrice})");
                             }
                         }
                         return;
@@ -958,14 +999,16 @@ public class FPSPlayerController : MonoBehaviour
                     // If aiming specifically at the rear tailgate area (< 1.8m from tailgate)
                     if (vehicle.rearTailgate != null && distToTailgate < 1.8f)
                     {
+                        if (interactPressed)
+                        {
+                            if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+                            vehicle.rearTailgate.ToggleDoor();
+                            return;
+                        }
+
                         if (InteractionPromptHUD.Instance != null)
                         {
                             InteractionPromptHUD.Instance.ShowPrompt(vehicle.rearTailgate.GetPromptText());
-                        }
-
-                        if (interactPressed)
-                        {
-                            vehicle.rearTailgate.ToggleDoor();
                         }
                         return;
                     }
@@ -989,7 +1032,15 @@ public class FPSPlayerController : MonoBehaviour
 
                         if (fPressed && CommercialHubUIManager.Instance != null)
                         {
+                            if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
                             CommercialHubUIManager.Instance.OpenGarageWorkshopPanel(vehicle);
+                            return;
+                        }
+
+                        if (interactPressed && exitVehicleSafetyTimer <= 0f)
+                        {
+                            if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+                            vehicle.EnterVehicle(this);
                             return;
                         }
 
@@ -1000,15 +1051,17 @@ public class FPSPlayerController : MonoBehaviour
                     }
                     else
                     {
+                        if (interactPressed && exitVehicleSafetyTimer <= 0f)
+                        {
+                            if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+                            vehicle.EnterVehicle(this);
+                            return;
+                        }
+
                         if (InteractionPromptHUD.Instance != null)
                         {
                             InteractionPromptHUD.Instance.ShowPrompt($"[E] Drive {vehicle.vehicleName}");
                         }
-                    }
-
-                    if (interactPressed && exitVehicleSafetyTimer <= 0f)
-                    {
-                        vehicle.EnterVehicle(this);
                     }
                     return;
                 }
@@ -1027,14 +1080,16 @@ public class FPSPlayerController : MonoBehaviour
             if (t != null)
             {
                 UpdateCargoFocus(null);
+                if (interactPressed)
+                {
+                    if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+                    t.InteractTerminal();
+                    return;
+                }
+
                 if (InteractionPromptHUD.Instance != null)
                 {
                     InteractionPromptHUD.Instance.ShowPrompt(t.GetPromptText());
-                }
-
-                if (interactPressed)
-                {
-                    t.InteractTerminal();
                 }
                 return;
             }
@@ -1051,20 +1106,25 @@ public class FPSPlayerController : MonoBehaviour
             {
                 Vector3 anchorPos = p.interactionAnchor != null ? p.interactionAnchor.position : p.transform.position;
                 float d = Vector3.Distance(transform.position, anchorPos);
-                if (d <= p.interactionDistance)
+                Vector3 dirToAnchor = (anchorPos - playerCamera.transform.position).normalized;
+                bool isFacingShop = Vector3.Dot(playerCamera.transform.forward, dirToAnchor) > 0.30f;
+
+                if (d <= p.interactionDistance && isFacingShop)
                 {
                     UpdateCargoFocus(null);
-                    if (InteractionPromptHUD.Instance != null)
-                    {
-                        InteractionPromptHUD.Instance.ShowPrompt(p.GetPromptText());
-                    }
-
                     if (interactPressed)
                     {
+                        if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
                         if (CommercialHubUIManager.Instance != null)
                             CommercialHubUIManager.Instance.OpenPropertyPurchaseModal(p);
                         else
                             p.TryPurchase();
+                        return;
+                    }
+
+                    if (InteractionPromptHUD.Instance != null)
+                    {
+                        InteractionPromptHUD.Instance.ShowPrompt(p.GetPromptText());
                     }
                     return;
                 }
@@ -1098,24 +1158,55 @@ public class FPSPlayerController : MonoBehaviour
         {
             UpdateCargoFocus(proxPkg);
 
-            if (InteractionPromptHUD.Instance != null)
-            {
-                string targetName = (proxPkg != null) ? $"Cargo #{proxPkg.targetPointId} (${proxPkg.deliveryReward})" : "Object";
-                InteractionPromptHUD.Instance.ShowPrompt($"[E] Pick up {targetName}");
-            }
-
             if (interactPressed && grabber != null)
             {
                 UpdateCargoFocus(null);
                 Rigidbody rbToGrab = proxPkg != null ? proxPkg.GetComponent<Rigidbody>() : proxRb;
                 if (rbToGrab != null)
                 {
+                    if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
                     grabber.GrabObject(rbToGrab);
-                    afterGrabSafetyTimer = 0.22f;
+                    afterGrabSafetyTimer = 0.25f;
                     currentDropHoldTime = 0f;
                 }
+                return;
+            }
+
+            if (InteractionPromptHUD.Instance != null)
+            {
+                string targetName = (proxPkg != null) ? "Cargo" : "Object";
+                InteractionPromptHUD.Instance.ShowPrompt($"[E] Pick up {targetName}");
             }
             return;
+        }
+
+        // 2.4 Proximity scan fallback for Vehicles (Standing right beside driver door / front / rear)
+        Collider[] closeVehs = Physics.OverlapSphere(transform.position, 3.2f, interactionLayers, QueryTriggerInteraction.Collide);
+        foreach (var cv in closeVehs)
+        {
+            if (cv.transform.IsChildOf(transform)) continue;
+            DrivableVehicle v = cv.GetComponentInParent<DrivableVehicle>();
+            if (v != null && !v.isPlayerInside)
+            {
+                Vector3 dirToVeh = (v.transform.position - playerCamera.transform.position).normalized;
+                bool isFacingVeh = Vector3.Dot(playerCamera.transform.forward, dirToVeh) > 0.15f;
+                if (isFacingVeh)
+                {
+                    UpdateCargoFocus(null);
+                    if (interactPressed && exitVehicleSafetyTimer <= 0f)
+                    {
+                        if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+                        v.EnterVehicle(this);
+                        return;
+                    }
+
+                    if (InteractionPromptHUD.Instance != null)
+                    {
+                        InteractionPromptHUD.Instance.ShowPrompt($"[E] Drive {v.vehicleName}");
+                    }
+                    return;
+                }
+            }
         }
 
         // No interactive target hit

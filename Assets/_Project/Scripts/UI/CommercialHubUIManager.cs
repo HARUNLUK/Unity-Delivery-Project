@@ -158,6 +158,11 @@ public class CommercialHubUIManager : MonoBehaviour
         EnsureUI();
         CloseAllPanels();
 
+        if (InteractionPromptHUD.Instance != null)
+        {
+            InteractionPromptHUD.Instance.HidePrompt();
+        }
+
         activeGarageVehicle = v;
         if (garagePanelRoot != null) garagePanelRoot.SetActive(true);
 
@@ -270,6 +275,11 @@ public class CommercialHubUIManager : MonoBehaviour
         EnsureUI();
         CloseAllPanels();
 
+        if (InteractionPromptHUD.Instance != null)
+        {
+            InteractionPromptHUD.Instance.HidePrompt();
+        }
+
         if (insurancePanelRoot != null) insurancePanelRoot.SetActive(true);
 
         Cursor.lockState = CursorLockMode.None;
@@ -355,6 +365,11 @@ public class CommercialHubUIManager : MonoBehaviour
     {
         EnsureUI();
         CloseAllPanels();
+
+        if (InteractionPromptHUD.Instance != null)
+        {
+            InteractionPromptHUD.Instance.HidePrompt();
+        }
 
         if (dispatchPanelRoot != null) dispatchPanelRoot.SetActive(true);
 
@@ -450,6 +465,11 @@ public class CommercialHubUIManager : MonoBehaviour
         EnsureUI();
         CloseAllPanels();
 
+        if (InteractionPromptHUD.Instance != null)
+        {
+            InteractionPromptHUD.Instance.HidePrompt();
+        }
+
         activePropertyToBuy = prop;
         if (propertyModalRoot != null) propertyModalRoot.SetActive(true);
 
@@ -464,23 +484,29 @@ public class CommercialHubUIManager : MonoBehaviour
         int branchLevel = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : (PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.WarehouseLevel : 1);
         int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
 
-        if (propertyModalTitleText != null) propertyModalTitleText.text = $"🏢 {prop.displayName.ToUpper()}";
-        if (propertyModalDescText != null) propertyModalDescText.text = prop.description;
-        if (propertyModalCostText != null) propertyModalCostText.text = $"<b>Fiyat:</b> <color=#32FF64>${prop.purchaseCost:N0}</color>  |  <b>Bakiyeniz:</b> ${balance:N0}";
+        if (propertyModalTitleText != null)
+        {
+            propertyModalTitleText.text = !string.IsNullOrEmpty(prop.displayName) ? prop.displayName.ToUpper() : "TİCARİ MÜLK SATIN ALMA";
+        }
+
+        if (propertyModalDescText != null)
+        {
+            propertyModalDescText.text = prop.description;
+        }
+
         if (propertyModalReqText != null)
         {
-            string lvlColor = branchLevel >= prop.requiredPlayerLevel ? "#32FF64" : "#FF4444";
-            propertyModalReqText.text = $"<b>Gereken Şube Seviyesi:</b> <color={lvlColor}>Level {prop.requiredPlayerLevel}</color> (Mevcut: Level {branchLevel})";
+            propertyModalReqText.text = $"Gereken Seviye: Level {prop.requiredPlayerLevel}";
+        }
+
+        if (propertyModalCostText != null)
+        {
+            propertyModalCostText.text = $"Fiyat: ${prop.purchaseCost:N0}";
         }
 
         if (propertyModalBuyBtn != null)
         {
             propertyModalBuyBtn.interactable = true;
-            TextMeshProUGUI bTxt = propertyModalBuyBtn.GetComponentInChildren<TextMeshProUGUI>();
-            if (bTxt != null)
-            {
-                bTxt.text = $"Satın Al (${prop.purchaseCost:N0})";
-            }
         }
     }
 
@@ -500,6 +526,11 @@ public class CommercialHubUIManager : MonoBehaviour
     public void CloseAllPanels()
     {
         bool wasOpen = IsAnyPanelOpen;
+
+        if (InteractionPromptHUD.Instance != null)
+        {
+            InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+        }
 
         if (garagePanelRoot != null) garagePanelRoot.SetActive(false);
         if (insurancePanelRoot != null) insurancePanelRoot.SetActive(false);
@@ -541,10 +572,7 @@ public class CommercialHubUIManager : MonoBehaviour
 
         if (forceRecreate)
         {
-            if (garagePanelRoot != null) DestroyImmediate(garagePanelRoot);
-            if (insurancePanelRoot != null) DestroyImmediate(insurancePanelRoot);
-            if (dispatchPanelRoot != null) DestroyImmediate(dispatchPanelRoot);
-            if (propertyModalRoot != null) DestroyImmediate(propertyModalRoot);
+            // Do not destroy custom-designed panels in the scene (PropertyPurchaseModal, GarageWorkshopPanel, etc.)
         }
 
         // 1. Build Garage Panel
@@ -742,19 +770,19 @@ public class CommercialHubUIManager : MonoBehaviour
     private void BindPropertyModal(GameObject root)
     {
         if (root == null) return;
-        propertyModalTitleText = FindTMPRecursive(root.transform, "Title");
-        propertyModalDescText = FindTMPRecursive(root.transform, "Desc");
-        propertyModalReqText = FindTMPRecursive(root.transform, "Req");
-        propertyModalCostText = FindTMPRecursive(root.transform, "Cost");
+        propertyModalTitleText = FindTMPRecursive(root.transform, "Title", "Header", "ModalTitle");
+        propertyModalDescText = FindTMPRecursive(root.transform, "Desc", "Description", "Info");
+        propertyModalReqText = FindTMPRecursive(root.transform, "Req", "Requirement", "LevelReq", "RequiredLevel");
+        propertyModalCostText = FindTMPRecursive(root.transform, "Cost", "Price", "Fiyat", "Fee");
 
-        propertyModalBuyBtn = FindButtonRecursive(root.transform, "BuyBtn");
+        propertyModalBuyBtn = FindButtonRecursive(root.transform, "BuyBtn", "BuyButton", "ConfirmBtn", "PurchaseBtn");
         if (propertyModalBuyBtn != null)
         {
             propertyModalBuyBtn.onClick.RemoveAllListeners();
             propertyModalBuyBtn.onClick.AddListener(OnPropertyConfirmPurchase);
         }
 
-        propertyModalCancelBtn = FindButtonRecursive(root.transform, "CancelBtn");
+        propertyModalCancelBtn = FindButtonRecursive(root.transform, "CancelBtn", "CancelButton", "CloseBtn", "CloseButton");
         if (propertyModalCancelBtn != null)
         {
             propertyModalCancelBtn.onClick.RemoveAllListeners();
@@ -828,25 +856,6 @@ public class CommercialHubUIManager : MonoBehaviour
     private GameObject CreatePropertyModal(Transform parent)
     {
         GameObject root = CreateDarkPanel(parent, "PropertyPurchaseModal", new Vector2(750, 480));
-
-        propertyModalTitleText = CreateTMPText(root, "Title", "🏢 TİCARİ MÜLK SATIN ALMA", 28, FontStyles.Bold, new Color(1f, 0.85f, 0.2f), TextAlignmentOptions.Center);
-        SetRectAnchors(propertyModalTitleText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -35), new Vector2(700, 45));
-
-        propertyModalDescText = CreateTMPText(root, "Desc", "Açıklama...", 20, FontStyles.Normal, Color.white, TextAlignmentOptions.Center);
-        SetRectAnchors(propertyModalDescText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -100), new Vector2(680, 80));
-
-        propertyModalReqText = CreateTMPText(root, "Req", "Gereken Seviye: Level 2", 20, FontStyles.Bold, Color.white, TextAlignmentOptions.Center);
-        SetRectAnchors(propertyModalReqText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -195), new Vector2(680, 35));
-
-        propertyModalCostText = CreateTMPText(root, "Cost", "Fiyat: $8.000", 22, FontStyles.Bold, new Color(0.3f, 1f, 0.4f), TextAlignmentOptions.Center);
-        SetRectAnchors(propertyModalCostText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -240), new Vector2(680, 35));
-
-        propertyModalBuyBtn = CreateButton(root, "BuyBtn", "✅ Satın Al", new Vector2(-165, -340), new Vector2(300, 56), new Color(0.12f, 0.65f, 0.35f));
-        propertyModalBuyBtn.onClick.AddListener(OnPropertyConfirmPurchase);
-
-        propertyModalCancelBtn = CreateButton(root, "CancelBtn", "❌ Vazgeç (ESC)", new Vector2(165, -340), new Vector2(300, 56), new Color(0.45f, 0.35f, 0.35f));
-        propertyModalCancelBtn.onClick.AddListener(CloseAllPanels);
-
         return root;
     }
 
@@ -957,26 +966,48 @@ public class CommercialHubUIManager : MonoBehaviour
         }
     }
 
-    private TextMeshProUGUI FindTMPRecursive(Transform root, string targetName)
+    private TextMeshProUGUI FindTMPRecursive(Transform root, params string[] searchNames)
     {
-        if (root == null) return null;
+        if (root == null || searchNames == null) return null;
         TextMeshProUGUI[] tmps = root.GetComponentsInChildren<TextMeshProUGUI>(true);
-        foreach (var t in tmps)
+        foreach (var name in searchNames)
         {
-            if (t.gameObject.name.Equals(targetName, StringComparison.OrdinalIgnoreCase))
-                return t;
+            foreach (var t in tmps)
+            {
+                if (t != null && t.gameObject.name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                    return t;
+            }
+        }
+        foreach (var name in searchNames)
+        {
+            foreach (var t in tmps)
+            {
+                if (t != null && t.gameObject.name.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0)
+                    return t;
+            }
         }
         return null;
     }
 
-    private Button FindButtonRecursive(Transform root, string targetName)
+    private Button FindButtonRecursive(Transform root, params string[] searchNames)
     {
-        if (root == null) return null;
+        if (root == null || searchNames == null) return null;
         Button[] buttons = root.GetComponentsInChildren<Button>(true);
-        foreach (var b in buttons)
+        foreach (var name in searchNames)
         {
-            if (b.gameObject.name.Equals(targetName, StringComparison.OrdinalIgnoreCase))
-                return b;
+            foreach (var b in buttons)
+            {
+                if (b != null && b.gameObject.name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                    return b;
+            }
+        }
+        foreach (var name in searchNames)
+        {
+            foreach (var b in buttons)
+            {
+                if (b != null && b.gameObject.name.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0)
+                    return b;
+            }
         }
         return null;
     }

@@ -260,6 +260,11 @@ public class CargoTabletUI : MonoBehaviour
 
     public void OpenTablet()
     {
+        if (InteractionPromptHUD.Instance != null)
+        {
+            InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+        }
+
         EnsureEventSystemAndRaycaster();
         EnsureTabletStructure();
 
@@ -288,6 +293,11 @@ public class CargoTabletUI : MonoBehaviour
 
     public void CloseTablet()
     {
+        if (InteractionPromptHUD.Instance != null)
+        {
+            InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+        }
+
         if (isTabletOpen && AudioManager.Instance != null)
         {
             AudioManager.Instance.PlayTabletClose();

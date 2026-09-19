@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -33,6 +34,10 @@ public class InteractionPromptHUD : MonoBehaviour
                     instance.EnsureUI();
                 }
             }
+            if (instance != null && !instance.gameObject.activeSelf)
+            {
+                instance.gameObject.SetActive(true);
+            }
             return instance;
         }
         private set => instance = value;
@@ -42,6 +47,12 @@ public class InteractionPromptHUD : MonoBehaviour
     public GameObject crosshairDot;
     public GameObject promptPanel;
     public TextMeshProUGUI promptText;
+
+    [Header("--- THROW CHARGE SLIDER / BAR ---")]
+    public GameObject throwSlideBG;
+    public Image throwBarFill;
+    public Slider throwBarSlider;
+    public RectTransform throwBarRect;
 
     [Header("--- HELD CARGO SIDE PANEL ---")]
     public GameObject heldCargoPanel;
@@ -70,6 +81,7 @@ public class InteractionPromptHUD : MonoBehaviour
     public float defaultPromptDuration = 2.0f;
 
     private float currentPromptTimer = 0f;
+    private float suppressUntilTime = 0f;
     private CanvasGroup promptCanvasGroup;
     private PhysicalCargoPackage currentHeldPackage;
 
@@ -100,6 +112,7 @@ public class InteractionPromptHUD : MonoBehaviour
     private void Start()
     {
         EnsureUI();
+        HideThrowCharge();
         HidePrompt();
         HideHeldCargoInfo();
         HideFuelHUD();
@@ -109,7 +122,9 @@ public class InteractionPromptHUD : MonoBehaviour
     {
         if (promptPanel != null && promptPanel.activeSelf)
         {
-            if (currentPromptTimer > 0f)
+            CheckPromptDismissInput();
+
+            if (promptPanel != null && promptPanel.activeSelf && currentPromptTimer > 0f)
             {
                 currentPromptTimer -= Time.deltaTime;
                 if (currentPromptTimer <= 0.45f && promptCanvasGroup != null)
@@ -121,6 +136,75 @@ public class InteractionPromptHUD : MonoBehaviour
                     HidePrompt();
                 }
             }
+        }
+    }
+
+    public void SuppressPrompts(float duration = 0.35f)
+    {
+        suppressUntilTime = Time.unscaledTime + duration;
+        HideThrowCharge();
+        HidePrompt();
+    }
+
+    private void CheckPromptDismissInput()
+    {
+        if (promptPanel == null || !promptPanel.activeSelf || promptText == null || !promptText.gameObject.activeSelf || string.IsNullOrEmpty(promptText.text)) return;
+
+        string txt = promptText.text;
+        bool dismissed = false;
+
+#if ENABLE_INPUT_SYSTEM
+        var kb = Keyboard.current;
+        var mouse = Mouse.current;
+
+        if (kb != null)
+        {
+            if (txt.IndexOf("[E]", System.StringComparison.OrdinalIgnoreCase) >= 0 && kb.eKey.wasPressedThisFrame) dismissed = true;
+            else if (txt.IndexOf("[F]", System.StringComparison.OrdinalIgnoreCase) >= 0 && kb.fKey.wasPressedThisFrame) dismissed = true;
+            else if (txt.IndexOf("[TAB]", System.StringComparison.OrdinalIgnoreCase) >= 0 && kb.tabKey.wasPressedThisFrame) dismissed = true;
+            else if (txt.IndexOf("[V]", System.StringComparison.OrdinalIgnoreCase) >= 0 && kb.vKey.wasPressedThisFrame) dismissed = true;
+            else if (txt.IndexOf("[R]", System.StringComparison.OrdinalIgnoreCase) >= 0 && kb.rKey.wasPressedThisFrame) dismissed = true;
+            else if (txt.IndexOf("[G]", System.StringComparison.OrdinalIgnoreCase) >= 0 && kb.gKey.wasPressedThisFrame) dismissed = true;
+            else if (txt.IndexOf("[Q]", System.StringComparison.OrdinalIgnoreCase) >= 0 && kb.qKey.wasPressedThisFrame) dismissed = true;
+            else if (txt.IndexOf("[C]", System.StringComparison.OrdinalIgnoreCase) >= 0 && kb.cKey.wasPressedThisFrame) dismissed = true;
+            else if ((txt.IndexOf("[Space]", System.StringComparison.OrdinalIgnoreCase) >= 0 || txt.IndexOf("[Boşluk]", System.StringComparison.OrdinalIgnoreCase) >= 0) && kb.spaceKey.wasPressedThisFrame) dismissed = true;
+            else if (txt.IndexOf("[ESC]", System.StringComparison.OrdinalIgnoreCase) >= 0 && kb.escapeKey.wasPressedThisFrame) dismissed = true;
+            else if (txt.IndexOf("[F9]", System.StringComparison.OrdinalIgnoreCase) >= 0 && kb.f9Key.wasPressedThisFrame) dismissed = true;
+        }
+
+        if (mouse != null && !dismissed)
+        {
+            if ((txt.IndexOf("[LMB]", System.StringComparison.OrdinalIgnoreCase) >= 0 || txt.IndexOf("[Sol Tık]", System.StringComparison.OrdinalIgnoreCase) >= 0) && mouse.leftButton.wasPressedThisFrame) dismissed = true;
+            else if ((txt.IndexOf("[RMB]", System.StringComparison.OrdinalIgnoreCase) >= 0 || txt.IndexOf("[Sağ Tık]", System.StringComparison.OrdinalIgnoreCase) >= 0) && mouse.rightButton.wasPressedThisFrame) dismissed = true;
+        }
+#endif
+
+#if ENABLE_LEGACY_INPUT_MANAGER
+        try
+        {
+            if (!dismissed)
+            {
+                if (txt.IndexOf("[E]", System.StringComparison.OrdinalIgnoreCase) >= 0 && Input.GetKeyDown(KeyCode.E)) dismissed = true;
+                else if (txt.IndexOf("[F]", System.StringComparison.OrdinalIgnoreCase) >= 0 && Input.GetKeyDown(KeyCode.F)) dismissed = true;
+                else if (txt.IndexOf("[TAB]", System.StringComparison.OrdinalIgnoreCase) >= 0 && Input.GetKeyDown(KeyCode.Tab)) dismissed = true;
+                else if (txt.IndexOf("[V]", System.StringComparison.OrdinalIgnoreCase) >= 0 && Input.GetKeyDown(KeyCode.V)) dismissed = true;
+                else if (txt.IndexOf("[R]", System.StringComparison.OrdinalIgnoreCase) >= 0 && Input.GetKeyDown(KeyCode.R)) dismissed = true;
+                else if (txt.IndexOf("[G]", System.StringComparison.OrdinalIgnoreCase) >= 0 && Input.GetKeyDown(KeyCode.G)) dismissed = true;
+                else if (txt.IndexOf("[Q]", System.StringComparison.OrdinalIgnoreCase) >= 0 && Input.GetKeyDown(KeyCode.Q)) dismissed = true;
+                else if (txt.IndexOf("[C]", System.StringComparison.OrdinalIgnoreCase) >= 0 && Input.GetKeyDown(KeyCode.C)) dismissed = true;
+                else if ((txt.IndexOf("[Space]", System.StringComparison.OrdinalIgnoreCase) >= 0 || txt.IndexOf("[Boşluk]", System.StringComparison.OrdinalIgnoreCase) >= 0) && Input.GetKeyDown(KeyCode.Space)) dismissed = true;
+                else if (txt.IndexOf("[ESC]", System.StringComparison.OrdinalIgnoreCase) >= 0 && Input.GetKeyDown(KeyCode.Escape)) dismissed = true;
+                else if (txt.IndexOf("[F9]", System.StringComparison.OrdinalIgnoreCase) >= 0 && Input.GetKeyDown(KeyCode.F9)) dismissed = true;
+                else if ((txt.IndexOf("[LMB]", System.StringComparison.OrdinalIgnoreCase) >= 0 || txt.IndexOf("[Sol Tık]", System.StringComparison.OrdinalIgnoreCase) >= 0) && Input.GetMouseButtonDown(0)) dismissed = true;
+                else if ((txt.IndexOf("[RMB]", System.StringComparison.OrdinalIgnoreCase) >= 0 || txt.IndexOf("[Sağ Tık]", System.StringComparison.OrdinalIgnoreCase) >= 0) && Input.GetMouseButtonDown(1)) dismissed = true;
+            }
+        }
+        catch { }
+#endif
+
+        if (dismissed)
+        {
+            SuppressPrompts(0.35f);
         }
     }
 
@@ -231,7 +315,10 @@ public class InteractionPromptHUD : MonoBehaviour
             }
         }
 
-        // 3. Held Cargo Side Details Panel (Strictly bind to existing scene object, NEVER modify design)
+        // 3. Throw Charge Slider/Bar (Directly under Canvas or inside InteractionPromptBox)
+        BindThrowSlideReferences(canvas != null ? canvas.transform : transform);
+
+        // 4. Held Cargo Side Details Panel (Strictly bind to existing scene object, NEVER modify design)
         Transform existingSide = canvas.transform.Find("HeldCargoSideCard");
         if (existingSide == null)
         {
@@ -251,7 +338,7 @@ public class InteractionPromptHUD : MonoBehaviour
             BindHeldCargoReferences(existingSide);
         }
 
-        // 4. In-Vehicle Fuel & Condition Dashboard Panels (Bottom Right)
+        // 5. In-Vehicle Fuel & Condition Dashboard Panels (Bottom Right)
         Transform existingDash = canvas.transform.Find("VehicleDashboardPanel");
         if (existingDash == null)
         {
@@ -272,8 +359,131 @@ public class InteractionPromptHUD : MonoBehaviour
         }
     }
 
+    private void BindThrowSlideReferences(Transform root)
+    {
+        if (root == null) return;
+
+        if (throwSlideBG == null)
+        {
+            Transform tBG = root.Find("ThrowSlideBG");
+            if (tBG == null)
+            {
+                var allT = root.GetComponentsInChildren<Transform>(true);
+                foreach (var t in allT)
+                {
+                    if (t != null && t.name.Equals("ThrowSlideBG", System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        tBG = t;
+                        break;
+                    }
+                }
+            }
+
+            if (tBG != null)
+            {
+                throwSlideBG = tBG.gameObject;
+            }
+        }
+
+        if (throwSlideBG != null)
+        {
+            Transform barT = throwSlideBG.transform.Find("bar");
+            if (barT == null)
+            {
+                var allB = throwSlideBG.GetComponentsInChildren<Transform>(true);
+                foreach (var b in allB)
+                {
+                    if (b != null && b != throwSlideBG.transform && (b.name.Equals("bar", System.StringComparison.OrdinalIgnoreCase) || b.name.IndexOf("bar", System.StringComparison.OrdinalIgnoreCase) >= 0 || b.name.IndexOf("fill", System.StringComparison.OrdinalIgnoreCase) >= 0))
+                    {
+                        barT = b;
+                        break;
+                    }
+                }
+            }
+
+            if (barT != null)
+            {
+                throwBarFill = barT.GetComponent<Image>();
+                throwBarSlider = throwSlideBG.GetComponent<Slider>();
+                if (throwBarSlider == null) throwBarSlider = barT.GetComponent<Slider>();
+                throwBarRect = barT.GetComponent<RectTransform>();
+
+                if (throwBarFill != null && throwBarSlider == null)
+                {
+                    if (throwBarFill.type != Image.Type.Filled)
+                    {
+                        throwBarFill.type = Image.Type.Filled;
+                        throwBarFill.fillMethod = Image.FillMethod.Horizontal;
+                        throwBarFill.fillOrigin = 0;
+                    }
+                }
+            }
+
+            // Initially ensure throw slide bar is hidden
+            if (throwSlideBG.activeSelf)
+            {
+                throwSlideBG.SetActive(false);
+            }
+        }
+    }
+
+    public void SetThrowCharge(float chargePercent)
+    {
+        if (throwSlideBG == null)
+        {
+            EnsureUI();
+        }
+
+        // Hide regular prompt box & text so no prompt text is shown during throw charging
+        if (promptPanel != null && promptPanel.activeSelf)
+        {
+            promptPanel.SetActive(false);
+        }
+        else if (promptText != null && promptText.gameObject.activeSelf)
+        {
+            promptText.gameObject.SetActive(false);
+        }
+
+        // Show throw charge bar
+        if (throwSlideBG != null && !throwSlideBG.activeSelf)
+        {
+            throwSlideBG.SetActive(true);
+        }
+
+        chargePercent = Mathf.Clamp01(chargePercent);
+
+        if (throwBarSlider != null)
+        {
+            throwBarSlider.value = chargePercent;
+        }
+        else if (throwBarFill != null)
+        {
+            if (throwBarFill.type != Image.Type.Filled)
+            {
+                throwBarFill.type = Image.Type.Filled;
+                throwBarFill.fillMethod = Image.FillMethod.Horizontal;
+                throwBarFill.fillOrigin = 0;
+            }
+            throwBarFill.fillAmount = chargePercent;
+        }
+    }
+
+    public void HideThrowCharge()
+    {
+        if (throwSlideBG != null && throwSlideBG.activeSelf)
+        {
+            throwSlideBG.SetActive(false);
+        }
+        if (promptText != null && !promptText.gameObject.activeSelf)
+        {
+            promptText.gameObject.SetActive(true);
+        }
+    }
+
     public void ShowPrompt(string message, float duration = 2.0f)
     {
+        if (Time.unscaledTime < suppressUntilTime) return;
+
         if (string.IsNullOrEmpty(message))
         {
             HidePrompt();
@@ -285,10 +495,16 @@ public class InteractionPromptHUD : MonoBehaviour
             EnsureUI();
         }
 
+        HideThrowCharge();
+
         if (promptPanel != null && promptText != null)
         {
+            promptText.gameObject.SetActive(true);
             promptText.text = message;
-            promptPanel.SetActive(true);
+            if (!promptPanel.activeSelf)
+            {
+                promptPanel.SetActive(true);
+            }
             currentPromptTimer = duration > 0f ? duration : defaultPromptDuration;
 
             if (promptCanvasGroup == null)
@@ -307,11 +523,12 @@ public class InteractionPromptHUD : MonoBehaviour
     public void HidePrompt()
     {
         currentPromptTimer = 0f;
+        HideThrowCharge();
         if (promptCanvasGroup != null)
         {
             promptCanvasGroup.alpha = 1f;
         }
-        if (promptPanel != null)
+        if (promptPanel != null && promptPanel.activeSelf)
         {
             promptPanel.SetActive(false);
         }
@@ -445,20 +662,102 @@ public class InteractionPromptHUD : MonoBehaviour
         return null;
     }
 
+    private TextMeshProUGUI FindTMPDirect(Transform root, params string[] searchNames)
+    {
+        if (root == null) return null;
+        var allTexts = root.GetComponentsInChildren<TextMeshProUGUI>(true);
+        foreach (var name in searchNames)
+        {
+            foreach (var t in allTexts)
+            {
+                if (t != null && t.gameObject.name.Equals(name, System.StringComparison.OrdinalIgnoreCase))
+                    return t;
+            }
+        }
+        return null;
+    }
+
     private void BindHeldCargoReferences(Transform sideCard)
     {
         if (sideCard == null) return;
         heldCargoPanel = sideCard.gameObject;
-        heldCargoHeaderText = FindTMPRecursive(sideCard, "Header", "Title", "PackageHeader", "HeldHeader");
-        heldCargoTypeText = FindTMPRecursive(sideCard, "Type", "CargoType", "Badge", "ParcelType");
-        heldCargoStatusText = FindTMPRecursive(sideCard, "Status", "Durum", "Condition", "TimeStatus");
-        heldCargoPercentageText = FindTMPRecursive(sideCard, "Percentage", "Percent", "Yuzde", "HealthPercentage", "Ratio");
-        heldCargoRecipientText = FindTMPRecursive(sideCard, "Recipient", "Alici", "Customer", "Name");
-        heldCargoAddressText = FindTMPRecursive(sideCard, "Address", "Adres", "TargetAddress", "Destination");
-        heldCargoAddressDescText = FindTMPRecursive(sideCard, "AddressDescription", "Description", "Clue", "VisualClue", "Ipucu", "Desc");
-        heldCargoRewardText = FindTMPRecursive(sideCard, "Reward", "Odul", "Earnings", "Price", "Money", "Income");
-        heldCargoPenaltyText = FindTMPRecursive(sideCard, "Penalty", "Ceza", "Fine");
-        heldCargoActionHintText = FindTMPRecursive(sideCard, "ActionHint", "Hint", "Prompt", "Controls", "KeyHint");
+
+        // Top -> Header, Type, Status, Percentage
+        Transform top = sideCard.Find("Top");
+        if (top != null)
+        {
+            Transform headerT = top.Find("Header");
+            if (headerT != null) heldCargoHeaderText = headerT.GetComponent<TextMeshProUGUI>();
+
+            Transform horiz = top.Find("Horizontal");
+            if (horiz != null)
+            {
+                Transform typeT = horiz.Find("Type");
+                if (typeT != null) heldCargoTypeText = typeT.GetComponent<TextMeshProUGUI>();
+
+                Transform statusT = horiz.Find("Status");
+                if (statusT != null) heldCargoStatusText = statusT.GetComponent<TextMeshProUGUI>();
+
+                Transform pctT = horiz.Find("Percentage");
+                if (pctT != null) heldCargoPercentageText = pctT.GetComponent<TextMeshProUGUI>();
+            }
+        }
+
+        if (heldCargoHeaderText == null) heldCargoHeaderText = FindTMPDirect(sideCard, "Header", "PackageHeader", "Title");
+        if (heldCargoTypeText == null) heldCargoTypeText = FindTMPDirect(sideCard, "Type", "CargoType");
+        if (heldCargoStatusText == null) heldCargoStatusText = FindTMPDirect(sideCard, "Status", "Durum");
+        if (heldCargoPercentageText == null) heldCargoPercentageText = FindTMPDirect(sideCard, "Percentage", "Percent");
+
+        // Detail -> recipient / value and address / value
+        Transform detail = sideCard.Find("Detail");
+        if (detail != null)
+        {
+            Transform recipGroup = detail.Find("recipient");
+            if (recipGroup != null)
+            {
+                Transform val = recipGroup.Find("value");
+                if (val != null) heldCargoRecipientText = val.GetComponent<TextMeshProUGUI>();
+            }
+
+            Transform addrGroup = detail.Find("address");
+            if (addrGroup != null)
+            {
+                Transform val = addrGroup.Find("value");
+                if (val != null) heldCargoAddressText = val.GetComponent<TextMeshProUGUI>();
+            }
+        }
+
+        // ClueBox -> ClueScrollView -> Content -> AddressDescription
+        Transform clueBox = sideCard.Find("ClueBox");
+        if (clueBox != null)
+        {
+            Transform descT = clueBox.Find("ClueScrollView/Content/AddressDescription");
+            if (descT == null) descT = clueBox.Find("AddressDescription");
+            if (descT != null) heldCargoAddressDescText = descT.GetComponent<TextMeshProUGUI>();
+        }
+        if (heldCargoAddressDescText == null)
+        {
+            heldCargoAddressDescText = FindTMPDirect(sideCard, "AddressDescription", "Description", "ClueDesc");
+        }
+
+        // Bottom -> reward / value and penalty / value
+        Transform bottom = sideCard.Find("Bottom");
+        if (bottom != null)
+        {
+            Transform rewardGroup = bottom.Find("reward");
+            if (rewardGroup != null)
+            {
+                Transform val = rewardGroup.Find("value");
+                if (val != null) heldCargoRewardText = val.GetComponent<TextMeshProUGUI>();
+            }
+
+            Transform penaltyGroup = bottom.Find("penalty");
+            if (penaltyGroup != null)
+            {
+                Transform val = penaltyGroup.Find("value");
+                if (val != null) heldCargoPenaltyText = val.GetComponent<TextMeshProUGUI>();
+            }
+        }
     }
 
     private void AlignFillToParent(Image fillImg)
@@ -539,69 +838,64 @@ public class InteractionPromptHUD : MonoBehaviour
             EnsureUI();
         }
 
-        if (heldCargoPanel != null)
+        if (heldCargoPanel != null && !heldCargoPanel.activeSelf)
         {
             heldCargoPanel.SetActive(true);
-            BindHeldCargoReferences(heldCargoPanel.transform);
         }
 
         string recipient = !string.IsNullOrEmpty(pkg.EffectiveRecipientName) ? pkg.EffectiveRecipientName : pkg.recipientName;
         string address = !string.IsNullOrEmpty(pkg.EffectiveAddressName) ? pkg.EffectiveAddressName : pkg.targetAddressName;
         string desc = !string.IsNullOrEmpty(pkg.EffectiveAddressDescription) ? pkg.EffectiveAddressDescription : pkg.targetAddressDescription;
 
+        // ONLY UPDATE VALUES - NEVER TOUCH LABELS, DESIGN, OR POSITIONS
         if (heldCargoRecipientText != null)
         {
-            heldCargoRecipientText.text = $"<b>Recipient:</b> {recipient}";
+            heldCargoRecipientText.text = recipient;
         }
 
         if (heldCargoAddressText != null)
         {
-            heldCargoAddressText.text = $"<b>Address:</b> {address}";
+            heldCargoAddressText.text = address;
         }
         
         if (heldCargoAddressDescText != null)
         {
-            heldCargoAddressDescText.text = !string.IsNullOrEmpty(desc) ? $"\"{desc}\"" : "\"(No address visual clue available)\"";
+            heldCargoAddressDescText.text = !string.IsNullOrEmpty(desc) ? desc : "";
         }
 
         if (heldCargoRewardText != null)
         {
-            heldCargoRewardText.text = $"<b>Reward:</b> +${pkg.deliveryReward}";
+            heldCargoRewardText.text = $"+${pkg.deliveryReward}";
         }
 
         if (heldCargoPenaltyText != null)
         {
-            heldCargoPenaltyText.text = $"<b>Penalty:</b> -${pkg.wrongPenalty}";
+            heldCargoPenaltyText.text = $"-${pkg.wrongPenalty}";
         }
 
-        // Cargo Type Row Handling (Type, Status, Percentage)
         if (heldCargoTypeText != null)
         {
             switch (pkg.cargoType)
             {
                 case CargoType.Standard:
-                    // Standard: Sadece STANDARD yazar, Status ve Percentage boş
                     heldCargoTypeText.text = "STANDARD";
                     if (heldCargoStatusText != null) heldCargoStatusText.text = "";
                     if (heldCargoPercentageText != null) heldCargoPercentageText.text = "";
                     break;
 
                 case CargoType.Express:
-                    // Express: EXPRESS ve Status'te teslimat saati (Örn: 13:00), Percentage boş
                     heldCargoTypeText.text = "EXPRESS";
                     if (heldCargoStatusText != null) heldCargoStatusText.text = pkg.GetFormattedTargetDeliveryTime();
                     if (heldCargoPercentageText != null) heldCargoPercentageText.text = "";
                     break;
 
                 case CargoType.Fragile:
-                    // Fragile: FRAGILE, Status'te "Broken" / "Condition", Percentage'da "0%" / "%100"
                     heldCargoTypeText.text = "FRAGILE";
                     if (heldCargoStatusText != null) heldCargoStatusText.text = pkg.isBroken ? "Broken" : "Condition";
                     if (heldCargoPercentageText != null) heldCargoPercentageText.text = pkg.isBroken ? "0%" : $"{pkg.health:F0}%";
                     break;
 
                 case CargoType.Explosive:
-                    // Explosive: EXPLOSIVE, Status'te "Detonated" / "Stability", Percentage'da "0%" / "50%"
                     heldCargoTypeText.text = "EXPLOSIVE";
                     if (heldCargoStatusText != null) heldCargoStatusText.text = pkg.isBroken ? "Detonated" : "Stability";
                     if (heldCargoPercentageText != null) heldCargoPercentageText.text = pkg.isBroken ? "0%" : $"{pkg.health:F0}%";

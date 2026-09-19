@@ -101,21 +101,7 @@ public class PurchasableProperty : MonoBehaviour
     {
         if (isUnlocked || disablePurchase) return string.Empty;
 
-        int branchLevel = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : (PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.WarehouseLevel : 1);
-        int playerBalance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
-
-        if (branchLevel < requiredPlayerLevel)
-        {
-            return $"<color=#FF4444>[KİLİTLİ] {displayName} - Şube Level {requiredPlayerLevel} Gerekiyor!</color>";
-        }
-        else if (playerBalance < purchaseCost)
-        {
-            return $"<color=#FFAA33>[SATILIK] {displayName} - ${purchaseCost:N0} (Bakiye: ${playerBalance:N0})</color>";
-        }
-        else
-        {
-            return $"<color=#32FF64>[E] SATIN AL: {displayName} (${purchaseCost:N0})</color>";
-        }
+        return "<color=#FFD232>[E] Satın Al</color>";
     }
 
     public bool TryPurchase()
