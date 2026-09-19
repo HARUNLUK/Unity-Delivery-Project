@@ -103,6 +103,22 @@ public class InteractionPromptHUD : MonoBehaviour
         }
     }
 
+    private void OnValidate()
+    {
+        if (!Application.isPlaying)
+        {
+            EnsureUI();
+#if UNITY_EDITOR
+            UnityEditor.EditorUtility.SetDirty(this);
+#endif
+        }
+    }
+
+    private void Reset()
+    {
+        EnsureUI();
+    }
+
     private void Awake()
     {
         Instance = this;
@@ -208,6 +224,7 @@ public class InteractionPromptHUD : MonoBehaviour
         }
     }
 
+    [ContextMenu("Auto-Bind All UI References")]
     public void EnsureUI(bool forceRecreate = false)
     {
         Canvas canvas = GetComponentInParent<Canvas>();
@@ -339,17 +356,39 @@ public class InteractionPromptHUD : MonoBehaviour
         }
 
         // 5. In-Vehicle Fuel & Condition Dashboard Panels (Bottom Right)
-        Transform existingDash = canvas.transform.Find("VehicleDashboardPanel");
+        Transform existingDash = vehicleDashboardRoot != null ? vehicleDashboardRoot.transform : null;
+        if (existingDash == null && canvas != null)
+        {
+            existingDash = canvas.transform.Find("VehicleDashboardPanel");
+            if (existingDash == null)
+            {
+                var allT = canvas.GetComponentsInChildren<Transform>(true);
+                foreach (var t in allT)
+                {
+                    if (t != null && t.name.Equals("VehicleDashboardPanel", System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        existingDash = t;
+                        break;
+                    }
+                }
+            }
+        }
         if (existingDash == null)
         {
-            var allT = canvas.GetComponentsInChildren<Transform>(true);
-            foreach (var t in allT)
+            var allCanvases = UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var c in allCanvases)
             {
-                if (t != null && t.name.Equals("VehicleDashboardPanel", System.StringComparison.OrdinalIgnoreCase))
+                if (c == null) continue;
+                var allT = c.GetComponentsInChildren<Transform>(true);
+                foreach (var t in allT)
                 {
-                    existingDash = t;
-                    break;
+                    if (t != null && t.name.Equals("VehicleDashboardPanel", System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        existingDash = t;
+                        break;
+                    }
                 }
+                if (existingDash != null) break;
             }
         }
 
@@ -560,7 +599,12 @@ public class InteractionPromptHUD : MonoBehaviour
         // 1. Fuel Bar & Value
         if (fuelBarFill != null)
         {
-            AlignFillToParent(fuelBarFill);
+            if (fuelBarFill.type != Image.Type.Filled)
+            {
+                fuelBarFill.type = Image.Type.Filled;
+                fuelBarFill.fillMethod = Image.FillMethod.Horizontal;
+                fuelBarFill.fillOrigin = 0;
+            }
             fuelBarFill.fillAmount = fuelPct;
         }
 
@@ -572,7 +616,12 @@ public class InteractionPromptHUD : MonoBehaviour
         // 2. Condition Bar & Value
         if (conditionBarFill != null)
         {
-            AlignFillToParent(conditionBarFill);
+            if (conditionBarFill.type != Image.Type.Filled)
+            {
+                conditionBarFill.type = Image.Type.Filled;
+                conditionBarFill.fillMethod = Image.FillMethod.Horizontal;
+                conditionBarFill.fillOrigin = 0;
+            }
             conditionBarFill.fillAmount = condPct;
         }
 
@@ -785,7 +834,7 @@ public class InteractionPromptHUD : MonoBehaviour
         if (dashRoot == null) return;
         vehicleDashboardRoot = dashRoot.gameObject;
 
-        // Fuel Card & Components
+        // 1. Fuel Card & Components
         Transform fCard = dashRoot.Find("FuelGaugeCard");
         if (fCard == null)
         {
@@ -800,11 +849,18 @@ public class InteractionPromptHUD : MonoBehaviour
             }
         }
         fuelGaugePanel = fCard != null ? fCard.gameObject : vehicleDashboardRoot;
-        fuelValueText = FindTMPRecursive(fCard ?? dashRoot, "FuelValue", "FuelVal", "FuelAmount", "FuelText");
-        fuelBarFill = FindImageRecursive(fCard ?? dashRoot, "FuelBarFill", "FuelFill", "FuelBar");
-        AlignFillToParent(fuelBarFill);
 
-        // Condition Card & Components
+        Transform fValT = (fCard ?? dashRoot).Find("Horizontal/FuelValue");
+        if (fValT == null) fValT = (fCard ?? dashRoot).Find("FuelValue");
+        if (fValT != null) fuelValueText = fValT.GetComponent<TextMeshProUGUI>();
+        if (fuelValueText == null) fuelValueText = FindTMPRecursive(fCard ?? dashRoot, "FuelValue", "FuelVal", "FuelAmount", "FuelText");
+
+        Transform fFillT = (fCard ?? dashRoot).Find("FuelBarBg/FuelBarFill");
+        if (fFillT == null) fFillT = (fCard ?? dashRoot).Find("FuelBarFill");
+        if (fFillT != null) fuelBarFill = fFillT.GetComponent<Image>();
+        if (fuelBarFill == null) fuelBarFill = FindImageRecursive(fCard ?? dashRoot, "FuelBarFill", "FuelFill", "FuelBar");
+
+        // 2. Condition Card & Components
         Transform cCard = dashRoot.Find("ConditionGaugeCard");
         if (cCard == null)
         {
@@ -819,9 +875,16 @@ public class InteractionPromptHUD : MonoBehaviour
             }
         }
         conditionGaugePanel = cCard != null ? cCard.gameObject : vehicleDashboardRoot;
-        conditionValueText = FindTMPRecursive(cCard ?? dashRoot, "CondValue", "ConditionValue", "CondVal", "ConditionText", "CondText");
-        conditionBarFill = FindImageRecursive(cCard ?? dashRoot, "CondBarFill", "ConditionBarFill", "CondFill", "ConditionFill");
-        AlignFillToParent(conditionBarFill);
+
+        Transform cValT = (cCard ?? dashRoot).Find("Horizontal/CondValue");
+        if (cValT == null) cValT = (cCard ?? dashRoot).Find("CondValue");
+        if (cValT != null) conditionValueText = cValT.GetComponent<TextMeshProUGUI>();
+        if (conditionValueText == null) conditionValueText = FindTMPRecursive(cCard ?? dashRoot, "CondValue", "ConditionValue", "CondVal", "ConditionText", "CondText");
+
+        Transform cFillT = (cCard ?? dashRoot).Find("CondBarBg/CondBarFill");
+        if (cFillT == null) cFillT = (cCard ?? dashRoot).Find("CondBarFill");
+        if (cFillT != null) conditionBarFill = cFillT.GetComponent<Image>();
+        if (conditionBarFill == null) conditionBarFill = FindImageRecursive(cCard ?? dashRoot, "CondBarFill", "ConditionBarFill", "CondFill", "ConditionFill");
     }
 
     public void ShowHeldCargoInfo(PhysicalCargoPackage pkg)

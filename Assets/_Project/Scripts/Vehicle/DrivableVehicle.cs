@@ -490,18 +490,6 @@ public class DrivableVehicle : MonoBehaviour
             // Persist condition after heavy impacts
             PlayerPrefs.SetFloat(CONDITION_SAVE_PREFIX + EffectiveVehicleId, currentCondition);
 
-            if (isPlayerInside && InteractionPromptHUD.Instance != null)
-            {
-                if (currentCondition <= 0.01f)
-                {
-                    InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>⚠️ [AĞIR HASARLI] Araç motoru hasar gördü! Minimum hızda (Limp Mode) çalışıyor. Lütfen oto servise gidin.</color>", 3.5f);
-                }
-                else if (damage >= 4f)
-                {
-                    InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF4444>💥 [ARAÇ HASARI] -%{damage:F0} Kondisyon! (Kalan: %{ConditionPercentage * 100:F0})</color>", 2.2f);
-                }
-            }
-
             Debug.Log($"<color=#FFAA33>[DrivableVehicle] Impact damage: -{damage:F1} (Impact Speed: {impactSpeed:F1} m/s). New Condition: {currentCondition:F1}/{maxCondition}</color>");
         }
     }
@@ -526,14 +514,10 @@ public class DrivableVehicle : MonoBehaviour
             rb.AddExplosionForce(explosionForce, explosionOrigin, explosionRadius, 1.2f, ForceMode.Impulse);
         }
 
-        if (InteractionPromptHUD.Instance != null)
+        if (InteractionPromptHUD.Instance != null && isPlayerInside)
         {
-            if (isPlayerInside)
-            {
-                bool isLow = currentFuel < (maxFuel * 0.18f);
-                InteractionPromptHUD.Instance.UpdateVehicleHUD(currentFuel, maxFuel, isLow, currentCondition, maxCondition);
-            }
-            InteractionPromptHUD.Instance.ShowPrompt("<color=#FF2222>💥 [PATLAMA HASARI] Araç ağır hasar aldı! Motor kondisyonu %0. Oto serviste tamir ettirin!</color>", 4.5f);
+            bool isLow = currentFuel < (maxFuel * 0.18f);
+            InteractionPromptHUD.Instance.UpdateVehicleHUD(currentFuel, maxFuel, isLow, currentCondition, maxCondition);
         }
 
         Debug.LogWarning($"<color=#FF2222>[DrivableVehicle] EXPLOSION HIT! Vehicle '{EffectiveVehicleId}' condition set to 0%.</color>");
