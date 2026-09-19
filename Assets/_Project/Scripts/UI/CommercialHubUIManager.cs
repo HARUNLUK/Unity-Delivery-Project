@@ -54,6 +54,7 @@ public class CommercialHubUIManager : MonoBehaviour
     private TextMeshProUGUI garagePaintSectionTitle;
     private TextMeshProUGUI garagePaintDescText;
     private TextMeshProUGUI garageCurrentColorText;
+    private Image garageCondBarFill;
     private Button garageRepairBtn;
     private Button garageTuneBtn;
     private Button garageDriveBtn;
@@ -137,11 +138,21 @@ public class CommercialHubUIManager : MonoBehaviour
     public void OpenGarageWorkshopPanel(DrivableVehicle v)
     {
         if (v == null) return;
-        if (VehicleServiceGarage.Instance != null && !VehicleServiceGarage.Instance.IsGarageUnlocked())
+        if (VehicleServiceGarage.Instance != null)
         {
-            if (InteractionPromptHUD.Instance != null)
-                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>Oto Servis Garajı henüz satın alınmadı veya kilitli!</color>", 2.5f);
-            return;
+            if (!VehicleServiceGarage.Instance.IsGarageUnlocked())
+            {
+                if (InteractionPromptHUD.Instance != null)
+                    InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>Oto Servis Garajı henüz satın alınmadı veya kilitli!</color>", 2.0f);
+                return;
+            }
+
+            if (!VehicleServiceGarage.Instance.IsVehicleInServiceBay(v))
+            {
+                if (InteractionPromptHUD.Instance != null)
+                    InteractionPromptHUD.Instance.ShowPrompt("<color=#FFAA33>Araç tamir dükkanı içine yanaştırılmalıdır!</color>", 2.0f);
+                return;
+            }
         }
 
         EnsureUI();
@@ -165,42 +176,24 @@ public class CommercialHubUIManager : MonoBehaviour
     {
         if (activeGarageVehicle == null) return;
 
-        if (garageTitleText != null)
+        if (garageCondBarFill != null)
         {
-            garageTitleText.text = $"🔧 OTO SERVİS & BOYA ATÖLYESİ - <color=#32FFFF>{activeGarageVehicle.vehicleName}</color>";
-        }
-
-        if (garageVehicleStatusText != null)
-        {
-            float fuelPct = activeGarageVehicle.FuelPercentage * 100f;
-            float condPct = activeGarageVehicle.ConditionPercentage * 100f;
-            string condColor = condPct < 25f ? "#FF4444" : (condPct < 70f ? "#FFAA33" : "#32FF64");
-            garageVehicleStatusText.text = $"<b>Yakıt Durumu:</b> {activeGarageVehicle.currentFuel:F1} / {activeGarageVehicle.maxFuel:F1} L (%{fuelPct:F0})  |  <b>Kondisyon:</b> <color={condColor}>%{condPct:F0}</color>";
-        }
-
-        if (garageTuningInfoText != null)
-        {
-            garageTuningInfoText.gameObject.SetActive(false);
-        }
-
-        if (garageRepairBtn != null)
-        {
-            int repCost = VehicleServiceGarage.Instance != null ? VehicleServiceGarage.Instance.repairCost : 150;
-            TextMeshProUGUI repairTxt = garageRepairBtn.GetComponentInChildren<TextMeshProUGUI>();
-            if (repairTxt != null) repairTxt.text = $"🛠️ Aracı Tamir Et & Depoyu Doldur (${repCost:N0})";
-        }
-
-        if (garageTuneBtn != null)
-        {
-            garageTuneBtn.gameObject.SetActive(false);
-        }
-
-        if (garageCurrentColorText != null)
-        {
-            Color curCol = activeGarageVehicle.GetCurrentColor();
-            string hex = ColorUtility.ToHtmlStringRGB(curCol);
-            int pCost = VehicleServiceGarage.Instance != null ? VehicleServiceGarage.Instance.repaintCost : 250;
-            garageCurrentColorText.text = $"<b>Mevcut Renk:</b> <color=#{hex}>■ #{hex}</color>  |  <b>Boya Değişim Ücreti:</b> <color=#32FF64>${pCost:N0}</color>";
+            float pct = Mathf.Clamp01(activeGarageVehicle.ConditionPercentage);
+            if (garageCondBarFill.type == Image.Type.Filled)
+            {
+                garageCondBarFill.fillAmount = pct;
+            }
+            else
+            {
+                RectTransform rt = garageCondBarFill.rectTransform;
+                if (rt != null)
+                {
+                    rt.anchorMin = Vector2.zero;
+                    rt.anchorMax = new Vector2(pct, 1f);
+                    rt.offsetMin = Vector2.zero;
+                    rt.offsetMax = Vector2.zero;
+                }
+            }
         }
     }
 
@@ -242,16 +235,21 @@ public class CommercialHubUIManager : MonoBehaviour
 
         if (activeGarageVehicle == null) return;
 
+        bool painted = false;
         if (VehicleServiceGarage.Instance != null)
         {
-            VehicleServiceGarage.Instance.TryRepaintVehicle(activeGarageVehicle, color);
+            painted = VehicleServiceGarage.Instance.TryRepaintVehicle(activeGarageVehicle, color);
         }
         else
         {
             activeGarageVehicle.ApplyPaintColor(color, true);
+            painted = true;
         }
 
-        RefreshGarageUI();
+        if (painted)
+        {
+            RefreshGarageUI();
+        }
     }
 
     private void OnGarageDriveClicked()
@@ -550,173 +548,107 @@ public class CommercialHubUIManager : MonoBehaviour
         }
 
         // 1. Build Garage Panel
-        Transform existingG = canvas.transform.Find("GarageWorkshopPanel");
-        if (existingG != null && (existingG.Find("PaintBtn_0") == null || existingG.Find("TuneBtn") != null))
-        {
-            if (Application.isPlaying)
-            {
-                Destroy(existingG.gameObject);
-            }
-            else
-            {
-                DestroyImmediate(existingG.gameObject);
-            }
-            existingG = null;
-            garagePanelRoot = null;
-        }
-
-        if (garagePanelRoot != null && (garagePanelRoot.transform.Find("PaintBtn_0") == null || garagePanelRoot.transform.Find("TuneBtn") != null))
-        {
-            if (Application.isPlaying)
-            {
-                Destroy(garagePanelRoot);
-            }
-            else
-            {
-                DestroyImmediate(garagePanelRoot);
-            }
-            garagePanelRoot = null;
-        }
-
         if (garagePanelRoot == null)
         {
+            Transform existingG = FindTransformRecursive(canvas.transform, "GarageWorkshopPanel");
             if (existingG != null)
             {
                 garagePanelRoot = existingG.gameObject;
-                BindGaragePanel(garagePanelRoot);
             }
             else
             {
                 garagePanelRoot = CreateGaragePanel(canvas.transform);
             }
         }
-        else
-        {
-            BindGaragePanel(garagePanelRoot);
-        }
+        BindGaragePanel(garagePanelRoot);
 
         // 2. Build Insurance Panel
         if (insurancePanelRoot == null)
         {
-            Transform existingI = canvas.transform.Find("InsuranceAgencyPanel");
+            Transform existingI = FindTransformRecursive(canvas.transform, "InsuranceAgencyPanel");
             if (existingI != null)
             {
                 insurancePanelRoot = existingI.gameObject;
-                BindInsurancePanel(insurancePanelRoot);
             }
             else
             {
                 insurancePanelRoot = CreateInsurancePanel(canvas.transform);
             }
         }
-        else
-        {
-            BindInsurancePanel(insurancePanelRoot);
-        }
+        BindInsurancePanel(insurancePanelRoot);
 
         // 3. Build Dispatch Panel
         if (dispatchPanelRoot == null)
         {
-            Transform existingD = canvas.transform.Find("PassiveDispatchPanel");
+            Transform existingD = FindTransformRecursive(canvas.transform, "PassiveDispatchPanel");
             if (existingD != null)
             {
                 dispatchPanelRoot = existingD.gameObject;
-                BindDispatchPanel(dispatchPanelRoot);
             }
             else
             {
                 dispatchPanelRoot = CreateDispatchPanel(canvas.transform);
             }
         }
-        else
-        {
-            BindDispatchPanel(dispatchPanelRoot);
-        }
+        BindDispatchPanel(dispatchPanelRoot);
 
         // 4. Build Property Purchase Modal
         if (propertyModalRoot == null)
         {
-            Transform existingP = canvas.transform.Find("PropertyPurchaseModal");
+            Transform existingP = FindTransformRecursive(canvas.transform, "PropertyPurchaseModal");
             if (existingP != null)
             {
                 propertyModalRoot = existingP.gameObject;
-                BindPropertyModal(propertyModalRoot);
             }
             else
             {
                 propertyModalRoot = CreatePropertyModal(canvas.transform);
             }
         }
-        else
-        {
-            BindPropertyModal(propertyModalRoot);
-        }
+        BindPropertyModal(propertyModalRoot);
     }
 
     private void BindGaragePanel(GameObject root)
     {
         if (root == null) return;
-        Transform tTitle = root.transform.Find("Title");
-        if (tTitle != null) garageTitleText = tTitle.GetComponent<TextMeshProUGUI>();
+        garageTitleText = FindTMPRecursive(root.transform, "Title");
+        garageVehicleStatusText = FindTMPRecursive(root.transform, "Status");
+        garageTuningInfoText = FindTMPRecursive(root.transform, "TuningInfo");
 
-        Transform tStatus = root.transform.Find("Status");
-        if (tStatus != null) garageVehicleStatusText = tStatus.GetComponent<TextMeshProUGUI>();
-
-        Transform tTuneInfo = root.transform.Find("TuningInfo");
-        if (tTuneInfo != null) garageTuningInfoText = tTuneInfo.GetComponent<TextMeshProUGUI>();
-
-        Transform tRepair = root.transform.Find("RepairBtn");
-        if (tRepair != null)
+        garageRepairBtn = FindButtonRecursive(root.transform, "RepairBtn");
+        if (garageRepairBtn != null)
         {
-            garageRepairBtn = tRepair.GetComponent<Button>();
-            if (garageRepairBtn != null)
-            {
-                garageRepairBtn.onClick.RemoveAllListeners();
-                garageRepairBtn.onClick.AddListener(OnGarageRepairClicked);
-            }
+            garageRepairBtn.onClick.RemoveAllListeners();
+            garageRepairBtn.onClick.AddListener(OnGarageRepairClicked);
         }
 
-        Transform tTune = root.transform.Find("TuneBtn");
-        if (tTune != null)
+        garageTuneBtn = FindButtonRecursive(root.transform, "TuneBtn");
+        if (garageTuneBtn != null)
         {
-            garageTuneBtn = tTune.GetComponent<Button>();
-            if (garageTuneBtn != null)
-            {
-                garageTuneBtn.onClick.RemoveAllListeners();
-                garageTuneBtn.onClick.AddListener(OnGarageTuneClicked);
-            }
+            garageTuneBtn.onClick.RemoveAllListeners();
+            garageTuneBtn.onClick.AddListener(OnGarageTuneClicked);
         }
 
-        Transform tDrive = root.transform.Find("DriveBtn");
-        if (tDrive != null)
+        garageDriveBtn = FindButtonRecursive(root.transform, "DriveBtn");
+        if (garageDriveBtn != null)
         {
-            garageDriveBtn = tDrive.GetComponent<Button>();
-            if (garageDriveBtn != null)
-            {
-                garageDriveBtn.onClick.RemoveAllListeners();
-                garageDriveBtn.onClick.AddListener(OnGarageDriveClicked);
-            }
+            garageDriveBtn.onClick.RemoveAllListeners();
+            garageDriveBtn.onClick.AddListener(OnGarageDriveClicked);
         }
 
-        Transform tClose = root.transform.Find("CloseBtn");
-        if (tClose != null)
+        garageCloseBtn = FindButtonRecursive(root.transform, "CloseBtn");
+        if (garageCloseBtn != null)
         {
-            garageCloseBtn = tClose.GetComponent<Button>();
-            if (garageCloseBtn != null)
-            {
-                garageCloseBtn.onClick.RemoveAllListeners();
-                garageCloseBtn.onClick.AddListener(CloseAllPanels);
-            }
+            garageCloseBtn.onClick.RemoveAllListeners();
+            garageCloseBtn.onClick.AddListener(CloseAllPanels);
         }
 
-        Transform tPaintTitle = root.transform.Find("PaintTitle");
-        if (tPaintTitle != null) garagePaintSectionTitle = tPaintTitle.GetComponent<TextMeshProUGUI>();
+        garagePaintSectionTitle = FindTMPRecursive(root.transform, "PaintTitle");
+        garagePaintDescText = FindTMPRecursive(root.transform, "PaintDesc");
+        garageCurrentColorText = FindTMPRecursive(root.transform, "CurrentColor");
 
-        Transform tPaintDesc = root.transform.Find("PaintDesc");
-        if (tPaintDesc != null) garagePaintDescText = tPaintDesc.GetComponent<TextMeshProUGUI>();
-
-        Transform tCurrentCol = root.transform.Find("CurrentColor");
-        if (tCurrentCol != null) garageCurrentColorText = tCurrentCol.GetComponent<TextMeshProUGUI>();
+        Transform tCondFill = FindTransformRecursive(root.transform, "CondBar_Fill");
+        if (tCondFill != null) garageCondBarFill = tCondFill.GetComponent<Image>();
 
         (string name, string hex, bool darkText)[] palette = new (string, string, bool)[]
         {
@@ -734,7 +666,7 @@ public class CommercialHubUIManager : MonoBehaviour
 
         for (int i = 0; i < palette.Length; i++)
         {
-            Transform tP = root.transform.Find($"PaintBtn_{i}");
+            Transform tP = FindTransformRecursive(root.transform, $"PaintBtn_{i}");
             if (tP != null)
             {
                 Button pBtn = tP.GetComponent<Button>();
@@ -753,204 +685,86 @@ public class CommercialHubUIManager : MonoBehaviour
     private void BindInsurancePanel(GameObject root)
     {
         if (root == null) return;
-        Transform tStatus = root.transform.Find("Status");
-        if (tStatus != null) insuranceStatusText = tStatus.GetComponent<TextMeshProUGUI>();
+        insuranceStatusText = FindTMPRecursive(root.transform, "Status");
+        insuranceBalanceText = FindTMPRecursive(root.transform, "Balance");
 
-        Transform tBal = root.transform.Find("Balance");
-        if (tBal != null) insuranceBalanceText = tBal.GetComponent<TextMeshProUGUI>();
-
-        Transform t2 = root.transform.Find("Tier2Btn");
-        if (t2 != null)
+        insuranceTier2UpgradeBtn = FindButtonRecursive(root.transform, "Tier2Btn");
+        if (insuranceTier2UpgradeBtn != null)
         {
-            insuranceTier2UpgradeBtn = t2.GetComponent<Button>();
-            if (insuranceTier2UpgradeBtn != null)
-            {
-                insuranceTier2UpgradeBtn.onClick.RemoveAllListeners();
-                insuranceTier2UpgradeBtn.onClick.AddListener(OnInsuranceUpgradeTierClicked);
-            }
+            insuranceTier2UpgradeBtn.onClick.RemoveAllListeners();
+            insuranceTier2UpgradeBtn.onClick.AddListener(OnInsuranceUpgradeTierClicked);
         }
 
-        Transform t3 = root.transform.Find("Tier3Btn");
-        if (t3 != null)
+        insuranceTier3UpgradeBtn = FindButtonRecursive(root.transform, "Tier3Btn");
+        if (insuranceTier3UpgradeBtn != null)
         {
-            insuranceTier3UpgradeBtn = t3.GetComponent<Button>();
-            if (insuranceTier3UpgradeBtn != null)
-            {
-                insuranceTier3UpgradeBtn.onClick.RemoveAllListeners();
-                insuranceTier3UpgradeBtn.onClick.AddListener(OnInsuranceUpgradeTierClicked);
-            }
+            insuranceTier3UpgradeBtn.onClick.RemoveAllListeners();
+            insuranceTier3UpgradeBtn.onClick.AddListener(OnInsuranceUpgradeTierClicked);
         }
 
-        Transform tClose = root.transform.Find("CloseBtn");
-        if (tClose != null)
+        insuranceCloseBtn = FindButtonRecursive(root.transform, "CloseBtn");
+        if (insuranceCloseBtn != null)
         {
-            insuranceCloseBtn = tClose.GetComponent<Button>();
-            if (insuranceCloseBtn != null)
-            {
-                insuranceCloseBtn.onClick.RemoveAllListeners();
-                insuranceCloseBtn.onClick.AddListener(CloseAllPanels);
-            }
+            insuranceCloseBtn.onClick.RemoveAllListeners();
+            insuranceCloseBtn.onClick.AddListener(CloseAllPanels);
         }
     }
 
     private void BindDispatchPanel(GameObject root)
     {
         if (root == null) return;
-        Transform tStatus = root.transform.Find("Status");
-        if (tStatus != null) dispatchStatusText = tStatus.GetComponent<TextMeshProUGUI>();
+        dispatchStatusText = FindTMPRecursive(root.transform, "Status");
+        dispatchRevenueInfoText = FindTMPRecursive(root.transform, "Revenue");
+        dispatchBalanceText = FindTMPRecursive(root.transform, "Balance");
 
-        Transform tRev = root.transform.Find("Revenue");
-        if (tRev != null) dispatchRevenueInfoText = tRev.GetComponent<TextMeshProUGUI>();
-
-        Transform tBal = root.transform.Find("Balance");
-        if (tBal != null) dispatchBalanceText = tBal.GetComponent<TextMeshProUGUI>();
-
-        Transform t2 = root.transform.Find("Tier2Btn");
-        if (t2 != null)
+        dispatchTier2UpgradeBtn = FindButtonRecursive(root.transform, "Tier2Btn");
+        if (dispatchTier2UpgradeBtn != null)
         {
-            dispatchTier2UpgradeBtn = t2.GetComponent<Button>();
-            if (dispatchTier2UpgradeBtn != null)
-            {
-                dispatchTier2UpgradeBtn.onClick.RemoveAllListeners();
-                dispatchTier2UpgradeBtn.onClick.AddListener(OnDispatchUpgradeClicked);
-            }
+            dispatchTier2UpgradeBtn.onClick.RemoveAllListeners();
+            dispatchTier2UpgradeBtn.onClick.AddListener(OnDispatchUpgradeClicked);
         }
 
-        Transform t3 = root.transform.Find("Tier3Btn");
-        if (t3 != null)
+        dispatchTier3UpgradeBtn = FindButtonRecursive(root.transform, "Tier3Btn");
+        if (dispatchTier3UpgradeBtn != null)
         {
-            dispatchTier3UpgradeBtn = t3.GetComponent<Button>();
-            if (dispatchTier3UpgradeBtn != null)
-            {
-                dispatchTier3UpgradeBtn.onClick.RemoveAllListeners();
-                dispatchTier3UpgradeBtn.onClick.AddListener(OnDispatchUpgradeClicked);
-            }
+            dispatchTier3UpgradeBtn.onClick.RemoveAllListeners();
+            dispatchTier3UpgradeBtn.onClick.AddListener(OnDispatchUpgradeClicked);
         }
 
-        Transform tClose = root.transform.Find("CloseBtn");
-        if (tClose != null)
+        dispatchCloseBtn = FindButtonRecursive(root.transform, "CloseBtn");
+        if (dispatchCloseBtn != null)
         {
-            dispatchCloseBtn = tClose.GetComponent<Button>();
-            if (dispatchCloseBtn != null)
-            {
-                dispatchCloseBtn.onClick.RemoveAllListeners();
-                dispatchCloseBtn.onClick.AddListener(CloseAllPanels);
-            }
+            dispatchCloseBtn.onClick.RemoveAllListeners();
+            dispatchCloseBtn.onClick.AddListener(CloseAllPanels);
         }
     }
 
     private void BindPropertyModal(GameObject root)
     {
         if (root == null) return;
-        Transform tTitle = root.transform.Find("Title");
-        if (tTitle != null) propertyModalTitleText = tTitle.GetComponent<TextMeshProUGUI>();
+        propertyModalTitleText = FindTMPRecursive(root.transform, "Title");
+        propertyModalDescText = FindTMPRecursive(root.transform, "Desc");
+        propertyModalReqText = FindTMPRecursive(root.transform, "Req");
+        propertyModalCostText = FindTMPRecursive(root.transform, "Cost");
 
-        Transform tDesc = root.transform.Find("Desc");
-        if (tDesc != null) propertyModalDescText = tDesc.GetComponent<TextMeshProUGUI>();
-
-        Transform tReq = root.transform.Find("Req");
-        if (tReq != null) propertyModalReqText = tReq.GetComponent<TextMeshProUGUI>();
-
-        Transform tCost = root.transform.Find("Cost");
-        if (tCost != null) propertyModalCostText = tCost.GetComponent<TextMeshProUGUI>();
-
-        Transform tBuy = root.transform.Find("BuyBtn");
-        if (tBuy != null)
+        propertyModalBuyBtn = FindButtonRecursive(root.transform, "BuyBtn");
+        if (propertyModalBuyBtn != null)
         {
-            propertyModalBuyBtn = tBuy.GetComponent<Button>();
-            if (propertyModalBuyBtn != null)
-            {
-                propertyModalBuyBtn.onClick.RemoveAllListeners();
-                propertyModalBuyBtn.onClick.AddListener(OnPropertyConfirmPurchase);
-            }
+            propertyModalBuyBtn.onClick.RemoveAllListeners();
+            propertyModalBuyBtn.onClick.AddListener(OnPropertyConfirmPurchase);
         }
 
-        Transform tCancel = root.transform.Find("CancelBtn");
-        if (tCancel != null)
+        propertyModalCancelBtn = FindButtonRecursive(root.transform, "CancelBtn");
+        if (propertyModalCancelBtn != null)
         {
-            propertyModalCancelBtn = tCancel.GetComponent<Button>();
-            if (propertyModalCancelBtn != null)
-            {
-                propertyModalCancelBtn.onClick.RemoveAllListeners();
-                propertyModalCancelBtn.onClick.AddListener(CloseAllPanels);
-            }
+            propertyModalCancelBtn.onClick.RemoveAllListeners();
+            propertyModalCancelBtn.onClick.AddListener(CloseAllPanels);
         }
     }
 
     private GameObject CreateGaragePanel(Transform parent)
     {
-        GameObject root = CreateDarkPanel(parent, "GarageWorkshopPanel", new Vector2(880, 560));
-
-        // Header
-        garageTitleText = CreateTMPText(root, "Title", "🔧 OTO SERVİS & BOYA ATÖLYESİ", 28, FontStyles.Bold, new Color(0.2f, 0.9f, 1f), TextAlignmentOptions.Center);
-        SetRectAnchors(garageTitleText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -32), new Vector2(820, 40));
-
-        // Status Line
-        garageVehicleStatusText = CreateTMPText(root, "Status", "Yakıt: 50.0 / 50.0 L (%100)  |  Kondisyon: %100", 18, FontStyles.Normal, Color.white, TextAlignmentOptions.Center);
-        SetRectAnchors(garageVehicleStatusText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -68), new Vector2(820, 28));
-
-        // Row 1: Repair Button (Centered & Prominent)
-        garageRepairBtn = CreateButton(root, "RepairBtn", "🛠️ Aracı Tamir Et & Depoyu Doldur ($150)", new Vector2(0, -112), new Vector2(500, 48), new Color(0.12f, 0.55f, 0.35f));
-        garageRepairBtn.onClick.AddListener(OnGarageRepairClicked);
-
-        // --- PAINT SECTION HEADER ---
-        garagePaintSectionTitle = CreateTMPText(root, "PaintTitle", "🎨 ARAÇ GÖVDE & PARÇA BOYAMA ATÖLYESİ ($250)", 20, FontStyles.Bold, new Color(1f, 0.82f, 0.2f), TextAlignmentOptions.Center);
-        SetRectAnchors(garagePaintSectionTitle.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -175), new Vector2(820, 28));
-
-        garagePaintDescText = CreateTMPText(root, "PaintDesc", "<color=#AAAAAA>Boyanacak Hedefler: PickupBody (Element 0), Hood (Element 0), DoorL & DoorR (Element 0)</color>", 15, FontStyles.Normal, Color.white, TextAlignmentOptions.Center);
-        SetRectAnchors(garagePaintDescText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -202), new Vector2(820, 22));
-
-        // 10 Color Swatches Grid (2 rows of 5)
-        (string name, string hex, bool darkText)[] palette = new (string, string, bool)[]
-        {
-            ("🔴 Kırmızı", "#C5221F", false),
-            ("🔵 Mavi", "#1A73E8", false),
-            ("🖤 Siyah", "#1E1E24", false),
-            ("⚪ Beyaz", "#F8F9FA", true),
-            ("🟡 Sarı", "#FBBC04", true),
-            ("🟢 Yeşil", "#1E8E3E", false),
-            ("🟠 Turuncu", "#E8710A", false),
-            ("🟣 Mor", "#9334E8", false),
-            ("🔘 Gri", "#5F6368", false),
-            ("🩵 Turkuaz", "#00BCD4", false)
-        };
-
-        float startX = -300f;
-        float stepX = 150f;
-
-        for (int i = 0; i < palette.Length; i++)
-        {
-            int row = i / 5;
-            int col = i % 5;
-            float x = startX + (col * stepX);
-            float y = row == 0 ? -245f : -305f;
-
-            var item = palette[i];
-            ColorUtility.TryParseHtmlString(item.hex, out Color colVal);
-            Color capturedColor = colVal;
-            Button pBtn = CreateButton(root, $"PaintBtn_{i}", item.name, new Vector2(x, y), new Vector2(138, 48), colVal);
-
-            TextMeshProUGUI bTxt = pBtn.GetComponentInChildren<TextMeshProUGUI>();
-            if (bTxt != null)
-            {
-                bTxt.color = item.darkText ? Color.black : Color.white;
-                bTxt.fontSize = 16;
-            }
-
-            pBtn.onClick.AddListener(() => OnGaragePaintColorClicked(capturedColor));
-        }
-
-        // Current Color Indicator
-        garageCurrentColorText = CreateTMPText(root, "CurrentColor", "<b>Mevcut Renk:</b> ■ Standart  |  <b>Boya Değişim Ücreti:</b> $250", 17, FontStyles.Normal, Color.white, TextAlignmentOptions.Center);
-        SetRectAnchors(garageCurrentColorText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -370), new Vector2(820, 26));
-
-        // Bottom Actions: Drive & Close
-        garageDriveBtn = CreateButton(root, "DriveBtn", "🚗 Aracı Sür & Çıkış Yap", new Vector2(-205, -432), new Vector2(380, 52), new Color(0.15f, 0.45f, 0.85f));
-        garageDriveBtn.onClick.AddListener(OnGarageDriveClicked);
-
-        garageCloseBtn = CreateButton(root, "CloseBtn", "❌ Kapat (ESC)", new Vector2(205, -432), new Vector2(380, 52), new Color(0.35f, 0.38f, 0.45f));
-        garageCloseBtn.onClick.AddListener(CloseAllPanels);
-
+        GameObject root = CreateDarkPanel(parent, "GarageWorkshopPanel", new Vector2(1040, 640));
         return root;
     }
 
@@ -1141,6 +955,42 @@ public class CommercialHubUIManager : MonoBehaviour
         {
             img.color = normalColor;
         }
+    }
+
+    private TextMeshProUGUI FindTMPRecursive(Transform root, string targetName)
+    {
+        if (root == null) return null;
+        TextMeshProUGUI[] tmps = root.GetComponentsInChildren<TextMeshProUGUI>(true);
+        foreach (var t in tmps)
+        {
+            if (t.gameObject.name.Equals(targetName, StringComparison.OrdinalIgnoreCase))
+                return t;
+        }
+        return null;
+    }
+
+    private Button FindButtonRecursive(Transform root, string targetName)
+    {
+        if (root == null) return null;
+        Button[] buttons = root.GetComponentsInChildren<Button>(true);
+        foreach (var b in buttons)
+        {
+            if (b.gameObject.name.Equals(targetName, StringComparison.OrdinalIgnoreCase))
+                return b;
+        }
+        return null;
+    }
+
+    private Transform FindTransformRecursive(Transform root, string targetName)
+    {
+        if (root == null) return null;
+        Transform[] transforms = root.GetComponentsInChildren<Transform>(true);
+        foreach (var t in transforms)
+        {
+            if (t.gameObject.name.Equals(targetName, StringComparison.OrdinalIgnoreCase))
+                return t;
+        }
+        return null;
     }
 
 #if UNITY_EDITOR

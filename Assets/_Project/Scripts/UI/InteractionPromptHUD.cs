@@ -67,7 +67,7 @@ public class InteractionPromptHUD : MonoBehaviour
 
     [Header("--- PROMPT TIMEOUT SETTINGS ---")]
     [Tooltip("Duration in seconds for on-screen interaction and hint prompts to automatically hide")]
-    public float defaultPromptDuration = 5.0f;
+    public float defaultPromptDuration = 2.0f;
 
     private float currentPromptTimer = 0f;
     private CanvasGroup promptCanvasGroup;
@@ -272,7 +272,7 @@ public class InteractionPromptHUD : MonoBehaviour
         }
     }
 
-    public void ShowPrompt(string message, float duration = 2.8f)
+    public void ShowPrompt(string message, float duration = 2.0f)
     {
         if (string.IsNullOrEmpty(message))
         {

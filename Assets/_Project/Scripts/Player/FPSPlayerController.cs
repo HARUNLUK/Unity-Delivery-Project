@@ -993,11 +993,9 @@ public class FPSPlayerController : MonoBehaviour
                             return;
                         }
 
-                        string garageInfo = VehicleServiceGarage.Instance.GetGaragePromptForVehicle(vehicle);
-
                         if (InteractionPromptHUD.Instance != null)
                         {
-                            InteractionPromptHUD.Instance.ShowPrompt($"[E] Sür  |  <color=#FFD232>[F] Servis Menüsü</color>  |  " + garageInfo);
+                            InteractionPromptHUD.Instance.ShowPrompt("<color=#FFD232>[F] Menüyü Aç</color>");
                         }
                     }
                     else
@@ -1118,45 +1116,6 @@ public class FPSPlayerController : MonoBehaviour
                 }
             }
             return;
-        }
-
-        // 2.4 Service garage bay vehicle proximity fallback
-        if (VehicleServiceGarage.Instance != null && VehicleServiceGarage.Instance.IsGarageUnlocked())
-        {
-            DrivableVehicle bayVehicle = VehicleServiceGarage.Instance.FindActiveVehicleInBay();
-            if (bayVehicle != null && Vector3.Distance(transform.position, bayVehicle.transform.position) <= 6.0f)
-            {
-                UpdateCargoFocus(null);
-                VehicleServiceGarage.Instance.CheckGarageShortcutInputs(bayVehicle);
-
-                bool fPressed = false;
-#if ENABLE_INPUT_SYSTEM
-                if (Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame) fPressed = true;
-#endif
-#if ENABLE_LEGACY_INPUT_MANAGER
-                try { if (Input.GetKeyDown(KeyCode.F)) fPressed = true; } catch { }
-#endif
-
-                if (fPressed && CommercialHubUIManager.Instance != null)
-                {
-                    CommercialHubUIManager.Instance.OpenGarageWorkshopPanel(bayVehicle);
-                    return;
-                }
-
-                if (InteractionPromptHUD.Instance != null)
-                {
-                    string garageInfo = VehicleServiceGarage.Instance.GetGaragePromptForVehicle(bayVehicle);
-                    InteractionPromptHUD.Instance.ShowPrompt($"[E] Sür  |  <color=#FFD232>[F] Servis Menüsü</color>  |  " + garageInfo);
-                }
-
-                if (interactPressed && exitVehicleSafetyTimer <= 0f && Vector3.Distance(transform.position, bayVehicle.transform.position) <= 3.5f)
-                {
-                    bayVehicle.EnterVehicle(this);
-                    return;
-                }
-
-                return;
-            }
         }
 
         // No interactive target hit

@@ -1109,6 +1109,7 @@ public static class DeliveryUIBuilder
 
         // Commercial Hub Shop UIs (Garage Workshop, Insurance Agency, Passive Dispatch, Property Modal)
         CommercialHubUIManager.CreateCommercialHubUITool();
+        GarageWorkshopUIBuilder.BuildGarageWorkshopPanelInActiveScene();
 
         // Apply complete Glassmorphic 9-slice textures, glows, and rounded styling
         GlassUIAssetGenerator.ApplyGlassmorphicStyleToAllUI();

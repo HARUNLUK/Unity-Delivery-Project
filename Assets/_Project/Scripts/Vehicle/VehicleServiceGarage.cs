@@ -102,13 +102,19 @@ public class VehicleServiceGarage : MonoBehaviour
     {
         if (v == null || !IsGarageUnlocked()) return false;
 
-        Vector3 bayPos = GetBayPosition();
-        float d = Vector3.Distance(bayPos, v.transform.position);
-        float effectiveRadius = Mathf.Max(serviceDistance, 16.0f);
-        if (d <= effectiveRadius) return true;
-
         BoxCollider box = GetComponent<BoxCollider>();
         if (box != null && box.bounds.Contains(v.transform.position))
+        {
+            return true;
+        }
+
+        Vector3 bayPos = GetBayPosition();
+        Vector3 diff = v.transform.position - bayPos;
+        float horizontalDist = new Vector2(diff.x, diff.z).magnitude;
+        float verticalDist = Mathf.Abs(diff.y);
+
+        float maxRadius = serviceDistance > 0 ? Mathf.Min(serviceDistance, 5.0f) : 4.5f;
+        if (horizontalDist <= maxRadius && verticalDist <= 2.8f)
         {
             return true;
         }
@@ -120,28 +126,21 @@ public class VehicleServiceGarage : MonoBehaviour
     {
         if (!IsGarageUnlocked()) return null;
 
-        Vector3 bayPos = GetBayPosition();
         DrivableVehicle[] vehicles = UnityEngine.Object.FindObjectsByType<DrivableVehicle>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-        DrivableVehicle closest = null;
-        float minDist = Mathf.Max(serviceDistance, 16.0f);
-
         foreach (var v in vehicles)
         {
-            if (v == null) continue;
-            float d = Vector3.Distance(bayPos, v.transform.position);
-            if (d <= minDist)
+            if (v != null && IsVehicleInServiceBay(v))
             {
-                minDist = d;
-                closest = v;
+                return v;
             }
         }
-        return closest;
+        return null;
     }
 
     public string GetGaragePromptForVehicle(DrivableVehicle v)
     {
         if (v == null || !IsGarageUnlocked()) return string.Empty;
-        return $"<color=#32D2FF>[R] Tamir (${repairCost})</color> | <color=#32FFFF>[F] Boya & Garaj Menüsü</color>";
+        return "<color=#FFD232>[F] Menüyü Aç</color>";
     }
 
     public void CheckGarageShortcutInputs(DrivableVehicle v)
@@ -277,17 +276,14 @@ public class VehicleServiceGarage : MonoBehaviour
     {
         if (v == null || !IsGarageUnlocked()) return false;
 
-        // Try to deduct repaint cost if economy exists and funds are available
+        // Check if player has enough money for repainting
         if (PlayerEconomyManager.Instance != null && repaintCost > 0)
         {
             if (!PlayerEconomyManager.Instance.SpendMoney(repaintCost))
             {
-                // If player has some money but less than full price, spend remaining balance
-                int avail = PlayerEconomyManager.Instance.CurrentLiveBalance;
-                if (avail > 0)
-                {
-                    PlayerEconomyManager.Instance.SpendMoney(avail);
-                }
+                if (InteractionPromptHUD.Instance != null)
+                    InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF3333>Yetersiz Bakiye! Boya Ücreti: ${repaintCost:N0}</color>", 2.5f);
+                return false;
             }
         }
 

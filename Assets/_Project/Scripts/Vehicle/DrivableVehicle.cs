@@ -152,6 +152,7 @@ public class DrivableVehicle : MonoBehaviour
 
     private Rigidbody rb;
     private float enterTimestamp = 0f;
+    private bool wasInGarageBayLastFrame = false;
 
     private void OnEnable()
     {
@@ -338,10 +339,9 @@ public class DrivableVehicle : MonoBehaviour
 
             if (inGarage)
             {
-                if (InteractionPromptHUD.Instance != null && !isUIOpen)
+                if (!wasInGarageBayLastFrame && InteractionPromptHUD.Instance != null && !isUIOpen)
                 {
-                    string garageInfo = VehicleServiceGarage.Instance.GetGaragePromptForVehicle(this);
-                    InteractionPromptHUD.Instance.ShowPrompt($"<color=#FFD232><b>[F] OTO SERVİS & MODİFİYE MENÜSÜ</b></color>  |  [E] İn  |  {garageInfo}");
+                    InteractionPromptHUD.Instance.ShowPrompt("<color=#FFD232>[F] Menüyü Aç</color>", 2.0f);
                 }
 
                 VehicleServiceGarage.Instance.CheckGarageShortcutInputs(this);
@@ -366,6 +366,15 @@ public class DrivableVehicle : MonoBehaviour
                     }
                 }
             }
+            else
+            {
+                if (wasInGarageBayLastFrame && InteractionPromptHUD.Instance != null)
+                {
+                    InteractionPromptHUD.Instance.HidePrompt();
+                }
+            }
+
+            wasInGarageBayLastFrame = inGarage;
 
             // 2. Debounce to prevent immediate exit on the frame of entry
             if (!isUIOpen && Time.time - enterTimestamp > 0.35f)
@@ -808,13 +817,15 @@ public class DrivableVehicle : MonoBehaviour
                             VehicleServiceGarage.Instance.IsGarageUnlocked() &&
                             VehicleServiceGarage.Instance.IsVehicleInServiceBay(this);
 
+            wasInGarageBayLastFrame = inGarage;
+
             if (inGarage)
             {
-                InteractionPromptHUD.Instance.ShowPrompt("[E] Araçtan İn  |  <color=#FFD232>[F] Servis Menüsü</color>  |  [V] Kamera");
+                InteractionPromptHUD.Instance.ShowPrompt("<color=#FFD232>[F] Menüyü Aç</color>", 2.0f);
             }
             else
             {
-                InteractionPromptHUD.Instance.ShowPrompt("[E] Exit  |  [V] Change Camera");
+                InteractionPromptHUD.Instance.ShowPrompt("[E] Exit  |  [V] Change Camera", 2.0f);
             }
             InteractionPromptHUD.Instance.UpdateVehicleHUD(currentFuel, maxFuel, currentFuel < (maxFuel * 0.18f), currentCondition, maxCondition);
         }
@@ -990,6 +1001,7 @@ public class DrivableVehicle : MonoBehaviour
 
         isPlayerInside = false;
         currentPlayer = null;
+        wasInGarageBayLastFrame = false;
 
         if (driverVisualObject != null)
         {
