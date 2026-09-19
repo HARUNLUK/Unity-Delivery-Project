@@ -168,6 +168,39 @@ public class AITrafficVehicle : MonoBehaviour
 
         CacheOwnColliders();
         AutoDetectWheels();
+        IgnorePlayerBarrierLayers();
+        PlayerOnlyBarrier.NotifyVehicleSpawned(this);
+    }
+
+    /// <summary>
+    /// Ensures AI radar and physics engine ignore all Player-Only wall/barrier layers.
+    /// </summary>
+    private void IgnorePlayerBarrierLayers()
+    {
+        string[] barrierNames = new string[]
+        {
+            "PlayerOnlyWall", "PlayerOnly", "DemoBarrier", "PlayerBarrier",
+            "InvisibleWall", "RoadLock", "RoadBarrier", "ZoneBarrier", "LevelBarrier"
+        };
+
+        foreach (var bName in barrierNames)
+        {
+            int layerId = LayerMask.NameToLayer(bName);
+            if (layerId >= 0)
+            {
+                // Remove barrier layer from raycast radar detection
+                obstacleLayers &= ~(1 << layerId);
+
+                // Ignore physics collisions between this vehicle's layer and the barrier layer
+                Physics.IgnoreLayerCollision(gameObject.layer, layerId, true);
+
+                int trafficLayerId = LayerMask.NameToLayer("AITraffic");
+                if (trafficLayerId >= 0)
+                {
+                    Physics.IgnoreLayerCollision(trafficLayerId, layerId, true);
+                }
+            }
+        }
     }
 
     private void CacheOwnColliders()
@@ -881,29 +914,63 @@ public class AITrafficVehicle : MonoBehaviour
         // 1. Ignore own vehicle colliders
         if (IsOwnCollider(col)) return false;
 
-        // 2. Ignore terrain, road, ground, sidewalk surface or slope
+        // 2. Ignore Player-Only Barriers, Invisible Walls, Gates, Level Locks, Cubes, and Borders
+        if (col.GetComponentInParent<PlayerOnlyBarrier>() != null) return false;
+
+        string colName = col.gameObject.name.ToLower();
+        if (colName.Contains("wall") || colName.Contains("duvar") || colName.Contains("barrier") || 
+            colName.Contains("barikat") || colName.Contains("border") || colName.Contains("limit") || 
+            colName.Contains("gate") || colName.Contains("block") || colName.Contains("kilit") || 
+            colName.Contains("lock") || colName.Contains("invisible") || colName.Contains("cube") ||
+            colName.Contains("boundary") || colName.Contains("obstacle") || colName.Contains("blockade"))
+        {
+            // If this object is not a player or vehicle, never consider it an obstacle for AI traffic
+            if (col.GetComponentInParent<FPSPlayerController>() == null &&
+                col.GetComponentInParent<DrivableVehicle>() == null &&
+                col.GetComponentInParent<CarController>() == null &&
+                col.GetComponentInParent<AITrafficVehicle>() == null)
+            {
+                return false;
+            }
+        }
+
+        string hitLayerName = LayerMask.LayerToName(col.gameObject.layer).ToLower();
+        if (hitLayerName.Contains("playeronly") || hitLayerName.Contains("demobarrier") || 
+            hitLayerName.Contains("playerbarrier") || hitLayerName.Contains("invisiblewall") || 
+            hitLayerName.Contains("roadlock") || hitLayerName.Contains("levelbarrier") ||
+            hitLayerName.Contains("wall") || hitLayerName.Contains("barrier") || hitLayerName.Contains("zone"))
+        {
+            if (col.GetComponentInParent<FPSPlayerController>() == null && 
+                col.GetComponentInParent<DrivableVehicle>() == null && 
+                col.GetComponentInParent<CarController>() == null)
+            {
+                return false;
+            }
+        }
+
+        // 3. Ignore terrain, road, ground, sidewalk surface or slope
         if (IsRoadOrTerrainCollider(col, hit.normal)) return false;
 
-        // 3. Ignore vehicles in the opposite lane traveling normally
+        // 4. Ignore vehicles in the opposite lane traveling normally
         if (IsOppositeLaneVehicle(col)) return false;
 
-        // 4. Vehicles & Player are always real obstacles
+        // 5. Real Obstacle A: Other AI Traffic Vehicles
         if (col.GetComponentInParent<AITrafficVehicle>() != null) return true;
+
+        // 6. Real Obstacle B: The Player (On-foot)
         if (col.GetComponentInParent<FPSPlayerController>() != null || col.CompareTag("Player")) return true;
+
+        // 7. Real Obstacle C: Player's Drivable Vehicles (Driving or parked)
         if (col.GetComponentInParent<DrivableVehicle>() != null || col.GetComponentInParent<CarController>() != null) return true;
 
-        // 5. Movable dynamic physics objects
+        // 8. Real Obstacle D: Physical Cargo Packages on the road
+        if (col.GetComponentInParent<PhysicalCargoPackage>() != null) return true;
+
+        // 9. Real Obstacle E: Movable dynamic physics objects (Only non-kinematic Rigidbodies)
         Rigidbody rb = col.GetComponentInParent<Rigidbody>();
         if (rb != null && !rb.isKinematic) return true;
 
-        // 6. Explicit obstacle names
-        string colName = col.gameObject.name.ToLower();
-        if (colName.Contains("obstacle") || colName.Contains("barrier") || colName.Contains("blockade") || colName.Contains("trafficcone"))
-        {
-            return true;
-        }
-
-        // Static roadside environment objects (buildings, trees, lamp posts, fences, rocks) are not obstacles
+        // ALL other static objects (buildings, trees, lamp posts, fences, walls, cubes) are NEVER obstacles for AI
         return false;
     }
 

@@ -26,6 +26,9 @@ public class RoadSignLevelLock : MonoBehaviour
     [Tooltip("Optional parent badge / plate GameObject containing the lock visual. Will be toggled on/off based on unlock status.")]
     public GameObject lockVisualContainer;
 
+    [Tooltip("Optional physical barrier / invisible wall that blocks the player while this road is locked. Will be enabled when locked, and disabled when unlocked.")]
+    public GameObject physicalBarrier;
+
     [Header("--- BEHAVIOR OPTIONS ---")]
     [Tooltip("If true, automatically creates a stylized sub-badge and 3D TextMeshPro under the sign if none is assigned.")]
     public bool autoCreateBadgeIfMissing = true;
@@ -155,6 +158,15 @@ public class RoadSignLevelLock : MonoBehaviour
                 lockTextMesh.gameObject.SetActive(true);
                 lockTextMesh.text = string.Format(lockTextFormat, requiredLevel);
                 lockTextMesh.color = lockTextColor;
+            }
+        }
+
+        if (physicalBarrier != null)
+        {
+            physicalBarrier.SetActive(!unlocked);
+            if (!unlocked && physicalBarrier.GetComponent<PlayerOnlyBarrier>() == null)
+            {
+                physicalBarrier.AddComponent<PlayerOnlyBarrier>();
             }
         }
 
