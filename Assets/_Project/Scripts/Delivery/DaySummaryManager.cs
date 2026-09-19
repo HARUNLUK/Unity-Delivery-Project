@@ -45,30 +45,16 @@ public class DaySummaryManager : MonoBehaviour
             Instance = this;
         }
 
-        if (summaryPanelRoot == null)
-        {
-            Transform t = transform.Find("DaySummaryPanel");
-            if (t != null) summaryPanelRoot = t.gameObject;
-            else
-            {
-                GameObject found = GameObject.Find("DaySummaryPanel");
-                if (found != null) summaryPanelRoot = found;
-            }
-        }
+        EnsureSummaryReferences();
 
         if (summaryPanelRoot != null) summaryPanelRoot.SetActive(false);
         if (historyItemTemplate != null) historyItemTemplate.SetActive(false);
-
-        if (restartDayButton != null)
-        {
-            restartDayButton.onClick.RemoveAllListeners();
-            restartDayButton.onClick.AddListener(RestartDay);
-        }
     }
 
     private void Start()
     {
         isDayFinalized = false;
+        EnsureSummaryReferences();
         if (summaryPanelRoot != null) summaryPanelRoot.SetActive(false);
     }
 
@@ -100,16 +86,7 @@ public class DaySummaryManager : MonoBehaviour
         if (isDayFinalized) return;
         isDayFinalized = true;
 
-        if (summaryPanelRoot == null)
-        {
-            Transform t = transform.Find("DaySummaryPanel");
-            if (t != null) summaryPanelRoot = t.gameObject;
-            else
-            {
-                GameObject found = GameObject.Find("DaySummaryPanel");
-                if (found != null) summaryPanelRoot = found;
-            }
-        }
+        EnsureSummaryReferences();
 
         if (summaryPanelRoot != null)
         {
@@ -184,9 +161,7 @@ public class DaySummaryManager : MonoBehaviour
 
         int netProfit = totalReward - totalPenalty;
 
-        // 3. XP System temporarily disabled per user request
-
-        // 4. Update and persist economy
+        // 3. Update and persist economy
         if (PlayerEconomyManager.Instance != null)
         {
             PlayerEconomyManager.Instance.AddEarnings(totalReward);
@@ -196,7 +171,7 @@ public class DaySummaryManager : MonoBehaviour
 
         int totalVault = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.TotalSavedBalance : netProfit;
 
-        // 5. Populate UI Text Elements
+        // 4. Populate UI Text Elements
         if (totalDeliveredText != null)
         {
             if (!string.IsNullOrEmpty(emergencyHospitalReason))
@@ -242,12 +217,13 @@ public class DaySummaryManager : MonoBehaviour
             }
         }
 
-        // 6. Detaylı Liste Satırlarını Oluştur
+        // 5. Detaylı Liste Satırlarını Oluştur
         PopulateResultsList(results);
     }
 
     private void PopulateResultsList(List<CargoDeliveryResult> results)
     {
+        if (historyListContent == null || historyItemTemplate == null) EnsureSummaryReferences();
         if (historyListContent == null || historyItemTemplate == null) return;
 
         foreach (Transform child in historyListContent)
@@ -263,58 +239,165 @@ public class DaySummaryManager : MonoBehaviour
             GameObject rowObj = Instantiate(historyItemTemplate, historyListContent);
             rowObj.SetActive(true);
 
-            TextMeshProUGUI rowText = rowObj.GetComponentInChildren<TextMeshProUGUI>();
-            Image rowImg = rowObj.GetComponent<Image>();
+            var deliveredText = FindTMPRecursive(rowObj.transform, "delivered", "DeliveredText", "DeliveredTo", "ActualAddress");
+            var targetText = FindTMPRecursive(rowObj.transform, "target", "TargetText", "Destination", "TargetAddress");
+            var resultText = FindTMPRecursive(rowObj.transform, "result", "ResultText", "Status", "StatusText");
 
-            if (rowText != null)
+            string deliveredAddr = !string.IsNullOrEmpty(res.actualAddress) ? res.actualAddress : "(Not Delivered)";
+            string targetAddr = !string.IsNullOrEmpty(res.targetAddress) ? res.targetAddress : "(Unknown)";
+
+            if (deliveredText != null)
             {
-                string statusLabel = "";
-                string typeBadge = res.cargoType == CargoType.Standard ? "" : 
-                    (res.cargoType == CargoType.Express && res.package != null ? $" [EXPRESS {res.package.GetFormattedTargetDeliveryTime()}]" : 
-                    (res.cargoType == CargoType.Explosive ? " [EXPLOSIVE 🔥]" : $" [{res.cargoType.ToString().ToUpper()}]"));
-
-                if (res.status == CargoDeliveryStatus.Correct)
-                {
-                    statusLabel = res.isExpressBonus 
-                        ? "<color=#00CCFF>[EXPRESS ON-TIME]</color>" 
-                        : "<color=#32FF64>[CORRECT DELIVERY]</color>";
-                }
-                else if (res.status == CargoDeliveryStatus.Broken)
-                {
-                    statusLabel = res.cargoType == CargoType.Explosive 
-                        ? "<color=#FF2222>[EXPLODED HAZARD]</color>" 
-                        : "<color=#FF2222>[BROKEN FRAGILE]</color>";
-                }
-                else if (res.status == CargoDeliveryStatus.WrongAddress)
-                {
-                    statusLabel = "<color=#FF4444>[WRONG ADDRESS]</color>";
-                }
-                else
-                {
-                    statusLabel = "<color=#FFAA22>[NOT DELIVERED]</color>";
-                }
-
-                string moneyLabel = (res.moneyChange == 0 && res.status != CargoDeliveryStatus.Correct)
-                    ? "<color=#32FF64>$0 (Kasko Korumalı)</color>"
-                    : (res.moneyChange >= 0 ? $"+${res.moneyChange}" : $"-${Mathf.Abs(res.moneyChange)}");
-
-                rowText.text = $"{res.trackingNumber}{typeBadge} | {statusLabel} ({moneyLabel})\nRecipient: {res.recipientName} | Target: {res.targetAddress} | Landed: {res.actualAddress}";
+                deliveredText.text = $"Delivered to: {deliveredAddr}";
             }
 
-            if (rowImg != null)
+            if (targetText != null)
             {
-                if (res.status == CargoDeliveryStatus.Correct)
-                    rowImg.color = new Color(0.12f, 0.38f, 0.18f, 0.9f);
-                else if (res.moneyChange == 0)
-                    rowImg.color = new Color(0.12f, 0.28f, 0.35f, 0.9f); // Insured protected tone
-                else if (res.status == CargoDeliveryStatus.Broken)
-                    rowImg.color = new Color(0.55f, 0.10f, 0.10f, 0.9f);
-                else if (res.status == CargoDeliveryStatus.WrongAddress)
-                    rowImg.color = new Color(0.48f, 0.14f, 0.14f, 0.9f);
-                else
-                    rowImg.color = new Color(0.38f, 0.28f, 0.12f, 0.9f);
+                targetText.text = $"Target: {targetAddr}";
+            }
+
+            if (resultText != null)
+            {
+                switch (res.status)
+                {
+                    case CargoDeliveryStatus.Correct:
+                        resultText.text = res.isExpressBonus ? "<color=#33E0FF>EXPRESS</color>" : "<color=#32FF64>CORRECT</color>";
+                        break;
+                    case CargoDeliveryStatus.WrongAddress:
+                        resultText.text = "<color=#FF4444>WRONG</color>";
+                        break;
+                    case CargoDeliveryStatus.Broken:
+                        resultText.text = res.cargoType == CargoType.Explosive ? "<color=#FF2222>EXPLODED</color>" : "<color=#FF4444>BROKEN</color>";
+                        break;
+                    default:
+                        resultText.text = "<color=#FFAA22>UNDELIVERED</color>";
+                        break;
+                }
+            }
+
+            // Fallback for single text label template if separate fields not found
+            if (deliveredText == null && targetText == null && resultText == null)
+            {
+                TextMeshProUGUI rowText = rowObj.GetComponentInChildren<TextMeshProUGUI>();
+                if (rowText != null)
+                {
+                    string statusLabel = res.status == CargoDeliveryStatus.Correct ? "[CORRECT]" : $"[{res.status}]";
+                    rowText.text = $"Delivered to: {deliveredAddr}\nTarget: {targetAddr}   {statusLabel}";
+                }
             }
         }
+    }
+
+    public void EnsureSummaryReferences()
+    {
+        if (summaryPanelRoot == null)
+        {
+            Canvas canvas = GetComponentInParent<Canvas>();
+            if (canvas == null) canvas = Object.FindAnyObjectByType<Canvas>();
+            if (canvas != null)
+            {
+                Transform t = FindTransformRecursive(canvas.transform, "DaySummaryPanel");
+                if (t != null) summaryPanelRoot = t.gameObject;
+            }
+            if (summaryPanelRoot == null)
+            {
+                GameObject found = GameObject.Find("DaySummaryPanel");
+                if (found != null) summaryPanelRoot = found;
+            }
+        }
+
+        if (summaryPanelRoot != null)
+        {
+            if (totalDeliveredText == null) totalDeliveredText = FindTMPRecursive(summaryPanelRoot.transform, "TotalDeliveredText", "TotalText", "TotalDelivered");
+            if (correctDeliveriesText == null) correctDeliveriesText = FindTMPRecursive(summaryPanelRoot.transform, "CorrectDeliveriesText", "CorrectText", "CorrectDeliveries");
+            if (wrongDeliveriesText == null) wrongDeliveriesText = FindTMPRecursive(summaryPanelRoot.transform, "WrongDeliveriesText", "WrongText", "WrongDeliveries");
+            if (netEarningsText == null) netEarningsText = FindTMPRecursive(summaryPanelRoot.transform, "NetEarningsText", "EarningsText", "NetEarnings");
+            if (progressionInfoText == null) progressionInfoText = FindTMPRecursive(summaryPanelRoot.transform, "ProgressionInfoText", "BranchText", "ProgressionText");
+
+            if (historyListContent == null)
+            {
+                Transform content = FindTransformRecursive(summaryPanelRoot.transform, "Content");
+                if (content != null) historyListContent = content;
+            }
+
+            if (historyItemTemplate == null && historyListContent != null)
+            {
+                Transform tmpl = historyListContent.Find("HistoryRowTemplate");
+                if (tmpl == null) tmpl = historyListContent.Find("HistoryItemTemplate");
+                if (tmpl != null) historyItemTemplate = tmpl.gameObject;
+            }
+
+            if (restartDayButton == null)
+            {
+                Button btn = FindButtonRecursive(summaryPanelRoot.transform, "RestartDayButton", "RestartButton", "StartNextDayButton", "NextDayButton");
+                if (btn != null) restartDayButton = btn;
+            }
+        }
+
+        if (restartDayButton != null)
+        {
+            restartDayButton.onClick.RemoveAllListeners();
+            restartDayButton.onClick.AddListener(RestartDay);
+        }
+    }
+
+    private TextMeshProUGUI FindTMPRecursive(Transform root, params string[] searchNames)
+    {
+        if (root == null) return null;
+        var allTexts = root.GetComponentsInChildren<TextMeshProUGUI>(true);
+        foreach (var name in searchNames)
+        {
+            foreach (var t in allTexts)
+            {
+                if (t != null && t.gameObject.name.Equals(name, System.StringComparison.OrdinalIgnoreCase))
+                    return t;
+            }
+        }
+        foreach (var name in searchNames)
+        {
+            foreach (var t in allTexts)
+            {
+                if (t != null && t.gameObject.name.IndexOf(name, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    return t;
+            }
+        }
+        return null;
+    }
+
+    private Button FindButtonRecursive(Transform root, params string[] searchNames)
+    {
+        if (root == null) return null;
+        var allBtns = root.GetComponentsInChildren<Button>(true);
+        foreach (var name in searchNames)
+        {
+            foreach (var b in allBtns)
+            {
+                if (b != null && b.gameObject.name.Equals(name, System.StringComparison.OrdinalIgnoreCase))
+                    return b;
+            }
+        }
+        foreach (var name in searchNames)
+        {
+            foreach (var b in allBtns)
+            {
+                if (b != null && b.gameObject.name.IndexOf(name, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    return b;
+            }
+        }
+        return null;
+    }
+
+    private Transform FindTransformRecursive(Transform root, string childName)
+    {
+        if (root == null) return null;
+        if (root.gameObject.name.Equals(childName, System.StringComparison.OrdinalIgnoreCase)) return root;
+        var allTransforms = root.GetComponentsInChildren<Transform>(true);
+        foreach (var t in allTransforms)
+        {
+            if (t != null && t.gameObject.name.Equals(childName, System.StringComparison.OrdinalIgnoreCase))
+                return t;
+        }
+        return null;
     }
 
     public void RestartDay()

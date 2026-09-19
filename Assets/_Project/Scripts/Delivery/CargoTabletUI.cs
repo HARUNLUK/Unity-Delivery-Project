@@ -62,6 +62,7 @@ public class CargoTabletUI : MonoBehaviour
     public TextMeshProUGUI currentBranchCapacityText;
     public TextMeshProUGUI currentBranchRentText;
     public GameObject nextBranchInfoRoot;
+    public GameObject nextDescBoxRoot;
     public TextMeshProUGUI nextBranchTitleText;
     public TextMeshProUGUI nextBranchDescText;
     public TextMeshProUGUI nextBranchCapacityText;
@@ -538,12 +539,11 @@ public class CargoTabletUI : MonoBehaviour
             {
                 if (v.IsUnlocked)
                 {
-                    float fuelPct = v.maxFuel > 0 ? (v.currentFuel / v.maxFuel) * 100f : 0f;
-                    label.text = $"<b>{v.vehicleName}</b>\n<color=#32FF64>[OWNED]</color> • Fuel: {fuelPct:F0}%";
+                    label.text = $"<b>{v.vehicleName}</b>\n[OWNED]";
                 }
                 else
                 {
-                    label.text = $"<b>{v.vehicleName}</b>\n<color=#FFAA33>${v.purchasePrice:N0}</color> (Lvl {v.requiredPlayerLevel})";
+                    label.text = $"<b>{v.vehicleName}</b>\n${v.purchasePrice:N0} (Lvl {v.requiredPlayerLevel})";
                 }
                 label.raycastTarget = false;
             }
@@ -770,6 +770,7 @@ public class CargoTabletUI : MonoBehaviour
         if (next != null)
         {
             if (nextBranchInfoRoot != null) nextBranchInfoRoot.SetActive(true);
+            if (nextDescBoxRoot != null) nextDescBoxRoot.SetActive(true);
             if (nextBranchTitleText != null)
             {
                 nextBranchTitleText.gameObject.SetActive(true);
@@ -806,6 +807,7 @@ public class CargoTabletUI : MonoBehaviour
         else
         {
             // Max level reached
+            if (nextDescBoxRoot != null) nextDescBoxRoot.SetActive(false);
             if (nextBranchTitleText != null) nextBranchTitleText.gameObject.SetActive(false);
             if (nextBranchDescText != null) nextBranchDescText.gameObject.SetActive(false);
             if (nextBranchCapacityText != null) nextBranchCapacityText.gameObject.SetActive(false);
@@ -971,6 +973,8 @@ public class CargoTabletUI : MonoBehaviour
             if (rBranch != null)
             {
                 nextBranchInfoRoot = rBranch.gameObject;
+                Transform nextBox = FindTransformRecursive(rBranch, "NextDescBox");
+                if (nextBox != null) nextDescBoxRoot = nextBox.gameObject;
                 nextBranchTitleText = FindTMPRecursive(rBranch, "NextTitle", "NextBranchTitle");
                 nextBranchCapacityText = FindTMPRecursive(rBranch, "NextCapText", "NextCapacityText");
                 nextBranchRentText = FindTMPRecursive(rBranch, "NextRentText", "NextRent");
