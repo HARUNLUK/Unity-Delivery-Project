@@ -93,17 +93,16 @@ public class BranchUpgradeTerminal : MonoBehaviour
 
     /// <summary>
     /// Called when the player presses [E] looking at this terminal.
-    /// Opens the Tablet on the Branch Office management tab!
+    /// Opens the dedicated Branch Upgrade Terminal UI modal!
     /// </summary>
     public void InteractTerminal()
     {
         if (CargoTabletUI.Instance != null)
         {
-            CargoTabletUI.Instance.OpenTablet();
-            CargoTabletUI.Instance.SwitchTab(TabletTab.BranchOffice);
+            CargoTabletUI.Instance.OpenBranchUpgradeTerminalUI();
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt("<color=#32FFFF>[BRANCH DASHBOARD OPENED]</color>");
+                InteractionPromptHUD.Instance.ShowPrompt("<color=#32FFFF>[BRANCH TERMINAL OPENED]</color>");
             }
         }
         else

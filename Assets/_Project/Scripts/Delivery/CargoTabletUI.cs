@@ -84,8 +84,10 @@ public class CargoTabletUI : MonoBehaviour
     private DrivableVehicle currentSelectedVehicle;
     private TabletTab currentTab = TabletTab.CargoInventory;
     private bool isTabletOpen = false;
+    private bool isTerminalMode = false;
 
     public bool IsTabletOpen => isTabletOpen;
+    public bool IsTerminalMode => isTerminalMode;
     public TabletTab CurrentTab => currentTab;
 
     private void Awake()
@@ -260,6 +262,8 @@ public class CargoTabletUI : MonoBehaviour
 
     public void OpenTablet()
     {
+        isTerminalMode = false;
+
         if (InteractionPromptHUD.Instance != null)
         {
             InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
@@ -281,6 +285,18 @@ public class CargoTabletUI : MonoBehaviour
             tabletPanelRoot.SetActive(true);
         }
 
+        // Keep standard tablet tabs visible, but branch tab hidden
+        if (tabCargoButton != null) tabCargoButton.gameObject.SetActive(true);
+        if (tabVehicleButton != null) tabVehicleButton.gameObject.SetActive(true);
+        if (tabBranchButton != null) tabBranchButton.gameObject.SetActive(false);
+        if (endShiftButton != null) endShiftButton.gameObject.SetActive(true);
+
+        // Never open directly into BranchOffice from general tablet hotkeys
+        if (currentTab == TabletTab.BranchOffice)
+        {
+            currentTab = TabletTab.CargoInventory;
+        }
+
         FPSPlayerController.LockCursor(false);
 
         if (AudioManager.Instance != null)
@@ -289,6 +305,56 @@ public class CargoTabletUI : MonoBehaviour
         }
 
         SwitchTab(currentTab);
+    }
+
+    /// <summary>
+    /// Opens the Branch Upgrade Terminal UI exclusively when interacting with the in-world terminal object.
+    /// In this mode, regular tablet tabs are hidden, isolating the screen to the branch management dashboard.
+    /// </summary>
+    public void OpenBranchUpgradeTerminalUI()
+    {
+        if (InteractionPromptHUD.Instance != null)
+        {
+            InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+        }
+
+        EnsureEventSystemAndRaycaster();
+        EnsureTabletStructure();
+
+        if (tabletPanelRoot == null)
+        {
+            Transform t = transform.Find("CargoTabletPanel");
+            if (t != null) tabletPanelRoot = t.gameObject;
+        }
+
+        isTerminalMode = true;
+        isTabletOpen = true;
+
+        if (tabletPanelRoot != null)
+        {
+            tabletPanelRoot.SetActive(true);
+        }
+
+        // Hide regular tablet navigation tabs while using the physical branch terminal
+        if (tabCargoButton != null) tabCargoButton.gameObject.SetActive(false);
+        if (tabVehicleButton != null) tabVehicleButton.gameObject.SetActive(false);
+        if (tabBranchButton != null) tabBranchButton.gameObject.SetActive(false);
+        if (endShiftButton != null) endShiftButton.gameObject.SetActive(false);
+
+        currentTab = TabletTab.BranchOffice;
+
+        if (cargoViewRoot != null) cargoViewRoot.SetActive(false);
+        if (vehicleViewRoot != null) vehicleViewRoot.SetActive(false);
+        if (branchViewRoot != null) branchViewRoot.SetActive(true);
+
+        FPSPlayerController.LockCursor(false);
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayTabletOpen();
+        }
+
+        PopulateBranchInfo();
     }
 
     public void CloseTablet()
@@ -304,13 +370,26 @@ public class CargoTabletUI : MonoBehaviour
         }
 
         isTabletOpen = false;
+        isTerminalMode = false;
         if (tabletPanelRoot != null) tabletPanelRoot.SetActive(false);
+
+        // Restore tab buttons state
+        if (tabCargoButton != null) tabCargoButton.gameObject.SetActive(true);
+        if (tabVehicleButton != null) tabVehicleButton.gameObject.SetActive(true);
+        if (tabBranchButton != null) tabBranchButton.gameObject.SetActive(false);
+        if (endShiftButton != null) endShiftButton.gameObject.SetActive(true);
 
         FPSPlayerController.LockCursor(true);
     }
 
     public void SwitchTab(TabletTab tab)
     {
+        // BranchOffice is exclusive to in-world terminal interaction
+        if (tab == TabletTab.BranchOffice && !isTerminalMode)
+        {
+            tab = TabletTab.CargoInventory;
+        }
+
         currentTab = tab;
         EnsureTabletStructure();
 
@@ -900,7 +979,7 @@ public class CargoTabletUI : MonoBehaviour
         if (tabBranchButton != null)
         {
             tabBranchButton.onClick.RemoveAllListeners();
-            tabBranchButton.onClick.AddListener(() => SwitchTab(TabletTab.BranchOffice));
+            tabBranchButton.gameObject.SetActive(false);
         }
 
         if (closeTabletButton != null)
