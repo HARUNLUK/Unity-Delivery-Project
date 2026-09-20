@@ -83,6 +83,15 @@ public class FuelStationPump : MonoBehaviour
         }
     }
 
+    public string GetStationDisplayName()
+    {
+        if (string.IsNullOrEmpty(stationName) || stationName == "Petrol İstasyonu" || stationName == "Gas Station")
+        {
+            return LocalizationManager.Get("prompt_gas_station_name");
+        }
+        return stationName;
+    }
+
     private void Update()
     {
         // 1. Clean up stale/destroyed colliders
@@ -134,7 +143,7 @@ public class FuelStationPump : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt($"<b>{stationName}</b>: Yakıt almak için aracınızı pompaya yanaştırın.");
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_gas_station_align", GetStationDisplayName()));
                 wasShowingPrompt = true;
             }
             return;
@@ -154,7 +163,7 @@ public class FuelStationPump : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[DEPO DOLU]</color> ({targetVehicle.maxFuel:F1} / {targetVehicle.maxFuel:F1} L) Deponuz tamamen dolu.");
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_gas_station_full", targetVehicle.maxFuel, targetVehicle.maxFuel));
                 wasShowingPrompt = true;
             }
             SetPumpLightActive(false);
@@ -183,7 +192,7 @@ public class FuelStationPump : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF5555>[YETERSİZ BAKİYE]</color> Yakıt için para gerekli (${pricePerLiter:F0}/L - Bakiyeniz: $0)");
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_gas_station_no_money", pricePerLiter));
                 wasShowingPrompt = true;
             }
             SetPumpLightActive(false);
@@ -243,7 +252,7 @@ public class FuelStationPump : MonoBehaviour
             if (InteractionPromptHUD.Instance != null)
             {
                 float percent = (targetVehicle.currentFuel / targetVehicle.maxFuel) * 100f;
-                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>⛽ [YAKIT ALINIYOR...]</color> {targetVehicle.currentFuel:F1} / {targetVehicle.maxFuel:F1} L (%{percent:F0}) - ${pricePerLiter:F0}/L");
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_gas_station_refueling", targetVehicle.currentFuel, targetVehicle.maxFuel, percent, pricePerLiter));
                 wasShowingPrompt = true;
             }
         }
@@ -257,15 +266,7 @@ public class FuelStationPump : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                bool isDriving = FPSPlayerController.Instance != null && !FPSPlayerController.Instance.IsOnFoot;
-                if (isDriving)
-                {
-                    InteractionPromptHUD.Instance.ShowPrompt($"<b>{stationName}</b>: <color=#32FF64>[F]</color> veya <color=#32FF64>[Boşluk]</color> Basılı Tut -> <b>Yakıt Doldur</b> (${pricePerLiter:F0}/L)");
-                }
-                else
-                {
-                    InteractionPromptHUD.Instance.ShowPrompt($"<b>{stationName}</b>: <color=#32FF64>[F]</color> veya <color=#32FF64>[E]</color> Basılı Tut -> <b>Yakıt Doldur</b> (${pricePerLiter:F0}/L)");
-                }
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_gas_station_hold_refuel", GetStationDisplayName(), pricePerLiter));
                 wasShowingPrompt = true;
             }
         }

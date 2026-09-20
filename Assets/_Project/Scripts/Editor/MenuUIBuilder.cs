@@ -104,7 +104,7 @@ public static class MenuUIBuilder
         GameObject titleObj = CreateUIElement("TitleHeader", mainCard.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -60), new Vector2(500, 90));
         TextMeshProUGUI titleText = titleObj.AddComponent<TextMeshProUGUI>();
         if (fontAsset != null) titleText.font = fontAsset;
-        titleText.text = "<size=130%><b>VALLEY LOGISTICS</b></size>\n<size=55%><color=#32FFFF>KARGO DAĞITIM VE SÜRÜŞ SİMÜLASYONU</color></size>";
+        titleText.text = "<b>Where's</b>\n<size=40><b>My Package</b></size>";
         titleText.fontSize = 28;
         titleText.alignment = TextAlignmentOptions.Center;
         titleText.color = Color.white;
@@ -304,6 +304,7 @@ public static class MenuUIBuilder
         gvlg.childControlWidth = true;
         gvlg.childControlHeight = false;
 
+        menuMgr.languageDropdown = CreateDropdownRow("LanguageRow", gfxSec.transform, "Oyun Dili (Language):", fontAsset);
         menuMgr.qualityDropdown = CreateDropdownRow("QualityRow", gfxSec.transform, "Grafik Kalitesi:", fontAsset);
         menuMgr.fullscreenDropdown = CreateDropdownRow("FullscreenRow", gfxSec.transform, "Ekran Modu:", fontAsset);
         menuMgr.resolutionDropdown = CreateDropdownRow("ResolutionRow", gfxSec.transform, "Çözünürlük:", fontAsset);

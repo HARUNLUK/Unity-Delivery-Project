@@ -56,17 +56,17 @@ public struct InputBindingData : IEquatable<InputBindingData>
         {
             switch (mouseButton)
             {
-                case CustomMouseButton.Left: return "Sol Tık (Mouse 0)";
-                case CustomMouseButton.Right: return "Sağ Tık (Mouse 1)";
-                case CustomMouseButton.Middle: return "Orta Tık (Mouse 2)";
-                case CustomMouseButton.Forward: return "Fare İleri (Mouse 4)";
-                case CustomMouseButton.Back: return "Fare Geri (Mouse 5)";
-                default: return "Atanmadı";
+                case CustomMouseButton.Left: return LocalizationManager.Get("mouse_btn_left", "Sol Tık (Mouse 0)");
+                case CustomMouseButton.Right: return LocalizationManager.Get("mouse_btn_right", "Sağ Tık (Mouse 1)");
+                case CustomMouseButton.Middle: return LocalizationManager.Get("mouse_btn_middle", "Orta Tık (Mouse 2)");
+                case CustomMouseButton.Forward: return LocalizationManager.Get("mouse_btn_forward", "Fare İleri (Mouse 4)");
+                case CustomMouseButton.Back: return LocalizationManager.Get("mouse_btn_back", "Fare Geri (Mouse 5)");
+                default: return LocalizationManager.Get("btn_unassigned", "Atanmadı");
             }
         }
         else
         {
-            if (keyboardKey == Key.None) return "Atanmadı";
+            if (keyboardKey == Key.None) return LocalizationManager.Get("btn_unassigned", "Atanmadı");
             return KeyBindingManager.GetKeyDisplayName(keyboardKey);
         }
     }
@@ -116,20 +116,20 @@ public static class KeyBindingManager
         { GameAction.DropCargo, InputBindingData.FromMouse(CustomMouseButton.Right) }
     };
 
-    private static readonly Dictionary<GameAction, string> actionDisplayNames = new Dictionary<GameAction, string>
+    private static readonly Dictionary<GameAction, (string locKey, string fallback)> actionLocalizationMap = new Dictionary<GameAction, (string, string)>
     {
-        { GameAction.MoveForward, "İleri Yürüme / Gaza Bas" },
-        { GameAction.MoveBackward, "Geri Yürüme / Fren" },
-        { GameAction.MoveLeft, "Sola Dön / Sol Direksiyon" },
-        { GameAction.MoveRight, "Sağa Dön / Sağ Direksiyon" },
-        { GameAction.Sprint, "Hızlı Koşma (Sprint)" },
-        { GameAction.Jump, "Zıplama / Araç El Freni" },
-        { GameAction.Interact, "Etkileşim / Kargo Alma / Dükkan" },
-        { GameAction.Vehicle, "Araca Binme / Araçtan İnme" },
-        { GameAction.Tablet, "Kargo Tableti / GPS Harita" },
-        { GameAction.Camera, "Kamera Modu (FPS / TPS)" },
-        { GameAction.ThrowCargo, "Koli Fırlatma (Şarjlı)" },
-        { GameAction.DropCargo, "Koliyi Yavaşça Bırakma" }
+        { GameAction.MoveForward, ("action_move_forward", "İleri Yürüme / Gaza Bas") },
+        { GameAction.MoveBackward, ("action_move_backward", "Geri Yürüme / Fren") },
+        { GameAction.MoveLeft, ("action_move_left", "Sola Dön / Sol Direksiyon") },
+        { GameAction.MoveRight, ("action_move_right", "Sağa Dön / Sağ Direksiyon") },
+        { GameAction.Sprint, ("action_sprint", "Hızlı Koşma (Sprint)") },
+        { GameAction.Jump, ("action_jump", "Zıplama / Araç El Freni") },
+        { GameAction.Interact, ("action_interact", "Etkileşim / Kargo Alma / Dükkan") },
+        { GameAction.Vehicle, ("action_vehicle", "Araca Binme / Araçtan İnme") },
+        { GameAction.Tablet, ("action_tablet", "Kargo Tableti / GPS Harita") },
+        { GameAction.Camera, ("action_camera", "Kamera Modu (FPS / TPS)") },
+        { GameAction.ThrowCargo, ("action_throw_cargo", "Koli Fırlatma (Şarjlı)") },
+        { GameAction.DropCargo, ("action_drop_cargo", "Koliyi Yavaşça Bırakma") }
     };
 
     private static Dictionary<GameAction, InputBindingData> currentBindings = new Dictionary<GameAction, InputBindingData>();
@@ -146,7 +146,11 @@ public static class KeyBindingManager
 
     public static string GetActionDescription(GameAction action)
     {
-        return actionDisplayNames.TryGetValue(action, out string desc) ? desc : action.ToString();
+        if (actionLocalizationMap.TryGetValue(action, out var item))
+        {
+            return LocalizationManager.Get(item.locKey, item.fallback);
+        }
+        return action.ToString();
     }
 
     public static InputBindingData GetBinding(GameAction action)
@@ -188,7 +192,7 @@ public static class KeyBindingManager
         {
             currentBindings[conflict] = InputBindingData.None;
             SaveBindingToPrefs(conflict, InputBindingData.None);
-            Debug.Log($"<color=#FFAA00>[KeyBindingManager] '{newBinding.GetDisplayName()}' tuşu daha önce '{actionDisplayNames[conflict]}' eyleminde kullanılıyordu; boşa çıkarıldı ve '{actionDisplayNames[action]}' eylemine atandı.</color>");
+            Debug.Log($"<color=#FFAA00>[KeyBindingManager] '{newBinding.GetDisplayName()}' tuşu daha önce '{GetActionDescription(conflict)}' eyleminde kullanılıyordu; boşa çıkarıldı ve '{GetActionDescription(action)}' eylemine atandı.</color>");
         }
 
         // 2. Apply new binding to target action

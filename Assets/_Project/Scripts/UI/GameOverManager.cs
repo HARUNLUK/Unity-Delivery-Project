@@ -138,17 +138,17 @@ public class GameOverManager : MonoBehaviour
 
         if (titleText != null)
         {
-            titleText.text = gameOverTitle;
+            titleText.text = LocalizationManager.Get("game_over_title");
         }
 
         if (reasonText != null)
         {
-            reasonText.text = gameOverReason;
+            reasonText.text = LocalizationManager.Get("game_over_reason");
         }
 
         if (debtAmountText != null)
         {
-            debtAmountText.text = $"<color=#FF4444>Mevcut Bakiye: -${Mathf.Abs(currentBalance):N0}</color>\n<size=70%><color=#FFAA33>(Borç Limiti: -${Mathf.Abs(bankruptcyDebtLimit):N0})</color></size>";
+            debtAmountText.text = LocalizationManager.GetFormat("game_over_balance", Mathf.Abs(currentBalance), Mathf.Abs(bankruptcyDebtLimit));
         }
 
         // Unlock mouse cursor for interaction
@@ -325,7 +325,7 @@ public class GameOverManager : MonoBehaviour
         GameObject badgeTextObj = new GameObject("Badge_Text");
         badgeTextObj.transform.SetParent(headerBadge.transform, false);
         TextMeshProUGUI bText = badgeTextObj.AddComponent<TextMeshProUGUI>();
-        bText.text = "🚨 ŞİRKET TASFİYESİ & İFLAS 🚨";
+        bText.text = LocalizationManager.Get("game_over_badge");
         bText.fontSize = 20;
         bText.fontStyle = FontStyles.Bold;
         bText.alignment = TextAlignmentOptions.Center;
@@ -339,7 +339,7 @@ public class GameOverManager : MonoBehaviour
         GameObject titleObj = new GameObject("Title_Text");
         titleObj.transform.SetParent(card.transform, false);
         titleText = titleObj.AddComponent<TextMeshProUGUI>();
-        titleText.text = gameOverTitle;
+        titleText.text = LocalizationManager.Get("game_over_title");
         titleText.fontSize = 42;
         titleText.fontStyle = FontStyles.Bold;
         titleText.alignment = TextAlignmentOptions.Center;
@@ -352,7 +352,7 @@ public class GameOverManager : MonoBehaviour
         GameObject debtObj = new GameObject("Debt_Amount_Text");
         debtObj.transform.SetParent(card.transform, false);
         debtAmountText = debtObj.AddComponent<TextMeshProUGUI>();
-        debtAmountText.text = "<color=#FF4444>Mevcut Bakiye: -$1,000</color>";
+        debtAmountText.text = LocalizationManager.GetFormat("game_over_balance", 1000, Mathf.Abs(bankruptcyDebtLimit));
         debtAmountText.fontSize = 28;
         debtAmountText.fontStyle = FontStyles.Bold;
         debtAmountText.alignment = TextAlignmentOptions.Center;
@@ -364,7 +364,7 @@ public class GameOverManager : MonoBehaviour
         GameObject reasonObj = new GameObject("Reason_Text");
         reasonObj.transform.SetParent(card.transform, false);
         reasonText = reasonObj.AddComponent<TextMeshProUGUI>();
-        reasonText.text = gameOverReason;
+        reasonText.text = LocalizationManager.Get("game_over_reason");
         reasonText.fontSize = 17;
         reasonText.alignment = TextAlignmentOptions.Center;
         reasonText.color = new Color(0.80f, 0.82f, 0.85f);
@@ -388,7 +388,7 @@ public class GameOverManager : MonoBehaviour
         GameObject btnTextObj = new GameObject("Btn_Text");
         btnTextObj.transform.SetParent(btnObj.transform, false);
         TextMeshProUGUI btnText = btnTextObj.AddComponent<TextMeshProUGUI>();
-        btnText.text = $"🔄 {restartButtonText}";
+        btnText.text = $"🔄 {LocalizationManager.Get("game_over_btn_restart")}";
         btnText.fontSize = 22;
         btnText.fontStyle = FontStyles.Bold;
         btnText.alignment = TextAlignmentOptions.Center;

@@ -1,0 +1,953 @@
+{
+  "language": "en",
+  "entries": [
+    {
+      "key": "game_title",
+      "value": "<b>Where's</b>\n<size=40><b>My Package</b></size>"
+    },
+    {
+      "key": "game_subtitle",
+      "value": ""
+    },
+    {
+      "key": "main_menu_save_info",
+      "value": "<color=#A0C8FF>Day {0}</color>  |  <color=#A0C8FF>Branch:</color> <color=#FFFFFF>Lv.{1} ({2})</color>  |  <color=#A0C8FF>Vault:</color> <color=#32FF64>${3:N0}</color>"
+    },
+    {
+      "key": "main_menu_new_info",
+      "value": "<color=#A0C8FF>New Career:</color> <color=#FFFFFF>Lv.1 ({0})</color>  |  <color=#A0C8FF>Starting Vault:</color> <color=#32FF64>${1:N0}</color>"
+    },
+    {
+      "key": "main_menu_default_badge",
+      "value": "<color=#A0C8FF>Current Branch:</color> <color=#FFFFFF>Lv.1 (Starter Garage)</color>  |  <color=#A0C8FF>Vault:</color> <color=#32FF64>$0</color>"
+    },
+    {
+      "key": "btn_continue",
+      "value": "CONTINUE"
+    },
+    {
+      "key": "btn_new_game",
+      "value": "NEW GAME"
+    },
+    {
+      "key": "btn_play",
+      "value": "PLAY GAME"
+    },
+    {
+      "key": "btn_settings",
+      "value": "SETTINGS"
+    },
+    {
+      "key": "btn_quit",
+      "value": "QUIT"
+    },
+    {
+      "key": "modal_new_game_title",
+      "value": "<b>START NEW GAME</b>"
+    },
+    {
+      "key": "modal_new_game_body",
+      "value": "Your current save and all branch progression will be reset to start a new career from Level 1.\n\n<b>Are you sure?</b>"
+    },
+    {
+      "key": "btn_confirm_reset",
+      "value": "YES, RESET & START"
+    },
+    {
+      "key": "btn_cancel",
+      "value": "CANCEL"
+    },
+    {
+      "key": "pause_title",
+      "value": "<b>GAME PAUSED</b>\n<size=55%><color=#32FFFF>PRESS ESC TO RESUME</color></size>"
+    },
+    {
+      "key": "btn_resume",
+      "value": "RESUME"
+    },
+    {
+      "key": "btn_return_main_menu",
+      "value": "RETURN TO MAIN MENU"
+    },
+    {
+      "key": "btn_quit_desktop",
+      "value": "QUIT TO DESKTOP"
+    },
+    {
+      "key": "settings_title",
+      "value": "<b>SETTINGS</b>"
+    },
+    {
+      "key": "tab_audio",
+      "value": "AUDIO"
+    },
+    {
+      "key": "tab_graphics",
+      "value": "GRAPHICS"
+    },
+    {
+      "key": "tab_controls",
+      "value": "CONTROLS"
+    },
+    {
+      "key": "tab_language",
+      "value": "LANGUAGE / DİL"
+    },
+    {
+      "key": "setting_language",
+      "value": "Game Language:"
+    },
+    {
+      "key": "setting_master_vol",
+      "value": "Master Volume:"
+    },
+    {
+      "key": "setting_music_vol",
+      "value": "Music Volume:"
+    },
+    {
+      "key": "setting_sfx_vol",
+      "value": "Sound Effects (SFX):"
+    },
+    {
+      "key": "setting_ambience_vol",
+      "value": "Environment & Ambience:"
+    },
+    {
+      "key": "setting_ui_vol",
+      "value": "UI & Notifications:"
+    },
+    {
+      "key": "setting_quality",
+      "value": "Graphics Quality:"
+    },
+    {
+      "key": "setting_display_mode",
+      "value": "Display Mode:"
+    },
+    {
+      "key": "setting_resolution",
+      "value": "Resolution:"
+    },
+    {
+      "key": "setting_vsync",
+      "value": "Vertical Sync (V-Sync):"
+    },
+    {
+      "key": "setting_target_fps",
+      "value": "Target Frame Rate (FPS Limit):"
+    },
+    {
+      "key": "setting_mouse_sens",
+      "value": "Mouse Look Sensitivity:"
+    },
+    {
+      "key": "setting_invert_y",
+      "value": "Invert Mouse Y-Axis:"
+    },
+    {
+      "key": "setting_keybindings_title",
+      "value": "<color=#32FFFF><b>KEYBINDINGS:</b></color> <size=80%><color=#85A8C8>(Click a key button to reassign)</color></size>"
+    },
+    {
+      "key": "btn_reset_defaults",
+      "value": "Reset to Defaults"
+    },
+    {
+      "key": "btn_save_return",
+      "value": "SAVE & RETURN"
+    },
+    {
+      "key": "btn_unassigned",
+      "value": "Unassigned"
+    },
+    {
+      "key": "btn_press_key",
+      "value": "<color=#FFE600><b>[ Press Key / Mouse... ]</b></color>"
+    },
+    {
+      "key": "quality_low",
+      "value": "Low (Mobile)"
+    },
+    {
+      "key": "quality_high",
+      "value": "High / PC (Ultra)"
+    },
+    {
+      "key": "disp_fullscreen",
+      "value": "Exclusive Fullscreen"
+    },
+    {
+      "key": "disp_borderless",
+      "value": "Borderless Windowed"
+    },
+    {
+      "key": "disp_windowed",
+      "value": "Windowed"
+    },
+    {
+      "key": "fps_unlimited",
+      "value": "Unlimited"
+    },
+    {
+      "key": "action_move_forward",
+      "value": "Move Forward / Throttle"
+    },
+    {
+      "key": "action_move_backward",
+      "value": "Move Backward / Brake"
+    },
+    {
+      "key": "action_move_left",
+      "value": "Steer Left"
+    },
+    {
+      "key": "action_move_right",
+      "value": "Steer Right"
+    },
+    {
+      "key": "action_sprint",
+      "value": "Sprint"
+    },
+    {
+      "key": "action_jump",
+      "value": "Jump / Vehicle Handbrake"
+    },
+    {
+      "key": "action_interact",
+      "value": "Interact / Pick Up / Shop"
+    },
+    {
+      "key": "action_vehicle",
+      "value": "Enter / Exit Vehicle"
+    },
+    {
+      "key": "action_tablet",
+      "value": "Cargo Tablet / GPS Map"
+    },
+    {
+      "key": "action_camera",
+      "value": "Camera View (FPS / TPS)"
+    },
+    {
+      "key": "action_throw_cargo",
+      "value": "Throw Cargo (Charged)"
+    },
+    {
+      "key": "action_drop_cargo",
+      "value": "Place / Drop Gently"
+    },
+    {
+      "key": "mouse_btn_left",
+      "value": "Left Click (Mouse 0)"
+    },
+    {
+      "key": "mouse_btn_right",
+      "value": "Right Click (Mouse 1)"
+    },
+    {
+      "key": "mouse_btn_middle",
+      "value": "Middle Click (Mouse 2)"
+    },
+    {
+      "key": "mouse_btn_forward",
+      "value": "Forward Button (Mouse 4)"
+    },
+    {
+      "key": "mouse_btn_back",
+      "value": "Back Button (Mouse 5)"
+    },
+    {
+      "key": "hud_day",
+      "value": "DAY {0}"
+    },
+    {
+      "key": "hud_remaining_cargo",
+      "value": "Remaining: {0} / {1}"
+    },
+    {
+      "key": "hud_held_cargo_header",
+      "value": "CARRIED CARGO"
+    },
+    {
+      "key": "hud_held_recipient",
+      "value": "RECIPIENT:"
+    },
+    {
+      "key": "hud_held_address",
+      "value": "ADDRESS:"
+    },
+    {
+      "key": "hud_held_clue",
+      "value": "CLUE & NOTE:"
+    },
+    {
+      "key": "hud_held_reward",
+      "value": "REWARD:"
+    },
+    {
+      "key": "hud_held_penalty",
+      "value": "PENALTY:"
+    },
+    {
+      "key": "hud_held_action_hint",
+      "value": "CONTROLS: [Left Click] Throw (Charged) | [Right Click] Drop Gently"
+    },
+    {
+      "key": "hud_fuel_label",
+      "value": "FUEL"
+    },
+    {
+      "key": "hud_condition_label",
+      "value": "CONDITION"
+    },
+    {
+      "key": "cargo_type_standard",
+      "value": "STANDARD"
+    },
+    {
+      "key": "cargo_type_fragile",
+      "value": "FRAGILE"
+    },
+    {
+      "key": "cargo_type_express",
+      "value": "EXPRESS"
+    },
+    {
+      "key": "cargo_type_explosive",
+      "value": "EXPLOSIVE"
+    },
+    {
+      "key": "cargo_status_in_transit",
+      "value": "IN TRANSIT"
+    },
+    {
+      "key": "cargo_status_at_zone",
+      "value": "AT ZONE"
+    },
+    {
+      "key": "cargo_status_delivered",
+      "value": "DELIVERED"
+    },
+    {
+      "key": "cargo_status_broken",
+      "value": "Broken / Damaged"
+    },
+    {
+      "key": "cargo_status_condition",
+      "value": "Condition"
+    },
+    {
+      "key": "cargo_status_detonated",
+      "value": "Detonated!"
+    },
+    {
+      "key": "cargo_status_stability",
+      "value": "Stability"
+    },
+    {
+      "key": "cargo_no_clue",
+      "value": "No specific visual clue available for this address."
+    },
+    {
+      "key": "tablet_tab_cargo",
+      "value": "DELIVERIES"
+    },
+    {
+      "key": "tablet_tab_vehicles",
+      "value": "VEHICLES"
+    },
+    {
+      "key": "tablet_tab_branch",
+      "value": "BRANCH"
+    },
+    {
+      "key": "tablet_cargo_in_vehicle",
+      "value": "CARGO IN VEHICLE"
+    },
+    {
+      "key": "tablet_details_hint_title",
+      "value": "DELIVERY DETAILS & HINT"
+    },
+    {
+      "key": "tablet_vehicle_dealership_title",
+      "value": "VEHICLE FLEET & DEALERSHIP"
+    },
+    {
+      "key": "tablet_branch_current_title",
+      "value": "CURRENT BRANCH / WAREHOUSE"
+    },
+    {
+      "key": "tablet_branch_next_title",
+      "value": "UPGRADE BRANCH / WAREHOUSE"
+    },
+    {
+      "key": "tablet_empty_cargo",
+      "value": "No packages in vehicle to deliver.\nLoad new packages from the warehouse."
+    },
+    {
+      "key": "tablet_physical_delivery_tip",
+      "value": "<b>Physical Delivery:</b> Pick up package with <b>[E]</b> and drop in delivery zone."
+    },
+    {
+      "key": "tablet_tracking_no",
+      "value": "Tracking #: {0}"
+    },
+    {
+      "key": "tablet_recipient",
+      "value": "Recipient: {0}"
+    },
+    {
+      "key": "tablet_address",
+      "value": "Address: {0}"
+    },
+    {
+      "key": "tablet_btn_drop_cargo",
+      "value": "DROP CARGO FROM VEHICLE"
+    },
+    {
+      "key": "tablet_btn_end_shift",
+      "value": "END SHIFT"
+    },
+    {
+      "key": "tablet_btn_close",
+      "value": "CLOSE"
+    },
+    {
+      "key": "vehicle_status_owned",
+      "value": "OWNED"
+    },
+    {
+      "key": "vehicle_status_locked",
+      "value": "LOCKED"
+    },
+    {
+      "key": "vehicle_status_empty",
+      "value": "EMPTY"
+    },
+    {
+      "key": "vehicle_status_low",
+      "value": "LOW"
+    },
+    {
+      "key": "vehicle_status_ok",
+      "value": "OK"
+    },
+    {
+      "key": "vehicle_fuel_tank",
+      "value": "Fuel Tank:"
+    },
+    {
+      "key": "vehicle_condition",
+      "value": "Condition:"
+    },
+    {
+      "key": "vehicle_lvl_req",
+      "value": "Lvl {0}"
+    },
+    {
+      "key": "vehicle_btn_purchase",
+      "value": "PURCHASE VEHICLE (${0:N0})"
+    },
+    {
+      "key": "vehicle_btn_fuel_full",
+      "value": "FUEL TANK FULL (100%)"
+    },
+    {
+      "key": "vehicle_btn_emergency_fuel",
+      "value": "ORDER EMERGENCY REFUEL (+{0:F0}L / ${1})"
+    },
+    {
+      "key": "vehicle_btn_recall_fee",
+      "value": "RECALL TO GARAGE (${0})"
+    },
+    {
+      "key": "vehicle_btn_recall_free",
+      "value": "RECALL TO WAREHOUSE GARAGE"
+    },
+    {
+      "key": "branch_current_title",
+      "value": "Current Branch Tier"
+    },
+    {
+      "key": "branch_daily_capacity",
+      "value": "Daily Parcel Limit:"
+    },
+    {
+      "key": "branch_daily_rent",
+      "value": "Daily Rent:"
+    },
+    {
+      "key": "branch_next_capacity",
+      "value": "New Parcel Limit:"
+    },
+    {
+      "key": "branch_next_rent",
+      "value": "New Daily Rent:"
+    },
+    {
+      "key": "branch_required_level",
+      "value": "Level {0}"
+    },
+    {
+      "key": "branch_btn_upgrade",
+      "value": "UPGRADE BRANCH (${0:N0})"
+    },
+    {
+      "key": "branch_badge_max",
+      "value": "MAXIMUM BRANCH LEVEL REACHED"
+    },
+    {
+      "key": "delivery_selection_title",
+      "value": "DELIVERY DESTINATION: {0}"
+    },
+    {
+      "key": "delivery_selection_feedback",
+      "value": "Select a package from your trunk to deliver to this address:"
+    },
+    {
+      "key": "delivery_selection_empty",
+      "value": "No cargo left in your van trunk!"
+    },
+    {
+      "key": "delivery_selection_selected",
+      "value": "Selected: {0} ({1})"
+    },
+    {
+      "key": "summary_title",
+      "value": "DAY {0} FINANCIAL SUMMARY"
+    },
+    {
+      "key": "summary_emergency_hospital",
+      "value": "<color=#FF3333>🚨 EMERGENCY:</color> {0}\nDay {1} | Total Packages: {2}"
+    },
+    {
+      "key": "summary_total_packages",
+      "value": "DAY {0} | Total Packages: {1}"
+    },
+    {
+      "key": "summary_correct_deliveries",
+      "value": "[+] Correct Deliveries: {0} (+${1})"
+    },
+    {
+      "key": "summary_passive_income",
+      "value": " | Passive Hub Income: +${0}"
+    },
+    {
+      "key": "summary_penalties",
+      "value": "[-] Penalties: -${0}"
+    },
+    {
+      "key": "summary_broken_count",
+      "value": " (Broken: {0})"
+    },
+    {
+      "key": "summary_rent_deduct",
+      "value": " | Branch Rent: -${0}"
+    },
+    {
+      "key": "summary_today_net",
+      "value": "TODAY NET: {0} | TOTAL VAULT: ${1:N0}"
+    },
+    {
+      "key": "summary_branch_level_badge",
+      "value": "BRANCH LEVEL {0} ({1})"
+    },
+    {
+      "key": "summary_delivered_to",
+      "value": "Delivered to: {0}"
+    },
+    {
+      "key": "summary_target",
+      "value": "Target: {0}"
+    },
+    {
+      "key": "summary_status_correct",
+      "value": "CORRECT"
+    },
+    {
+      "key": "summary_status_express",
+      "value": "EXPRESS"
+    },
+    {
+      "key": "summary_status_wrong",
+      "value": "WRONG ADDRESS"
+    },
+    {
+      "key": "summary_status_broken",
+      "value": "BROKEN"
+    },
+    {
+      "key": "summary_status_exploded",
+      "value": "EXPLODED"
+    },
+    {
+      "key": "summary_status_undelivered",
+      "value": "UNDELIVERED"
+    },
+    {
+      "key": "summary_btn_restart_day",
+      "value": "START NEXT DAY (DAY {0})"
+    },
+    {
+      "key": "garage_title",
+      "value": "AUTO SERVICE & TUNING GARAGE"
+    },
+    {
+      "key": "garage_tuning_info",
+      "value": "<b>Engine Performance:</b> Stage {0} ({1})"
+    },
+    {
+      "key": "garage_paint_title",
+      "value": "CUSTOM BODY PAINT & COATING"
+    },
+    {
+      "key": "garage_paint_desc",
+      "value": "Repaint and custom finish your delivery vehicle."
+    },
+    {
+      "key": "garage_paint_cost",
+      "value": "Paint Fee: ${0:N0}"
+    },
+    {
+      "key": "garage_btn_repair",
+      "value": "🔧 REPAIR & SERVICE (${0})"
+    },
+    {
+      "key": "garage_btn_tune",
+      "value": "⚡ STAGE {0} ENGINE TUNING (${1:N0})"
+    },
+    {
+      "key": "garage_btn_tune_max",
+      "value": "⭐ MAXIMUM ENGINE PERFORMANCE (STAGE 3)"
+    },
+    {
+      "key": "garage_btn_drive",
+      "value": "🚗 START & DRIVE VEHICLE"
+    },
+    {
+      "key": "garage_btn_close",
+      "value": "CLOSE"
+    },
+    {
+      "key": "insurance_title",
+      "value": "CARGO INSURANCE AGENCY"
+    },
+    {
+      "key": "insurance_current_policy",
+      "value": "<b>Current Policy:</b> <color=#32FF64>{0}</color>"
+    },
+    {
+      "key": "insurance_wallet",
+      "value": "<b>Wallet Balance:</b> <color=#32FF64>${0:N0}</color>"
+    },
+    {
+      "key": "insurance_btn_tier2_active",
+      "value": "✅ Silver Insurance Active"
+    },
+    {
+      "key": "insurance_btn_tier2_buy",
+      "value": "🛡️ Purchase Silver Insurance (${0:N0})"
+    },
+    {
+      "key": "insurance_btn_tier3_active",
+      "value": "⭐ Gold Full Insurance Active"
+    },
+    {
+      "key": "insurance_btn_tier3_buy",
+      "value": "🛡️ Purchase Gold Full Insurance (${0:N0})"
+    },
+    {
+      "key": "insurance_tier1_name",
+      "value": "Basic Insurance ({0}% Damage Discount)"
+    },
+    {
+      "key": "insurance_tier2_name",
+      "value": "Silver Insurance ({0}% Damage, {1}% Wrong Address, {2}% Lost Protection)"
+    },
+    {
+      "key": "insurance_tier3_name",
+      "value": "Gold Full Insurance (100% Full Protection & {0}% Wrong Address Discount)"
+    },
+    {
+      "key": "dispatch_title",
+      "value": "REGIONAL LOGISTICS HUB (PASSIVE FLEET)"
+    },
+    {
+      "key": "dispatch_status",
+      "value": "<b>Hub Level:</b> Level {0}  |  <b>Active Couriers:</b> {1} Couriers"
+    },
+    {
+      "key": "dispatch_revenue_info",
+      "value": "<b>Daily Passive Revenue:</b> <color=#32FF64>+${0:N0} / Day</color> (Auto-deposited at 18:00 daily)"
+    },
+    {
+      "key": "dispatch_btn_tier2_active",
+      "value": "✅ Level 2 Active ({0} Couriers)"
+    },
+    {
+      "key": "dispatch_btn_tier2_buy",
+      "value": "📦 Upgrade to Level 2 ({0} Couriers - +${1:N0}/Day) [${2:N0}]"
+    },
+    {
+      "key": "dispatch_btn_tier3_active",
+      "value": "⭐ Level 3 Max Fleet ({0} Couriers)"
+    },
+    {
+      "key": "dispatch_btn_tier3_buy",
+      "value": "📦 Upgrade to Level 3 ({0} Couriers - +${1:N0}/Day) [${2:N0}]"
+    },
+    {
+      "key": "property_modal_default_title",
+      "value": "PURCHASE COMMERCIAL PROPERTY"
+    },
+    {
+      "key": "property_req_level",
+      "value": "Required Level: Level {0}"
+    },
+    {
+      "key": "property_price",
+      "value": "Price: ${0:N0}"
+    },
+    {
+      "key": "property_btn_buy",
+      "value": "PURCHASE PROPERTY"
+    },
+    {
+      "key": "branch_trans_badge",
+      "value": "★ BRANCH UPGRADED ★"
+    },
+    {
+      "key": "branch_trans_title",
+      "value": "LEVEL {0}: {1}"
+    },
+    {
+      "key": "branch_trans_details",
+      "value": "<b>Daily Capacity:</b> <color=#32FFFF>{0} Packages</color>  |  <b>Daily Rent:</b> <color=#FFD232>${1}</color>\n<size=85%><color=#D0E0FF>{2}</color></size>"
+    },
+    {
+      "key": "game_over_title",
+      "value": "BANKRUPT!"
+    },
+    {
+      "key": "game_over_reason",
+      "value": "Your logistics company went bankrupt and your branch was closed due to exceeding the debt limit (-$1,000)."
+    },
+    {
+      "key": "game_over_balance",
+      "value": "<color=#FF4444>Current Balance: -${0:N0}</color>\n<size=70%><color=#FFAA33>(Debt Limit: -${1:N0})</color></size>"
+    },
+    {
+      "key": "game_over_btn_restart",
+      "value": "RESTART CAREER (DAY 1)"
+    },
+    {
+      "key": "prompt_open_tailgate",
+      "value": "[E] Open Tailgate"
+    },
+    {
+      "key": "prompt_close_tailgate",
+      "value": "[E] Close Tailgate"
+    },
+    {
+      "key": "prompt_drive_vehicle",
+      "value": "[E] Drive {0}"
+    },
+    {
+      "key": "prompt_pickup_cargo",
+      "value": "[E] Pick up {0}"
+    },
+    {
+      "key": "prompt_target_cargo",
+      "value": "Cargo"
+    },
+    {
+      "key": "prompt_target_object",
+      "value": "Object"
+    },
+    {
+      "key": "prompt_purchase_vehicle",
+      "value": "<color=#32FF64>[E] Purchase: {0}</color> (${1:N0})"
+    },
+    {
+      "key": "prompt_vehicle_locked_level",
+      "value": "<color=#FF5555>[LOCKED] {0}</color> (Requires Branch Level {1} - ${2:N0})"
+    },
+    {
+      "key": "prompt_vehicle_locked_cash",
+      "value": "<color=#FFAA33>[LOCKED] {0}</color> (${1:N0} - Balance: ${2:N0})"
+    },
+    {
+      "key": "prompt_vehicle_purchased_success",
+      "value": "<color=#32FFFF>[PURCHASED] {0} Successfully Purchased!</color>"
+    },
+    {
+      "key": "prompt_open_menu",
+      "value": "<color=#FFD232>[F] Open Menu</color>"
+    },
+    {
+      "key": "prompt_buy_property",
+      "value": "<color=#FFD232>[E] Purchase</color>"
+    },
+    {
+      "key": "prompt_open_insurance_menu",
+      "value": "<color=#32FF64>[E] Open Cargo Insurance Agency ({0})</color>"
+    },
+    {
+      "key": "prompt_open_dispatch_menu",
+      "value": "<color=#32FF64>[E] Open Regional Logistics Hub (Level {0} - {1} Couriers)</color>"
+    },
+    {
+      "key": "prompt_branch_terminal_next",
+      "value": "<color=#32FF64>[E] Open Branch Terminal</color> -> Level {0}: {1} (${2:N0})"
+    },
+    {
+      "key": "prompt_branch_terminal_max",
+      "value": "<color=#32FFFF>[E] Open Branch Terminal</color> [{0} - MAX LEVEL]"
+    },
+    {
+      "key": "prompt_branch_terminal_opened",
+      "value": "<color=#32FFFF>[BRANCH TERMINAL OPENED]</color>"
+    },
+    {
+      "key": "prompt_branch_active_new",
+      "value": "<color=#32FFFF>[NEW BRANCH ACTIVE] Level {0} ({1})</color>"
+    },
+    {
+      "key": "prompt_out_of_fuel",
+      "value": "<color=#FF3333>[OUT OF FUEL] Engine stopped! Open Tablet [TAB] -> VEHICLES to refuel or visit a gas pump.</color>"
+    },
+    {
+      "key": "prompt_garage_recall_success",
+      "value": "<color=#32FFFF>[GARAGE RECALL] {0} recovered to warehouse garage!{1}</color>"
+    },
+    {
+      "key": "prompt_insufficient_funds",
+      "value": "<color=#FF3333>Insufficient Funds!</color>"
+    },
+    {
+      "key": "prompt_insufficient_funds_fuel",
+      "value": "<color=#FF5555>[INSUFFICIENT FUNDS] Need ${0} for emergency fuel delivery!</color>"
+    },
+    {
+      "key": "prompt_insufficient_funds_recall",
+      "value": "<color=#FF4444>[INSUFFICIENT FUNDS] Need ${0} to recall {1}! (Balance: ${2})</color>"
+    },
+    {
+      "key": "prompt_emergency_fuel_delivered",
+      "value": "<color=#32FF64>[EMERGENCY FUEL] +{0:F0}L Roadside Fuel Delivered to {1}! (-${2})</color>"
+    },
+    {
+      "key": "prompt_insufficient_branch_level",
+      "value": "<color=#FF3333>Branch level insufficient! (Required: Level {0})</color>"
+    },
+    {
+      "key": "prompt_garage_not_unlocked",
+      "value": "<color=#FF3333>Auto Service Garage is locked or not yet purchased!</color>"
+    },
+    {
+      "key": "prompt_garage_car_not_in_bay",
+      "value": "<color=#FFAA33>Vehicle must be parked inside the service garage bay!</color>"
+    },
+    {
+      "key": "prompt_garage_repaired",
+      "value": "<color=#32FF64>🔧 {0} Repaired & Serviced!</color>"
+    },
+    {
+      "key": "prompt_garage_tune_max",
+      "value": "<color=#FFAA33>This vehicle has reached maximum engine tuning!</color>"
+    },
+    {
+      "key": "prompt_garage_tuned_success",
+      "value": "<color=#32FF64>⚡ {0} Engine Upgraded to Stage {1}! (+{2:0}% Torque)</color>"
+    },
+    {
+      "key": "prompt_garage_painted_success",
+      "value": "<color=#{0}>🎨 {1} Custom Repainted!</color>"
+    },
+    {
+      "key": "prompt_gas_station_name",
+      "value": "Gas Station"
+    },
+    {
+      "key": "prompt_gas_station_align",
+      "value": "<b>{0}</b>: Pull your vehicle near the pump to refuel."
+    },
+    {
+      "key": "prompt_gas_station_full",
+      "value": "<color=#32FF64>[TANK FULL]</color> ({0:F1} / {1:F1} L) Your fuel tank is completely full."
+    },
+    {
+      "key": "prompt_gas_station_no_money",
+      "value": "<color=#FF5555>[INSUFFICIENT FUNDS]</color> Money required for fuel (${0:F0}/L - Balance: $0)"
+    },
+    {
+      "key": "prompt_gas_station_refueling",
+      "value": "<color=#32FFFF>⛽ [REFUELING...]</color> {0:F1} / {1:F1} L ({2:F0}%) - ${3:F0}/L"
+    },
+    {
+      "key": "prompt_gas_station_hold_refuel",
+      "value": "<b>{0}</b>: Hold <color=#32FF64>[F]</color> or <color=#32FF64>[E]</color> -> <b>Refuel Vehicle</b> (${1:F0}/L)"
+    },
+    {
+      "key": "prompt_explosion_emergency",
+      "value": "<color=#FF2222>💥 EXPLOSION! You were severely injured and rushed to the hospital...</color>"
+    },
+    {
+      "key": "prompt_hospital_reason_explosion",
+      "value": "Severe injury from cargo explosion (Rushed to Hospital)"
+    },
+    {
+      "key": "prompt_water_rescue_vehicle",
+      "value": "<color=#44AAFF>[WATER RESCUE] Vehicle recovered to safe road!</color>"
+    },
+    {
+      "key": "prompt_water_rescue_player",
+      "value": "<color=#44AAFF>[WATER RESCUE] Rescued from water!</color>"
+    },
+    {
+      "key": "prompt_dev_reset",
+      "value": "<color=#FF5555>[DEV RESET] ALL VEHICLES, SHOPS AND PROGRESSION RESET (F9)</color>"
+    },
+    {
+      "key": "prompt_dev_reset_balance",
+      "value": "<color=#FFAA33>[RESET] Level 1 & Balance $0! [F7]</color>"
+    },
+    {
+      "key": "sign_level_required",
+      "value": "LEVEL {0} REQUIRED"
+    },
+    {
+      "key": "unit_packages",
+      "value": "Packages"
+    },
+    {
+      "key": "unit_packages_per_day",
+      "value": "Packages / Day"
+    },
+    {
+      "key": "unit_day",
+      "value": "Day"
+    },
+    {
+      "key": "terminal_branch_title",
+      "value": "BRANCH OFFICE"
+    },
+    {
+      "key": "terminal_branch_ready",
+      "value": "Ready..."
+    },
+    {
+      "key": "terminal_branch_current_next",
+      "value": "<b>{0}</b>\n<color=#32FFFF>Current: Level {1} ({2})</color>\n<size=75%>Next: {3}\nUpgrade Price: ${4:N0}</size>"
+    },
+    {
+      "key": "terminal_branch_max",
+      "value": "<b>{0}</b>\n<color=#32FF64>[MAXIMUM LEVEL]\n{1}</color>"
+    },
+    {
+      "key": "game_over_badge",
+      "value": "🚨 COMPANY LIQUIDATION & BANKRUPTCY 🚨"
+    }
+  ]
+}

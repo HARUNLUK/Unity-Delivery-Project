@@ -161,17 +161,17 @@ public class InsuranceAgencyManager : MonoBehaviour
         {
             case 1:
                 int d1 = Mathf.RoundToInt((1f - tier1FragileMultiplier) * 100f);
-                return $"Temel Kasko (%{d1} Hasar İndirimi)";
+                return LocalizationManager.GetFormat("insurance_tier1_name", "Basic Insurance ({0}% Damage Discount)", d1);
             case 2:
                 int d2Frag = Mathf.RoundToInt((1f - tier2FragileMultiplier) * 100f);
                 int d2Wrong = Mathf.RoundToInt((1f - tier2WrongAddressMultiplier) * 100f);
                 int d2Undel = Mathf.RoundToInt((1f - tier2UndeliveredMultiplier) * 100f);
-                return $"Gümüş Kasko (%{d2Frag} Hasar, %{d2Wrong} Yanlış Adres, %{d2Undel} Teslimat Koruması)";
+                return LocalizationManager.GetFormat("insurance_tier2_name", "Silver Insurance ({0}% Damage, {1}% Wrong Address, {2}% Lost Protection)", d2Frag, d2Wrong, d2Undel);
             case 3:
                 int d3Wrong = Mathf.RoundToInt((1f - tier3WrongAddressMultiplier) * 100f);
-                return $"Altın Tam Kasko (%100 Tam Koruma & %{d3Wrong} Yanlış Adres İndirimi)";
+                return LocalizationManager.GetFormat("insurance_tier3_name", "Gold Full Insurance (100% Full Protection & {0}% Wrong Address Discount)", d3Wrong);
             default:
-                return "Kasko";
+                return LocalizationManager.Get("insurance_title", "Insurance Policy");
         }
     }
 
@@ -181,20 +181,20 @@ public class InsuranceAgencyManager : MonoBehaviour
 
         if (insuranceTier >= 3)
         {
-            return "<color=#32FF64>🛡️ Altın Tam Kasko: MAKSİMUM SEVİYE (%100 Hasar Koruması)</color>";
+            return $"<color=#32FF64>🛡️ {GetTierName()}</color>";
         }
 
         int nextCost = GetNextTierCost();
         int targetTier = insuranceTier + 1;
-        string nextTierName = targetTier == 2 ? $"Gümüş Kasko (%{Mathf.RoundToInt((1f - tier2FragileMultiplier) * 100f)} İndirim)" : $"Altın Tam Kasko (%100 Koruma)";
+        string nextTierName = targetTier == 2 ? LocalizationManager.GetFormat("insurance_tier1_name", "Silver Insurance", Mathf.RoundToInt((1f - tier2FragileMultiplier) * 100f)) : LocalizationManager.Get("insurance_btn_tier3_active", "Gold Full Insurance");
         int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
 
         if (balance < nextCost)
         {
-            return $"<color=#FFAA33>🛡️ {nextTierName} - ${nextCost:N0} (Bakiye: ${balance:N0})</color>";
+            return $"<color=#FFAA33>🛡️ {nextTierName} - ${nextCost:N0} (Balance: ${balance:N0})</color>";
         }
 
-        return $"<color=#32FF64>[E] Kaskoyu Yükselt: {nextTierName} (${nextCost:N0})</color>";
+        return $"<color=#32FF64>[E] {nextTierName} (${nextCost:N0})</color>";
     }
 
     public bool TryUpgradeTier()
@@ -211,7 +211,7 @@ public class InsuranceAgencyManager : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>🛡️ Sigorta Yükseltildi: {GetTierName()}</color>");
+                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>🛡️ {GetTierName()}</color>");
             }
             return true;
         }

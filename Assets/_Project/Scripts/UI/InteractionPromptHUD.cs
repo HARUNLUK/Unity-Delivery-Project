@@ -87,11 +87,13 @@ public class InteractionPromptHUD : MonoBehaviour
 
     private void OnEnable()
     {
+        LocalizationManager.OnLanguageChanged += HandleLanguageChanged;
         AddressLocalizationManager.OnLanguageChanged += HandleLanguageChanged;
     }
 
     private void OnDisable()
     {
+        LocalizationManager.OnLanguageChanged -= HandleLanguageChanged;
         AddressLocalizationManager.OnLanguageChanged -= HandleLanguageChanged;
     }
 
@@ -941,31 +943,31 @@ public class InteractionPromptHUD : MonoBehaviour
             switch (pkg.cargoType)
             {
                 case CargoType.Standard:
-                    heldCargoTypeText.text = "STANDARD";
+                    heldCargoTypeText.text = LocalizationManager.Get("cargo_type_standard", "STANDART");
                     if (heldCargoStatusText != null) heldCargoStatusText.text = "";
                     if (heldCargoPercentageText != null) heldCargoPercentageText.text = "";
                     break;
 
                 case CargoType.Express:
-                    heldCargoTypeText.text = "EXPRESS";
+                    heldCargoTypeText.text = LocalizationManager.Get("cargo_type_express", "EKSPRES");
                     if (heldCargoStatusText != null) heldCargoStatusText.text = pkg.GetFormattedTargetDeliveryTime();
                     if (heldCargoPercentageText != null) heldCargoPercentageText.text = "";
                     break;
 
                 case CargoType.Fragile:
-                    heldCargoTypeText.text = "FRAGILE";
-                    if (heldCargoStatusText != null) heldCargoStatusText.text = pkg.isBroken ? "Broken" : "Condition";
+                    heldCargoTypeText.text = LocalizationManager.Get("cargo_type_fragile", "KIRILABİLİR");
+                    if (heldCargoStatusText != null) heldCargoStatusText.text = pkg.isBroken ? LocalizationManager.Get("cargo_status_broken", "Kırıldı / Hasarlı") : LocalizationManager.Get("cargo_status_condition", "Kondisyon");
                     if (heldCargoPercentageText != null) heldCargoPercentageText.text = pkg.isBroken ? "0%" : $"{pkg.health:F0}%";
                     break;
 
                 case CargoType.Explosive:
-                    heldCargoTypeText.text = "EXPLOSIVE";
-                    if (heldCargoStatusText != null) heldCargoStatusText.text = pkg.isBroken ? "Detonated" : "Stability";
+                    heldCargoTypeText.text = LocalizationManager.Get("cargo_type_explosive", "PATLAYICI");
+                    if (heldCargoStatusText != null) heldCargoStatusText.text = pkg.isBroken ? LocalizationManager.Get("cargo_status_detonated", "Patladı!") : LocalizationManager.Get("cargo_status_stability", "Stabilite");
                     if (heldCargoPercentageText != null) heldCargoPercentageText.text = pkg.isBroken ? "0%" : $"{pkg.health:F0}%";
                     break;
 
                 default:
-                    heldCargoTypeText.text = "STANDARD";
+                    heldCargoTypeText.text = LocalizationManager.Get("cargo_type_standard", "STANDART");
                     if (heldCargoStatusText != null) heldCargoStatusText.text = "";
                     if (heldCargoPercentageText != null) heldCargoPercentageText.text = "";
                     break;

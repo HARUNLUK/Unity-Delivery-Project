@@ -148,21 +148,21 @@ public class BranchUpgradeTransitionUI : MonoBehaviour
         string tierNameStr = newTier != null ? newTier.tierName : $"Tier {newLevel}";
         int cap = newTier != null ? newTier.dailyPackageCapacity : (newLevel * 4);
         int rent = newTier != null ? newTier.dailyRent : (newLevel * 60);
-        string desc = newTier != null ? newTier.description : "Expanded logistics and distribution capacity.";
+        string desc = newTier != null ? newTier.description : (LocalizationManager.IsTurkish ? "Genişletilmiş lojistik ve dağıtım kapasitesi." : "Expanded logistics and distribution capacity.");
 
         if (badgeText != null)
         {
-            badgeText.text = "ŞUBE YÜKSELTİLDİ - BRANCH UPGRADE";
+            badgeText.text = LocalizationManager.Get("branch_trans_badge");
         }
 
         if (titleText != null)
         {
-            titleText.text = $"LEVEL {newLevel}: {tierNameStr.ToUpper()}";
+            titleText.text = LocalizationManager.GetFormat("branch_trans_title", newLevel, tierNameStr.ToUpper());
         }
 
         if (detailsText != null)
         {
-            detailsText.text = $"<b>Günlük Kapasite:</b> <color=#32FFFF>{cap} Paket</color>  |  <b>Günlük Kira:</b> <color=#FFD232>${rent}</color>\n<size=85%><color=#D0E0FF>{desc}</color></size>";
+            detailsText.text = LocalizationManager.GetFormat("branch_trans_details", cap, rent, desc);
         }
 
         // 4. Activate Panel and Fade Out (Screen turns black)
@@ -229,7 +229,7 @@ public class BranchUpgradeTransitionUI : MonoBehaviour
 
         if (InteractionPromptHUD.Instance != null)
         {
-            InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>[YENİ ŞUBE AKTİF] Seviye {newLevel} ({tierNameStr})</color>", 4.0f);
+            InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_branch_active_new", newLevel, tierNameStr), 4.0f);
         }
 
         onCompleteAction?.Invoke();

@@ -36,8 +36,8 @@ public static class DeliveryUIBuilder
             deliveryManager.AddComponent<BranchManager>();
         }
 
-        // Ensure active address language is initialized to English (EN)
-        AddressLocalizationManager.SetLanguage("en");
+        // Ensure active language is initialized
+        LocalizationManager.Initialize();
 
         // 1. Find or Create Canvas
         Canvas canvas = Object.FindAnyObjectByType<Canvas>();

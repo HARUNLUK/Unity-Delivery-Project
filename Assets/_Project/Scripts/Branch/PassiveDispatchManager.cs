@@ -164,7 +164,7 @@ public class PassiveDispatchManager : MonoBehaviour
 
         if (dispatchHubLevel >= 3)
         {
-            return $"<color=#32FF64>📦 Dağıtım Şubesi: MAKSİMUM SEVİYE ({GetCourierCount()} Kurye - +${GetDailyPassiveRevenue():N0}/Gün)</color>";
+            return $"<color=#32FF64>📦 {LocalizationManager.GetFormat("dispatch_status", "Level {0} - {1} Couriers", dispatchHubLevel, GetCourierCount())} (+${GetDailyPassiveRevenue():N0}/{LocalizationManager.Get("unit_day", "Day")})</color>";
         }
 
         int nextLevel = dispatchHubLevel + 1;
@@ -175,10 +175,10 @@ public class PassiveDispatchManager : MonoBehaviour
 
         if (balance < nextCost)
         {
-            return $"<color=#FFAA33>📦 Seviye {nextLevel} ({nextCouriers} Kurye, +${nextRevenue:N0}/Gün) - ${nextCost:N0} (Bakiye: ${balance:N0})</color>";
+            return $"<color=#FFAA33>📦 {LocalizationManager.GetFormat("prompt_open_dispatch_menu", "Level {0} - {1} Couriers", nextLevel, nextCouriers)} - ${nextCost:N0} (Balance: ${balance:N0})</color>";
         }
 
-        return $"<color=#32FF64>[E] Şubeyi Yükselt: Seviye {nextLevel} ({nextCouriers} Kurye - +${nextRevenue:N0}/Gün) (${nextCost:N0})</color>";
+        return $"<color=#32FF64>{LocalizationManager.GetFormat("prompt_open_dispatch_menu", "Level {0} - {1} Couriers", nextLevel, nextCouriers)} (${nextCost:N0})</color>";
     }
 
     public bool TryUpgradeHub()
@@ -195,7 +195,7 @@ public class PassiveDispatchManager : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>📦 Pasif Kargo Şubesi Seviye {dispatchHubLevel}'e Yükseltildi! ({GetCourierCount()} Kurye - +${GetDailyPassiveRevenue():N0}/Gün)</color>");
+                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>📦 {LocalizationManager.GetFormat("dispatch_status", "Level {0} - {1} Couriers", dispatchHubLevel, GetCourierCount())} (+${GetDailyPassiveRevenue():N0}/{LocalizationManager.Get("unit_day", "Day")})</color>");
             }
             return true;
         }

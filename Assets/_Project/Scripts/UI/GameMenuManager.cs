@@ -111,6 +111,7 @@ public class GameMenuManager : MonoBehaviour
     public TextMeshProUGUI uiVolumeValText;
 
     [Header("Graphics Selectors")]
+    public TMP_Dropdown languageDropdown;
     public TMP_Dropdown qualityDropdown;
     public TMP_Dropdown fullscreenDropdown;
     public TMP_Dropdown resolutionDropdown;
@@ -184,12 +185,30 @@ public class GameMenuManager : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        LocalizationManager.OnLanguageChanged += HandleLanguageChanged;
+        KeyBindingManager.OnBindingsChanged += RefreshAllKeybindingUI;
+    }
+
+    private void OnDisable()
+    {
+        LocalizationManager.OnLanguageChanged -= HandleLanguageChanged;
+        KeyBindingManager.OnBindingsChanged -= RefreshAllKeybindingUI;
+    }
+
+    private void HandleLanguageChanged(string lang)
+    {
+        RefreshLocalizedUI();
+    }
+
     private void Start()
     {
         EnsureReferences();
         EnsureUI();
         BindButtonsAndEvents();
         InitializeSettingsUI();
+        RefreshLocalizedUI();
 
         if (SkipMainMenuOnNextLoad)
         {
@@ -326,6 +345,7 @@ public class GameMenuManager : MonoBehaviour
 
             if (graphicsSection != null)
             {
+                languageDropdown = graphicsSection.transform.Find("LanguageRow/Dropdown")?.GetComponent<TMP_Dropdown>();
                 qualityDropdown = graphicsSection.transform.Find("QualityRow/Dropdown")?.GetComponent<TMP_Dropdown>();
                 fullscreenDropdown = graphicsSection.transform.Find("FullscreenRow/Dropdown")?.GetComponent<TMP_Dropdown>();
                 resolutionDropdown = graphicsSection.transform.Find("ResolutionRow/Dropdown")?.GetComponent<TMP_Dropdown>();
@@ -393,7 +413,7 @@ public class GameMenuManager : MonoBehaviour
             GameObject titleObj = CreateElement("TitleHeader", mainCard.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -60), new Vector2(500, 90));
             mainMenuTitleText = titleObj.AddComponent<TextMeshProUGUI>();
             if (fontAsset != null) mainMenuTitleText.font = fontAsset;
-            mainMenuTitleText.text = "<size=130%><b>VALLEY LOGISTICS</b></size>\n<size=55%><color=#32FFFF>KARGO DAĞITIM VE SÜRÜŞ SİMÜLASYONU</color></size>";
+            mainMenuTitleText.text = "<b>Where's</b>\n<size=40><b>My Package</b></size>";
             mainMenuTitleText.fontSize = 28;
             mainMenuTitleText.alignment = TextAlignmentOptions.Center;
             mainMenuTitleText.color = Color.white;
@@ -1077,15 +1097,15 @@ public class GameMenuManager : MonoBehaviour
         int level = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : PlayerPrefs.GetInt("Delivery_BranchLevel", 1);
         int day = DayTimeManager.Instance != null ? DayTimeManager.Instance.CurrentDay : PlayerPrefs.GetInt("Delivery_CurrentDay", 1);
         string tierName = BranchManager.Instance != null && BranchManager.Instance.CurrentTier != null ?
-            BranchManager.Instance.CurrentTier.tierName : $"Seviye {level}";
+            BranchManager.Instance.CurrentTier.tierName : $"Lv.{level}";
 
         if (hasSave)
         {
-            mainMenuSaveInfoText.text = $"<color=#A0C8FF>Gün {day}</color>  |  <color=#A0C8FF>Şube:</color> <color=#FFFFFF>Lv.{level} ({tierName})</color>  |  <color=#A0C8FF>Kasa:</color> <color=#32FF64>${cash:N0}</color>";
+            mainMenuSaveInfoText.text = LocalizationManager.GetFormat("main_menu_save_info", "<color=#A0C8FF>Gün {0}</color>  |  <color=#A0C8FF>Şube:</color> <color=#FFFFFF>Lv.{1} ({2})</color>  |  <color=#A0C8FF>Kasa:</color> <color=#32FF64>${3:N0}</color>", day, level, tierName, cash);
         }
         else
         {
-            mainMenuSaveInfoText.text = $"<color=#A0C8FF>Yeni Kariyer:</color> <color=#FFFFFF>Lv.1 ({tierName})</color>  |  <color=#A0C8FF>Başlangıç:</color> <color=#32FF64>${cash:N0}</color>";
+            mainMenuSaveInfoText.text = LocalizationManager.GetFormat("main_menu_new_info", "<color=#A0C8FF>Yeni Kariyer:</color> <color=#FFFFFF>Lv.1 ({0})</color>  |  <color=#A0C8FF>Başlangıç:</color> <color=#32FF64>${1:N0}</color>", tierName, cash);
         }
     }
 
@@ -1706,6 +1726,28 @@ public class GameMenuManager : MonoBehaviour
     {
         if (SettingsManager.Instance == null) return;
 
+        // Populate Language Dropdown
+        if (languageDropdown != null)
+        {
+            languageDropdown.onValueChanged.RemoveAllListeners();
+            languageDropdown.ClearOptions();
+            languageDropdown.AddOptions(new List<string> { "Türkçe (TR)", "English (EN)" });
+            languageDropdown.value = LocalizationManager.IsTurkish ? 0 : 1;
+            languageDropdown.RefreshShownValue();
+            languageDropdown.onValueChanged.AddListener((int val) =>
+            {
+                string chosen = val == 0 ? "tr" : "en";
+                if (SettingsManager.Instance != null)
+                {
+                    SettingsManager.Instance.SetLanguage(chosen);
+                }
+                else
+                {
+                    LocalizationManager.SetLanguage(chosen);
+                }
+            });
+        }
+
         // Populate Resolution Dropdown
         if (resolutionDropdown != null)
         {
@@ -1746,7 +1788,11 @@ public class GameMenuManager : MonoBehaviour
         if (fullscreenDropdown != null)
         {
             fullscreenDropdown.ClearOptions();
-            fullscreenDropdown.AddOptions(new List<string> { "Tam Ekran (Exclusive)", "Kenarlıksız (Borderless)", "Pencereli (Windowed)" });
+            fullscreenDropdown.AddOptions(new List<string> {
+                LocalizationManager.Get("disp_fullscreen", "Tam Ekran (Exclusive)"),
+                LocalizationManager.Get("disp_borderless", "Kenarlıksız (Borderless)"),
+                LocalizationManager.Get("disp_windowed", "Pencereli (Windowed)")
+            });
             fullscreenDropdown.value = SettingsManager.Instance.fullscreenMode;
             fullscreenDropdown.RefreshShownValue();
         }
@@ -1755,7 +1801,7 @@ public class GameMenuManager : MonoBehaviour
         if (fpsLimitDropdown != null)
         {
             fpsLimitDropdown.ClearOptions();
-            fpsLimitDropdown.AddOptions(new List<string> { "30 FPS", "60 FPS", "120 FPS", "144 FPS", "Sınırsız (Unlimited)" });
+            fpsLimitDropdown.AddOptions(new List<string> { "30 FPS", "60 FPS", "120 FPS", "144 FPS", LocalizationManager.Get("fps_unlimited", "Sınırsız (Unlimited)") });
             int curFps = SettingsManager.Instance.targetFps;
             if (curFps == 30) fpsLimitDropdown.value = 0;
             else if (curFps == 60) fpsLimitDropdown.value = 1;
@@ -1790,7 +1836,8 @@ public class GameMenuManager : MonoBehaviour
         if (uiVolumeSlider != null) uiVolumeSlider.value = sm.uiVolume;
         if (uiVolumeValText != null) uiVolumeValText.text = $"%{(int)(sm.uiVolume * 100)}";
 
-        // 2. Graphics
+        // 2. Graphics & Language
+        if (languageDropdown != null) languageDropdown.value = LocalizationManager.IsTurkish ? 0 : 1;
         if (qualityDropdown != null) qualityDropdown.value = sm.qualityLevel;
         if (fullscreenDropdown != null) fullscreenDropdown.value = sm.fullscreenMode;
         if (vsyncToggle != null) vsyncToggle.isOn = sm.vsyncEnabled;
@@ -1799,6 +1846,102 @@ public class GameMenuManager : MonoBehaviour
         if (mouseSensSlider != null) mouseSensSlider.value = sm.mouseSensitivity;
         if (mouseSensValText != null) mouseSensValText.text = $"{sm.mouseSensitivity:F1}x";
         if (invertYToggle != null) invertYToggle.isOn = sm.invertMouseY;
+    }
+
+    public void RefreshLocalizedUI()
+    {
+        // 1. Main Menu Texts
+        if (mainMenuTitleText != null)
+        {
+            mainMenuTitleText.text = LocalizationManager.Get("game_title", "<b>Where's</b>\n<size=40><b>My Package</b></size>");
+        }
+
+        UpdateMainMenuSaveStats();
+
+        SetButtonText(continueButton, LocalizationManager.Get("btn_continue", "DEVAM ET"));
+        SetButtonText(newGameButton, LocalizationManager.Get("btn_new_game", "YENİ OYUN"));
+        SetButtonText(playButton, LocalizationManager.Get("btn_play", "OYUNA BAŞLA"));
+        SetButtonText(mainMenuSettingsButton, LocalizationManager.Get("btn_settings", "AYARLAR"));
+        SetButtonText(mainMenuQuitButton, LocalizationManager.Get("btn_quit", "ÇIKIŞ"));
+
+        // 2. New Game Confirmation Modal
+        if (newGameModalPanel != null)
+        {
+            var mTitle = newGameModalPanel.transform.Find("ModalCard/Title")?.GetComponent<TextMeshProUGUI>();
+            if (mTitle != null) mTitle.text = LocalizationManager.Get("modal_new_game_title", "<b>YENİ OYUN BAŞLAT</b>");
+
+            var mBody = newGameModalPanel.transform.Find("ModalCard/BodyText")?.GetComponent<TextMeshProUGUI>();
+            if (mBody != null) mBody.text = LocalizationManager.Get("modal_new_game_body", "Mevcut kayıt ve tüm şube ilerlemeniz sıfırlanarak 1. Seviyeden yeni bir kariyere başlanacaktır.\n\n<b>Emin misiniz?</b>");
+
+            SetButtonText(confirmNewGameBtn, LocalizationManager.Get("btn_confirm_reset", "EVET, SIFIRLA VE BAŞLA"));
+            SetButtonText(cancelNewGameBtn, LocalizationManager.Get("btn_cancel", "İPTAL"));
+        }
+
+        // 3. Pause Menu Texts
+        if (pauseMenuPanel != null)
+        {
+            var pTitle = pauseMenuPanel.transform.Find("PauseCard/PauseTitle")?.GetComponent<TextMeshProUGUI>();
+            if (pTitle != null) pTitle.text = LocalizationManager.Get("pause_title", "<b>OYUN DURAKLATILDI</b>\n<size=55%><color=#32FFFF>GAME PAUSED</color></size>");
+
+            SetButtonText(resumeButton, LocalizationManager.Get("btn_resume", "DEVAM ET"));
+            SetButtonText(pauseSettingsButton, LocalizationManager.Get("btn_settings", "AYARLAR"));
+            SetButtonText(returnToMainMenuButton, LocalizationManager.Get("btn_return_main_menu", "ANA MENÜYE DÖN"));
+            SetButtonText(pauseQuitButton, LocalizationManager.Get("btn_quit_desktop", "MASAÜSTÜNE ÇIK"));
+        }
+
+        // 4. Settings Panel Texts
+        if (settingsPanel != null)
+        {
+            var sTitle = settingsPanel.transform.Find("SettingsCard/SettingsTitle")?.GetComponent<TextMeshProUGUI>();
+            if (sTitle != null) sTitle.text = LocalizationManager.Get("settings_title", "<b>AYARLAR - SETTINGS</b>");
+
+            SetButtonText(tabAudioBtn, LocalizationManager.Get("tab_audio", "SES"));
+            SetButtonText(tabGraphicsBtn, LocalizationManager.Get("tab_graphics", "GRAFİK"));
+            SetButtonText(tabControlsBtn, LocalizationManager.Get("tab_controls", "KONTROLLER"));
+            SetButtonText(settingsBackButton, LocalizationManager.Get("btn_save_return", "KAYDET VE GERİ DÖN"));
+            SetButtonText(resetKeybindingsBtn, LocalizationManager.Get("btn_reset_defaults", "Varsayılana Sıfırla"));
+
+            var kbTitle = settingsPanel.transform.Find("SettingsCard/ContentArea/ControlsSection/KeybindingsHeaderRow/HeaderTitle")?.GetComponent<TextMeshProUGUI>();
+            if (kbTitle != null) kbTitle.text = LocalizationManager.Get("setting_keybindings_title", "<color=#32FFFF><b>TUŞ ATAMALARI:</b></color> <size=80%><color=#85A8C8>(Değiştirmek istediğiniz tuşa tıklayın)</color></size>");
+
+            // Refresh Fullscreen options text
+            if (fullscreenDropdown != null)
+            {
+                int curVal = fullscreenDropdown.value;
+                fullscreenDropdown.ClearOptions();
+                fullscreenDropdown.AddOptions(new List<string> {
+                    LocalizationManager.Get("disp_fullscreen", "Tam Ekran (Exclusive)"),
+                    LocalizationManager.Get("disp_borderless", "Kenarlıksız (Borderless)"),
+                    LocalizationManager.Get("disp_windowed", "Pencereli (Windowed)")
+                });
+                fullscreenDropdown.value = curVal;
+                fullscreenDropdown.RefreshShownValue();
+            }
+
+            if (fpsLimitDropdown != null)
+            {
+                int curVal = fpsLimitDropdown.value;
+                fpsLimitDropdown.ClearOptions();
+                fpsLimitDropdown.AddOptions(new List<string> { "30 FPS", "60 FPS", "120 FPS", "144 FPS", LocalizationManager.Get("fps_unlimited", "Sınırsız (Unlimited)") });
+                fpsLimitDropdown.value = curVal;
+                fpsLimitDropdown.RefreshShownValue();
+            }
+
+            if (languageDropdown != null)
+            {
+                languageDropdown.value = LocalizationManager.IsTurkish ? 0 : 1;
+                languageDropdown.RefreshShownValue();
+            }
+        }
+
+        RefreshAllKeybindingUI();
+    }
+
+    private static void SetButtonText(Button btn, string txt)
+    {
+        if (btn == null) return;
+        TextMeshProUGUI tmp = btn.GetComponentInChildren<TextMeshProUGUI>();
+        if (tmp != null) tmp.text = txt;
     }
 
     #endregion

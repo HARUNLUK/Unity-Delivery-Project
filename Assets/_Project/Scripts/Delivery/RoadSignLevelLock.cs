@@ -91,6 +91,7 @@ public class RoadSignLevelLock : MonoBehaviour
         PlayerProgressionManager.OnLevelUp += HandleLevelUp;
         PlayerProgressionManager.OnWarehouseLevelUp += HandleLevelUp;
         PurchasableProperty.OnPropertyUnlocked += HandlePropertyUnlocked;
+        LocalizationManager.OnLanguageChanged += HandleLanguageChanged;
     }
 
     private void UnsubscribeEvents()
@@ -99,11 +100,13 @@ public class RoadSignLevelLock : MonoBehaviour
         PlayerProgressionManager.OnLevelUp -= HandleLevelUp;
         PlayerProgressionManager.OnWarehouseLevelUp -= HandleLevelUp;
         PurchasableProperty.OnPropertyUnlocked -= HandlePropertyUnlocked;
+        LocalizationManager.OnLanguageChanged -= HandleLanguageChanged;
     }
 
     private void HandleBranchUpgraded(int newLevel, BranchTier tier) => UpdateVisuals();
     private void HandleLevelUp(int newLevel) => UpdateVisuals();
     private void HandlePropertyUnlocked(PurchasableProperty prop) => UpdateVisuals();
+    private void HandleLanguageChanged(string newLang) => UpdateVisuals();
 
     /// <summary>
     /// Fetches the current live player or branch level.
@@ -156,7 +159,14 @@ public class RoadSignLevelLock : MonoBehaviour
             if (lockTextMesh != null)
             {
                 lockTextMesh.gameObject.SetActive(true);
-                lockTextMesh.text = string.Format(lockTextFormat, requiredLevel);
+                if (string.IsNullOrEmpty(lockTextFormat) || lockTextFormat == "LEVEL {0} REQUIRED" || lockTextFormat == "SEVİYE {0} GEREKLİ")
+                {
+                    lockTextMesh.text = LocalizationManager.GetFormat("sign_level_required", requiredLevel);
+                }
+                else
+                {
+                    lockTextMesh.text = string.Format(lockTextFormat, requiredLevel);
+                }
                 lockTextMesh.color = lockTextColor;
             }
         }

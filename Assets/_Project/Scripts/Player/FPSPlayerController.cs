@@ -354,7 +354,7 @@ public class FPSPlayerController : MonoBehaviour
             }
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF5555>[DEV RESET] TÜM ARAÇLAR (YAKIT & KONDİSYON %100), DÜKKANLAR VE ŞUBE SIFIRLANDI (F9)</color>", 3.5f);
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.Get("prompt_dev_reset"), 3.5f);
             }
             if (CargoTabletUI.Instance != null && CargoTabletUI.Instance.IsTabletOpen)
             {
@@ -852,7 +852,7 @@ public class FPSPlayerController : MonoBehaviour
 
                         if (InteractionPromptHUD.Instance != null)
                         {
-                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Kargo Sigorta Acentesi Menüsünü Aç ({ins.GetTierName()})</color>");
+                            InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_open_insurance_menu", ins.GetTierName()));
                         }
                         return;
                     }
@@ -874,7 +874,7 @@ public class FPSPlayerController : MonoBehaviour
 
                         if (InteractionPromptHUD.Instance != null)
                         {
-                            InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Bölge Dağıtım Şubesi Menüsünü Aç (Seviye {hub.DispatchHubLevel} - {hub.GetCourierCount()} Kurye)</color>");
+                            InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_open_dispatch_menu", hub.DispatchHubLevel, hub.GetCourierCount()));
                         }
                         return;
                     }
@@ -937,8 +937,8 @@ public class FPSPlayerController : MonoBehaviour
 
                     if (InteractionPromptHUD.Instance != null)
                     {
-                        string targetName = (pkg != null) ? "Cargo" : "Object";
-                        InteractionPromptHUD.Instance.ShowPrompt($"[E] Pick up {targetName}");
+                        string targetName = (pkg != null) ? LocalizationManager.Get("prompt_target_cargo") : LocalizationManager.Get("prompt_target_object");
+                        InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_pickup_cargo", targetName));
                     }
                     return;
                 }
@@ -965,7 +965,7 @@ public class FPSPlayerController : MonoBehaviour
 
                             if (InteractionPromptHUD.Instance != null)
                             {
-                                InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF5555>[LOCKED] {vehicle.vehicleName}</color> (Requires Branch Level {vehicle.requiredPlayerLevel} - ${vehicle.purchasePrice})");
+                                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_vehicle_locked_level", vehicle.vehicleName, vehicle.requiredPlayerLevel, vehicle.purchasePrice));
                             }
                         }
                         else if (currentBalance < vehicle.purchasePrice)
@@ -979,7 +979,7 @@ public class FPSPlayerController : MonoBehaviour
 
                             if (InteractionPromptHUD.Instance != null)
                             {
-                                InteractionPromptHUD.Instance.ShowPrompt($"<color=#FFAA33>[LOCKED] {vehicle.vehicleName}</color> (${vehicle.purchasePrice} - Balance: ${currentBalance})");
+                                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_vehicle_locked_cash", vehicle.vehicleName, vehicle.purchasePrice, currentBalance));
                             }
                         }
                         else
@@ -990,14 +990,14 @@ public class FPSPlayerController : MonoBehaviour
                                 bool bought = vehicle.TryPurchase();
                                 if (bought && InteractionPromptHUD.Instance != null)
                                 {
-                                    InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>[PURCHASED] {vehicle.vehicleName} Successfully Purchased!</color>", 2.5f);
+                                    InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_vehicle_purchased_success", vehicle.vehicleName), 2.5f);
                                 }
                                 return;
                             }
 
                             if (InteractionPromptHUD.Instance != null)
                             {
-                                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>[E] Purchase: {vehicle.vehicleName}</color> (${vehicle.purchasePrice})");
+                                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_purchase_vehicle", vehicle.vehicleName, vehicle.purchasePrice));
                             }
                         }
                         return;
@@ -1053,7 +1053,7 @@ public class FPSPlayerController : MonoBehaviour
 
                         if (InteractionPromptHUD.Instance != null)
                         {
-                            InteractionPromptHUD.Instance.ShowPrompt("<color=#FFD232>[F] Menüyü Aç</color>");
+                            InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.Get("prompt_open_menu"));
                         }
                     }
                     else
@@ -1067,7 +1067,7 @@ public class FPSPlayerController : MonoBehaviour
 
                         if (InteractionPromptHUD.Instance != null)
                         {
-                            InteractionPromptHUD.Instance.ShowPrompt($"[E] Drive {vehicle.vehicleName}");
+                            InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_drive_vehicle", vehicle.vehicleName));
                         }
                     }
                     return;
@@ -1181,8 +1181,8 @@ public class FPSPlayerController : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                string targetName = (proxPkg != null) ? "Cargo" : "Object";
-                InteractionPromptHUD.Instance.ShowPrompt($"[E] Pick up {targetName}");
+                string targetName = (proxPkg != null) ? LocalizationManager.Get("prompt_target_cargo") : LocalizationManager.Get("prompt_target_object");
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_pickup_cargo", targetName));
             }
             return;
         }
@@ -1209,7 +1209,7 @@ public class FPSPlayerController : MonoBehaviour
 
                     if (InteractionPromptHUD.Instance != null)
                     {
-                        InteractionPromptHUD.Instance.ShowPrompt($"[E] Drive {v.vehicleName}");
+                        InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_drive_vehicle", v.vehicleName));
                     }
                     return;
                 }
@@ -1336,12 +1336,12 @@ public class FPSPlayerController : MonoBehaviour
 
         if (InteractionPromptHUD.Instance != null)
         {
-            InteractionPromptHUD.Instance.ShowPrompt("<color=#FF2222>💥 PATLAMA! Ağır yaralandınız ve acilen hastaneye kaldırıldınız...</color>", 6.0f);
+            InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.Get("prompt_explosion_emergency"), 6.0f);
         }
 
         if (DaySummaryManager.Instance != null)
         {
-            DaySummaryManager.Instance.emergencyHospitalReason = "Kargo patlaması nedeniyle ağır yaralanma (Hastaneye Kaldırıldı)";
+            DaySummaryManager.Instance.emergencyHospitalReason = LocalizationManager.Get("prompt_hospital_reason_explosion");
         }
 
         LockCursor(false);

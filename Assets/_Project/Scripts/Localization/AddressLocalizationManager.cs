@@ -48,7 +48,8 @@ public class AddressLocalizationManager : MonoBehaviour
     {
         if (!isInitialized)
         {
-            string savedLang = PlayerPrefs.GetString(PREF_LANG_KEY, "en");
+            string defaultLang = Application.systemLanguage == SystemLanguage.Turkish ? "tr" : "en";
+            string savedLang = PlayerPrefs.GetString(PREF_LANG_KEY, defaultLang);
             LoadLanguageData(savedLang);
         }
     }

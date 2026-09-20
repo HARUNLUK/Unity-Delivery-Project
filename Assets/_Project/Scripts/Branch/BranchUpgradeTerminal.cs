@@ -29,6 +29,7 @@ public class BranchUpgradeTerminal : MonoBehaviour
     {
         BranchManager.OnBranchUpgraded += HandleBranchUpgraded;
         BranchManager.OnBranchReset += HandleBranchReset;
+        LocalizationManager.OnLanguageChanged += HandleLanguageChanged;
         UpdateTerminalVisuals();
     }
 
@@ -36,6 +37,12 @@ public class BranchUpgradeTerminal : MonoBehaviour
     {
         BranchManager.OnBranchUpgraded -= HandleBranchUpgraded;
         BranchManager.OnBranchReset -= HandleBranchReset;
+        LocalizationManager.OnLanguageChanged -= HandleLanguageChanged;
+    }
+
+    private void HandleLanguageChanged(string newLang)
+    {
+        UpdateTerminalVisuals();
     }
 
     private void Update()
@@ -82,12 +89,12 @@ public class BranchUpgradeTerminal : MonoBehaviour
 
         if (next != null)
         {
-            return $"<color=#32FF64>[E] Open Branch Terminal</color> -> Level {next.tierLevel}: {next.tierName} (${next.upgradeCost})";
+            return LocalizationManager.GetFormat("prompt_branch_terminal_next", next.tierLevel, next.tierName, next.upgradeCost);
         }
         else
         {
-            string tName = current != null ? current.tierName : "Maximum";
-            return $"<color=#32FFFF>[E] Open Branch Terminal</color> [{tName} - MAX LEVEL]";
+            string tName = current != null ? current.tierName : LocalizationManager.Get("branch_badge_max");
+            return LocalizationManager.GetFormat("prompt_branch_terminal_max", tName);
         }
     }
 
@@ -102,7 +109,7 @@ public class BranchUpgradeTerminal : MonoBehaviour
             CargoTabletUI.Instance.OpenBranchUpgradeTerminalUI();
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt("<color=#32FFFF>[BRANCH TERMINAL OPENED]</color>");
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.Get("prompt_branch_terminal_opened"));
             }
         }
         else
@@ -126,11 +133,14 @@ public class BranchUpgradeTerminal : MonoBehaviour
     {
         EnsureVisualComponents();
 
+        string title = LocalizationManager.Get("terminal_branch_title");
+
         if (BranchManager.Instance == null)
         {
             if (screenText != null)
             {
-                screenText.text = "<b>BRANCH OFFICE</b>\n<color=#32FFFF>Ready...</color>";
+                string ready = LocalizationManager.Get("terminal_branch_ready");
+                screenText.text = $"<b>{title}</b>\n<color=#32FFFF>{ready}</color>";
             }
             return;
         }
@@ -142,11 +152,11 @@ public class BranchUpgradeTerminal : MonoBehaviour
         {
             if (current != null && next != null)
             {
-                screenText.text = $"<b>BRANCH OFFICE</b>\n<color=#32FFFF>Current: Level {current.tierLevel} ({current.tierName})</color>\n<size=75%>Next: {next.tierName}\nUpgrade Price: ${next.upgradeCost:N0}</size>";
+                screenText.text = LocalizationManager.GetFormat("terminal_branch_current_next", title, current.tierLevel, current.tierName, next.tierName, next.upgradeCost);
             }
             else if (current != null)
             {
-                screenText.text = $"<b>BRANCH OFFICE</b>\n<color=#32FF64>[MAXIMUM LEVEL]\n{current.tierName}</color>";
+                screenText.text = LocalizationManager.GetFormat("terminal_branch_max", title, current.tierName);
             }
         }
 

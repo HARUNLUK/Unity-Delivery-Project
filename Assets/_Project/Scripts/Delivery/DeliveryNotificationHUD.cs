@@ -76,7 +76,7 @@ public class DeliveryNotificationHUD : MonoBehaviour
     {
         if (remainingCargoCounterText != null && VanInventory.Instance != null)
         {
-            remainingCargoCounterText.text = $"Remaining: {VanInventory.Instance.RemainingCargoCount} / 10";
+            remainingCargoCounterText.text = LocalizationManager.GetFormat("hud_remaining_cargo", "Kalan: {0} / {1}", VanInventory.Instance.RemainingCargoCount, VanInventory.Instance.dailyPackageCount);
         }
     }
 }

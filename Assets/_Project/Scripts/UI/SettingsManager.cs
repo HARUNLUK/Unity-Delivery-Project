@@ -43,7 +43,11 @@ public class SettingsManager : MonoBehaviour
 
     private const string KEY_MOUSE_SENS = "Settings_MouseSensitivity";
     private const string KEY_INVERT_Y = "Settings_InvertY";
+    private const string KEY_LANGUAGE = "SelectedLanguage";
     #endregion
+
+    [Header("--- LANGUAGE SETTINGS ---")]
+    public string language = "tr"; // "tr" or "en"
 
     [Header("--- AUDIO SETTINGS ---")]
     [Range(0f, 1f)] public float masterVolume = 1.0f;
@@ -127,6 +131,10 @@ public class SettingsManager : MonoBehaviour
         // 3. Gameplay
         mouseSensitivity = PlayerPrefs.GetFloat(KEY_MOUSE_SENS, 2.0f);
         invertMouseY = PlayerPrefs.GetInt(KEY_INVERT_Y, 0) == 1;
+
+        // 4. Language
+        string defaultLang = Application.systemLanguage == SystemLanguage.Turkish ? "tr" : "en";
+        language = PlayerPrefs.GetString(KEY_LANGUAGE, defaultLang);
     }
 
     public void SaveAllSettings()
@@ -149,16 +157,35 @@ public class SettingsManager : MonoBehaviour
         PlayerPrefs.SetFloat(KEY_MOUSE_SENS, mouseSensitivity);
         PlayerPrefs.SetInt(KEY_INVERT_Y, invertMouseY ? 1 : 0);
 
+        // 4. Language
+        PlayerPrefs.SetString(KEY_LANGUAGE, language);
+
         PlayerPrefs.Save();
         OnSettingsChanged?.Invoke();
     }
 
     public void ApplyAllSettings()
     {
+        ApplyLanguageSettings();
         ApplyAudioSettings();
         ApplyGraphicsSettings();
         ApplyGameplaySettings();
     }
+
+    #region --- LANGUAGE APPLICATION ---
+    public void ApplyLanguageSettings()
+    {
+        LocalizationManager.SetLanguage(language);
+    }
+
+    public void SetLanguage(string langCode)
+    {
+        if (string.IsNullOrEmpty(langCode)) langCode = "tr";
+        language = langCode.ToLower().Trim();
+        LocalizationManager.SetLanguage(language);
+        SaveAllSettings();
+    }
+    #endregion
 
     #region --- AUDIO APPLICATION ---
     public void ApplyAudioSettings()

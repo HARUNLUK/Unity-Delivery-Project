@@ -115,7 +115,7 @@ public class VehicleShowroomManager : MonoBehaviour
             ResetAllVehiclePurchases();
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF5555>[DEV RESET] ALL VEHICLE PURCHASES RESET (F9)</color>");
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.Get("prompt_dev_reset"));
             }
         }
     }

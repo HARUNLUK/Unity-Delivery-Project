@@ -143,14 +143,14 @@ public class CommercialHubUIManager : MonoBehaviour
             if (!VehicleServiceGarage.Instance.IsGarageUnlocked())
             {
                 if (InteractionPromptHUD.Instance != null)
-                    InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>Oto Servis Garajı henüz satın alınmadı veya kilitli!</color>", 2.0f);
+                    InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.Get("prompt_garage_not_unlocked", "<color=#FF3333>Auto Service Garage is locked or not yet purchased!</color>"), 2.0f);
                 return;
             }
 
             if (!VehicleServiceGarage.Instance.IsVehicleInServiceBay(v))
             {
                 if (InteractionPromptHUD.Instance != null)
-                    InteractionPromptHUD.Instance.ShowPrompt("<color=#FFAA33>Araç tamir dükkanı içine yanaştırılmalıdır!</color>", 2.0f);
+                    InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.Get("prompt_garage_car_not_in_bay", "<color=#FFAA33>Vehicle must be parked inside the service garage bay!</color>"), 2.0f);
                 return;
             }
         }
@@ -302,12 +302,12 @@ public class CommercialHubUIManager : MonoBehaviour
 
         if (insuranceStatusText != null)
         {
-            insuranceStatusText.text = $"<b>Mevcut Poliçeniz:</b> <color=#32FF64>{InsuranceAgencyManager.Instance.GetTierName()}</color>";
+            insuranceStatusText.text = LocalizationManager.GetFormat("insurance_current_policy", "<b>Current Policy:</b> <color=#32FF64>{0}</color>", InsuranceAgencyManager.Instance.GetTierName());
         }
 
         if (insuranceBalanceText != null)
         {
-            insuranceBalanceText.text = $"<b>Cüzdan Bakiyeniz:</b> <color=#32FF64>${balance:N0}</color>";
+            insuranceBalanceText.text = LocalizationManager.GetFormat("insurance_wallet", "<b>Wallet Balance:</b> <color=#32FF64>${0:N0}</color>", balance);
         }
 
         InsuranceAgencyManager ins = InsuranceAgencyManager.Instance;
@@ -316,12 +316,12 @@ public class CommercialHubUIManager : MonoBehaviour
             TextMeshProUGUI txt = insuranceTier2UpgradeBtn.GetComponentInChildren<TextMeshProUGUI>();
             if (tier >= 2)
             {
-                if (txt != null) txt.text = "✅ Gümüş Kasko Aktif";
+                if (txt != null) txt.text = LocalizationManager.Get("insurance_btn_tier2_active", "✅ Silver Insurance Active");
                 insuranceTier2UpgradeBtn.interactable = false;
             }
             else
             {
-                if (txt != null) txt.text = $"🛡️ Gümüş Kasko Satın Al (${ins.tier2UpgradeCost:N0})";
+                if (txt != null) txt.text = LocalizationManager.GetFormat("insurance_btn_tier2_buy", "🛡️ Purchase Silver Insurance (${0:N0})", ins.tier2UpgradeCost);
                 insuranceTier2UpgradeBtn.interactable = true;
             }
         }
@@ -331,12 +331,12 @@ public class CommercialHubUIManager : MonoBehaviour
             TextMeshProUGUI txt = insuranceTier3UpgradeBtn.GetComponentInChildren<TextMeshProUGUI>();
             if (tier >= 3)
             {
-                if (txt != null) txt.text = "⭐ Altın Tam Kasko Aktif";
+                if (txt != null) txt.text = LocalizationManager.Get("insurance_btn_tier3_active", "⭐ Gold Full Insurance Active");
                 insuranceTier3UpgradeBtn.interactable = false;
             }
             else
             {
-                if (txt != null) txt.text = $"🛡️ Altın Tam Kasko Satın Al (${ins.tier3UpgradeCost:N0})";
+                if (txt != null) txt.text = LocalizationManager.GetFormat("insurance_btn_tier3_buy", "🛡️ Purchase Gold Full Insurance (${0:N0})", ins.tier3UpgradeCost);
                 insuranceTier3UpgradeBtn.interactable = (tier >= 2);
             }
         }
@@ -396,17 +396,17 @@ public class CommercialHubUIManager : MonoBehaviour
 
         if (dispatchStatusText != null)
         {
-            dispatchStatusText.text = $"<b>Şube Seviyesi:</b> Seviye {level}  |  <b>Kurye Sayısı:</b> {couriers} Kurye";
+            dispatchStatusText.text = LocalizationManager.GetFormat("dispatch_status", "<b>Hub Level:</b> Level {0}  |  <b>Active Couriers:</b> {1} Couriers", level, couriers);
         }
 
         if (dispatchRevenueInfoText != null)
         {
-            dispatchRevenueInfoText.text = $"<b>Günlük Pasif Gelir:</b> <color=#32FF64>+${dailyRev:N0} / Gün</color> (Her gün 18:00'de otomatik yatırılır)";
+            dispatchRevenueInfoText.text = LocalizationManager.GetFormat("dispatch_revenue_info", "<b>Daily Passive Revenue:</b> <color=#32FF64>+${0:N0} / Day</color> (Auto-deposited at 18:00 daily)", dailyRev);
         }
 
         if (dispatchBalanceText != null)
         {
-            dispatchBalanceText.text = $"<b>Cüzdan Bakiyeniz:</b> <color=#32FF64>${balance:N0}</color>";
+            dispatchBalanceText.text = LocalizationManager.GetFormat("insurance_wallet", "<b>Wallet Balance:</b> <color=#32FF64>${0:N0}</color>", balance);
         }
 
         if (dispatchTier2UpgradeBtn != null)
@@ -414,12 +414,12 @@ public class CommercialHubUIManager : MonoBehaviour
             TextMeshProUGUI txt = dispatchTier2UpgradeBtn.GetComponentInChildren<TextMeshProUGUI>();
             if (level >= 2)
             {
-                if (txt != null) txt.text = $"✅ Seviye 2 Aktif ({hub.level2Couriers} Kurye)";
+                if (txt != null) txt.text = LocalizationManager.GetFormat("dispatch_btn_tier2_active", "✅ Level 2 Active ({0} Couriers)", hub.level2Couriers);
                 dispatchTier2UpgradeBtn.interactable = false;
             }
             else
             {
-                if (txt != null) txt.text = $"📦 Seviye 2'ye Yükselt ({hub.level2Couriers} Kurye - +${hub.level2DailyRevenue:N0}/Gün) [${hub.level2UpgradeCost:N0}]";
+                if (txt != null) txt.text = LocalizationManager.GetFormat("dispatch_btn_tier2_buy", "📦 Upgrade to Level 2 ({0} Couriers - +${1:N0}/Day) [${2:N0}]", hub.level2Couriers, hub.level2DailyRevenue, hub.level2UpgradeCost);
                 dispatchTier2UpgradeBtn.interactable = true;
             }
         }
@@ -429,12 +429,12 @@ public class CommercialHubUIManager : MonoBehaviour
             TextMeshProUGUI txt = dispatchTier3UpgradeBtn.GetComponentInChildren<TextMeshProUGUI>();
             if (level >= 3)
             {
-                if (txt != null) txt.text = $"⭐ Seviye 3 Maksimum Filo ({hub.level3Couriers} Kurye)";
+                if (txt != null) txt.text = LocalizationManager.GetFormat("dispatch_btn_tier3_active", "⭐ Level 3 Max Fleet ({0} Couriers)", hub.level3Couriers);
                 dispatchTier3UpgradeBtn.interactable = false;
             }
             else
             {
-                if (txt != null) txt.text = $"📦 Seviye 3'e Yükselt ({hub.level3Couriers} Kurye - +${hub.level3DailyRevenue:N0}/Gün) [${hub.level3UpgradeCost:N0}]";
+                if (txt != null) txt.text = LocalizationManager.GetFormat("dispatch_btn_tier3_buy", "📦 Upgrade to Level 3 ({0} Couriers - +${1:N0}/Day) [${2:N0}]", hub.level3Couriers, hub.level3DailyRevenue, hub.level3UpgradeCost);
                 dispatchTier3UpgradeBtn.interactable = (level >= 2);
             }
         }
@@ -486,7 +486,7 @@ public class CommercialHubUIManager : MonoBehaviour
 
         if (propertyModalTitleText != null)
         {
-            propertyModalTitleText.text = !string.IsNullOrEmpty(prop.displayName) ? prop.displayName.ToUpper() : "TİCARİ MÜLK SATIN ALMA";
+            propertyModalTitleText.text = !string.IsNullOrEmpty(prop.displayName) ? prop.displayName.ToUpper() : LocalizationManager.Get("property_modal_default_title", "PURCHASE COMMERCIAL PROPERTY");
         }
 
         if (propertyModalDescText != null)
@@ -496,17 +496,19 @@ public class CommercialHubUIManager : MonoBehaviour
 
         if (propertyModalReqText != null)
         {
-            propertyModalReqText.text = $"Gereken Seviye: Level {prop.requiredPlayerLevel}";
+            propertyModalReqText.text = LocalizationManager.GetFormat("property_req_level", "Required Level: Level {0}", prop.requiredPlayerLevel);
         }
 
         if (propertyModalCostText != null)
         {
-            propertyModalCostText.text = $"Fiyat: ${prop.purchaseCost:N0}";
+            propertyModalCostText.text = LocalizationManager.GetFormat("property_price", "Price: ${0:N0}", prop.purchaseCost);
         }
 
         if (propertyModalBuyBtn != null)
         {
             propertyModalBuyBtn.interactable = true;
+            var buyTxt = propertyModalBuyBtn.GetComponentInChildren<TextMeshProUGUI>();
+            if (buyTxt != null) buyTxt.text = LocalizationManager.Get("property_btn_buy", "PURCHASE PROPERTY");
         }
     }
 

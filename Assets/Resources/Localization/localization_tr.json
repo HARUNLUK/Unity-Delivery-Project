@@ -1,0 +1,953 @@
+{
+  "language": "tr",
+  "entries": [
+    {
+      "key": "game_title",
+      "value": "<b>Where's</b>\n<size=40><b>My Package</b></size>"
+    },
+    {
+      "key": "game_subtitle",
+      "value": ""
+    },
+    {
+      "key": "main_menu_save_info",
+      "value": "<color=#A0C8FF>Gün {0}</color>  |  <color=#A0C8FF>Şube:</color> <color=#FFFFFF>Lv.{1} ({2})</color>  |  <color=#A0C8FF>Kasa:</color> <color=#32FF64>${3:N0}</color>"
+    },
+    {
+      "key": "main_menu_new_info",
+      "value": "<color=#A0C8FF>Yeni Kariyer:</color> <color=#FFFFFF>Lv.1 ({0})</color>  |  <color=#A0C8FF>Başlangıç:</color> <color=#32FF64>${1:N0}</color>"
+    },
+    {
+      "key": "main_menu_default_badge",
+      "value": "<color=#A0C8FF>Mevcut Şube:</color> <color=#FFFFFF>Lv.1 (Başlangıç Garajı)</color>  |  <color=#A0C8FF>Kasa:</color> <color=#32FF64>$0</color>"
+    },
+    {
+      "key": "btn_continue",
+      "value": "DEVAM ET"
+    },
+    {
+      "key": "btn_new_game",
+      "value": "YENİ OYUN"
+    },
+    {
+      "key": "btn_play",
+      "value": "OYUNA BAŞLA"
+    },
+    {
+      "key": "btn_settings",
+      "value": "AYARLAR"
+    },
+    {
+      "key": "btn_quit",
+      "value": "ÇIKIŞ"
+    },
+    {
+      "key": "modal_new_game_title",
+      "value": "<b>YENİ OYUN BAŞLAT</b>"
+    },
+    {
+      "key": "modal_new_game_body",
+      "value": "Mevcut kayıt ve tüm şube ilerlemeniz sıfırlanarak 1. Seviyeden yeni bir kariyere başlanacaktır.\n\n<b>Emin misiniz?</b>"
+    },
+    {
+      "key": "btn_confirm_reset",
+      "value": "EVET, SIFIRLA VE BAŞLA"
+    },
+    {
+      "key": "btn_cancel",
+      "value": "İPTAL"
+    },
+    {
+      "key": "pause_title",
+      "value": "<b>OYUN DURAKLATILDI</b>\n<size=55%><color=#32FFFF>DEVAM ETMEK İÇİN ESC'YE BASIN</color></size>"
+    },
+    {
+      "key": "btn_resume",
+      "value": "DEVAM ET"
+    },
+    {
+      "key": "btn_return_main_menu",
+      "value": "ANA MENÜYE DÖN"
+    },
+    {
+      "key": "btn_quit_desktop",
+      "value": "MASAÜSTÜNE ÇIK"
+    },
+    {
+      "key": "settings_title",
+      "value": "<b>AYARLAR - SETTINGS</b>"
+    },
+    {
+      "key": "tab_audio",
+      "value": "SES"
+    },
+    {
+      "key": "tab_graphics",
+      "value": "GRAFİK"
+    },
+    {
+      "key": "tab_controls",
+      "value": "KONTROLLER"
+    },
+    {
+      "key": "tab_language",
+      "value": "DİL / LANGUAGE"
+    },
+    {
+      "key": "setting_language",
+      "value": "Oyun Dili (Language):"
+    },
+    {
+      "key": "setting_master_vol",
+      "value": "Ana Ses (Master):"
+    },
+    {
+      "key": "setting_music_vol",
+      "value": "Müzik Ses Şiddeti:"
+    },
+    {
+      "key": "setting_sfx_vol",
+      "value": "Ses Efektleri (SFX):"
+    },
+    {
+      "key": "setting_ambience_vol",
+      "value": "Çevre & Vadi Atmosferi:"
+    },
+    {
+      "key": "setting_ui_vol",
+      "value": "Arayüz & Bildirimler:"
+    },
+    {
+      "key": "setting_quality",
+      "value": "Grafik Kalitesi:"
+    },
+    {
+      "key": "setting_display_mode",
+      "value": "Ekran Modu:"
+    },
+    {
+      "key": "setting_resolution",
+      "value": "Çözünürlük:"
+    },
+    {
+      "key": "setting_vsync",
+      "value": "Dikey Senkronizasyon (V-Sync):"
+    },
+    {
+      "key": "setting_target_fps",
+      "value": "Hedef Kare Hızı (FPS Limit):"
+    },
+    {
+      "key": "setting_mouse_sens",
+      "value": "Fare Bakış Hassasiyeti:"
+    },
+    {
+      "key": "setting_invert_y",
+      "value": "Fare Y-Ekseni Ters Çevir:"
+    },
+    {
+      "key": "setting_keybindings_title",
+      "value": "<color=#32FFFF><b>TUŞ ATAMALARI:</b></color> <size=80%><color=#85A8C8>(Değiştirmek istediğiniz tuşa tıklayın)</color></size>"
+    },
+    {
+      "key": "btn_reset_defaults",
+      "value": "Varsayılana Sıfırla"
+    },
+    {
+      "key": "btn_save_return",
+      "value": "KAYDET VE GERİ DÖN"
+    },
+    {
+      "key": "btn_unassigned",
+      "value": "Atanmadı"
+    },
+    {
+      "key": "btn_press_key",
+      "value": "<color=#FFE600><b>[ Tuşa / Fareye Basın... ]</b></color>"
+    },
+    {
+      "key": "quality_low",
+      "value": "Düşük (Mobil)"
+    },
+    {
+      "key": "quality_high",
+      "value": "Yüksek / PC (Ultra)"
+    },
+    {
+      "key": "disp_fullscreen",
+      "value": "Tam Ekran (Exclusive)"
+    },
+    {
+      "key": "disp_borderless",
+      "value": "Kenarlıksız (Borderless)"
+    },
+    {
+      "key": "disp_windowed",
+      "value": "Pencereli (Windowed)"
+    },
+    {
+      "key": "fps_unlimited",
+      "value": "Sınırsız (Unlimited)"
+    },
+    {
+      "key": "action_move_forward",
+      "value": "İleri Yürüme / Gaza Bas"
+    },
+    {
+      "key": "action_move_backward",
+      "value": "Geri Yürüme / Fren"
+    },
+    {
+      "key": "action_move_left",
+      "value": "Sola Dön / Sol Direksiyon"
+    },
+    {
+      "key": "action_move_right",
+      "value": "Sağa Dön / Sağ Direksiyon"
+    },
+    {
+      "key": "action_sprint",
+      "value": "Hızlı Koşma (Sprint)"
+    },
+    {
+      "key": "action_jump",
+      "value": "Zıplama / Araç El Freni"
+    },
+    {
+      "key": "action_interact",
+      "value": "Etkileşim / Kargo Alma / Dükkan"
+    },
+    {
+      "key": "action_vehicle",
+      "value": "Araca Binme / Araçtan İnme"
+    },
+    {
+      "key": "action_tablet",
+      "value": "Kargo Tableti / GPS Harita"
+    },
+    {
+      "key": "action_camera",
+      "value": "Kamera Modu (FPS / TPS)"
+    },
+    {
+      "key": "action_throw_cargo",
+      "value": "Koli Fırlatma (Şarjlı)"
+    },
+    {
+      "key": "action_drop_cargo",
+      "value": "Koliyi Yavaşça Bırakma"
+    },
+    {
+      "key": "mouse_btn_left",
+      "value": "Sol Tık (Mouse 0)"
+    },
+    {
+      "key": "mouse_btn_right",
+      "value": "Sağ Tık (Mouse 1)"
+    },
+    {
+      "key": "mouse_btn_middle",
+      "value": "Orta Tık (Mouse 2)"
+    },
+    {
+      "key": "mouse_btn_forward",
+      "value": "Fare İleri (Mouse 4)"
+    },
+    {
+      "key": "mouse_btn_back",
+      "value": "Fare Geri (Mouse 5)"
+    },
+    {
+      "key": "hud_day",
+      "value": "GÜN {0}"
+    },
+    {
+      "key": "hud_remaining_cargo",
+      "value": "Kalan: {0} / {1}"
+    },
+    {
+      "key": "hud_held_cargo_header",
+      "value": "TAŞINAN KARGO"
+    },
+    {
+      "key": "hud_held_recipient",
+      "value": "ALICI:"
+    },
+    {
+      "key": "hud_held_address",
+      "value": "ADRES:"
+    },
+    {
+      "key": "hud_held_clue",
+      "value": "İPUCU & TARİF:"
+    },
+    {
+      "key": "hud_held_reward",
+      "value": "ÖDÜL:"
+    },
+    {
+      "key": "hud_held_penalty",
+      "value": "CEZA:"
+    },
+    {
+      "key": "hud_held_action_hint",
+      "value": "KONTROLLER: [Sol Tık] Fırlat (Şarjlı) | [Sağ Tık] Yavaşça Bırak"
+    },
+    {
+      "key": "hud_fuel_label",
+      "value": "YAKIT"
+    },
+    {
+      "key": "hud_condition_label",
+      "value": "KONDİSYON"
+    },
+    {
+      "key": "cargo_type_standard",
+      "value": "STANDART"
+    },
+    {
+      "key": "cargo_type_fragile",
+      "value": "KIRILABİLİR"
+    },
+    {
+      "key": "cargo_type_express",
+      "value": "EKSPRES"
+    },
+    {
+      "key": "cargo_type_explosive",
+      "value": "PATLAYICI"
+    },
+    {
+      "key": "cargo_status_in_transit",
+      "value": "TESLİMATTA"
+    },
+    {
+      "key": "cargo_status_at_zone",
+      "value": "BÖLGEDE"
+    },
+    {
+      "key": "cargo_status_delivered",
+      "value": "TESLİM EDİLDİ"
+    },
+    {
+      "key": "cargo_status_broken",
+      "value": "Kırıldı / Hasarlı"
+    },
+    {
+      "key": "cargo_status_condition",
+      "value": "Kondisyon"
+    },
+    {
+      "key": "cargo_status_detonated",
+      "value": "Patladı!"
+    },
+    {
+      "key": "cargo_status_stability",
+      "value": "Stabilite"
+    },
+    {
+      "key": "cargo_no_clue",
+      "value": "Bu adres için özel bir ipucu bulunmuyor."
+    },
+    {
+      "key": "tablet_tab_cargo",
+      "value": "TESLİMATLAR"
+    },
+    {
+      "key": "tablet_tab_vehicles",
+      "value": "ARAÇLAR"
+    },
+    {
+      "key": "tablet_tab_branch",
+      "value": "ŞUBE"
+    },
+    {
+      "key": "tablet_cargo_in_vehicle",
+      "value": "ARAÇTAKİ KARGOLAR"
+    },
+    {
+      "key": "tablet_details_hint_title",
+      "value": "TESLİMAT DETAYLARI & İPUCU"
+    },
+    {
+      "key": "tablet_vehicle_dealership_title",
+      "value": "ARAÇ FİLOSU & GALERİ"
+    },
+    {
+      "key": "tablet_branch_current_title",
+      "value": "MEVCUT ŞUBE / DEPO"
+    },
+    {
+      "key": "tablet_branch_next_title",
+      "value": "ŞUBEYİ YÜKSELT"
+    },
+    {
+      "key": "tablet_empty_cargo",
+      "value": "Aracınızda teslim edilecek kargo paketi yok.\nDepodan yeni paketler yükleyin."
+    },
+    {
+      "key": "tablet_physical_delivery_tip",
+      "value": "<b>Fiziksel Teslimat:</b> Koliyi <b>[E]</b> ile taşıyıp teslimat alanına bırakın."
+    },
+    {
+      "key": "tablet_tracking_no",
+      "value": "Takip No: {0}"
+    },
+    {
+      "key": "tablet_recipient",
+      "value": "Alıcı: {0}"
+    },
+    {
+      "key": "tablet_address",
+      "value": "Adres: {0}"
+    },
+    {
+      "key": "tablet_btn_drop_cargo",
+      "value": "KOLİYİ KASADAN ÇIKAR / BIRAK"
+    },
+    {
+      "key": "tablet_btn_end_shift",
+      "value": "VARDIYAYI BİTİR"
+    },
+    {
+      "key": "tablet_btn_close",
+      "value": "KAPAT"
+    },
+    {
+      "key": "vehicle_status_owned",
+      "value": "SAHİP OLUNDU"
+    },
+    {
+      "key": "vehicle_status_locked",
+      "value": "KİLİTLİ"
+    },
+    {
+      "key": "vehicle_status_empty",
+      "value": "BOŞ"
+    },
+    {
+      "key": "vehicle_status_low",
+      "value": "DÜŞÜK"
+    },
+    {
+      "key": "vehicle_status_ok",
+      "value": "NORMAL"
+    },
+    {
+      "key": "vehicle_fuel_tank",
+      "value": "Yakıt Deposu:"
+    },
+    {
+      "key": "vehicle_condition",
+      "value": "Kondisyon:"
+    },
+    {
+      "key": "vehicle_lvl_req",
+      "value": "Lvl {0}"
+    },
+    {
+      "key": "vehicle_btn_purchase",
+      "value": "ARACI SATIN AL (${0:N0})"
+    },
+    {
+      "key": "vehicle_btn_fuel_full",
+      "value": "YAKIT DEPOSU DOLU (%100)"
+    },
+    {
+      "key": "vehicle_btn_emergency_fuel",
+      "value": "ACİL YAKIT SİPARİŞİ (+{0:F0}L / ${1})"
+    },
+    {
+      "key": "vehicle_btn_recall_fee",
+      "value": "ŞUBE GARAJINA ÇEK (${0})"
+    },
+    {
+      "key": "vehicle_btn_recall_free",
+      "value": "ŞUBE GARAJINA ÇEK (Ücretsiz)"
+    },
+    {
+      "key": "branch_current_title",
+      "value": "Mevcut Şube Seviyesi"
+    },
+    {
+      "key": "branch_daily_capacity",
+      "value": "Günlük Koli Limiti:"
+    },
+    {
+      "key": "branch_daily_rent",
+      "value": "Günlük Kira:"
+    },
+    {
+      "key": "branch_next_capacity",
+      "value": "Yeni Koli Limiti:"
+    },
+    {
+      "key": "branch_next_rent",
+      "value": "Yeni Günlük Kira:"
+    },
+    {
+      "key": "branch_required_level",
+      "value": "Seviye {0}"
+    },
+    {
+      "key": "branch_btn_upgrade",
+      "value": "ŞUBEYİ YÜKSELT (${0:N0})"
+    },
+    {
+      "key": "branch_badge_max",
+      "value": "MAKSİMUM ŞUBE SEVİYESİNE ULAŞILDI"
+    },
+    {
+      "key": "delivery_selection_title",
+      "value": "TESLİMAT NOKTASI: {0}"
+    },
+    {
+      "key": "delivery_selection_feedback",
+      "value": "Teslim etmek istediğiniz kargoyu bagajınızdan seçin:"
+    },
+    {
+      "key": "delivery_selection_empty",
+      "value": "Aracınızda teslim edilecek koli kalmadı!"
+    },
+    {
+      "key": "delivery_selection_selected",
+      "value": "Seçilen: {0} ({1})"
+    },
+    {
+      "key": "summary_title",
+      "value": "GÜN {0} BİLANÇOSU"
+    },
+    {
+      "key": "summary_emergency_hospital",
+      "value": "<color=#FF3333>🚨 ACİL DURUM:</color> {0}\nGün {1} | Toplam Koli: {2}"
+    },
+    {
+      "key": "summary_total_packages",
+      "value": "GÜN {0} | Toplam Koli: {1}"
+    },
+    {
+      "key": "summary_correct_deliveries",
+      "value": "[+] Doğru Teslimatlar: {0} (+${1})"
+    },
+    {
+      "key": "summary_passive_income",
+      "value": " | Pasif Şube Geliri: +${0}"
+    },
+    {
+      "key": "summary_penalties",
+      "value": "[-] Cezalar: -${0}"
+    },
+    {
+      "key": "summary_broken_count",
+      "value": " (Kırık: {0})"
+    },
+    {
+      "key": "summary_rent_deduct",
+      "value": " | Şube Kirası: -${0}"
+    },
+    {
+      "key": "summary_today_net",
+      "value": "BUGÜNKÜ NET: {0} | TOPLAM KASA: ${1:N0}"
+    },
+    {
+      "key": "summary_branch_level_badge",
+      "value": "ŞUBE SEVİYESİ {0} ({1})"
+    },
+    {
+      "key": "summary_delivered_to",
+      "value": "Teslim Edilen: {0}"
+    },
+    {
+      "key": "summary_target",
+      "value": "Hedef: {0}"
+    },
+    {
+      "key": "summary_status_correct",
+      "value": "DOĞRU"
+    },
+    {
+      "key": "summary_status_express",
+      "value": "EKSPRES"
+    },
+    {
+      "key": "summary_status_wrong",
+      "value": "YANLIŞ ADRES"
+    },
+    {
+      "key": "summary_status_broken",
+      "value": "HASARLI / KIRIK"
+    },
+    {
+      "key": "summary_status_exploded",
+      "value": "PATLADI"
+    },
+    {
+      "key": "summary_status_undelivered",
+      "value": "TESLİM EDİLMEDİ"
+    },
+    {
+      "key": "summary_btn_restart_day",
+      "value": "YENİ GÜNE BAŞLA (GÜN {0})"
+    },
+    {
+      "key": "garage_title",
+      "value": "OTO SERVİS & MODİFİYE GARAJI"
+    },
+    {
+      "key": "garage_tuning_info",
+      "value": "<b>Motor Performansı:</b> Stage {0} ({1})"
+    },
+    {
+      "key": "garage_paint_title",
+      "value": "ÖZEL GÖVDE BOYASI & KAPLAMA"
+    },
+    {
+      "key": "garage_paint_desc",
+      "value": "Aracınızı dilediğiniz renge boyayın ve cilalayın."
+    },
+    {
+      "key": "garage_paint_cost",
+      "value": "Boya Ücreti: ${0:N0}"
+    },
+    {
+      "key": "garage_btn_repair",
+      "value": "🔧 TAMİR ET & BAKIM YAP (${0})"
+    },
+    {
+      "key": "garage_btn_tune",
+      "value": "⚡ STAGE {0} MOTOR MODİFİYESİ (${1:N0})"
+    },
+    {
+      "key": "garage_btn_tune_max",
+      "value": "⭐ MAKSİMUM MOTOR PERFORMANSI (STAGE 3)"
+    },
+    {
+      "key": "garage_btn_drive",
+      "value": "🚗 ARACI ÇALIŞTIR VE SÜR"
+    },
+    {
+      "key": "garage_btn_close",
+      "value": "KAPAT"
+    },
+    {
+      "key": "insurance_title",
+      "value": "KARGO SİGORTA VE KASKO ACENTESİ"
+    },
+    {
+      "key": "insurance_current_policy",
+      "value": "<b>Mevcut Poliçeniz:</b> <color=#32FF64>{0}</color>"
+    },
+    {
+      "key": "insurance_wallet",
+      "value": "<b>Cüzdan Bakiyeniz:</b> <color=#32FF64>${0:N0}</color>"
+    },
+    {
+      "key": "insurance_btn_tier2_active",
+      "value": "✅ Gümüş Kasko Aktif"
+    },
+    {
+      "key": "insurance_btn_tier2_buy",
+      "value": "🛡️ Gümüş Kasko Satın Al (${0:N0})"
+    },
+    {
+      "key": "insurance_btn_tier3_active",
+      "value": "⭐ Altın Tam Kasko Aktif"
+    },
+    {
+      "key": "insurance_btn_tier3_buy",
+      "value": "🛡️ Altın Tam Kasko Satın Al (${0:N0})"
+    },
+    {
+      "key": "insurance_tier1_name",
+      "value": "Temel Kasko (%{0} Hasar İndirimi)"
+    },
+    {
+      "key": "insurance_tier2_name",
+      "value": "Gümüş Kasko (%{0} Hasar, %{1} Yanlış Adres, %{2} Teslimat Koruması)"
+    },
+    {
+      "key": "insurance_tier3_name",
+      "value": "Altın Tam Kasko (%100 Tam Koruma & %{0} Yanlış Adres İndirimi)"
+    },
+    {
+      "key": "dispatch_title",
+      "value": "BÖLGE DAĞITIM ŞUBESİ (PASİF FİLO)"
+    },
+    {
+      "key": "dispatch_status",
+      "value": "<b>Şube Seviyesi:</b> Seviye {0}  |  <b>Kurye Sayısı:</b> {1} Kurye"
+    },
+    {
+      "key": "dispatch_revenue_info",
+      "value": "<b>Günlük Pasif Gelir:</b> <color=#32FF64>+${0:N0} / Gün</color> (Her gün 18:00'de otomatik yatırılır)"
+    },
+    {
+      "key": "dispatch_btn_tier2_active",
+      "value": "✅ Seviye 2 Aktif ({0} Kurye)"
+    },
+    {
+      "key": "dispatch_btn_tier2_buy",
+      "value": "📦 Seviye 2'ye Yükselt ({0} Kurye - +${1:N0}/Gün) [${2:N0}]"
+    },
+    {
+      "key": "dispatch_btn_tier3_active",
+      "value": "⭐ Seviye 3 Maksimum Filo ({0} Kurye)"
+    },
+    {
+      "key": "dispatch_btn_tier3_buy",
+      "value": "📦 Seviye 3'e Yükselt ({0} Kurye - +${1:N0}/Gün) [${2:N0}]"
+    },
+    {
+      "key": "property_modal_default_title",
+      "value": "TİCARİ MÜLK SATIN ALMA"
+    },
+    {
+      "key": "property_req_level",
+      "value": "Gereken Seviye: Seviye {0}"
+    },
+    {
+      "key": "property_price",
+      "value": "Fiyat: ${0:N0}"
+    },
+    {
+      "key": "property_btn_buy",
+      "value": "MÜLKÜ SATIN AL"
+    },
+    {
+      "key": "branch_trans_badge",
+      "value": "★ ŞUBE YÜKSELTİLDİ - BRANCH UPGRADED ★"
+    },
+    {
+      "key": "branch_trans_title",
+      "value": "SEVİYE {0}: {1}"
+    },
+    {
+      "key": "branch_trans_details",
+      "value": "<b>Günlük Kapasite:</b> <color=#32FFFF>{0} Paket</color>  |  <b>Günlük Kira:</b> <color=#FFD232>${1}</color>\n<size=85%><color=#D0E0FF>{2}</color></size>"
+    },
+    {
+      "key": "game_over_title",
+      "value": "İFLAS ETTİNİZ!"
+    },
+    {
+      "key": "game_over_reason",
+      "value": "Borç limitini (-$1,000) aştığınız için lojistik şirketiniz iflas etti ve şubeniz kapatıldı."
+    },
+    {
+      "key": "game_over_balance",
+      "value": "<color=#FF4444>Mevcut Bakiye: -${0:N0}</color>\n<size=70%><color=#FFAA33>(Borç Limiti: -${1:N0})</color></size>"
+    },
+    {
+      "key": "game_over_btn_restart",
+      "value": "YENİDEN BAŞLA (GÜN 1)"
+    },
+    {
+      "key": "prompt_open_tailgate",
+      "value": "[E] Bagaj Kapağını Aç"
+    },
+    {
+      "key": "prompt_close_tailgate",
+      "value": "[E] Bagaj Kapağını Kapat"
+    },
+    {
+      "key": "prompt_drive_vehicle",
+      "value": "[E] Aracı Sür: {0}"
+    },
+    {
+      "key": "prompt_pickup_cargo",
+      "value": "[E] Kargoyu Al: {0}"
+    },
+    {
+      "key": "prompt_target_cargo",
+      "value": "Kargo"
+    },
+    {
+      "key": "prompt_target_object",
+      "value": "Nesne"
+    },
+    {
+      "key": "prompt_purchase_vehicle",
+      "value": "<color=#32FF64>[E] Satın Al: {0}</color> (${1:N0})"
+    },
+    {
+      "key": "prompt_vehicle_locked_level",
+      "value": "<color=#FF5555>[KİLİTLİ] {0}</color> (Gereken Şube Seviyesi: {1} - ${2:N0})"
+    },
+    {
+      "key": "prompt_vehicle_locked_cash",
+      "value": "<color=#FFAA33>[KİLİTLİ] {0}</color> (${1:N0} - Bakiye: ${2:N0})"
+    },
+    {
+      "key": "prompt_vehicle_purchased_success",
+      "value": "<color=#32FFFF>[SATIN ALINDI] {0} Başarıyla Satın Alındı!</color>"
+    },
+    {
+      "key": "prompt_open_menu",
+      "value": "<color=#FFD232>[F] Menüyü Aç</color>"
+    },
+    {
+      "key": "prompt_buy_property",
+      "value": "<color=#FFD232>[E] Satın Al</color>"
+    },
+    {
+      "key": "prompt_open_insurance_menu",
+      "value": "<color=#32FF64>[E] Kargo Sigorta Acentesi Menüsünü Aç ({0})</color>"
+    },
+    {
+      "key": "prompt_open_dispatch_menu",
+      "value": "<color=#32FF64>[E] Bölge Dağıtım Şubesi Menüsünü Aç (Seviye {0} - {1} Kurye)</color>"
+    },
+    {
+      "key": "prompt_branch_terminal_next",
+      "value": "<color=#32FF64>[E] Şube Terminalini Aç</color> -> Seviye {0}: {1} (${2:N0})"
+    },
+    {
+      "key": "prompt_branch_terminal_max",
+      "value": "<color=#32FFFF>[E] Şube Terminalini Aç</color> [{0} - MAKSİMUM SEVİYE]"
+    },
+    {
+      "key": "prompt_branch_terminal_opened",
+      "value": "<color=#32FFFF>[ŞUBE TERMİNALİ AÇILDI]</color>"
+    },
+    {
+      "key": "prompt_branch_active_new",
+      "value": "<color=#32FFFF>[YENİ ŞUBE AKTİF] Seviye {0} ({1})</color>"
+    },
+    {
+      "key": "prompt_out_of_fuel",
+      "value": "<color=#FF3333>[YAKIT TÜKENDİ] Motor durdu! Yakıt almak için Tableti [TAB] -> ARAÇLAR açın veya benzinliğe gidin.</color>"
+    },
+    {
+      "key": "prompt_garage_recall_success",
+      "value": "<color=#32FFFF>[GARAJA ÇEKİLDİ] {0} şube garajına çekildi!{1}</color>"
+    },
+    {
+      "key": "prompt_insufficient_funds",
+      "value": "<color=#FF3333>Yetersiz Bakiye!</color>"
+    },
+    {
+      "key": "prompt_insufficient_funds_fuel",
+      "value": "<color=#FF5555>[YETERSİZ BAKİYE] Acil yakıt servisi için ${0} gerekli!</color>"
+    },
+    {
+      "key": "prompt_insufficient_funds_recall",
+      "value": "<color=#FF4444>[YETERSİZ BAKİYE] {1} aracını garaja çekmek için ${0} gerekli! (Bakiye: ${2})</color>"
+    },
+    {
+      "key": "prompt_emergency_fuel_delivered",
+      "value": "<color=#32FF64>[ACİL YAKIT] +{0:F0}L Yol Yardımı Yakıtı {1} Aracına Dolduruldu! (-${2})</color>"
+    },
+    {
+      "key": "prompt_insufficient_branch_level",
+      "value": "<color=#FF3333>Şube seviyeniz yetersiz! (Gereken: Seviye {0})</color>"
+    },
+    {
+      "key": "prompt_garage_not_unlocked",
+      "value": "<color=#FF3333>Oto Servis Garajı henüz satın alınmadı veya kilitli!</color>"
+    },
+    {
+      "key": "prompt_garage_car_not_in_bay",
+      "value": "<color=#FFAA33>Araç tamir dükkanı içine yanaştırılmalıdır!</color>"
+    },
+    {
+      "key": "prompt_garage_repaired",
+      "value": "<color=#32FF64>🔧 {0} Tamir Edildi & Bakımı Yapıldı!</color>"
+    },
+    {
+      "key": "prompt_garage_tune_max",
+      "value": "<color=#FFAA33>Bu araç maksimum motor modifiyesine ulaştı!</color>"
+    },
+    {
+      "key": "prompt_garage_tuned_success",
+      "value": "<color=#32FF64>⚡ {0} Motor Stage {1} Yapıldı! (+{2:0}% Tork)</color>"
+    },
+    {
+      "key": "prompt_garage_painted_success",
+      "value": "<color=#{0}>🎨 {1} Yeni Rengine Boyandı!</color>"
+    },
+    {
+      "key": "prompt_gas_station_name",
+      "value": "Petrol İstasyonu"
+    },
+    {
+      "key": "prompt_gas_station_align",
+      "value": "<b>{0}</b>: Yakıt almak için aracınızı pompaya yanaştırın."
+    },
+    {
+      "key": "prompt_gas_station_full",
+      "value": "<color=#32FF64>[DEPO DOLU]</color> ({0:F1} / {1:F1} L) Deponuz tamamen dolu."
+    },
+    {
+      "key": "prompt_gas_station_no_money",
+      "value": "<color=#FF5555>[YETERSİZ BAKİYE]</color> Yakıt için para gerekli (${0:F0}/L - Bakiyeniz: $0)"
+    },
+    {
+      "key": "prompt_gas_station_refueling",
+      "value": "<color=#32FFFF>⛽ [YAKIT ALINIYOR...]</color> {0:F1} / {1:F1} L (%{2:F0}) - ${3:F0}/L"
+    },
+    {
+      "key": "prompt_gas_station_hold_refuel",
+      "value": "<b>{0}</b>: <color=#32FF64>[F]</color> veya <color=#32FF64>[E]</color> Basılı Tut -> <b>Yakıt Doldur</b> (${1:F0}/L)"
+    },
+    {
+      "key": "prompt_explosion_emergency",
+      "value": "<color=#FF2222>💥 PATLAMA! Ağır yaralandınız ve acilen hastaneye kaldırıldınız...</color>"
+    },
+    {
+      "key": "prompt_hospital_reason_explosion",
+      "value": "Kargo patlaması nedeniyle ağır yaralanma (Hastaneye Kaldırıldı)"
+    },
+    {
+      "key": "prompt_water_rescue_vehicle",
+      "value": "<color=#44AAFF>[SU KURTARMA] Araç güvenli yola çekildi!</color>"
+    },
+    {
+      "key": "prompt_water_rescue_player",
+      "value": "<color=#44AAFF>[SU KURTARMA] Sudan kurtarıldınız!</color>"
+    },
+    {
+      "key": "prompt_dev_reset",
+      "value": "<color=#FF5555>[DEV RESET] TÜM ARAÇLAR, DÜKKANLAR VE İLERLEME SIFIRLANDI (F9)</color>"
+    },
+    {
+      "key": "prompt_dev_reset_balance",
+      "value": "<color=#FFAA33>[SIFIRLAMA] Seviye 1 & Kasa $0! [F7]</color>"
+    },
+    {
+      "key": "sign_level_required",
+      "value": "SEVİYE {0} GEREKLİ"
+    },
+    {
+      "key": "unit_packages",
+      "value": "Paket"
+    },
+    {
+      "key": "unit_packages_per_day",
+      "value": "Paket / Gün"
+    },
+    {
+      "key": "unit_day",
+      "value": "Gün"
+    },
+    {
+      "key": "terminal_branch_title",
+      "value": "ŞUBE MERKEZİ"
+    },
+    {
+      "key": "terminal_branch_ready",
+      "value": "Hazır..."
+    },
+    {
+      "key": "terminal_branch_current_next",
+      "value": "<b>{0}</b>\n<color=#32FFFF>Mevcut: Seviye {1} ({2})</color>\n<size=75%>Sonraki: {3}\nYükseltme Ücreti: ${4:N0}</size>"
+    },
+    {
+      "key": "terminal_branch_max",
+      "value": "<b>{0}</b>\n<color=#32FF64>[MAKSİMUM SEVİYE]\n{1}</color>"
+    },
+    {
+      "key": "game_over_badge",
+      "value": "🚨 ŞİRKET TASFİYESİ & İFLAS 🚨"
+    }
+  ]
+}

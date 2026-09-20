@@ -363,7 +363,7 @@ public class DrivableVehicle : MonoBehaviour
             {
                 if (!wasInGarageBayLastFrame && InteractionPromptHUD.Instance != null && !isUIOpen)
                 {
-                    InteractionPromptHUD.Instance.ShowPrompt("<color=#FFD232>[F] Menüyü Aç</color>", 2.0f);
+                    InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.Get("prompt_open_menu"), 2.0f);
                 }
 
                 VehicleServiceGarage.Instance.CheckGarageShortcutInputs(this);
@@ -440,7 +440,7 @@ public class DrivableVehicle : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>[OUT OF FUEL] Engine stopped! Open Tablet [TAB] -> VEHICLES to refuel or visit a gas pump.</color>");
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.Get("prompt_out_of_fuel"));
             }
         }
 
@@ -754,7 +754,7 @@ public class DrivableVehicle : MonoBehaviour
 
         if (InteractionPromptHUD.Instance != null)
         {
-            InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FFFF>[GARAGE RECALL] {vehicleName} recovered to warehouse garage!</color>");
+            InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_garage_recall_success", vehicleName, ""));
         }
 
         OnVehicleRecalled?.Invoke(this);

@@ -61,12 +61,12 @@ public class DeliverySelectionUI : MonoBehaviour
 
         if (addressTitleText != null)
         {
-            addressTitleText.text = $"DELIVERY DESTINATION: {zone.addressName}";
+            addressTitleText.text = LocalizationManager.GetFormat("delivery_selection_title", "DELIVERY DESTINATION: {0}", zone.EffectiveAddressName);
         }
 
         if (feedbackText != null)
         {
-            feedbackText.text = "Select a package from your trunk to deliver to this address:";
+            feedbackText.text = LocalizationManager.Get("delivery_selection_feedback", "Select a package from your trunk to deliver to this address:");
         }
 
         PopulateCargoList();
@@ -101,7 +101,7 @@ public class DeliverySelectionUI : MonoBehaviour
 
         if (loadedList.Count == 0)
         {
-            if (feedbackText != null) feedbackText.text = "No cargo left in your van trunk!";
+            if (feedbackText != null) feedbackText.text = LocalizationManager.Get("delivery_selection_empty", "No cargo left in your van trunk!");
             if (deliverButton != null) deliverButton.interactable = false;
             return;
         }
@@ -117,7 +117,7 @@ public class DeliverySelectionUI : MonoBehaviour
             TextMeshProUGUI label = cardObj.GetComponentInChildren<TextMeshProUGUI>();
             if (label != null)
             {
-                label.text = $"{cargo.trackingNumber} | {cargo.recipientName}\nAddress: {cargo.targetAddress}";
+                label.text = $"{cargo.trackingNumber} | {cargo.recipientName}\n{LocalizationManager.Get("tablet_address", "Address:")} {cargo.targetAddress}";
                 label.raycastTarget = false;
             }
 
@@ -143,7 +143,7 @@ public class DeliverySelectionUI : MonoBehaviour
 
         if (feedbackText != null)
         {
-            feedbackText.text = $"Selected: {cargo.trackingNumber} ({cargo.targetAddress})";
+            feedbackText.text = LocalizationManager.GetFormat("delivery_selection_selected", "Selected: {0} ({1})", cargo.trackingNumber, cargo.targetAddress);
         }
     }
 

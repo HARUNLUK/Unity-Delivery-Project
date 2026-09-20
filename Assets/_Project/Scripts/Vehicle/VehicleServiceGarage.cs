@@ -140,7 +140,7 @@ public class VehicleServiceGarage : MonoBehaviour
     public string GetGaragePromptForVehicle(DrivableVehicle v)
     {
         if (v == null || !IsGarageUnlocked()) return string.Empty;
-        return "<color=#FFD232>[F] Menüyü Aç</color>";
+        return LocalizationManager.Get("prompt_open_menu", "<color=#FFD232>[F] Open Menu</color>");
     }
 
     public void CheckGarageShortcutInputs(DrivableVehicle v)
@@ -190,13 +190,13 @@ public class VehicleServiceGarage : MonoBehaviour
             OnVehicleRepaired?.Invoke(v);
 
             if (InteractionPromptHUD.Instance != null)
-                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>✅ {v.vehicleName} Tamir Edildi & Bakımı Yapıldı!</color>", 2.5f);
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_garage_repaired", "<color=#32FF64>🔧 {0} Repaired & Serviced!</color>", v.vehicleName), 2.5f);
 
             return true;
         }
 
         if (InteractionPromptHUD.Instance != null)
-            InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>Yetersiz Bakiye!</color>", 2.0f);
+            InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.Get("prompt_insufficient_funds", "<color=#FF3333>Insufficient Funds!</color>"), 2.0f);
 
         return false;
     }
@@ -241,7 +241,7 @@ public class VehicleServiceGarage : MonoBehaviour
         if (currentStage >= 3)
         {
             if (InteractionPromptHUD.Instance != null)
-                InteractionPromptHUD.Instance.ShowPrompt("<color=#FFAA33>Bu araç maksimum motor modifiyesine ulaştı!</color>", 2.0f);
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.Get("prompt_garage_tune_max", "<color=#FFAA33>This vehicle has reached maximum engine tuning!</color>"), 2.0f);
             return false;
         }
 
@@ -268,13 +268,13 @@ public class VehicleServiceGarage : MonoBehaviour
             OnVehicleTuned?.Invoke(v, nextStage);
 
             if (InteractionPromptHUD.Instance != null)
-                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>🚀 {v.vehicleName} Motor Stage {nextStage} Yapıldı! (+{(GetTorqueMultiplierForStage(nextStage)-1f)*100:0}% Tork)</color>", 2.5f);
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_garage_tuned_success", "<color=#32FF64>⚡ {0} Engine Upgraded to Stage {1}! (+{2:0}% Torque)</color>", v.vehicleName, nextStage, (GetTorqueMultiplierForStage(nextStage) - 1f) * 100f), 2.5f);
 
             return true;
         }
 
         if (InteractionPromptHUD.Instance != null)
-            InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>Yetersiz Bakiye!</color>", 2.0f);
+            InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.Get("prompt_insufficient_funds", "<color=#FF3333>Insufficient Funds!</color>"), 2.0f);
 
         return false;
     }
@@ -312,7 +312,7 @@ public class VehicleServiceGarage : MonoBehaviour
             if (!PlayerEconomyManager.Instance.SpendMoney(repaintCost))
             {
                 if (InteractionPromptHUD.Instance != null)
-                    InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF3333>Yetersiz Bakiye! Boya Ücreti: ${repaintCost:N0}</color>", 2.5f);
+                    InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_insufficient_funds_fuel", "<color=#FF3333>Insufficient Funds!</color>", repaintCost), 2.5f);
                 return false;
             }
         }
@@ -329,7 +329,7 @@ public class VehicleServiceGarage : MonoBehaviour
 
         string hex = ColorUtility.ToHtmlStringRGB(chosenColor);
         if (InteractionPromptHUD.Instance != null)
-            InteractionPromptHUD.Instance.ShowPrompt($"<color=#{hex}>🎨 {v.vehicleName} Yeni Rengine Boyandı!</color>", 2.5f);
+            InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_garage_painted_success", "<color=#{0}>🎨 {1} Custom Repainted!</color>", hex, v.vehicleName), 2.5f);
 
         return true;
     }

@@ -101,6 +101,21 @@ public class VehicleTailgate : MonoBehaviour
 
     public string GetPromptText()
     {
-        return isOpen ? closePromptText : openPromptText;
+        if (isOpen)
+        {
+            if (string.IsNullOrEmpty(closePromptText) || closePromptText == "[E] Close Tailgate" || closePromptText == "[E] Bagaj Kapağını Kapat")
+            {
+                return LocalizationManager.Get("prompt_close_tailgate");
+            }
+            return closePromptText;
+        }
+        else
+        {
+            if (string.IsNullOrEmpty(openPromptText) || openPromptText == "[E] Open Tailgate" || openPromptText == "[E] Bagaj Kapağını Aç")
+            {
+                return LocalizationManager.Get("prompt_open_tailgate");
+            }
+            return openPromptText;
+        }
     }
 }

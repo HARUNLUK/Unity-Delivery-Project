@@ -176,37 +176,37 @@ public class DaySummaryManager : MonoBehaviour
         // 4. Populate UI Text Elements
         if (headerTitleText != null)
         {
-            headerTitleText.text = $"GÜN {dayNum} BİLANÇOSU";
+            headerTitleText.text = LocalizationManager.GetFormat("summary_title", "DAY {0} FINANCIAL SUMMARY", dayNum);
         }
 
         if (totalDeliveredText != null)
         {
             if (!string.IsNullOrEmpty(emergencyHospitalReason))
             {
-                totalDeliveredText.text = $"<color=#FF3333>🚨 ACİL DURUM:</color> {emergencyHospitalReason}\nGün {dayNum} | Toplam Koli: {totalCount}";
+                totalDeliveredText.text = LocalizationManager.GetFormat("summary_emergency_hospital", "<color=#FF3333>🚨 EMERGENCY:</color> {0}\nDay {1} | Total Packages: {2}", emergencyHospitalReason, dayNum, totalCount);
             }
             else
             {
-                totalDeliveredText.text = $"GÜN {dayNum} | Toplam Koli: {totalCount}";
+                totalDeliveredText.text = LocalizationManager.GetFormat("summary_total_packages", "DAY {0} | Total Packages: {1}", dayNum, totalCount);
             }
         }
         
-        string correctText = $"[+] Correct Deliveries: {correctCount} (+${totalReward - passiveIncome})";
+        string correctText = LocalizationManager.GetFormat("summary_correct_deliveries", "[+] Correct Deliveries: {0} (+${1})", correctCount, totalReward - passiveIncome);
         if (passiveIncome > 0)
         {
-            correctText += $" | Pasif Şube: +${passiveIncome}";
+            correctText += LocalizationManager.GetFormat("summary_passive_income", " | Passive Hub Income: +${0}", passiveIncome);
         }
         if (correctDeliveriesText != null) correctDeliveriesText.text = correctText;
         
-        string wrongBreakdown = $"[-] Penalties: -${totalPenalty - dailyRent}";
-        if (brokenCount > 0) wrongBreakdown += $" (Broken: {brokenCount})";
-        wrongBreakdown += $" | Warehouse Rent: -${dailyRent}";
+        string wrongBreakdown = LocalizationManager.GetFormat("summary_penalties", "[-] Penalties: -${0}", totalPenalty - dailyRent);
+        if (brokenCount > 0) wrongBreakdown += LocalizationManager.GetFormat("summary_broken_count", " (Broken: {0})", brokenCount);
+        wrongBreakdown += LocalizationManager.GetFormat("summary_rent_deduct", " | Branch Rent: -${0}", dailyRent);
         if (wrongDeliveriesText != null) wrongDeliveriesText.text = wrongBreakdown;
         
         if (netEarningsText != null)
         {
-            string profitLabel = netProfit >= 0 ? $"+${netProfit}" : $"-${Mathf.Abs(netProfit)}";
-            netEarningsText.text = $"TODAY NET: {profitLabel} | TOTAL VAULT: ${totalVault}";
+            string profitLabel = netProfit >= 0 ? $"+${netProfit:N0}" : $"-${Mathf.Abs(netProfit):N0}";
+            netEarningsText.text = LocalizationManager.GetFormat("summary_today_net", "TODAY NET: {0} | TOTAL VAULT: ${1:N0}", profitLabel, totalVault);
             netEarningsText.color = netProfit >= 0 ? new Color(0.2f, 0.95f, 0.3f) : new Color(0.95f, 0.2f, 0.2f);
         }
 
@@ -216,11 +216,20 @@ public class DaySummaryManager : MonoBehaviour
             {
                 BranchTier currentTier = BranchManager.Instance.CurrentTier;
                 string tName = currentTier != null ? currentTier.tierName : "Branch";
-                progressionInfoText.text = $"BRANCH LEVEL {BranchManager.Instance.CurrentBranchLevel} ({tName.ToUpper()})";
+                progressionInfoText.text = LocalizationManager.GetFormat("summary_branch_level_badge", "BRANCH LEVEL {0} ({1})", BranchManager.Instance.CurrentBranchLevel, tName.ToUpper());
             }
             else
             {
                 progressionInfoText.text = string.Empty;
+            }
+        }
+
+        if (restartDayButton != null)
+        {
+            var btnText = restartDayButton.GetComponentInChildren<TextMeshProUGUI>();
+            if (btnText != null)
+            {
+                btnText.text = LocalizationManager.GetFormat("summary_btn_restart_day", "START NEXT DAY (DAY {0})", dayNum + 1);
             }
         }
 
@@ -250,17 +259,17 @@ public class DaySummaryManager : MonoBehaviour
             var targetText = FindTMPRecursive(rowObj.transform, "target", "TargetText", "Destination", "TargetAddress");
             var resultText = FindTMPRecursive(rowObj.transform, "result", "ResultText", "Status", "StatusText");
 
-            string deliveredAddr = !string.IsNullOrEmpty(res.actualAddress) ? res.actualAddress : "(Not Delivered)";
+            string deliveredAddr = !string.IsNullOrEmpty(res.actualAddress) ? res.actualAddress : $"( {LocalizationManager.Get("summary_status_undelivered", "UNDELIVERED")} )";
             string targetAddr = !string.IsNullOrEmpty(res.targetAddress) ? res.targetAddress : "(Unknown)";
 
             if (deliveredText != null)
             {
-                deliveredText.text = $"Delivered to: {deliveredAddr}";
+                deliveredText.text = LocalizationManager.GetFormat("summary_delivered_to", "Delivered to: {0}", deliveredAddr);
             }
 
             if (targetText != null)
             {
-                targetText.text = $"Target: {targetAddr}";
+                targetText.text = LocalizationManager.GetFormat("summary_target", "Target: {0}", targetAddr);
             }
 
             if (resultText != null)
@@ -268,16 +277,16 @@ public class DaySummaryManager : MonoBehaviour
                 switch (res.status)
                 {
                     case CargoDeliveryStatus.Correct:
-                        resultText.text = res.isExpressBonus ? "<color=#33E0FF>EXPRESS</color>" : "<color=#32FF64>CORRECT</color>";
+                        resultText.text = res.isExpressBonus ? $"<color=#33E0FF>{LocalizationManager.Get("summary_status_express", "EXPRESS")}</color>" : $"<color=#32FF64>{LocalizationManager.Get("summary_status_correct", "CORRECT")}</color>";
                         break;
                     case CargoDeliveryStatus.WrongAddress:
-                        resultText.text = "<color=#FF4444>WRONG</color>";
+                        resultText.text = $"<color=#FF4444>{LocalizationManager.Get("summary_status_wrong", "WRONG ADDRESS")}</color>";
                         break;
                     case CargoDeliveryStatus.Broken:
-                        resultText.text = res.cargoType == CargoType.Explosive ? "<color=#FF2222>EXPLODED</color>" : "<color=#FF4444>BROKEN</color>";
+                        resultText.text = res.cargoType == CargoType.Explosive ? $"<color=#FF2222>{LocalizationManager.Get("summary_status_exploded", "EXPLODED")}</color>" : $"<color=#FF4444>{LocalizationManager.Get("summary_status_broken", "BROKEN")}</color>";
                         break;
                     default:
-                        resultText.text = "<color=#FFAA22>UNDELIVERED</color>";
+                        resultText.text = $"<color=#FFAA22>{LocalizationManager.Get("summary_status_undelivered", "UNDELIVERED")}</color>";
                         break;
                 }
             }
@@ -288,8 +297,8 @@ public class DaySummaryManager : MonoBehaviour
                 TextMeshProUGUI rowText = rowObj.GetComponentInChildren<TextMeshProUGUI>();
                 if (rowText != null)
                 {
-                    string statusLabel = res.status == CargoDeliveryStatus.Correct ? "[CORRECT]" : $"[{res.status}]";
-                    rowText.text = $"Delivered to: {deliveredAddr}\nTarget: {targetAddr}   {statusLabel}";
+                    string statusLabel = res.status == CargoDeliveryStatus.Correct ? $"[{LocalizationManager.Get("summary_status_correct", "CORRECT")}]" : $"[{LocalizationManager.Get("summary_status_broken", "BROKEN")}]";
+                    rowText.text = $"{LocalizationManager.GetFormat("summary_delivered_to", "Delivered to: {0}", deliveredAddr)}\n{LocalizationManager.GetFormat("summary_target", "Target: {0}", targetAddr)}   {statusLabel}";
                 }
             }
         }

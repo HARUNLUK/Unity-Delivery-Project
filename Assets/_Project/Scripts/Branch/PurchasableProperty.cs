@@ -101,7 +101,7 @@ public class PurchasableProperty : MonoBehaviour
     {
         if (isUnlocked || disablePurchase) return string.Empty;
 
-        return "<color=#FFD232>[E] Satın Al</color>";
+        return LocalizationManager.Get("prompt_buy_property", "<color=#FFD232>[E] Purchase</color>");
     }
 
     public bool TryPurchase()
@@ -116,7 +116,7 @@ public class PurchasableProperty : MonoBehaviour
                 AudioManager.Instance.PlayError();
             }
             if (InteractionPromptHUD.Instance != null)
-                InteractionPromptHUD.Instance.ShowPrompt($"<color=#FF3333>Şube seviyeniz yetersiz! (Gereken: Level {requiredPlayerLevel})</color>");
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_insufficient_branch_level", "<color=#FF3333>Branch level insufficient! (Required: Level {0})</color>", requiredPlayerLevel));
             return false;
         }
 
@@ -130,7 +130,7 @@ public class PurchasableProperty : MonoBehaviour
             else
             {
                 if (InteractionPromptHUD.Instance != null)
-                    InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>Yetersiz Bakiye!</color>");
+                    InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.Get("prompt_insufficient_funds", "<color=#FF3333>Insufficient Funds!</color>"));
                 return false;
             }
         }
@@ -149,11 +149,11 @@ public class PurchasableProperty : MonoBehaviour
             AudioManager.Instance.PlayPropertyPurchase(transform.position);
         }
 
-        Debug.Log($"<color=#32FF64>[PROPERTY UNLOCKED] {displayName} başarıyla satın alındı ve açıldı!</color>");
+        Debug.Log($"<color=#32FF64>[PROPERTY UNLOCKED] {displayName} successfully purchased and unlocked!</color>");
 
         if (InteractionPromptHUD.Instance != null)
         {
-            InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>🎉 {displayName} Açıldı!</color>", 3.0f);
+            InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>🎉 {displayName}</color>", 3.0f);
         }
 
         OnPropertyUnlocked?.Invoke(this);
