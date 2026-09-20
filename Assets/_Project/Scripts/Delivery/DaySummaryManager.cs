@@ -422,7 +422,18 @@ public class DaySummaryManager : MonoBehaviour
             PlayerPrefs.Save();
         }
 
-        // 2. Reload active scene for next day
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        // 2. Instruct GameMenuManager to skip Main Menu on reload and start directly in gameplay
+        GameMenuManager.SkipMainMenuOnNextLoad = true;
+
+        // 3. Reload active scene for next day
+        Scene currentScene = SceneManager.GetActiveScene();
+        if (currentScene.buildIndex >= 0)
+        {
+            SceneManager.LoadScene(currentScene.buildIndex);
+        }
+        else
+        {
+            SceneManager.LoadScene(currentScene.name);
+        }
     }
 }

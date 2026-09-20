@@ -172,19 +172,23 @@ public class PlayerEconomyManager : MonoBehaviour
     /// </summary>
     public void FinalizeAndSaveDay()
     {
-        totalSavedBalance = Mathf.Max(0, CurrentLiveBalance);
+        totalSavedBalance = CurrentLiveBalance;
         todayEarned = 0;
         todayPenalties = 0;
         PlayerPrefs.SetInt(BALANCE_KEY, totalSavedBalance);
         PlayerPrefs.SetInt("Delivery_PlayerCash", totalSavedBalance);
         PlayerPrefs.Save();
         Debug.Log($"[PlayerEconomyManager] End of day saved! New Total Vault: ${totalSavedBalance}");
+
+        if (GameOverManager.Instance != null)
+        {
+            GameOverManager.Instance.CheckGameOverCondition(totalSavedBalance);
+        }
     }
 
     public void SaveLiveBalance()
     {
-        int finalBalance = Mathf.Max(0, CurrentLiveBalance);
-        totalSavedBalance = finalBalance;
+        totalSavedBalance = CurrentLiveBalance;
         todayEarned = 0;
         todayPenalties = 0;
         PlayerPrefs.SetInt(BALANCE_KEY, totalSavedBalance);

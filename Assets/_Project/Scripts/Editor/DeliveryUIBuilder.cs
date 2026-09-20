@@ -187,6 +187,7 @@ public static class DeliveryUIBuilder
         // MainHUDController
         MainHUDController hudController = canvas.GetComponent<MainHUDController>();
         if (hudController == null) hudController = canvas.gameObject.AddComponent<MainHUDController>();
+        hudController.hudRoot = hudObj;
         hudController.clockText = clockText;
         hudController.remainingCargoText = remainingText;
         hudController.balanceEarningsText = balanceText;

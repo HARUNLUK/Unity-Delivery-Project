@@ -119,7 +119,7 @@ public static class MenuUIBuilder
         GameObject saveInfoObj = CreateUIElement("SaveInfoText", saveBadge.transform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
         TextMeshProUGUI saveText = saveInfoObj.AddComponent<TextMeshProUGUI>();
         if (fontAsset != null) saveText.font = fontAsset;
-        saveText.text = "<color=#A0C8FF>Mevcut Şube:</color> <color=#FFFFFF>Lv.1 (Starter Garage)</color>  |  <color=#A0C8FF>Kasa:</color> <color=#32FF64>$500</color>";
+        saveText.text = "<color=#A0C8FF>Mevcut Şube:</color> <color=#FFFFFF>Lv.1 (Starter Garage)</color>  |  <color=#A0C8FF>Kasa:</color> <color=#32FF64>$0</color>";
         saveText.fontSize = 17;
         saveText.alignment = TextAlignmentOptions.Center;
         menuMgr.mainMenuSaveInfoText = saveText;

@@ -49,6 +49,8 @@ public class GameMenuManager : MonoBehaviour
         private set => instance = value;
     }
 
+    public static bool SkipMainMenuOnNextLoad { get; set; } = false;
+
     [Header("--- INITIAL FLOW STATE ---")]
     [Tooltip("If true, scene launches into the Main Menu with cinematic shop view. If false, starts directly in gameplay.")]
     public bool startInMainMenu = true;
@@ -175,6 +177,11 @@ public class GameMenuManager : MonoBehaviour
         KeyBindingManager.EnsureInitialized();
         EnsureReferences();
         EnsureUI();
+
+        if (SkipMainMenuOnNextLoad)
+        {
+            currentState = GameFlowState.Playing;
+        }
     }
 
     private void Start()
@@ -184,7 +191,12 @@ public class GameMenuManager : MonoBehaviour
         BindButtonsAndEvents();
         InitializeSettingsUI();
 
-        if (startInMainMenu)
+        if (SkipMainMenuOnNextLoad)
+        {
+            SkipMainMenuOnNextLoad = false;
+            InitializeDirectGameplay();
+        }
+        else if (startInMainMenu)
         {
             InitializeMainMenu();
         }
@@ -393,7 +405,7 @@ public class GameMenuManager : MonoBehaviour
             GameObject saveInfoObj = CreateElement("SaveInfoText", saveBadge.transform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
             mainMenuSaveInfoText = saveInfoObj.AddComponent<TextMeshProUGUI>();
             if (fontAsset != null) mainMenuSaveInfoText.font = fontAsset;
-            mainMenuSaveInfoText.text = "<color=#A0C8FF>Mevcut Şube:</color> <color=#FFFFFF>Lv.1</color>  |  <color=#A0C8FF>Kasa:</color> <color=#32FF64>$500</color>";
+            mainMenuSaveInfoText.text = "<color=#A0C8FF>Mevcut Şube:</color> <color=#FFFFFF>Lv.1</color>  |  <color=#A0C8FF>Kasa:</color> <color=#32FF64>$0</color>";
             mainMenuSaveInfoText.fontSize = 17;
             mainMenuSaveInfoText.alignment = TextAlignmentOptions.Center;
 
@@ -931,6 +943,15 @@ public class GameMenuManager : MonoBehaviour
         {
             MainHUDController.Instance.SetHUDVisible(false);
         }
+        else
+        {
+            Canvas c = GetComponentInParent<Canvas>() ?? UnityEngine.Object.FindAnyObjectByType<Canvas>();
+            if (c != null)
+            {
+                Transform dh = c.transform.Find("DeliveryHUD");
+                if (dh != null) dh.gameObject.SetActive(false);
+            }
+        }
 
         // 4. Update Main Menu save stats and button states
         UpdateMainMenuSaveStats();
@@ -980,6 +1001,15 @@ public class GameMenuManager : MonoBehaviour
         {
             MainHUDController.Instance.SetHUDVisible(true);
         }
+        else
+        {
+            Canvas c = GetComponentInParent<Canvas>() ?? UnityEngine.Object.FindAnyObjectByType<Canvas>();
+            if (c != null)
+            {
+                Transform dh = c.transform.Find("DeliveryHUD");
+                if (dh != null) dh.gameObject.SetActive(true);
+            }
+        }
 
         if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
@@ -997,8 +1027,8 @@ public class GameMenuManager : MonoBehaviour
         if (PlayerPrefs.GetInt("Delivery_BranchLevel", 1) > 1) return true;
         if (PlayerPrefs.GetInt("WAREHOUSE_PLAYER_LEVEL", 1) > 1) return true;
         if (PlayerPrefs.GetInt("Delivery_CurrentDay", 1) > 1) return true;
-        if (PlayerPrefs.GetInt("CARGO_PLAYER_TOTAL_BALANCE", 0) > 500) return true;
-        if (PlayerPrefs.GetInt("Delivery_PlayerCash", 500) > 500) return true;
+        if (PlayerPrefs.GetInt("CARGO_PLAYER_TOTAL_BALANCE", 0) > 0) return true;
+        if (PlayerPrefs.GetInt("Delivery_PlayerCash", 0) > 0) return true;
 
         if (PlayerPrefs.GetInt("DELIVERY_VEHICLE_UNLOCKED_cargo_van", 0) == 1 ||
             PlayerPrefs.GetInt("DELIVERY_VEHICLE_UNLOCKED_driveable_van", 0) == 1 ||
@@ -1043,7 +1073,7 @@ public class GameMenuManager : MonoBehaviour
         if (mainMenuSaveInfoText == null) return;
 
         bool hasSave = HasSaveData();
-        int cash = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : PlayerPrefs.GetInt("CARGO_PLAYER_TOTAL_BALANCE", PlayerPrefs.GetInt("Delivery_PlayerCash", 500));
+        int cash = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : PlayerPrefs.GetInt("CARGO_PLAYER_TOTAL_BALANCE", PlayerPrefs.GetInt("Delivery_PlayerCash", 0));
         int level = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : PlayerPrefs.GetInt("Delivery_BranchLevel", 1);
         int day = DayTimeManager.Instance != null ? DayTimeManager.Instance.CurrentDay : PlayerPrefs.GetInt("Delivery_CurrentDay", 1);
         string tierName = BranchManager.Instance != null && BranchManager.Instance.CurrentTier != null ?
@@ -1277,15 +1307,15 @@ public class GameMenuManager : MonoBehaviour
             PlayerPrefs.SetInt("Delivery_CurrentXP", 0);
         }
 
-        // 5. Reset Economy to starter balance ($500)
+        // 5. Reset Economy to starter balance ($0)
         if (PlayerEconomyManager.Instance != null)
         {
-            PlayerEconomyManager.Instance.SetBalance(500);
+            PlayerEconomyManager.Instance.SetBalance(0);
         }
         else
         {
-            PlayerPrefs.SetInt("CARGO_PLAYER_TOTAL_BALANCE", 500);
-            PlayerPrefs.SetInt("Delivery_PlayerCash", 500);
+            PlayerPrefs.SetInt("CARGO_PLAYER_TOTAL_BALANCE", 0);
+            PlayerPrefs.SetInt("Delivery_PlayerCash", 0);
         }
 
         // 6. Reset Day Count to Day 1

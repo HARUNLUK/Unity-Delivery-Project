@@ -68,7 +68,7 @@ public class FPSPlayerController : MonoBehaviour
 
     [Header("--- ECONOMY / CASH OVERRIDE (OYUNCU PARASI) ---")]
     [Tooltip("Directly view or set the player's cash balance from Inspector in Editor/Runtime")]
-    public int playerCash = 500;
+    public int playerCash = 0;
 
     [Tooltip("If true, the player's saved cash in PlayerPrefs will be overwritten with playerCash on Start")]
     public bool overrideStartingCash = false;
