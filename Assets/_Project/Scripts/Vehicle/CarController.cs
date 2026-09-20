@@ -240,10 +240,11 @@ public class CarController : MonoBehaviour
         DrivableVehicle dv = GetComponent<DrivableVehicle>();
         if (dv != null)
         {
-            int stage = PlayerPrefs.GetInt("Vehicle_TuningStage_" + dv.vehicleId, 0);
+            int stage = PlayerPrefs.GetInt("Vehicle_TuningStage_" + dv.EffectiveVehicleId, PlayerPrefs.GetInt("Vehicle_TuningStage_" + dv.vehicleId, 0));
             if (stage == 1) tuningTorqueMultiplier = 1.15f;
             else if (stage == 2) tuningTorqueMultiplier = 1.30f;
             else if (stage >= 3) tuningTorqueMultiplier = 1.50f;
+            else tuningTorqueMultiplier = 1.00f;
         }
     }
 

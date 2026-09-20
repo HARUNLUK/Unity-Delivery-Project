@@ -1000,8 +1000,14 @@ public class GameMenuManager : MonoBehaviour
         if (PlayerPrefs.GetInt("CARGO_PLAYER_TOTAL_BALANCE", 0) > 500) return true;
         if (PlayerPrefs.GetInt("Delivery_PlayerCash", 500) > 500) return true;
 
-        if (PlayerPrefs.GetInt("Vehicle_Purchased_cargo_van", 0) == 1 ||
-            PlayerPrefs.GetInt("Vehicle_Purchased_driveable_van", 0) == 1) return true;
+        if (PlayerPrefs.GetInt("DELIVERY_VEHICLE_UNLOCKED_cargo_van", 0) == 1 ||
+            PlayerPrefs.GetInt("DELIVERY_VEHICLE_UNLOCKED_driveable_van", 0) == 1 ||
+            PlayerPrefs.GetInt("DELIVERY_VEHICLE_UNLOCKED_drivable_van", 0) == 1) return true;
+
+        if (PlayerPrefs.GetInt("Property_Unlocked_property_showroom", 0) == 1 ||
+            PlayerPrefs.GetInt("Property_Unlocked_property_service_garage", 0) == 1 ||
+            PlayerPrefs.GetInt("Property_Unlocked_property_insurance", 0) == 1 ||
+            PlayerPrefs.GetInt("Property_Unlocked_property_logistics", 0) == 1) return true;
 
         return false;
     }
@@ -1039,12 +1045,13 @@ public class GameMenuManager : MonoBehaviour
         bool hasSave = HasSaveData();
         int cash = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : PlayerPrefs.GetInt("CARGO_PLAYER_TOTAL_BALANCE", PlayerPrefs.GetInt("Delivery_PlayerCash", 500));
         int level = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : PlayerPrefs.GetInt("Delivery_BranchLevel", 1);
+        int day = DayTimeManager.Instance != null ? DayTimeManager.Instance.CurrentDay : PlayerPrefs.GetInt("Delivery_CurrentDay", 1);
         string tierName = BranchManager.Instance != null && BranchManager.Instance.CurrentTier != null ?
             BranchManager.Instance.CurrentTier.tierName : $"Seviye {level}";
 
         if (hasSave)
         {
-            mainMenuSaveInfoText.text = $"<color=#A0C8FF>Mevcut Şube:</color> <color=#FFFFFF>Lv.{level} ({tierName})</color>  |  <color=#A0C8FF>Kasa Bakiyesi:</color> <color=#32FF64>${cash:N0}</color>";
+            mainMenuSaveInfoText.text = $"<color=#A0C8FF>Gün {day}</color>  |  <color=#A0C8FF>Şube:</color> <color=#FFFFFF>Lv.{level} ({tierName})</color>  |  <color=#A0C8FF>Kasa:</color> <color=#32FF64>${cash:N0}</color>";
         }
         else
         {
@@ -1239,8 +1246,11 @@ public class GameMenuManager : MonoBehaviour
             AudioManager.Instance.PlayButtonClick();
         }
 
-        // 1. Reset all vehicles, fuels and conditions
+        Debug.Log("<color=#FFAA33>[GameMenuManager] Resetting all game progression, economy, day, properties, and vehicle states for NEW GAME...</color>");
+
+        // 1. Reset all vehicles, fuels, conditions, colors and tuning stages
         DrivableVehicle.ResetAllVehiclesInGame();
+        VehicleServiceGarage.ResetAllVehicleTuning();
 
         // 2. Reset all commercial properties (lock them)
         PurchasableProperty.ResetAllPropertiesInGame();
@@ -1263,6 +1273,8 @@ public class GameMenuManager : MonoBehaviour
         else
         {
             PlayerPrefs.SetInt("WAREHOUSE_PLAYER_LEVEL", 1);
+            PlayerPrefs.SetInt("Delivery_PlayerLevel", 1);
+            PlayerPrefs.SetInt("Delivery_CurrentXP", 0);
         }
 
         // 5. Reset Economy to starter balance ($500)
@@ -1273,17 +1285,38 @@ public class GameMenuManager : MonoBehaviour
         else
         {
             PlayerPrefs.SetInt("CARGO_PLAYER_TOTAL_BALANCE", 500);
+            PlayerPrefs.SetInt("Delivery_PlayerCash", 500);
         }
-        PlayerPrefs.SetInt("Delivery_PlayerCash", 500);
 
         // 6. Reset Day Count to Day 1
-        PlayerPrefs.SetInt("Delivery_CurrentDay", 1);
+        if (DayTimeManager.Instance != null)
+        {
+            DayTimeManager.Instance.ResetDayCount();
+        }
+        else
+        {
+            PlayerPrefs.SetInt("Delivery_CurrentDay", 1);
+        }
         PlayerPrefs.DeleteKey("DaySummary_DayCount");
 
-        // 7. Reset Vehicle Tuning, Service Garage, Passive Dispatch, Insurance
-        PlayerPrefs.DeleteKey("Save_PassiveDispatch_Tier");
-        PlayerPrefs.DeleteKey("Save_Insurance_Tier");
-        PlayerPrefs.DeleteKey("VehicleService_WorkshopLevel");
+        // 7. Reset Insurance and Passive Dispatch tiers
+        if (InsuranceAgencyManager.Instance != null)
+        {
+            InsuranceAgencyManager.Instance.DevResetTier();
+        }
+        else
+        {
+            PlayerPrefs.SetInt("Delivery_InsuranceTier", 1);
+        }
+
+        if (PassiveDispatchManager.Instance != null)
+        {
+            PassiveDispatchManager.Instance.DevResetLevel();
+        }
+        else
+        {
+            PlayerPrefs.SetInt("Delivery_PassiveDispatchLevel", 1);
+        }
 
         // 8. Set Save Game flag
         PlayerPrefs.SetInt("Delivery_HasSaveGame", 1);

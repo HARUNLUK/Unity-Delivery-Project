@@ -592,7 +592,7 @@ public class BranchManager : MonoBehaviour
         // Deduct Upgrade Cost
         if (PlayerEconomyManager.Instance != null)
         {
-            PlayerEconomyManager.Instance.DeductCash(next.upgradeCost);
+            PlayerEconomyManager.Instance.SpendMoney(next.upgradeCost);
         }
 
         int oldLevel = currentBranchLevel;

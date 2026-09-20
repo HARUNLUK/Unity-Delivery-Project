@@ -36,7 +36,7 @@ public class MainHUDController : MonoBehaviour
     {
         if (clockText != null && DayTimeManager.Instance != null)
         {
-            clockText.text = $"<mspace=0.6em>{DayTimeManager.Instance.GetFormattedTime()}</mspace>";
+            clockText.text = $"<size=75%>GÜN {DayTimeManager.Instance.CurrentDay}</size>  <mspace=0.6em>{DayTimeManager.Instance.GetFormattedTime()}</mspace>";
         }
 
         if (Time.frameCount % 30 == 0)

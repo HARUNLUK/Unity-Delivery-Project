@@ -93,9 +93,8 @@ public class PlayerProgressionManager : MonoBehaviour
         }
 
         int upgradeCost = GetWarehouseUpgradeCost(warehouseLevel + 1);
-        if (PlayerEconomyManager.Instance != null && PlayerEconomyManager.Instance.TotalSavedBalance >= upgradeCost)
+        if (PlayerEconomyManager.Instance != null && PlayerEconomyManager.Instance.SpendMoney(upgradeCost))
         {
-            PlayerEconomyManager.Instance.DeductCash(upgradeCost);
             warehouseLevel++;
             Debug.Log($"<color=#32FFFF>[WAREHOUSE UPGRADED] Reached Level {warehouseLevel}!</color>");
             OnWarehouseLevelUp?.Invoke(warehouseLevel);

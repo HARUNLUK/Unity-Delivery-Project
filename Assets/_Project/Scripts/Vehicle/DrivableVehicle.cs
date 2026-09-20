@@ -165,6 +165,28 @@ public class DrivableVehicle : MonoBehaviour
     private void OnDisable()
     {
         AllDrivableVehicles.Remove(this);
+        SaveVehicleState();
+    }
+
+    private void OnApplicationQuit()
+    {
+        SaveVehicleState();
+    }
+
+    private void OnApplicationPause(bool pauseStatus)
+    {
+        if (pauseStatus)
+        {
+            SaveVehicleState();
+        }
+    }
+
+    public void SaveVehicleState()
+    {
+        if (string.IsNullOrEmpty(EffectiveVehicleId)) return;
+        PlayerPrefs.SetFloat(FUEL_SAVE_PREFIX + EffectiveVehicleId, currentFuel);
+        PlayerPrefs.SetFloat(CONDITION_SAVE_PREFIX + EffectiveVehicleId, currentCondition);
+        PlayerPrefs.Save();
     }
 
     public float FuelPercentage => maxFuel > 0 ? Mathf.Clamp01(currentFuel / maxFuel) : 0f;
@@ -561,7 +583,7 @@ public class DrivableVehicle : MonoBehaviour
         // Deduct money
         if (PlayerEconomyManager.Instance != null && purchasePrice > 0)
         {
-            PlayerEconomyManager.Instance.DeductCash(purchasePrice);
+            PlayerEconomyManager.Instance.SpendMoney(purchasePrice);
         }
 
         // Save unlock state
@@ -651,10 +673,12 @@ public class DrivableVehicle : MonoBehaviour
         PlayerPrefs.DeleteKey(COLOR_SAVE_PREFIX + "driveable_van");
         PlayerPrefs.DeleteKey(COLOR_SAVE_PREFIX + "cargo_van_01");
 
+        VehicleServiceGarage.ResetAllVehicleTuning();
+
         PlayerPrefs.Save();
 
         OnAnyVehicleReset?.Invoke();
-        Debug.Log("<color=#FF3333>[DEV] F9 PRESSED: ALL VEHICLE PURCHASES, FUELS AND CONDITIONS RESET TO 100%!</color>");
+        Debug.Log("<color=#FF3333>[DEV] F9 PRESSED: ALL VEHICLE PURCHASES, FUELS, CONDITIONS, PAINTS AND TUNINGS RESET!</color>");
     }
 
     /// <summary>

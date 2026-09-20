@@ -125,6 +125,7 @@ public class PlayerEconomyManager : MonoBehaviour
         todayEarned = 0;
         todayPenalties = 0;
         PlayerPrefs.SetInt(BALANCE_KEY, totalSavedBalance);
+        PlayerPrefs.SetInt("Delivery_PlayerCash", totalSavedBalance);
         PlayerPrefs.Save();
         OnEconomyUpdated?.Invoke(CurrentLiveBalance, TodayNetProfit);
     }
@@ -133,7 +134,27 @@ public class PlayerEconomyManager : MonoBehaviour
     {
         if (CurrentLiveBalance >= amount)
         {
-            DeductCash(amount);
+            if (amount <= totalSavedBalance)
+            {
+                totalSavedBalance -= amount;
+            }
+            else
+            {
+                int rem = amount - totalSavedBalance;
+                totalSavedBalance = 0;
+                todayPenalties += rem;
+            }
+
+            PlayerPrefs.SetInt(BALANCE_KEY, totalSavedBalance);
+            PlayerPrefs.SetInt("Delivery_PlayerCash", CurrentLiveBalance);
+            PlayerPrefs.Save();
+
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayMoneySubtract();
+            }
+
+            OnEconomyUpdated?.Invoke(CurrentLiveBalance, TodayNetProfit);
             return true;
         }
 
@@ -151,10 +172,38 @@ public class PlayerEconomyManager : MonoBehaviour
     /// </summary>
     public void FinalizeAndSaveDay()
     {
-        totalSavedBalance += TodayNetProfit;
+        totalSavedBalance = Mathf.Max(0, CurrentLiveBalance);
+        todayEarned = 0;
+        todayPenalties = 0;
         PlayerPrefs.SetInt(BALANCE_KEY, totalSavedBalance);
+        PlayerPrefs.SetInt("Delivery_PlayerCash", totalSavedBalance);
         PlayerPrefs.Save();
         Debug.Log($"[PlayerEconomyManager] End of day saved! New Total Vault: ${totalSavedBalance}");
+    }
+
+    public void SaveLiveBalance()
+    {
+        int finalBalance = Mathf.Max(0, CurrentLiveBalance);
+        totalSavedBalance = finalBalance;
+        todayEarned = 0;
+        todayPenalties = 0;
+        PlayerPrefs.SetInt(BALANCE_KEY, totalSavedBalance);
+        PlayerPrefs.SetInt("Delivery_PlayerCash", totalSavedBalance);
+        PlayerPrefs.Save();
+        Debug.Log($"[PlayerEconomyManager] Live balance saved: ${totalSavedBalance}");
+    }
+
+    private void OnApplicationQuit()
+    {
+        SaveLiveBalance();
+    }
+
+    private void OnApplicationPause(bool pauseStatus)
+    {
+        if (pauseStatus)
+        {
+            SaveLiveBalance();
+        }
     }
 
     /// <summary>
@@ -164,6 +213,7 @@ public class PlayerEconomyManager : MonoBehaviour
     public void ResetEntireEconomy()
     {
         PlayerPrefs.DeleteKey(BALANCE_KEY);
+        PlayerPrefs.DeleteKey("Delivery_PlayerCash");
         totalSavedBalance = 0;
         todayEarned = 0;
         todayPenalties = 0;

@@ -10,6 +10,7 @@ public class DaySummaryManager : MonoBehaviour
 
     [Header("--- PANEL REFERENCES ---")]
     public GameObject summaryPanelRoot;
+    public TextMeshProUGUI headerTitleText;
     public TextMeshProUGUI totalDeliveredText;
     public TextMeshProUGUI correctDeliveriesText;
     public TextMeshProUGUI wrongDeliveriesText;
@@ -170,17 +171,23 @@ public class DaySummaryManager : MonoBehaviour
         }
 
         int totalVault = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.TotalSavedBalance : netProfit;
+        int dayNum = DayTimeManager.Instance != null ? DayTimeManager.Instance.CurrentDay : PlayerPrefs.GetInt("Delivery_CurrentDay", 1);
 
         // 4. Populate UI Text Elements
+        if (headerTitleText != null)
+        {
+            headerTitleText.text = $"GÜN {dayNum} BİLANÇOSU";
+        }
+
         if (totalDeliveredText != null)
         {
             if (!string.IsNullOrEmpty(emergencyHospitalReason))
             {
-                totalDeliveredText.text = $"<color=#FF3333>🚨 ACİL DURUM:</color> {emergencyHospitalReason}\nTotal Packages Today: {totalCount}";
+                totalDeliveredText.text = $"<color=#FF3333>🚨 ACİL DURUM:</color> {emergencyHospitalReason}\nGün {dayNum} | Toplam Koli: {totalCount}";
             }
             else
             {
-                totalDeliveredText.text = $"Total Packages Today: {totalCount}";
+                totalDeliveredText.text = $"GÜN {dayNum} | Toplam Koli: {totalCount}";
             }
         }
         
@@ -308,6 +315,7 @@ public class DaySummaryManager : MonoBehaviour
 
         if (summaryPanelRoot != null)
         {
+            if (headerTitleText == null) headerTitleText = FindTMPRecursive(summaryPanelRoot.transform, "HeaderTitleText", "TitleText", "HeaderTitle", "PanelTitle", "Title");
             if (totalDeliveredText == null) totalDeliveredText = FindTMPRecursive(summaryPanelRoot.transform, "TotalDeliveredText", "TotalText", "TotalDelivered");
             if (correctDeliveriesText == null) correctDeliveriesText = FindTMPRecursive(summaryPanelRoot.transform, "CorrectDeliveriesText", "CorrectText", "CorrectDeliveries");
             if (wrongDeliveriesText == null) wrongDeliveriesText = FindTMPRecursive(summaryPanelRoot.transform, "WrongDeliveriesText", "WrongText", "WrongDeliveries");
@@ -402,6 +410,19 @@ public class DaySummaryManager : MonoBehaviour
 
     public void RestartDay()
     {
+        // 1. Advance to the next calendar day
+        if (DayTimeManager.Instance != null)
+        {
+            DayTimeManager.Instance.AdvanceToNextDay();
+        }
+        else
+        {
+            int nextDay = PlayerPrefs.GetInt("Delivery_CurrentDay", 1) + 1;
+            PlayerPrefs.SetInt("Delivery_CurrentDay", nextDay);
+            PlayerPrefs.Save();
+        }
+
+        // 2. Reload active scene for next day
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 }

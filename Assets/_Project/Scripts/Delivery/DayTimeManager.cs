@@ -51,7 +51,15 @@ public class DayTimeManager : MonoBehaviour
     public int CurrentMinute { get; private set; }
     public bool IsShiftEnded { get; private set; }
 
+    [Header("--- DAY PROGRESSION ---")]
+    [Tooltip("Current calendar/shift day number (Starts at Day 1)")]
+    [SerializeField] private int currentDay = 1;
+    public int CurrentDay => currentDay;
+
+    public const string PREFS_CURRENT_DAY = "Delivery_CurrentDay";
+
     public static event Action OnShiftEnded;
+    public static event Action<int> OnDayAdvanced;
 
     private float totalShiftInGameMinutes;
     private float totalRealTimeSeconds;
@@ -60,6 +68,7 @@ public class DayTimeManager : MonoBehaviour
     private void Awake()
     {
         Instance = this;
+        LoadDayCount();
 
         if (directionalSun == null)
         {
@@ -230,12 +239,52 @@ public class DayTimeManager : MonoBehaviour
         return $"{CurrentHour:D2}:{CurrentMinute:D2}";
     }
 
+    public string GetFormattedDay()
+    {
+        return $"GÜN {currentDay}";
+    }
+
+    public string GetFormattedDayAndTime()
+    {
+        return $"GÜN {currentDay} | {CurrentHour:D2}:{CurrentMinute:D2}";
+    }
+
+    public void LoadDayCount()
+    {
+        currentDay = PlayerPrefs.GetInt(PREFS_CURRENT_DAY, 1);
+        if (currentDay < 1) currentDay = 1;
+    }
+
+    /// <summary>
+    /// Advances calendar to the next day, saves to PlayerPrefs, and returns the new day index.
+    /// </summary>
+    public int AdvanceToNextDay()
+    {
+        currentDay++;
+        PlayerPrefs.SetInt(PREFS_CURRENT_DAY, currentDay);
+        PlayerPrefs.Save();
+        Debug.Log($"<color=#32FF64>[DayTimeManager] Advanced to Day {currentDay}! Saved to PlayerPrefs.</color>");
+        OnDayAdvanced?.Invoke(currentDay);
+        return currentDay;
+    }
+
+    /// <summary>
+    /// Resets day counter to Day 1 (Used during New Game).
+    /// </summary>
+    public void ResetDayCount()
+    {
+        currentDay = 1;
+        PlayerPrefs.SetInt(PREFS_CURRENT_DAY, 1);
+        PlayerPrefs.Save();
+        Debug.Log("[DayTimeManager] Day count reset to Day 1.");
+    }
+
     public void EndShift()
     {
         if (IsShiftEnded) return;
         IsShiftEnded = true;
 
-        Debug.Log("[DayTimeManager] It's 18:00! Shift has ended. Opening Day Summary report...");
+        Debug.Log($"[DayTimeManager] It's 18:00 on Day {currentDay}! Shift has ended. Opening Day Summary report...");
         OnShiftEnded?.Invoke();
 
         if (DaySummaryManager.Instance != null)

@@ -203,6 +203,12 @@ public class VehicleServiceGarage : MonoBehaviour
 
     public int GetVehicleTuningStage(string vehicleId)
     {
+        if (string.IsNullOrEmpty(vehicleId)) return 0;
+        string cleanId = vehicleId.ToLower().Trim();
+        if (PlayerPrefs.HasKey("Vehicle_TuningStage_" + cleanId))
+        {
+            return PlayerPrefs.GetInt("Vehicle_TuningStage_" + cleanId, 0);
+        }
         return PlayerPrefs.GetInt("Vehicle_TuningStage_" + vehicleId, 0);
     }
 
@@ -231,7 +237,7 @@ public class VehicleServiceGarage : MonoBehaviour
     public bool TryTuneVehicle(DrivableVehicle v)
     {
         if (v == null || !IsGarageUnlocked()) return false;
-        int currentStage = GetVehicleTuningStage(v.vehicleId);
+        int currentStage = GetVehicleTuningStage(v.EffectiveVehicleId);
         if (currentStage >= 3)
         {
             if (InteractionPromptHUD.Instance != null)
@@ -244,6 +250,7 @@ public class VehicleServiceGarage : MonoBehaviour
 
         if (PlayerEconomyManager.Instance != null && PlayerEconomyManager.Instance.SpendMoney(cost))
         {
+            PlayerPrefs.SetInt("Vehicle_TuningStage_" + v.EffectiveVehicleId, nextStage);
             PlayerPrefs.SetInt("Vehicle_TuningStage_" + v.vehicleId, nextStage);
             PlayerPrefs.Save();
 
@@ -270,6 +277,29 @@ public class VehicleServiceGarage : MonoBehaviour
             InteractionPromptHUD.Instance.ShowPrompt("<color=#FF3333>Yetersiz Bakiye!</color>", 2.0f);
 
         return false;
+    }
+
+    [ContextMenu("Reset All Vehicle Tuning")]
+    public static void ResetAllVehicleTuning()
+    {
+        DrivableVehicle[] allVehicles = UnityEngine.Object.FindObjectsByType<DrivableVehicle>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var v in allVehicles)
+        {
+            if (v != null)
+            {
+                PlayerPrefs.DeleteKey("Vehicle_TuningStage_" + v.EffectiveVehicleId);
+                PlayerPrefs.DeleteKey("Vehicle_TuningStage_" + v.vehicleId);
+                CarController cc = v.GetComponent<CarController>();
+                if (cc != null) cc.tuningTorqueMultiplier = 1.0f;
+            }
+        }
+        string[] commonIds = new string[] { "pickup_truck", "cargo_van", "driveable_van", "drivable_pickup", "drivable_van", "cargo_van_01" };
+        foreach (var id in commonIds)
+        {
+            PlayerPrefs.DeleteKey("Vehicle_TuningStage_" + id);
+        }
+        PlayerPrefs.Save();
+        Debug.Log("<color=#FF5555>[DEV RESET] All vehicle tuning stages reset to 0.</color>");
     }
 
     public bool TryRepaintVehicle(DrivableVehicle v, Color chosenColor)

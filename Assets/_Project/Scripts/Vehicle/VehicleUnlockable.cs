@@ -148,9 +148,9 @@ public class VehicleUnlockable : MonoBehaviour
         }
 
         // Deduct money
-        if (PlayerEconomyManager.Instance != null)
+        if (PlayerEconomyManager.Instance != null && purchasePrice > 0)
         {
-            PlayerEconomyManager.Instance.DeductCash(purchasePrice);
+            PlayerEconomyManager.Instance.SpendMoney(purchasePrice);
         }
 
         // Save unlock state
