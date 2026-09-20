@@ -364,8 +364,8 @@ public class FPSPlayerController : MonoBehaviour
 
         if (!isOnFoot)
         {
-            // V tuşu ile FPS (İç görünüm) ve TPS (Dış takip) arasında geçiş yap
-            if (!isUIOpen && Keyboard.current != null && Keyboard.current.vKey.wasPressedThisFrame)
+            // Kamera modu (FPS/TPS) geçişi
+            if (!isUIOpen && KeyBindingManager.WasPressedThisFrame(GameAction.Camera))
             {
                 ToggleVehicleCameraMode();
             }
@@ -616,32 +616,16 @@ public class FPSPlayerController : MonoBehaviour
         bool isSprinting = false;
         bool jumpPressed = false;
 
-        if (!IsUIBlockingInput() && Keyboard.current != null)
+        if (!IsUIBlockingInput())
         {
-            if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) moveZ += 1f;
-            if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) moveZ -= 1f;
-            if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) moveX += 1f;
-            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) moveX -= 1f;
+            if (KeyBindingManager.IsPressed(GameAction.MoveForward)) moveZ += 1f;
+            if (KeyBindingManager.IsPressed(GameAction.MoveBackward)) moveZ -= 1f;
+            if (KeyBindingManager.IsPressed(GameAction.MoveRight)) moveX += 1f;
+            if (KeyBindingManager.IsPressed(GameAction.MoveLeft)) moveX -= 1f;
 
-            isSprinting = Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed;
-            jumpPressed = Keyboard.current.spaceKey.wasPressedThisFrame;
+            isSprinting = KeyBindingManager.IsPressed(GameAction.Sprint);
+            jumpPressed = KeyBindingManager.WasPressedThisFrame(GameAction.Jump);
         }
-
-#if ENABLE_LEGACY_INPUT_MANAGER
-        try
-        {
-            if (!IsUIBlockingInput())
-            {
-                if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) moveZ = Mathf.Max(moveZ, 1f);
-                if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) moveZ = Mathf.Min(moveZ, -1f);
-                if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) moveX = Mathf.Max(moveX, 1f);
-                if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) moveX = Mathf.Min(moveX, -1f);
-                if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) isSprinting = true;
-                if (Input.GetKeyDown(KeyCode.Space)) jumpPressed = true;
-            }
-        }
-        catch { }
-#endif
 
         Vector3 move = (transform.right * moveX + transform.forward * moveZ).normalized;
         float speed = isSprinting ? sprintSpeed : walkSpeed;
@@ -687,13 +671,7 @@ public class FPSPlayerController : MonoBehaviour
 
     private void HandleInteraction()
     {
-        bool interactPressed = false;
-#if ENABLE_INPUT_SYSTEM
-        if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame) interactPressed = true;
-#endif
-#if ENABLE_LEGACY_INPUT_MANAGER
-        try { if (Input.GetKeyDown(KeyCode.E)) interactPressed = true; } catch { }
-#endif
+        bool interactPressed = KeyBindingManager.WasPressedThisFrame(GameAction.Interact);
 
         // If holding an object
         if (grabber != null && grabber.IsHoldingObject)
@@ -711,25 +689,14 @@ public class FPSPlayerController : MonoBehaviour
                 return;
             }
 
-            bool isHoldingDropKey = false;
-            bool dropKeyReleased = false;
+            // 1. Throw Cargo (Charged)
+            bool isChargingThrow = KeyBindingManager.IsPressed(GameAction.ThrowCargo);
+            bool throwReleased = KeyBindingManager.WasReleasedThisFrame(GameAction.ThrowCargo);
 
-#if ENABLE_INPUT_SYSTEM
-            if (Keyboard.current != null && Keyboard.current.eKey.isPressed) isHoldingDropKey = true;
-            if (Mouse.current != null && Mouse.current.leftButton.isPressed) isHoldingDropKey = true;
-            if (Keyboard.current != null && Keyboard.current.eKey.wasReleasedThisFrame) dropKeyReleased = true;
-            if (Mouse.current != null && Mouse.current.leftButton.wasReleasedThisFrame) dropKeyReleased = true;
-#endif
-#if ENABLE_LEGACY_INPUT_MANAGER
-            try
-            {
-                if (Input.GetKey(KeyCode.E) || Input.GetMouseButton(0)) isHoldingDropKey = true;
-                if (Input.GetKeyUp(KeyCode.E) || Input.GetMouseButtonUp(0)) dropKeyReleased = true;
-            }
-            catch { }
-#endif
+            // 2. Drop Cargo (Gently)
+            bool dropPressed = KeyBindingManager.WasPressedThisFrame(GameAction.DropCargo);
 
-            if (isHoldingDropKey)
+            if (isChargingThrow)
             {
                 currentDropHoldTime += Time.deltaTime;
                 float chargePercent = Mathf.Clamp01(currentDropHoldTime / throwChargeDuration);
@@ -748,9 +715,9 @@ public class FPSPlayerController : MonoBehaviour
                 }
             }
 
-            if (dropKeyReleased)
+            if (throwReleased)
             {
-                if (currentDropHoldTime >= 0.25f)
+                if (currentDropHoldTime >= 0.15f)
                 {
                     // Charged throw
                     float charge = Mathf.Clamp01(currentDropHoldTime / throwChargeDuration);
@@ -760,8 +727,9 @@ public class FPSPlayerController : MonoBehaviour
                 }
                 else
                 {
-                    // Gently drop
-                    grabber.ReleaseObject(Vector3.zero);
+                    // Light toss
+                    Vector3 tossVel = (playerCamera.transform.forward * 4.0f) + (Vector3.up * 0.8f);
+                    grabber.ReleaseObject(tossVel);
                 }
 
                 currentDropHoldTime = 0f;
@@ -771,6 +739,21 @@ public class FPSPlayerController : MonoBehaviour
                     InteractionPromptHUD.Instance.HideThrowCharge();
                     InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
                 }
+                return;
+            }
+
+            if (dropPressed)
+            {
+                // Gently drop straight down
+                grabber.ReleaseObject(Vector3.zero);
+                currentDropHoldTime = 0f;
+                afterGrabSafetyTimer = 0.35f;
+                if (InteractionPromptHUD.Instance != null)
+                {
+                    InteractionPromptHUD.Instance.HideThrowCharge();
+                    InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+                }
+                return;
             }
 
             return;
@@ -1052,13 +1035,7 @@ public class FPSPlayerController : MonoBehaviour
                     {
                         VehicleServiceGarage.Instance.CheckGarageShortcutInputs(vehicle);
 
-                        bool fPressed = false;
-#if ENABLE_INPUT_SYSTEM
-                        if (Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame) fPressed = true;
-#endif
-#if ENABLE_LEGACY_INPUT_MANAGER
-                        try { if (Input.GetKeyDown(KeyCode.F)) fPressed = true; } catch { }
-#endif
+                        bool fPressed = KeyBindingManager.WasPressedThisFrame(GameAction.Vehicle);
 
                         if (fPressed && CommercialHubUIManager.Instance != null)
                         {

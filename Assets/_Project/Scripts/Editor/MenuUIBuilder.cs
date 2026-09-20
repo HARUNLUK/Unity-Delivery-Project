@@ -104,7 +104,7 @@ public static class MenuUIBuilder
         GameObject titleObj = CreateUIElement("TitleHeader", mainCard.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -60), new Vector2(500, 90));
         TextMeshProUGUI titleText = titleObj.AddComponent<TextMeshProUGUI>();
         if (fontAsset != null) titleText.font = fontAsset;
-        titleText.text = "<size=130%><b>VALLEY LOGISTICS</b></size>\n<size=55%><color=#32FFFF>✦ KARGO DAĞITIM VE SÜRÜŞ SİMÜLASYONU ✦</color></size>";
+        titleText.text = "<size=130%><b>VALLEY LOGISTICS</b></size>\n<size=55%><color=#32FFFF>KARGO DAĞITIM VE SÜRÜŞ SİMÜLASYONU</color></size>";
         titleText.fontSize = 28;
         titleText.alignment = TextAlignmentOptions.Center;
         titleText.color = Color.white;
@@ -119,7 +119,7 @@ public static class MenuUIBuilder
         GameObject saveInfoObj = CreateUIElement("SaveInfoText", saveBadge.transform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
         TextMeshProUGUI saveText = saveInfoObj.AddComponent<TextMeshProUGUI>();
         if (fontAsset != null) saveText.font = fontAsset;
-        saveText.text = "<color=#A0C8FF>Mevcut Şube:</color> <color=#FFFFFF>Lv.1 (Starter Garage)</color>   •   <color=#A0C8FF>Kasa:</color> <color=#32FF64>$500</color>";
+        saveText.text = "<color=#A0C8FF>Mevcut Şube:</color> <color=#FFFFFF>Lv.1 (Starter Garage)</color>  |  <color=#A0C8FF>Kasa:</color> <color=#32FF64>$500</color>";
         saveText.fontSize = 17;
         saveText.alignment = TextAlignmentOptions.Center;
         menuMgr.mainMenuSaveInfoText = saveText;
@@ -127,25 +127,73 @@ public static class MenuUIBuilder
         // Action Buttons Column
         GameObject btnCol = CreateUIElement("ButtonsColumn", mainCard.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0, -60), new Vector2(440, 360));
         VerticalLayoutGroup vlg = btnCol.AddComponent<VerticalLayoutGroup>();
-        vlg.spacing = 18f;
+        vlg.spacing = 14f;
         vlg.childAlignment = TextAnchor.MiddleCenter;
         vlg.childControlWidth = true;
         vlg.childControlHeight = false;
 
-        Button playBtn = CreateStyledButton("PlayButton", btnCol.transform, "▶  OYUNA BAŞLA / DEVAM ET", 58, btnGreenSprite != null ? btnGreenSprite : btnCyanSprite, new Color(0.1f, 0.9f, 0.4f), fontAsset);
-        Button settingsBtn = CreateStyledButton("SettingsButton", btnCol.transform, "⚙  AYARLAR", 50, btnDarkSprite, Color.white, fontAsset);
-        Button quitBtn = CreateStyledButton("QuitButton", btnCol.transform, "⏻  ÇIKIŞ", 50, btnRedSprite != null ? btnRedSprite : btnDarkSprite, new Color(1f, 0.4f, 0.4f), fontAsset);
+        Button continueBtn = CreateStyledButton("ContinueButton", btnCol.transform, "DEVAM ET", 54, btnGreenSprite != null ? btnGreenSprite : btnCyanSprite, new Color(0.1f, 0.95f, 0.45f), fontAsset);
+        Button newGameBtn = CreateStyledButton("NewGameButton", btnCol.transform, "YENİ OYUN", 48, btnDarkSprite, new Color(0.3f, 0.9f, 1f), fontAsset);
+        Button settingsBtn = CreateStyledButton("SettingsButton", btnCol.transform, "AYARLAR", 48, btnDarkSprite, Color.white, fontAsset);
+        Button quitBtn = CreateStyledButton("QuitButton", btnCol.transform, "ÇIKIŞ", 48, btnRedSprite != null ? btnRedSprite : btnDarkSprite, new Color(1f, 0.4f, 0.4f), fontAsset);
 
-        menuMgr.playButton = playBtn;
+        menuMgr.continueButton = continueBtn;
+        menuMgr.newGameButton = newGameBtn;
+        menuMgr.playButton = continueBtn;
         menuMgr.mainMenuSettingsButton = settingsBtn;
         menuMgr.mainMenuQuitButton = quitBtn;
+
+        // New Game Confirmation Modal
+        GameObject modalPanel = CreateFullscreenPanel(mainPanel.transform, "NewGameConfirmModal");
+        Image mBg = modalPanel.AddComponent<Image>();
+        mBg.color = new Color(0f, 0f, 0f, 0.75f);
+
+        GameObject mCard = CreateUIElement("ModalCard", modalPanel.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(540, 260));
+        Image mCardBg = mCard.AddComponent<Image>();
+        if (panelMedSprite != null) { mCardBg.sprite = panelMedSprite; mCardBg.type = Image.Type.Sliced; }
+        else mCardBg.color = new Color(0.08f, 0.11f, 0.17f, 0.98f);
+
+        Outline mCardOutline = mCard.AddComponent<Outline>();
+        mCardOutline.effectColor = new Color(1f, 0.6f, 0.2f, 0.65f);
+        mCardOutline.effectDistance = new Vector2(2, -2);
+
+        GameObject mTitleObj = CreateUIElement("Title", mCard.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -30), new Vector2(480, 40));
+        TextMeshProUGUI mTitle = mTitleObj.AddComponent<TextMeshProUGUI>();
+        if (fontAsset != null) mTitle.font = fontAsset;
+        mTitle.text = "<b>YENİ OYUN BAŞLAT</b>";
+        mTitle.fontSize = 22;
+        mTitle.alignment = TextAlignmentOptions.Center;
+        mTitle.color = new Color(1f, 0.75f, 0.25f);
+
+        GameObject mBodyObj = CreateUIElement("BodyText", mCard.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 10), new Vector2(480, 80));
+        TextMeshProUGUI mBody = mBodyObj.AddComponent<TextMeshProUGUI>();
+        if (fontAsset != null) mBody.font = fontAsset;
+        mBody.text = "Mevcut kayıt ve tüm şube ilerlemeniz sıfırlanarak 1. Seviyeden yeni bir kariyere başlanacaktır.\n\n<b>Emin misiniz?</b>";
+        mBody.fontSize = 15;
+        mBody.alignment = TextAlignmentOptions.Center;
+        mBody.color = new Color(0.85f, 0.92f, 1.0f);
+
+        GameObject mBtnRow = CreateUIElement("ButtonRow", mCard.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 30), new Vector2(480, 45));
+        HorizontalLayoutGroup mHlg = mBtnRow.AddComponent<HorizontalLayoutGroup>();
+        mHlg.spacing = 20f;
+        mHlg.childControlWidth = true;
+        mHlg.childControlHeight = true;
+
+        Button confirmBtn = CreateStyledButton("ConfirmBtn", mBtnRow.transform, "EVET, SIFIRLA VE BAŞLA", 45, btnRedSprite != null ? btnRedSprite : btnDarkSprite, new Color(1f, 0.45f, 0.45f), fontAsset);
+        Button cancelBtn = CreateStyledButton("CancelBtn", mBtnRow.transform, "İPTAL", 45, btnDarkSprite, Color.white, fontAsset);
+
+        menuMgr.newGameModalPanel = modalPanel;
+        menuMgr.confirmNewGameBtn = confirmBtn;
+        menuMgr.cancelNewGameBtn = cancelBtn;
+        modalPanel.SetActive(false);
+
         menuMgr.mainMenuPanel = mainPanel;
 
         // Footer version text
         GameObject footerObj = CreateUIElement("FooterVersion", mainCard.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 20), new Vector2(400, 30));
         TextMeshProUGUI footerText = footerObj.AddComponent<TextMeshProUGUI>();
         if (fontAsset != null) footerText.font = fontAsset;
-        footerText.text = "<color=#6080A0>v1.0.0 • PC Standalone URP Edition</color>";
+        footerText.text = "<color=#6080A0>v1.0.0 - PC Standalone URP Edition</color>";
         footerText.fontSize = 14;
         footerText.alignment = TextAlignmentOptions.Center;
 
@@ -168,7 +216,7 @@ public static class MenuUIBuilder
         GameObject pTitle = CreateUIElement("PauseTitle", pauseCard.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -45), new Vector2(400, 50));
         TextMeshProUGUI pTitleText = pTitle.AddComponent<TextMeshProUGUI>();
         if (fontAsset != null) pTitleText.font = fontAsset;
-        pTitleText.text = "<b>OYUN DURAKLATILDI</b>\n<size=55%><color=#32FFFF>✦ GAME PAUSED ✦</color></size>";
+        pTitleText.text = "<b>OYUN DURAKLATILDI</b>\n<size=55%><color=#32FFFF>GAME PAUSED</color></size>";
         pTitleText.fontSize = 24;
         pTitleText.alignment = TextAlignmentOptions.Center;
         pTitleText.color = Color.white;
@@ -181,10 +229,10 @@ public static class MenuUIBuilder
         pvlg.childControlWidth = true;
         pvlg.childControlHeight = false;
 
-        Button pResumeBtn = CreateStyledButton("ResumeBtn", pBtnCol.transform, "▶  DEVAM ET", 54, btnCyanSprite, new Color(0.2f, 0.9f, 1.0f), fontAsset);
-        Button pSettingsBtn = CreateStyledButton("SettingsBtn", pBtnCol.transform, "⚙  AYARLAR", 48, btnDarkSprite, Color.white, fontAsset);
-        Button pMainMenuBtn = CreateStyledButton("MainMenuBtn", pBtnCol.transform, "🏠  ANA MENÜYE DÖN", 48, btnDarkSprite, new Color(1.0f, 0.8f, 0.4f), fontAsset);
-        Button pQuitBtn = CreateStyledButton("QuitBtn", pBtnCol.transform, "⏻  MASAÜSTÜNE ÇIK", 48, btnRedSprite != null ? btnRedSprite : btnDarkSprite, new Color(1f, 0.4f, 0.4f), fontAsset);
+        Button pResumeBtn = CreateStyledButton("ResumeBtn", pBtnCol.transform, "DEVAM ET", 54, btnCyanSprite, new Color(0.2f, 0.9f, 1.0f), fontAsset);
+        Button pSettingsBtn = CreateStyledButton("SettingsBtn", pBtnCol.transform, "AYARLAR", 48, btnDarkSprite, Color.white, fontAsset);
+        Button pMainMenuBtn = CreateStyledButton("MainMenuBtn", pBtnCol.transform, "ANA MENÜYE DÖN", 48, btnDarkSprite, new Color(1.0f, 0.8f, 0.4f), fontAsset);
+        Button pQuitBtn = CreateStyledButton("QuitBtn", pBtnCol.transform, "MASAÜSTÜNE ÇIK", 48, btnRedSprite != null ? btnRedSprite : btnDarkSprite, new Color(1f, 0.4f, 0.4f), fontAsset);
 
         menuMgr.resumeButton = pResumeBtn;
         menuMgr.pauseSettingsButton = pSettingsBtn;
@@ -212,7 +260,7 @@ public static class MenuUIBuilder
         GameObject sTitle = CreateUIElement("SettingsTitle", setCard.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -40), new Vector2(600, 45));
         TextMeshProUGUI sTitleText = sTitle.AddComponent<TextMeshProUGUI>();
         if (fontAsset != null) sTitleText.font = fontAsset;
-        sTitleText.text = "<b>⚙  AYARLAR • SETTINGS</b>";
+        sTitleText.text = "<b>AYARLAR - SETTINGS</b>";
         sTitleText.fontSize = 28;
         sTitleText.alignment = TextAlignmentOptions.Center;
         sTitleText.color = Color.white;
@@ -224,9 +272,9 @@ public static class MenuUIBuilder
         thlg.childControlWidth = true;
         thlg.childControlHeight = true;
 
-        Button tabAudio = CreateStyledButton("TabAudio", tabRow.transform, "🔊  SES", 45, btnDarkSprite, Color.white, fontAsset);
-        Button tabGraphics = CreateStyledButton("TabGraphics", tabRow.transform, "🖥  GRAFİK", 45, btnDarkSprite, Color.white, fontAsset);
-        Button tabControls = CreateStyledButton("TabControls", tabRow.transform, "🎮  KONTROLLER", 45, btnDarkSprite, Color.white, fontAsset);
+        Button tabAudio = CreateStyledButton("TabAudio", tabRow.transform, "SES", 45, btnDarkSprite, Color.white, fontAsset);
+        Button tabGraphics = CreateStyledButton("TabGraphics", tabRow.transform, "GRAFİK", 45, btnDarkSprite, Color.white, fontAsset);
+        Button tabControls = CreateStyledButton("TabControls", tabRow.transform, "KONTROLLER", 45, btnDarkSprite, Color.white, fontAsset);
 
         menuMgr.tabAudioBtn = tabAudio;
         menuMgr.tabGraphicsBtn = tabGraphics;
@@ -267,39 +315,42 @@ public static class MenuUIBuilder
         // 3.3 CONTROLS SECTION
         GameObject ctrlSec = CreateUIElement("ControlsSection", contentArea.transform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
         VerticalLayoutGroup cvlg = ctrlSec.AddComponent<VerticalLayoutGroup>();
-        cvlg.spacing = 12f;
+        cvlg.spacing = 8f;
         cvlg.childControlWidth = true;
         cvlg.childControlHeight = false;
 
         menuMgr.mouseSensSlider = CreateSliderRow("MouseSensRow", ctrlSec.transform, "Fare Bakış Hassasiyeti:", out menuMgr.mouseSensValText, trackSprite, fillSprite, fontAsset, 0.2f, 5.0f);
         menuMgr.invertYToggle = CreateToggleRow("InvertYRow", ctrlSec.transform, "Fare Y-Ekseni Ters Çevir:", fontAsset);
 
-        // Keybindings Cheat Sheet Card
-        GameObject keyCard = CreateUIElement("KeybindingsCard", ctrlSec.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(800, 220));
-        Image kcImg = keyCard.AddComponent<Image>();
-        if (cardSprite != null) { kcImg.sprite = cardSprite; kcImg.type = Image.Type.Sliced; }
-        else kcImg.color = new Color(0.08f, 0.11f, 0.17f, 0.90f);
+        // Keybindings Header Row
+        GameObject kbHeader = CreateUIElement("KeybindingsHeaderRow", ctrlSec.transform, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(0, 36));
+        GameObject kbTitleObj = CreateUIElement("HeaderTitle", kbHeader.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(8, 0), new Vector2(480, 32));
+        TextMeshProUGUI kbTitle = kbTitleObj.AddComponent<TextMeshProUGUI>();
+        if (fontAsset != null) kbTitle.font = fontAsset;
+        kbTitle.text = "<color=#32FFFF><b>TUŞ ATAMALARI:</b></color> <size=80%><color=#85A8C8>(Değiştirmek istediğiniz tuşa tıklayın)</color></size>";
+        kbTitle.fontSize = 16;
+        kbTitle.alignment = TextAlignmentOptions.Left;
 
-        GameObject keyInfo = CreateUIElement("KeyInfoText", keyCard.transform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
-        TextMeshProUGUI keyText = keyInfo.AddComponent<TextMeshProUGUI>();
-        if (fontAsset != null) keyText.font = fontAsset;
-        keyText.text = "<color=#32FFFF><b>KONTROL ŞEMASI / KEYBINDINGS:</b></color>\n\n" +
-            "• <b>W / A / S / D :</b> Yürüme / Araç Sürüş & Direksiyon\n" +
-            "• <b>E :</b> Dükkan, Koli ve Kapı Etkileşimi / Kargo Al\n" +
-            "• <b>F :</b> Araca Bin / Araçtan İn\n" +
-            "• <b>TAB / M :</b> Kargo Tableti & Haritayı Aç/Kapat\n" +
-            "• <b>Sol Tık :</b> Koli Fırlat (Basılı Tut = Güçlü Fırlat)\n" +
-            "• <b>Sağ Tık :</b> Koliyi Yavaşça Bırak   |   <b>Shift :</b> Koşma\n" +
-            "• <b>Boşluk (Space) :</b> Zıplama / Araç El Freni   |   <b>ESC :</b> Duraklatma";
-        keyText.fontSize = 16;
-        keyText.alignment = TextAlignmentOptions.Center;
-        keyText.lineSpacing = 18;
+        GameObject resetBtnObj = CreateUIElement("ResetBindingsBtn", kbHeader.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-6, 0), new Vector2(180, 32));
+        menuMgr.resetKeybindingsBtn = CreateStyledButton("ResetBtn", resetBtnObj.transform, "Varsayılana Sıfırla", 32, btnDarkSprite, new Color(1.0f, 0.85f, 0.4f), fontAsset);
+
+        // Keybindings ScrollView
+        var (svObj, contentTr) = CreateKeybindingsScrollViewElement(ctrlSec.transform, cardSprite, trackSprite, fillSprite);
+        menuMgr.keybindingsContent = contentTr;
+
+        foreach (GameAction action in System.Enum.GetValues(typeof(GameAction)))
+        {
+            string desc = KeyBindingManager.GetActionDescription(action);
+            string keyName = KeyBindingManager.GetBinding(action).GetDisplayName();
+            CreateKeyRowElement(contentTr, desc, action.ToString(), keyName, btnCyanSprite != null ? btnCyanSprite : btnDarkSprite, fontAsset);
+        }
+
         menuMgr.controlsSection = ctrlSec;
         ctrlSec.SetActive(false);
 
         // Back / Save Button
         GameObject backBtnObj = CreateUIElement("BackButtonHolder", setCard.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 35), new Vector2(300, 48));
-        Button backBtn = CreateStyledButton("SettingsBackBtn", backBtnObj.transform, "✔  KAYDET VE GERİ DÖN", 48, btnCyanSprite, new Color(0.2f, 0.9f, 1f), fontAsset);
+        Button backBtn = CreateStyledButton("SettingsBackBtn", backBtnObj.transform, "KAYDET VE GERİ DÖN", 48, btnCyanSprite, new Color(0.2f, 0.9f, 1f), fontAsset);
         menuMgr.settingsBackButton = backBtn;
         menuMgr.settingsPanel = settingsPanel;
 
@@ -514,6 +565,120 @@ public static class MenuUIBuilder
         toggle.targetGraphic = bgImg;
 
         return toggle;
+    }
+
+    private static (GameObject scrollView, Transform content) CreateKeybindingsScrollViewElement(Transform parent, Sprite bgSprite, Sprite trackSprite, Sprite fillSprite)
+    {
+        GameObject svObj = CreateUIElement("KeybindingsScrollView", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(820, 260));
+        Image svBg = svObj.AddComponent<Image>();
+        if (bgSprite != null) { svBg.sprite = bgSprite; svBg.type = Image.Type.Sliced; }
+        else svBg.color = new Color(0.04f, 0.06f, 0.10f, 0.90f);
+
+        Outline svOutline = svObj.AddComponent<Outline>();
+        svOutline.effectColor = new Color(0.2f, 0.8f, 1f, 0.30f);
+        svOutline.effectDistance = new Vector2(1, -1);
+
+        ScrollRect sr = svObj.AddComponent<ScrollRect>();
+        sr.horizontal = false;
+        sr.vertical = true;
+        sr.movementType = ScrollRect.MovementType.Clamped;
+        sr.scrollSensitivity = 28f;
+
+        // Viewport
+        GameObject vpObj = CreateUIElement("Viewport", svObj.transform, Vector2.zero, Vector2.one, new Vector2(0f, 1f), Vector2.zero, Vector2.zero);
+        RectTransform vpRt = vpObj.GetComponent<RectTransform>();
+        vpRt.offsetMin = new Vector2(6, 6);
+        vpRt.offsetMax = new Vector2(-20, -6);
+        vpObj.AddComponent<RectMask2D>();
+        sr.viewport = vpRt;
+
+        // Content
+        GameObject contentObj = CreateUIElement("Content", vpObj.transform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), Vector2.zero, Vector2.zero);
+        RectTransform contentRt = contentObj.GetComponent<RectTransform>();
+        contentRt.anchoredPosition = Vector2.zero;
+        VerticalLayoutGroup cvlg = contentObj.AddComponent<VerticalLayoutGroup>();
+        cvlg.spacing = 6f;
+        cvlg.padding = new RectOffset(6, 6, 6, 6);
+        cvlg.childControlWidth = true;
+        cvlg.childControlHeight = false;
+        cvlg.childForceExpandWidth = true;
+        cvlg.childForceExpandHeight = false;
+
+        ContentSizeFitter csf = contentObj.AddComponent<ContentSizeFitter>();
+        csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        sr.content = contentRt;
+
+        // Scrollbar
+        GameObject sbObj = CreateUIElement("Scrollbar", svObj.transform, new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(1f, 0.5f), Vector2.zero, new Vector2(14, 0));
+        RectTransform sbRt = sbObj.GetComponent<RectTransform>();
+        sbRt.offsetMin = new Vector2(-16, 6);
+        sbRt.offsetMax = new Vector2(-4, -6);
+        Image sbTrack = sbObj.AddComponent<Image>();
+        if (trackSprite != null) { sbTrack.sprite = trackSprite; sbTrack.type = Image.Type.Sliced; }
+        else sbTrack.color = new Color(0.07f, 0.10f, 0.16f, 0.90f);
+
+        GameObject handleObj = CreateUIElement("Handle", sbObj.transform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
+        Image handleImg = handleObj.AddComponent<Image>();
+        if (fillSprite != null) { handleImg.sprite = fillSprite; handleImg.type = Image.Type.Sliced; }
+        else handleImg.color = new Color(0.2f, 0.8f, 1.0f, 0.80f);
+
+        Scrollbar sb = sbObj.AddComponent<Scrollbar>();
+        sb.direction = Scrollbar.Direction.BottomToTop;
+        sb.targetGraphic = handleImg;
+        sb.handleRect = handleObj.GetComponent<RectTransform>();
+
+        sr.verticalScrollbar = sb;
+        sr.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.Permanent;
+
+        return (svObj, contentObj.transform);
+    }
+
+    private static GameObject CreateKeyRowElement(Transform parent, string actionLabel, string actionKeyId, string currentKeyText, Sprite btnSprite, TMP_FontAsset fontAsset)
+    {
+        GameObject row = CreateUIElement("KeyRow_" + actionKeyId, parent, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(0, 38));
+        Image rowBg = row.AddComponent<Image>();
+        rowBg.color = new Color(0.06f, 0.09f, 0.15f, 0.85f);
+
+        Outline rowOutline = row.AddComponent<Outline>();
+        rowOutline.effectColor = new Color(0.2f, 0.8f, 1f, 0.20f);
+        rowOutline.effectDistance = new Vector2(1, -1);
+
+        // Left Action Label
+        GameObject lblObj = CreateUIElement("ActionLabel", row.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(14, 0), new Vector2(460, 32));
+        TextMeshProUGUI lbl = lblObj.AddComponent<TextMeshProUGUI>();
+        if (fontAsset != null) lbl.font = fontAsset;
+        lbl.text = $"<b>{actionLabel}</b>";
+        lbl.fontSize = 15;
+        lbl.alignment = TextAlignmentOptions.Left;
+        lbl.color = new Color(0.9f, 0.95f, 1.0f);
+
+        // Right Key Button
+        GameObject btnObj = CreateUIElement("KeyButton", row.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-12, 0), new Vector2(170, 30));
+        Image btnImg = btnObj.AddComponent<Image>();
+        if (btnSprite != null) { btnImg.sprite = btnSprite; btnImg.type = Image.Type.Sliced; }
+        else btnImg.color = new Color(0.10f, 0.16f, 0.25f, 0.95f);
+
+        Outline btnOutline = btnObj.AddComponent<Outline>();
+        btnOutline.effectColor = new Color(0.2f, 0.8f, 1f, 0.45f);
+        btnOutline.effectDistance = new Vector2(1, -1);
+
+        Button btn = btnObj.AddComponent<Button>();
+        ColorBlock cb = btn.colors;
+        cb.normalColor = Color.white;
+        cb.highlightedColor = new Color(1.3f, 1.3f, 1.3f, 1f);
+        cb.pressedColor = new Color(0.7f, 0.9f, 1.0f, 1f);
+        btn.colors = cb;
+
+        GameObject textObj = CreateUIElement("Text", btnObj.transform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
+        TextMeshProUGUI txt = textObj.AddComponent<TextMeshProUGUI>();
+        if (fontAsset != null) txt.font = fontAsset;
+        txt.text = $"[ {currentKeyText} ]";
+        txt.fontSize = 15;
+        txt.fontStyle = FontStyles.Bold;
+        txt.alignment = TextAlignmentOptions.Center;
+        txt.color = new Color(0.25f, 0.95f, 1.0f);
+
+        return row;
     }
 
     #endregion

@@ -152,7 +152,7 @@ public class BranchUpgradeTransitionUI : MonoBehaviour
 
         if (badgeText != null)
         {
-            badgeText.text = "✦ ŞUBE YÜKSELTİLDİ • BRANCH UPGRADE ✦";
+            badgeText.text = "ŞUBE YÜKSELTİLDİ - BRANCH UPGRADE";
         }
 
         if (titleText != null)
@@ -312,7 +312,7 @@ public class BranchUpgradeTransitionUI : MonoBehaviour
         badgeRect.sizeDelta = new Vector2(0, 35);
 
         badgeText = badgeObj.AddComponent<TextMeshProUGUI>();
-        badgeText.text = "✦ ŞUBE YÜKSELTİLDİ • BRANCH UPGRADE ✦";
+        badgeText.text = "ŞUBE YÜKSELTİLDİ - BRANCH UPGRADE";
         badgeText.fontSize = 20;
         badgeText.fontStyle = FontStyles.Bold;
         badgeText.alignment = TextAlignmentOptions.Center;

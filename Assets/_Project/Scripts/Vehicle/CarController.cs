@@ -343,16 +343,11 @@ public class CarController : MonoBehaviour
             return;
         }
 
-#if ENABLE_INPUT_SYSTEM
-        if (Keyboard.current != null)
-        {
-            if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) verticalInput += 1f;
-            if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) verticalInput -= 1f;
-            if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) horizontalInput += 1f;
-            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) horizontalInput -= 1f;
-            if (Keyboard.current.spaceKey.isPressed) isHandbraking = true;
-        }
-#endif
+        if (KeyBindingManager.IsPressed(GameAction.MoveForward)) verticalInput += 1f;
+        if (KeyBindingManager.IsPressed(GameAction.MoveBackward)) verticalInput -= 1f;
+        if (KeyBindingManager.IsPressed(GameAction.MoveRight)) horizontalInput += 1f;
+        if (KeyBindingManager.IsPressed(GameAction.MoveLeft)) horizontalInput -= 1f;
+        if (KeyBindingManager.IsPressed(GameAction.Jump)) isHandbraking = true;
 
 #if ENABLE_LEGACY_INPUT_MANAGER
         if (verticalInput == 0f) verticalInput = Input.GetAxis("Vertical");

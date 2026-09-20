@@ -379,23 +379,7 @@ public class DrivableVehicle : MonoBehaviour
             // 2. Debounce to prevent immediate exit on the frame of entry
             if (!isUIOpen && Time.time - enterTimestamp > 0.35f)
             {
-                bool exitPressed = false;
-#if ENABLE_INPUT_SYSTEM
-                if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
-                {
-                    exitPressed = true;
-                }
-#endif
-#if ENABLE_LEGACY_INPUT_MANAGER
-                try
-                {
-                    if (Input.GetKeyDown(KeyCode.E))
-                    {
-                        exitPressed = true;
-                    }
-                }
-                catch { }
-#endif
+                bool exitPressed = KeyBindingManager.WasPressedThisFrame(GameAction.Interact) || KeyBindingManager.WasPressedThisFrame(GameAction.Vehicle);
 
                 if (exitPressed)
                 {

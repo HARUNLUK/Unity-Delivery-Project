@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -20,7 +21,8 @@ public enum GameFlowState
 
 /// <summary>
 /// Central manager for Main Menu, Pause Menu, Settings System, and Screen Fade Transitions.
-/// Handles camera switching between Shop Overview and Player Gameplay, and coordinates game pause state.
+/// Handles camera switching between Shop Overview and Player Gameplay, coordinates game pause state,
+/// and manages dynamic keybindings rebind UI.
 /// </summary>
 public class GameMenuManager : MonoBehaviour
 {
@@ -68,9 +70,16 @@ public class GameMenuManager : MonoBehaviour
     [Header("--- MAIN MENU UI REFERENCES ---")]
     public TextMeshProUGUI mainMenuTitleText;
     public TextMeshProUGUI mainMenuSaveInfoText;
+    public Button continueButton;
+    public Button newGameButton;
     public Button playButton;
     public Button mainMenuSettingsButton;
     public Button mainMenuQuitButton;
+
+    [Header("--- NEW GAME CONFIRMATION MODAL ---")]
+    public GameObject newGameModalPanel;
+    public Button confirmNewGameBtn;
+    public Button cancelNewGameBtn;
 
     [Header("--- PAUSE MENU UI REFERENCES ---")]
     public Button resumeButton;
@@ -110,6 +119,16 @@ public class GameMenuManager : MonoBehaviour
     public Slider mouseSensSlider;
     public TextMeshProUGUI mouseSensValText;
     public Toggle invertYToggle;
+
+    [Header("Keybindings UI")]
+    public Button resetKeybindingsBtn;
+    public Transform keybindingsContent;
+
+    private readonly Dictionary<GameAction, (Button button, TextMeshProUGUI text)> keybindingRowMap = new Dictionary<GameAction, (Button button, TextMeshProUGUI text)>();
+    private GameAction? activeRebindingAction = null;
+    private TextMeshProUGUI activeRebindingText = null;
+    private Button activeRebindingButton = null;
+    private float rebindDebounceTimer = 0f;
 
     private GameFlowState currentState = GameFlowState.MainMenu;
     public GameFlowState CurrentState => currentState;
@@ -153,6 +172,7 @@ public class GameMenuManager : MonoBehaviour
         }
 
         instance = this;
+        KeyBindingManager.EnsureInitialized();
         EnsureReferences();
         EnsureUI();
     }
@@ -238,22 +258,38 @@ public class GameMenuManager : MonoBehaviour
         {
             mainMenuTitleText = mainMenuPanel.transform.Find("LeftContentCard/TitleHeader")?.GetComponent<TextMeshProUGUI>();
             mainMenuSaveInfoText = mainMenuPanel.transform.Find("LeftContentCard/SaveInfoBadge/SaveInfoText")?.GetComponent<TextMeshProUGUI>();
+            continueButton = mainMenuPanel.transform.Find("LeftContentCard/ButtonsColumn/ContinueButton")?.GetComponent<Button>();
+            newGameButton = mainMenuPanel.transform.Find("LeftContentCard/ButtonsColumn/NewGameButton")?.GetComponent<Button>();
             playButton = mainMenuPanel.transform.Find("LeftContentCard/ButtonsColumn/PlayButton")?.GetComponent<Button>();
+            if (continueButton == null && playButton != null) continueButton = playButton;
             mainMenuSettingsButton = mainMenuPanel.transform.Find("LeftContentCard/ButtonsColumn/SettingsButton")?.GetComponent<Button>();
             mainMenuQuitButton = mainMenuPanel.transform.Find("LeftContentCard/ButtonsColumn/QuitButton")?.GetComponent<Button>();
+
+            Transform modal = mainMenuPanel.transform.Find("NewGameConfirmModal");
+            if (modal != null)
+            {
+                newGameModalPanel = modal.gameObject;
+                confirmNewGameBtn = modal.Find("ModalCard/ButtonRow/ConfirmBtn")?.GetComponent<Button>();
+                cancelNewGameBtn = modal.Find("ModalCard/ButtonRow/CancelBtn")?.GetComponent<Button>();
+            }
         }
 
         if (pauseMenuPanel != null)
         {
-            resumeButton = pauseMenuPanel.transform.Find("PauseCard/PauseButtons/ResumeBtn")?.GetComponent<Button>();
-            pauseSettingsButton = pauseMenuPanel.transform.Find("PauseCard/PauseButtons/SettingsBtn")?.GetComponent<Button>();
-            returnToMainMenuButton = pauseMenuPanel.transform.Find("PauseCard/PauseButtons/MainMenuBtn")?.GetComponent<Button>();
-            pauseQuitButton = pauseMenuPanel.transform.Find("PauseCard/PauseButtons/QuitBtn")?.GetComponent<Button>();
+            resumeButton = pauseMenuPanel.transform.Find("PauseCard/PauseButtons/ResumeBtn")?.GetComponent<Button>() ??
+                           pauseMenuPanel.transform.Find("PauseCard/PauseButtons/ResumeButton")?.GetComponent<Button>();
+            pauseSettingsButton = pauseMenuPanel.transform.Find("PauseCard/PauseButtons/SettingsBtn")?.GetComponent<Button>() ??
+                                  pauseMenuPanel.transform.Find("PauseCard/PauseButtons/SettingsButton")?.GetComponent<Button>();
+            returnToMainMenuButton = pauseMenuPanel.transform.Find("PauseCard/PauseButtons/MainMenuBtn")?.GetComponent<Button>() ??
+                                     pauseMenuPanel.transform.Find("PauseCard/PauseButtons/MainMenuButton")?.GetComponent<Button>();
+            pauseQuitButton = pauseMenuPanel.transform.Find("PauseCard/PauseButtons/QuitBtn")?.GetComponent<Button>() ??
+                              pauseMenuPanel.transform.Find("PauseCard/PauseButtons/QuitButton")?.GetComponent<Button>();
         }
 
         if (settingsPanel != null)
         {
-            settingsBackButton = settingsPanel.transform.Find("SettingsCard/BackButtonHolder/SettingsBackBtn")?.GetComponent<Button>();
+            settingsBackButton = settingsPanel.transform.Find("SettingsCard/BackButtonHolder/SettingsBackBtn")?.GetComponent<Button>() ??
+                                 settingsPanel.transform.Find("SettingsCard/BackButtonHolder/BackButton")?.GetComponent<Button>();
             tabAudioBtn = settingsPanel.transform.Find("SettingsCard/TabRow/TabAudio")?.GetComponent<Button>();
             tabGraphicsBtn = settingsPanel.transform.Find("SettingsCard/TabRow/TabGraphics")?.GetComponent<Button>();
             tabControlsBtn = settingsPanel.transform.Find("SettingsCard/TabRow/TabControls")?.GetComponent<Button>();
@@ -290,6 +326,29 @@ public class GameMenuManager : MonoBehaviour
                 mouseSensSlider = controlsSection.transform.Find("MouseSensRow/Slider")?.GetComponent<Slider>();
                 mouseSensValText = controlsSection.transform.Find("MouseSensRow/ValText")?.GetComponent<TextMeshProUGUI>();
                 invertYToggle = controlsSection.transform.Find("InvertYRow/Toggle")?.GetComponent<Toggle>();
+
+                resetKeybindingsBtn = controlsSection.transform.Find("KeybindingsHeaderRow/ResetBindingsBtn/ResetBtn")?.GetComponent<Button>() ??
+                                      controlsSection.transform.Find("KeybindingsHeaderRow/ResetBindingsBtn")?.GetComponent<Button>();
+
+                Transform content = controlsSection.transform.Find("KeybindingsScrollView/Viewport/Content");
+                if (content != null)
+                {
+                    keybindingsContent = content;
+                    keybindingRowMap.Clear();
+                    foreach (GameAction action in Enum.GetValues(typeof(GameAction)))
+                    {
+                        Transform row = content.Find("KeyRow_" + action.ToString());
+                        if (row != null)
+                        {
+                            Button btn = row.Find("KeyButton")?.GetComponent<Button>();
+                            TextMeshProUGUI txt = row.Find("KeyButton/Text")?.GetComponent<TextMeshProUGUI>();
+                            if (btn != null && txt != null)
+                            {
+                                keybindingRowMap[action] = (btn, txt);
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -322,7 +381,7 @@ public class GameMenuManager : MonoBehaviour
             GameObject titleObj = CreateElement("TitleHeader", mainCard.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -60), new Vector2(500, 90));
             mainMenuTitleText = titleObj.AddComponent<TextMeshProUGUI>();
             if (fontAsset != null) mainMenuTitleText.font = fontAsset;
-            mainMenuTitleText.text = "<size=130%><b>VALLEY LOGISTICS</b></size>\n<size=55%><color=#32FFFF>✦ KARGO DAĞITIM VE SÜRÜŞ SİMÜLASYONU ✦</color></size>";
+            mainMenuTitleText.text = "<size=130%><b>VALLEY LOGISTICS</b></size>\n<size=55%><color=#32FFFF>KARGO DAĞITIM VE SÜRÜŞ SİMÜLASYONU</color></size>";
             mainMenuTitleText.fontSize = 28;
             mainMenuTitleText.alignment = TextAlignmentOptions.Center;
             mainMenuTitleText.color = Color.white;
@@ -334,7 +393,7 @@ public class GameMenuManager : MonoBehaviour
             GameObject saveInfoObj = CreateElement("SaveInfoText", saveBadge.transform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
             mainMenuSaveInfoText = saveInfoObj.AddComponent<TextMeshProUGUI>();
             if (fontAsset != null) mainMenuSaveInfoText.font = fontAsset;
-            mainMenuSaveInfoText.text = "<color=#A0C8FF>Mevcut Şube:</color> <color=#FFFFFF>Lv.1</color>   •   <color=#A0C8FF>Kasa:</color> <color=#32FF64>$500</color>";
+            mainMenuSaveInfoText.text = "<color=#A0C8FF>Mevcut Şube:</color> <color=#FFFFFF>Lv.1</color>  |  <color=#A0C8FF>Kasa:</color> <color=#32FF64>$500</color>";
             mainMenuSaveInfoText.fontSize = 17;
             mainMenuSaveInfoText.alignment = TextAlignmentOptions.Center;
 
@@ -345,9 +404,51 @@ public class GameMenuManager : MonoBehaviour
             vlg.childControlWidth = true;
             vlg.childControlHeight = false;
 
-            playButton = CreateButton("PlayButton", btnCol.transform, "▶  OYUNA BAŞLA / DEVAM ET", 58, new Color(0.06f, 0.28f, 0.15f, 0.95f), new Color(0.2f, 1.0f, 0.45f), fontAsset);
-            mainMenuSettingsButton = CreateButton("SettingsButton", btnCol.transform, "⚙  AYARLAR", 50, new Color(0.09f, 0.12f, 0.18f, 0.95f), Color.white, fontAsset);
-            mainMenuQuitButton = CreateButton("QuitButton", btnCol.transform, "⏻  ÇIKIŞ", 50, new Color(0.35f, 0.08f, 0.08f, 0.95f), new Color(1f, 0.35f, 0.35f), fontAsset);
+            continueButton = CreateButton("ContinueButton", btnCol.transform, "DEVAM ET", 54, new Color(0.06f, 0.28f, 0.15f, 0.95f), new Color(0.2f, 1.0f, 0.45f), fontAsset);
+            newGameButton = CreateButton("NewGameButton", btnCol.transform, "YENİ OYUN", 48, new Color(0.08f, 0.20f, 0.32f, 0.95f), new Color(0.3f, 0.9f, 1f), fontAsset);
+            mainMenuSettingsButton = CreateButton("SettingsButton", btnCol.transform, "AYARLAR", 48, new Color(0.09f, 0.12f, 0.18f, 0.95f), Color.white, fontAsset);
+            mainMenuQuitButton = CreateButton("QuitButton", btnCol.transform, "ÇIKIŞ", 48, new Color(0.35f, 0.08f, 0.08f, 0.95f), new Color(1f, 0.35f, 0.35f), fontAsset);
+            playButton = continueButton;
+
+            // New Game Confirmation Modal
+            GameObject modalObj = CreatePanel(mp.transform, "NewGameConfirmModal");
+            Image mBg = modalObj.AddComponent<Image>();
+            mBg.color = new Color(0f, 0f, 0f, 0.75f);
+
+            GameObject mCard = CreateElement("ModalCard", modalObj.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(540, 260));
+            Image mCardBg = mCard.AddComponent<Image>();
+            mCardBg.color = new Color(0.08f, 0.11f, 0.17f, 0.98f);
+            Outline mCardOutline = mCard.AddComponent<Outline>();
+            mCardOutline.effectColor = new Color(1f, 0.6f, 0.2f, 0.65f);
+            mCardOutline.effectDistance = new Vector2(2, -2);
+
+            GameObject mTitleObj = CreateElement("Title", mCard.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -30), new Vector2(480, 40));
+            TextMeshProUGUI mTitle = mTitleObj.AddComponent<TextMeshProUGUI>();
+            if (fontAsset != null) mTitle.font = fontAsset;
+            mTitle.text = "<b>YENİ OYUN BAŞLAT</b>";
+            mTitle.fontSize = 22;
+            mTitle.alignment = TextAlignmentOptions.Center;
+            mTitle.color = new Color(1f, 0.75f, 0.25f);
+
+            GameObject mBodyObj = CreateElement("BodyText", mCard.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 10), new Vector2(480, 80));
+            TextMeshProUGUI mBody = mBodyObj.AddComponent<TextMeshProUGUI>();
+            if (fontAsset != null) mBody.font = fontAsset;
+            mBody.text = "Mevcut kayıt ve tüm şube ilerlemeniz sıfırlanarak 1. Seviyeden yeni bir kariyere başlanacaktır.\n\n<b>Emin misiniz?</b>";
+            mBody.fontSize = 15;
+            mBody.alignment = TextAlignmentOptions.Center;
+            mBody.color = new Color(0.85f, 0.92f, 1.0f);
+
+            GameObject mBtnRow = CreateElement("ButtonRow", mCard.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 30), new Vector2(480, 45));
+            HorizontalLayoutGroup mHlg = mBtnRow.AddComponent<HorizontalLayoutGroup>();
+            mHlg.spacing = 20f;
+            mHlg.childControlWidth = true;
+            mHlg.childControlHeight = true;
+
+            confirmNewGameBtn = CreateButton("ConfirmBtn", mBtnRow.transform, "EVET, SIFIRLA VE BAŞLA", 45, new Color(0.35f, 0.10f, 0.10f, 0.95f), new Color(1f, 0.45f, 0.45f), fontAsset);
+            cancelNewGameBtn = CreateButton("CancelBtn", mBtnRow.transform, "İPTAL", 45, new Color(0.10f, 0.14f, 0.20f, 0.95f), Color.white, fontAsset);
+
+            newGameModalPanel = modalObj;
+            modalObj.SetActive(false);
 
             mainMenuPanel = mp;
         }
@@ -370,7 +471,7 @@ public class GameMenuManager : MonoBehaviour
             GameObject pTitle = CreateElement("PauseTitle", pCard.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -45), new Vector2(400, 50));
             TextMeshProUGUI pTitleText = pTitle.AddComponent<TextMeshProUGUI>();
             if (fontAsset != null) pTitleText.font = fontAsset;
-            pTitleText.text = "<b>OYUN DURAKLATILDI</b>\n<size=55%><color=#32FFFF>✦ GAME PAUSED ✦</color></size>";
+            pTitleText.text = "<b>OYUN DURAKLATILDI</b>\n<size=55%><color=#32FFFF>GAME PAUSED</color></size>";
             pTitleText.fontSize = 24;
             pTitleText.alignment = TextAlignmentOptions.Center;
             pTitleText.color = Color.white;
@@ -382,10 +483,10 @@ public class GameMenuManager : MonoBehaviour
             pvlg.childControlWidth = true;
             pvlg.childControlHeight = false;
 
-            resumeButton = CreateButton("ResumeBtn", pBtnCol.transform, "▶  DEVAM ET", 54, new Color(0.08f, 0.22f, 0.35f, 0.95f), new Color(0.2f, 0.9f, 1.0f), fontAsset);
-            pauseSettingsButton = CreateButton("SettingsBtn", pBtnCol.transform, "⚙  AYARLAR", 48, new Color(0.09f, 0.12f, 0.18f, 0.95f), Color.white, fontAsset);
-            returnToMainMenuButton = CreateButton("MainMenuBtn", pBtnCol.transform, "🏠  ANA MENÜYE DÖN", 48, new Color(0.09f, 0.12f, 0.18f, 0.95f), new Color(1.0f, 0.8f, 0.4f), fontAsset);
-            pauseQuitButton = CreateButton("QuitBtn", pBtnCol.transform, "⏻  MASAÜSTÜNE ÇIK", 48, new Color(0.35f, 0.08f, 0.08f, 0.95f), new Color(1f, 0.35f, 0.35f), fontAsset);
+            resumeButton = CreateButton("ResumeBtn", pBtnCol.transform, "DEVAM ET", 54, new Color(0.08f, 0.22f, 0.35f, 0.95f), new Color(0.2f, 0.9f, 1.0f), fontAsset);
+            pauseSettingsButton = CreateButton("SettingsBtn", pBtnCol.transform, "AYARLAR", 48, new Color(0.09f, 0.12f, 0.18f, 0.95f), Color.white, fontAsset);
+            returnToMainMenuButton = CreateButton("MainMenuBtn", pBtnCol.transform, "ANA MENÜYE DÖN", 48, new Color(0.09f, 0.12f, 0.18f, 0.95f), new Color(1.0f, 0.8f, 0.4f), fontAsset);
+            pauseQuitButton = CreateButton("QuitBtn", pBtnCol.transform, "MASAÜSTÜNE ÇIK", 48, new Color(0.35f, 0.08f, 0.08f, 0.95f), new Color(1f, 0.35f, 0.35f), fontAsset);
 
             pauseMenuPanel = pp;
             pp.SetActive(false);
@@ -409,7 +510,7 @@ public class GameMenuManager : MonoBehaviour
             GameObject sTitle = CreateElement("SettingsTitle", sCard.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -40), new Vector2(600, 45));
             TextMeshProUGUI sTitleText = sTitle.AddComponent<TextMeshProUGUI>();
             if (fontAsset != null) sTitleText.font = fontAsset;
-            sTitleText.text = "<b>⚙  AYARLAR • SETTINGS</b>";
+            sTitleText.text = "<b>AYARLAR - SETTINGS</b>";
             sTitleText.fontSize = 28;
             sTitleText.alignment = TextAlignmentOptions.Center;
             sTitleText.color = Color.white;
@@ -420,13 +521,13 @@ public class GameMenuManager : MonoBehaviour
             thlg.childControlWidth = true;
             thlg.childControlHeight = true;
 
-            tabAudioBtn = CreateButton("TabAudio", tabRow.transform, "🔊  SES", 45, new Color(0.09f, 0.12f, 0.18f, 0.95f), Color.white, fontAsset);
-            tabGraphicsBtn = CreateButton("TabGraphics", tabRow.transform, "🖥  GRAFİK", 45, new Color(0.09f, 0.12f, 0.18f, 0.95f), Color.white, fontAsset);
-            tabControlsBtn = CreateButton("TabControls", tabRow.transform, "🎮  KONTROLLER", 45, new Color(0.09f, 0.12f, 0.18f, 0.95f), Color.white, fontAsset);
+            tabAudioBtn = CreateButton("TabAudio", tabRow.transform, "SES", 45, new Color(0.09f, 0.12f, 0.18f, 0.95f), Color.white, fontAsset);
+            tabGraphicsBtn = CreateButton("TabGraphics", tabRow.transform, "GRAFİK", 45, new Color(0.09f, 0.12f, 0.18f, 0.95f), Color.white, fontAsset);
+            tabControlsBtn = CreateButton("TabControls", tabRow.transform, "KONTROLLER", 45, new Color(0.09f, 0.12f, 0.18f, 0.95f), Color.white, fontAsset);
 
             GameObject contentArea = CreateElement("ContentArea", sCard.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -30), new Vector2(820, 430));
 
-            // Audio Section
+            // 3.1 Audio Section
             audioSection = CreateElement("AudioSection", contentArea.transform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
             VerticalLayoutGroup avlg = audioSection.AddComponent<VerticalLayoutGroup>();
             avlg.spacing = 12f;
@@ -439,7 +540,7 @@ public class GameMenuManager : MonoBehaviour
             ambienceVolumeSlider = CreateSlider("AmbienceVolRow", audioSection.transform, "Çevre Atmosferi:", out ambienceVolumeValText, fontAsset);
             uiVolumeSlider = CreateSlider("UiVolRow", audioSection.transform, "Arayüz & Bildirimler:", out uiVolumeValText, fontAsset);
 
-            // Graphics Section
+            // 3.2 Graphics Section
             graphicsSection = CreateElement("GraphicsSection", contentArea.transform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
             VerticalLayoutGroup gvlg = graphicsSection.AddComponent<VerticalLayoutGroup>();
             gvlg.spacing = 12f;
@@ -453,38 +554,45 @@ public class GameMenuManager : MonoBehaviour
             fpsLimitDropdown = CreateDropdown("FpsLimitRow", graphicsSection.transform, "Hedef FPS Limiti:", fontAsset);
             graphicsSection.SetActive(false);
 
-            // Controls Section
+            // 3.3 Controls Section
             controlsSection = CreateElement("ControlsSection", contentArea.transform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
             VerticalLayoutGroup cvlg = controlsSection.AddComponent<VerticalLayoutGroup>();
-            cvlg.spacing = 12f;
+            cvlg.spacing = 8f;
             cvlg.childControlWidth = true;
             cvlg.childControlHeight = false;
 
             mouseSensSlider = CreateSlider("MouseSensRow", controlsSection.transform, "Fare Bakış Hassasiyeti:", out mouseSensValText, fontAsset, 0.2f, 5.0f);
             invertYToggle = CreateToggle("InvertYRow", controlsSection.transform, "Fare Y-Ekseni Ters Çevir:", fontAsset);
 
-            GameObject keyCard = CreateElement("KeybindingsCard", controlsSection.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(800, 220));
-            Image kcImg = keyCard.AddComponent<Image>();
-            kcImg.color = new Color(0.08f, 0.11f, 0.17f, 0.90f);
+            // Keybindings Header Row
+            GameObject kbHeaderRow = CreateElement("KeybindingsHeaderRow", controlsSection.transform, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(0, 36));
+            GameObject kbTitleObj = CreateElement("HeaderTitle", kbHeaderRow.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(10, 0), new Vector2(480, 32));
+            TextMeshProUGUI kbTitle = kbTitleObj.AddComponent<TextMeshProUGUI>();
+            if (fontAsset != null) kbTitle.font = fontAsset;
+            kbTitle.text = "<color=#32FFFF><b>TUŞ ATAMALARI:</b></color> <size=80%><color=#85A8C8>(Değiştirmek istediğiniz tuşa tıklayın)</color></size>";
+            kbTitle.fontSize = 16;
+            kbTitle.alignment = TextAlignmentOptions.Left;
 
-            GameObject keyInfo = CreateElement("KeyInfoText", keyCard.transform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
-            TextMeshProUGUI keyText = keyInfo.AddComponent<TextMeshProUGUI>();
-            if (fontAsset != null) keyText.font = fontAsset;
-            keyText.text = "<color=#32FFFF><b>KONTROL ŞEMASI / KEYBINDINGS:</b></color>\n\n" +
-                "• <b>W / A / S / D :</b> Yürüme / Araç Sürüş & Direksiyon\n" +
-                "• <b>E :</b> Dükkan, Koli ve Kapı Etkileşimi / Kargo Al\n" +
-                "• <b>F :</b> Araca Bin / Araçtan İn\n" +
-                "• <b>TAB / M :</b> Kargo Tableti & Haritayı Aç/Kapat\n" +
-                "• <b>Sol Tık :</b> Koli Fırlat (Basılı Tut = Güçlü Fırlat)\n" +
-                "• <b>Sağ Tık :</b> Koliyi Yavaşça Bırak   |   <b>Shift :</b> Koşma\n" +
-                "• <b>Boşluk (Space) :</b> Zıplama / Araç El Freni   |   <b>ESC :</b> Duraklatma";
-            keyText.fontSize = 16;
-            keyText.alignment = TextAlignmentOptions.Center;
-            keyText.lineSpacing = 18;
+            GameObject resetBtnHolder = CreateElement("ResetBindingsBtn", kbHeaderRow.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-10, 0), new Vector2(190, 32));
+            resetKeybindingsBtn = CreateButton("ResetBtn", resetBtnHolder.transform, "Varsayılana Sıfırla", 32, new Color(0.18f, 0.12f, 0.08f, 0.95f), new Color(1.0f, 0.85f, 0.4f), fontAsset);
+
+            // ScrollView for Keybindings
+            var (svObj, contentTr, _) = CreateKeybindingsScrollView(controlsSection.transform, fontAsset);
+            keybindingsContent = contentTr;
+
+            keybindingRowMap.Clear();
+            foreach (GameAction action in Enum.GetValues(typeof(GameAction)))
+            {
+                string desc = KeyBindingManager.GetActionDescription(action);
+                string keyName = KeyBindingManager.GetBinding(action).GetDisplayName();
+                CreateKeybindingRow(keybindingsContent, desc, action.ToString(), keyName, out Button btn, out TextMeshProUGUI txt, fontAsset);
+                keybindingRowMap[action] = (btn, txt);
+            }
+
             controlsSection.SetActive(false);
 
             GameObject backBtnObj = CreateElement("BackButtonHolder", sCard.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 35), new Vector2(300, 48));
-            settingsBackButton = CreateButton("SettingsBackBtn", backBtnObj.transform, "✔  KAYDET VE GERİ DÖN", 48, new Color(0.08f, 0.22f, 0.35f, 0.95f), new Color(0.2f, 0.9f, 1f), fontAsset);
+            settingsBackButton = CreateButton("SettingsBackBtn", backBtnObj.transform, "KAYDET VE GERİ DÖN", 48, new Color(0.08f, 0.22f, 0.35f, 0.95f), new Color(0.2f, 0.9f, 1f), fontAsset);
 
             settingsPanel = sp;
             sp.SetActive(false);
@@ -578,7 +686,7 @@ public class GameMenuManager : MonoBehaviour
         GameObject row = new GameObject(name, typeof(RectTransform));
         row.transform.SetParent(parent, false);
         RectTransform rrt = row.GetComponent<RectTransform>();
-        rrt.sizeDelta = new Vector2(0, 42);
+        rrt.sizeDelta = new Vector2(0, 40);
         rrt.localScale = Vector3.one;
 
         GameObject lblObj = CreateElement("Label", row.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(10, 0), new Vector2(280, 36));
@@ -623,7 +731,7 @@ public class GameMenuManager : MonoBehaviour
         GameObject row = new GameObject(name, typeof(RectTransform));
         row.transform.SetParent(parent, false);
         RectTransform rrt = row.GetComponent<RectTransform>();
-        rrt.sizeDelta = new Vector2(0, 42);
+        rrt.sizeDelta = new Vector2(0, 40);
         rrt.localScale = Vector3.one;
 
         GameObject lblObj = CreateElement("Label", row.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(10, 0), new Vector2(280, 36));
@@ -655,7 +763,7 @@ public class GameMenuManager : MonoBehaviour
         GameObject row = new GameObject(name, typeof(RectTransform));
         row.transform.SetParent(parent, false);
         RectTransform rrt = row.GetComponent<RectTransform>();
-        rrt.sizeDelta = new Vector2(0, 42);
+        rrt.sizeDelta = new Vector2(0, 40);
         rrt.localScale = Vector3.one;
 
         GameObject lblObj = CreateElement("Label", row.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(10, 0), new Vector2(380, 36));
@@ -679,6 +787,123 @@ public class GameMenuManager : MonoBehaviour
         toggle.targetGraphic = bgImg;
 
         return toggle;
+    }
+
+    private static (GameObject scrollView, Transform content, Scrollbar scrollbar) CreateKeybindingsScrollView(Transform parent, TMP_FontAsset fontAsset)
+    {
+        GameObject svObj = CreateElement("KeybindingsScrollView", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(820, 260));
+        Image svBg = svObj.AddComponent<Image>();
+        svBg.color = new Color(0.04f, 0.06f, 0.10f, 0.90f);
+
+        Outline svOutline = svObj.AddComponent<Outline>();
+        svOutline.effectColor = new Color(0.2f, 0.8f, 1f, 0.30f);
+        svOutline.effectDistance = new Vector2(1, -1);
+
+        ScrollRect sr = svObj.AddComponent<ScrollRect>();
+        sr.horizontal = false;
+        sr.vertical = true;
+        sr.movementType = ScrollRect.MovementType.Clamped;
+        sr.scrollSensitivity = 28f;
+
+        // Viewport
+        GameObject vpObj = CreateElement("Viewport", svObj.transform, Vector2.zero, Vector2.one, new Vector2(0f, 1f), Vector2.zero, Vector2.zero);
+        RectTransform vpRt = vpObj.GetComponent<RectTransform>();
+        vpRt.offsetMin = new Vector2(6, 6);
+        vpRt.offsetMax = new Vector2(-20, -6);
+        vpObj.AddComponent<RectMask2D>();
+        sr.viewport = vpRt;
+
+        // Content
+        GameObject contentObj = CreateElement("Content", vpObj.transform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), Vector2.zero, Vector2.zero);
+        RectTransform contentRt = contentObj.GetComponent<RectTransform>();
+        contentRt.anchoredPosition = Vector2.zero;
+        VerticalLayoutGroup cvlg = contentObj.AddComponent<VerticalLayoutGroup>();
+        cvlg.spacing = 6f;
+        cvlg.padding = new RectOffset(6, 6, 6, 6);
+        cvlg.childControlWidth = true;
+        cvlg.childControlHeight = false;
+        cvlg.childForceExpandWidth = true;
+        cvlg.childForceExpandHeight = false;
+
+        ContentSizeFitter csf = contentObj.AddComponent<ContentSizeFitter>();
+        csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        sr.content = contentRt;
+
+        // Scrollbar
+        GameObject sbObj = CreateElement("Scrollbar", svObj.transform, new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(1f, 0.5f), Vector2.zero, new Vector2(14, 0));
+        RectTransform sbRt = sbObj.GetComponent<RectTransform>();
+        sbRt.offsetMin = new Vector2(-16, 6);
+        sbRt.offsetMax = new Vector2(-4, -6);
+        Image sbTrack = sbObj.AddComponent<Image>();
+        sbTrack.color = new Color(0.07f, 0.10f, 0.16f, 0.90f);
+
+        GameObject handleObj = CreateElement("Handle", sbObj.transform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
+        Image handleImg = handleObj.AddComponent<Image>();
+        handleImg.color = new Color(0.2f, 0.8f, 1.0f, 0.80f);
+
+        Scrollbar sb = sbObj.AddComponent<Scrollbar>();
+        sb.direction = Scrollbar.Direction.BottomToTop;
+        sb.targetGraphic = handleImg;
+        sb.handleRect = handleObj.GetComponent<RectTransform>();
+
+        sr.verticalScrollbar = sb;
+        sr.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.Permanent;
+
+        return (svObj, contentObj.transform, sb);
+    }
+
+    private static GameObject CreateKeybindingRow(Transform parent, string actionLabel, string actionKeyId, string currentKeyText, out Button btnOut, out TextMeshProUGUI textOut, TMP_FontAsset fontAsset)
+    {
+        GameObject row = new GameObject("KeyRow_" + actionKeyId, typeof(RectTransform));
+        row.transform.SetParent(parent, false);
+        RectTransform rrt = row.GetComponent<RectTransform>();
+        rrt.sizeDelta = new Vector2(0, 38);
+        rrt.localScale = Vector3.one;
+
+        Image rowBg = row.AddComponent<Image>();
+        rowBg.color = new Color(0.06f, 0.09f, 0.15f, 0.85f);
+
+        Outline rowOutline = row.AddComponent<Outline>();
+        rowOutline.effectColor = new Color(0.2f, 0.8f, 1f, 0.20f);
+        rowOutline.effectDistance = new Vector2(1, -1);
+
+        // Left Action Label
+        GameObject lblObj = CreateElement("ActionLabel", row.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(14, 0), new Vector2(460, 32));
+        TextMeshProUGUI lbl = lblObj.AddComponent<TextMeshProUGUI>();
+        if (fontAsset != null) lbl.font = fontAsset;
+        lbl.text = $"<b>{actionLabel}</b>";
+        lbl.fontSize = 15;
+        lbl.alignment = TextAlignmentOptions.Left;
+        lbl.color = new Color(0.9f, 0.95f, 1.0f);
+
+        // Right Key Button
+        GameObject btnObj = CreateElement("KeyButton", row.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-12, 0), new Vector2(170, 30));
+        Image btnImg = btnObj.AddComponent<Image>();
+        btnImg.color = new Color(0.10f, 0.16f, 0.25f, 0.95f);
+
+        Outline btnOutline = btnObj.AddComponent<Outline>();
+        btnOutline.effectColor = new Color(0.2f, 0.8f, 1f, 0.45f);
+        btnOutline.effectDistance = new Vector2(1, -1);
+
+        Button btn = btnObj.AddComponent<Button>();
+        ColorBlock cb = btn.colors;
+        cb.normalColor = Color.white;
+        cb.highlightedColor = new Color(1.3f, 1.3f, 1.3f, 1f);
+        cb.pressedColor = new Color(0.7f, 0.9f, 1.0f, 1f);
+        btn.colors = cb;
+
+        GameObject textObj = CreateElement("Text", btnObj.transform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
+        TextMeshProUGUI txt = textObj.AddComponent<TextMeshProUGUI>();
+        if (fontAsset != null) txt.font = fontAsset;
+        txt.text = $"[ {currentKeyText} ]";
+        txt.fontSize = 15;
+        txt.fontStyle = FontStyles.Bold;
+        txt.alignment = TextAlignmentOptions.Center;
+        txt.color = new Color(0.25f, 0.95f, 1.0f);
+
+        btnOut = btn;
+        textOut = txt;
+        return row;
     }
 
     #region --- INITIALIZATION MODES ---
@@ -707,17 +932,19 @@ public class GameMenuManager : MonoBehaviour
             MainHUDController.Instance.SetHUDVisible(false);
         }
 
-        // 4. Update Main Menu save stats
+        // 4. Update Main Menu save stats and button states
         UpdateMainMenuSaveStats();
+        UpdateMainMenuButtons();
 
         // 5. Setup UI Panels
         if (mainMenuPanel != null)
         {
             mainMenuPanel.SetActive(true);
-            mainMenuPanel.transform.SetAsLastSibling(); // BRING TO FRONT OF CANVAS
+            mainMenuPanel.transform.SetAsLastSibling();
         }
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
         if (settingsPanel != null) settingsPanel.SetActive(false);
+        if (newGameModalPanel != null) newGameModalPanel.SetActive(false);
         if (fadeOverlayCanvasGroup != null)
         {
             fadeOverlayCanvasGroup.alpha = 0f;
@@ -757,18 +984,72 @@ public class GameMenuManager : MonoBehaviour
         if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
         if (settingsPanel != null) settingsPanel.SetActive(false);
+        if (newGameModalPanel != null) newGameModalPanel.SetActive(false);
+    }
+
+    public static bool HasSaveData()
+    {
+        if (PlayerPrefs.HasKey("Delivery_HasSaveGame") && PlayerPrefs.GetInt("Delivery_HasSaveGame", 0) == 1)
+        {
+            return true;
+        }
+
+        if (PlayerPrefs.GetInt("Delivery_BranchLevel", 1) > 1) return true;
+        if (PlayerPrefs.GetInt("WAREHOUSE_PLAYER_LEVEL", 1) > 1) return true;
+        if (PlayerPrefs.GetInt("Delivery_CurrentDay", 1) > 1) return true;
+        if (PlayerPrefs.GetInt("CARGO_PLAYER_TOTAL_BALANCE", 0) > 500) return true;
+        if (PlayerPrefs.GetInt("Delivery_PlayerCash", 500) > 500) return true;
+
+        if (PlayerPrefs.GetInt("Vehicle_Purchased_cargo_van", 0) == 1 ||
+            PlayerPrefs.GetInt("Vehicle_Purchased_driveable_van", 0) == 1) return true;
+
+        return false;
+    }
+
+    public void UpdateMainMenuButtons()
+    {
+        bool hasSave = HasSaveData();
+
+        if (continueButton != null)
+        {
+            continueButton.gameObject.SetActive(hasSave);
+        }
+
+        if (newGameButton != null)
+        {
+            newGameButton.gameObject.SetActive(true);
+            // newGameButton text is not modified via script
+        }
+
+        if (playButton != null && playButton != continueButton && playButton != newGameButton)
+        {
+            playButton.gameObject.SetActive(!hasSave);
+        }
+
+        if (newGameModalPanel != null)
+        {
+            newGameModalPanel.SetActive(false);
+        }
     }
 
     public void UpdateMainMenuSaveStats()
     {
         if (mainMenuSaveInfoText == null) return;
 
-        int cash = PlayerPrefs.GetInt("Delivery_PlayerCash", 500);
-        int level = PlayerPrefs.GetInt("Delivery_BranchLevel", 1);
+        bool hasSave = HasSaveData();
+        int cash = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : PlayerPrefs.GetInt("CARGO_PLAYER_TOTAL_BALANCE", PlayerPrefs.GetInt("Delivery_PlayerCash", 500));
+        int level = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : PlayerPrefs.GetInt("Delivery_BranchLevel", 1);
         string tierName = BranchManager.Instance != null && BranchManager.Instance.CurrentTier != null ?
             BranchManager.Instance.CurrentTier.tierName : $"Seviye {level}";
 
-        mainMenuSaveInfoText.text = $"<color=#A0C8FF>Mevcut Şube:</color> <color=#FFFFFF>Lv.{level} ({tierName})</color>   •   <color=#A0C8FF>Kasa Bakiyesi:</color> <color=#32FF64>${cash:N0}</color>";
+        if (hasSave)
+        {
+            mainMenuSaveInfoText.text = $"<color=#A0C8FF>Mevcut Şube:</color> <color=#FFFFFF>Lv.{level} ({tierName})</color>  |  <color=#A0C8FF>Kasa Bakiyesi:</color> <color=#32FF64>${cash:N0}</color>";
+        }
+        else
+        {
+            mainMenuSaveInfoText.text = $"<color=#A0C8FF>Yeni Kariyer:</color> <color=#FFFFFF>Lv.1 ({tierName})</color>  |  <color=#A0C8FF>Başlangıç:</color> <color=#32FF64>${cash:N0}</color>";
+        }
     }
 
     #endregion
@@ -787,7 +1068,76 @@ public class GameMenuManager : MonoBehaviour
             }
         }
 
+        if (activeRebindingAction.HasValue)
+        {
+            HandleKeyRebindInput();
+            return;
+        }
+
         HandleInput();
+    }
+
+    private void HandleKeyRebindInput()
+    {
+        if (!activeRebindingAction.HasValue) return;
+
+        if (rebindDebounceTimer > 0f)
+        {
+            rebindDebounceTimer -= Time.unscaledDeltaTime;
+            return;
+        }
+
+#if ENABLE_INPUT_SYSTEM
+        // 1. ESC cancels rebinding
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            CancelKeyRebind();
+            return;
+        }
+
+        // 2. Mouse buttons detection (Left, Right, Middle, Forward, Back)
+        if (Mouse.current != null)
+        {
+            CustomMouseButton pressedMouse = CustomMouseButton.None;
+            if (Mouse.current.leftButton.wasPressedThisFrame) pressedMouse = CustomMouseButton.Left;
+            else if (Mouse.current.rightButton.wasPressedThisFrame) pressedMouse = CustomMouseButton.Right;
+            else if (Mouse.current.middleButton.wasPressedThisFrame) pressedMouse = CustomMouseButton.Middle;
+            else if (Mouse.current.forwardButton.wasPressedThisFrame) pressedMouse = CustomMouseButton.Forward;
+            else if (Mouse.current.backButton.wasPressedThisFrame) pressedMouse = CustomMouseButton.Back;
+
+            if (pressedMouse != CustomMouseButton.None)
+            {
+                KeyBindingManager.SetMouse(activeRebindingAction.Value, pressedMouse);
+                if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+                RefreshAllKeybindingUI();
+                activeRebindingAction = null;
+                activeRebindingButton = null;
+                activeRebindingText = null;
+                return;
+            }
+        }
+
+        // 3. Keyboard keys detection
+        if (Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame)
+        {
+            foreach (var control in Keyboard.current.allControls)
+            {
+                if (control is KeyControl kc && kc.wasPressedThisFrame)
+                {
+                    if (kc.keyCode != Key.None && kc.keyCode != Key.Escape)
+                    {
+                        KeyBindingManager.SetKey(activeRebindingAction.Value, kc.keyCode);
+                        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+                        RefreshAllKeybindingUI();
+                        activeRebindingAction = null;
+                        activeRebindingButton = null;
+                        activeRebindingText = null;
+                        return;
+                    }
+                }
+            }
+        }
+#endif
     }
 
     private void HandleInput()
@@ -830,9 +1180,14 @@ public class GameMenuManager : MonoBehaviour
 
     #endregion
 
-    #region --- FLOW ACTIONS (PLAY, PAUSE, RESUME, RETURN, QUIT) ---
+    #region --- FLOW ACTIONS (PLAY, CONTINUE, NEW GAME, PAUSE, RESUME, RETURN, QUIT) ---
 
     public void OnPlayButtonClicked()
+    {
+        OnContinueButtonClicked();
+    }
+
+    public void OnContinueButtonClicked()
     {
         if (currentState == GameFlowState.Transitioning) return;
 
@@ -841,6 +1196,109 @@ public class GameMenuManager : MonoBehaviour
             AudioManager.Instance.PlayButtonClick();
         }
 
+        StartGameplayTransition();
+    }
+
+    public void OnNewGameButtonClicked()
+    {
+        if (currentState == GameFlowState.Transitioning) return;
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayButtonClick();
+        }
+
+        bool hasSave = HasSaveData();
+        if (hasSave)
+        {
+            if (newGameModalPanel != null)
+            {
+                newGameModalPanel.SetActive(true);
+                newGameModalPanel.transform.SetAsLastSibling();
+            }
+            else
+            {
+                ExecuteNewGameResetAndStart();
+            }
+        }
+        else
+        {
+            ExecuteNewGameResetAndStart();
+        }
+    }
+
+    public void ExecuteNewGameResetAndStart()
+    {
+        if (newGameModalPanel != null)
+        {
+            newGameModalPanel.SetActive(false);
+        }
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayButtonClick();
+        }
+
+        // 1. Reset all vehicles, fuels and conditions
+        DrivableVehicle.ResetAllVehiclesInGame();
+
+        // 2. Reset all commercial properties (lock them)
+        PurchasableProperty.ResetAllPropertiesInGame();
+
+        // 3. Reset Branch progression to Level 1
+        if (BranchManager.Instance != null)
+        {
+            BranchManager.Instance.ResetBranchProgression();
+        }
+        else
+        {
+            PlayerPrefs.SetInt("Delivery_BranchLevel", 1);
+        }
+
+        // 4. Reset Warehouse level to 1
+        if (PlayerProgressionManager.Instance != null)
+        {
+            PlayerProgressionManager.Instance.ResetProgression();
+        }
+        else
+        {
+            PlayerPrefs.SetInt("WAREHOUSE_PLAYER_LEVEL", 1);
+        }
+
+        // 5. Reset Economy to starter balance ($500)
+        if (PlayerEconomyManager.Instance != null)
+        {
+            PlayerEconomyManager.Instance.SetBalance(500);
+        }
+        else
+        {
+            PlayerPrefs.SetInt("CARGO_PLAYER_TOTAL_BALANCE", 500);
+        }
+        PlayerPrefs.SetInt("Delivery_PlayerCash", 500);
+
+        // 6. Reset Day Count to Day 1
+        PlayerPrefs.SetInt("Delivery_CurrentDay", 1);
+        PlayerPrefs.DeleteKey("DaySummary_DayCount");
+
+        // 7. Reset Vehicle Tuning, Service Garage, Passive Dispatch, Insurance
+        PlayerPrefs.DeleteKey("Save_PassiveDispatch_Tier");
+        PlayerPrefs.DeleteKey("Save_Insurance_Tier");
+        PlayerPrefs.DeleteKey("VehicleService_WorkshopLevel");
+
+        // 8. Set Save Game flag
+        PlayerPrefs.SetInt("Delivery_HasSaveGame", 1);
+        PlayerPrefs.Save();
+
+        // 9. Update stats display and buttons
+        UpdateMainMenuSaveStats();
+        UpdateMainMenuButtons();
+
+        // 10. Start game transition
+        StartGameplayTransition();
+    }
+
+    private void StartGameplayTransition()
+    {
         PlayTransitionSequence(
             onBlackout: () =>
             {
@@ -866,6 +1324,7 @@ public class GameMenuManager : MonoBehaviour
                 if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
                 if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
                 if (settingsPanel != null) settingsPanel.SetActive(false);
+                if (newGameModalPanel != null) newGameModalPanel.SetActive(false);
 
                 if (MainHUDController.Instance != null)
                 {
@@ -888,6 +1347,18 @@ public class GameMenuManager : MonoBehaviour
         currentState = GameFlowState.Paused;
         Time.timeScale = 0f;
 
+        EnsureUI();
+
+        if (pauseMenuPanel == null)
+        {
+            Canvas canvas = GetComponentInParent<Canvas>() ?? UnityEngine.Object.FindAnyObjectByType<Canvas>();
+            if (canvas != null)
+            {
+                Transform pmp = canvas.transform.Find("PauseMenuPanel");
+                if (pmp != null) pauseMenuPanel = pmp.gameObject;
+            }
+        }
+
         if (pauseMenuPanel != null)
         {
             pauseMenuPanel.SetActive(true);
@@ -895,6 +1366,7 @@ public class GameMenuManager : MonoBehaviour
         }
         if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
         if (settingsPanel != null) settingsPanel.SetActive(false);
+        if (newGameModalPanel != null) newGameModalPanel.SetActive(false);
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -915,6 +1387,7 @@ public class GameMenuManager : MonoBehaviour
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
         if (settingsPanel != null) settingsPanel.SetActive(false);
         if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
+        if (newGameModalPanel != null) newGameModalPanel.SetActive(false);
 
         FPSPlayerController.LockCursor(true);
 
@@ -968,6 +1441,7 @@ public class GameMenuManager : MonoBehaviour
 
                 // 4. Show Main Menu UI
                 UpdateMainMenuSaveStats();
+                UpdateMainMenuButtons();
                 if (mainMenuPanel != null)
                 {
                     mainMenuPanel.SetActive(true);
@@ -975,6 +1449,7 @@ public class GameMenuManager : MonoBehaviour
                 }
                 if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
                 if (settingsPanel != null) settingsPanel.SetActive(false);
+                if (newGameModalPanel != null) newGameModalPanel.SetActive(false);
 
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
@@ -1017,8 +1492,59 @@ public class GameMenuManager : MonoBehaviour
             AudioManager.Instance.PlayButtonClick();
         }
 
-        if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
-        if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
+        EnsureUI();
+
+        // 1. Deactivate Pause Menu Panel completely
+        if (pauseMenuPanel != null)
+        {
+            pauseMenuPanel.SetActive(false);
+        }
+        else
+        {
+            Canvas canvas = GetComponentInParent<Canvas>() ?? UnityEngine.Object.FindAnyObjectByType<Canvas>();
+            if (canvas != null)
+            {
+                Transform pmp = canvas.transform.Find("PauseMenuPanel");
+                if (pmp != null)
+                {
+                    pauseMenuPanel = pmp.gameObject;
+                    pauseMenuPanel.SetActive(false);
+                }
+            }
+        }
+
+        // 2. Deactivate Main Menu & Modals
+        if (mainMenuPanel != null)
+        {
+            mainMenuPanel.SetActive(false);
+        }
+        else
+        {
+            Canvas canvas = GetComponentInParent<Canvas>() ?? UnityEngine.Object.FindAnyObjectByType<Canvas>();
+            if (canvas != null)
+            {
+                Transform mmp = canvas.transform.Find("MainMenuPanel");
+                if (mmp != null)
+                {
+                    mainMenuPanel = mmp.gameObject;
+                    mainMenuPanel.SetActive(false);
+                }
+            }
+        }
+
+        if (newGameModalPanel != null) newGameModalPanel.SetActive(false);
+
+        // 3. Activate Settings Panel
+        if (settingsPanel == null)
+        {
+            Canvas canvas = GetComponentInParent<Canvas>() ?? UnityEngine.Object.FindAnyObjectByType<Canvas>();
+            if (canvas != null)
+            {
+                Transform sp = canvas.transform.Find("SettingsPanel");
+                if (sp != null) settingsPanel = sp.gameObject;
+            }
+        }
+
         if (settingsPanel != null)
         {
             settingsPanel.SetActive(true);
@@ -1027,6 +1553,7 @@ public class GameMenuManager : MonoBehaviour
 
         ShowSettingsTab(0); // Default to Audio tab
         SyncSettingsValuesToUI();
+        RefreshAllKeybindingUI();
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -1034,6 +1561,8 @@ public class GameMenuManager : MonoBehaviour
 
     public void CloseSettings()
     {
+        CancelKeyRebind();
+
         if (SettingsManager.Instance != null)
         {
             SettingsManager.Instance.SaveAllSettings();
@@ -1044,11 +1573,23 @@ public class GameMenuManager : MonoBehaviour
             AudioManager.Instance.PlayButtonClick();
         }
 
+        EnsureUI();
+
         if (settingsPanel != null) settingsPanel.SetActive(false);
 
         if (openedSettingsFromPause)
         {
             currentState = GameFlowState.Paused;
+            if (pauseMenuPanel == null)
+            {
+                Canvas canvas = GetComponentInParent<Canvas>() ?? UnityEngine.Object.FindAnyObjectByType<Canvas>();
+                if (canvas != null)
+                {
+                    Transform pmp = canvas.transform.Find("PauseMenuPanel");
+                    if (pmp != null) pauseMenuPanel = pmp.gameObject;
+                }
+            }
+
             if (pauseMenuPanel != null)
             {
                 pauseMenuPanel.SetActive(true);
@@ -1058,6 +1599,16 @@ public class GameMenuManager : MonoBehaviour
         else
         {
             currentState = GameFlowState.MainMenu;
+            if (mainMenuPanel == null)
+            {
+                Canvas canvas = GetComponentInParent<Canvas>() ?? UnityEngine.Object.FindAnyObjectByType<Canvas>();
+                if (canvas != null)
+                {
+                    Transform mmp = canvas.transform.Find("MainMenuPanel");
+                    if (mmp != null) mainMenuPanel = mmp.gameObject;
+                }
+            }
+
             if (mainMenuPanel != null)
             {
                 mainMenuPanel.SetActive(true);
@@ -1071,6 +1622,8 @@ public class GameMenuManager : MonoBehaviour
 
     public void ShowSettingsTab(int tabIndex)
     {
+        CancelKeyRebind();
+
         if (audioSection != null) audioSection.SetActive(tabIndex == 0);
         if (graphicsSection != null) graphicsSection.SetActive(tabIndex == 1);
         if (controlsSection != null) controlsSection.SetActive(tabIndex == 2);
@@ -1078,6 +1631,11 @@ public class GameMenuManager : MonoBehaviour
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlayTabSwitch();
+        }
+
+        if (tabIndex == 2)
+        {
+            RefreshAllKeybindingUI();
         }
     }
 
@@ -1145,6 +1703,7 @@ public class GameMenuManager : MonoBehaviour
         }
 
         SyncSettingsValuesToUI();
+        RefreshAllKeybindingUI();
     }
 
     private void SyncSettingsValuesToUI()
@@ -1181,15 +1740,104 @@ public class GameMenuManager : MonoBehaviour
 
     #endregion
 
+    #region --- KEYBINDINGS REBINDING METHODS ---
+
+    public void StartKeyRebind(GameAction action, Button btn, TextMeshProUGUI btnText)
+    {
+        if (activeRebindingAction.HasValue && activeRebindingText != null)
+        {
+            InputBindingData prev = KeyBindingManager.GetBinding(activeRebindingAction.Value);
+            activeRebindingText.text = prev.IsAssigned ? $"[ {prev.GetDisplayName()} ]" : "<color=#FF5555><b>[ Atanmadı ]</b></color>";
+            activeRebindingText.color = prev.IsAssigned ? new Color(0.25f, 0.95f, 1.0f) : Color.white;
+        }
+
+        activeRebindingAction = action;
+        activeRebindingButton = btn;
+        activeRebindingText = btnText;
+        rebindDebounceTimer = 0.15f;
+
+        btnText.text = "<color=#FFE600><b>[ Tuşa / Fareye Basın... ]</b></color>";
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+    }
+
+    public void CancelKeyRebind()
+    {
+        if (activeRebindingAction.HasValue && activeRebindingText != null)
+        {
+            InputBindingData prev = KeyBindingManager.GetBinding(activeRebindingAction.Value);
+            activeRebindingText.text = prev.IsAssigned ? $"[ {prev.GetDisplayName()} ]" : "<color=#FF5555><b>[ Atanmadı ]</b></color>";
+            activeRebindingText.color = prev.IsAssigned ? new Color(0.25f, 0.95f, 1.0f) : Color.white;
+        }
+
+        activeRebindingAction = null;
+        activeRebindingButton = null;
+        activeRebindingText = null;
+        rebindDebounceTimer = 0f;
+    }
+
+    public void RefreshAllKeybindingUI()
+    {
+        foreach (var kvp in keybindingRowMap)
+        {
+            if (kvp.Value.text != null)
+            {
+                InputBindingData binding = KeyBindingManager.GetBinding(kvp.Key);
+                if (binding.IsAssigned)
+                {
+                    kvp.Value.text.text = $"[ {binding.GetDisplayName()} ]";
+                    kvp.Value.text.color = new Color(0.25f, 0.95f, 1.0f);
+                }
+                else
+                {
+                    kvp.Value.text.text = "<color=#FF5555><b>[ Atanmadı ]</b></color>";
+                }
+            }
+        }
+    }
+
+    public void ResetKeybindingsToDefault()
+    {
+        CancelKeyRebind();
+        KeyBindingManager.ResetToDefaults();
+        RefreshAllKeybindingUI();
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+    }
+
+    #endregion
+
     #region --- BUTTON & SLIDER BINDINGS ---
 
     private void BindButtonsAndEvents()
     {
-        // Main Menu
-        if (playButton != null)
+        // Main Menu Continue & New Game
+        if (continueButton != null)
+        {
+            continueButton.onClick.RemoveAllListeners();
+            continueButton.onClick.AddListener(OnContinueButtonClicked);
+        }
+        if (newGameButton != null)
+        {
+            newGameButton.onClick.RemoveAllListeners();
+            newGameButton.onClick.AddListener(OnNewGameButtonClicked);
+        }
+        if (playButton != null && playButton != continueButton && playButton != newGameButton)
         {
             playButton.onClick.RemoveAllListeners();
             playButton.onClick.AddListener(OnPlayButtonClicked);
+        }
+        if (confirmNewGameBtn != null)
+        {
+            confirmNewGameBtn.onClick.RemoveAllListeners();
+            confirmNewGameBtn.onClick.AddListener(ExecuteNewGameResetAndStart);
+        }
+        if (cancelNewGameBtn != null)
+        {
+            cancelNewGameBtn.onClick.RemoveAllListeners();
+            cancelNewGameBtn.onClick.AddListener(() =>
+            {
+                if (newGameModalPanel != null) newGameModalPanel.SetActive(false);
+                if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+            });
         }
         if (mainMenuSettingsButton != null)
         {
@@ -1244,6 +1892,26 @@ public class GameMenuManager : MonoBehaviour
         {
             tabControlsBtn.onClick.RemoveAllListeners();
             tabControlsBtn.onClick.AddListener(() => ShowSettingsTab(2));
+        }
+
+        // Keybindings Reset
+        if (resetKeybindingsBtn != null)
+        {
+            resetKeybindingsBtn.onClick.RemoveAllListeners();
+            resetKeybindingsBtn.onClick.AddListener(ResetKeybindingsToDefault);
+        }
+
+        // Keybindings Row Buttons
+        foreach (var kvp in keybindingRowMap)
+        {
+            GameAction action = kvp.Key;
+            Button btn = kvp.Value.button;
+            TextMeshProUGUI txt = kvp.Value.text;
+            if (btn != null)
+            {
+                btn.onClick.RemoveAllListeners();
+                btn.onClick.AddListener(() => StartKeyRebind(action, btn, txt));
+            }
         }
 
         // Audio Sliders

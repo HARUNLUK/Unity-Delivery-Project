@@ -75,7 +75,7 @@ MonoBehaviour:
   vehicleTailgateClose: {fileID: 8300000, guid: 936f7fa626cf0cd44ba32255d0f8a4c1, type: 3}
   vehicleCrashLight: {fileID: 8300000, guid: 2407a49ed3be15945b9d8027907a366b, type: 3}
   vehicleCrashHeavy: {fileID: 8300000, guid: 176eb784084611d4f93e8cd34195a258, type: 3}
-  vehicleCrashVolume: 0.9
+  vehicleCrashVolume: 0.29
   fuelPumpingLoop: {fileID: 8300000, guid: 784b2b1feb46d7845a169c53746ff11f, type: 3}
   fuelPumpingVolume: 0.95
   fuelPumpFinishBeep: {fileID: 8300000, guid: 5f8b96c45be37194b99b195388922e4b, type: 3}

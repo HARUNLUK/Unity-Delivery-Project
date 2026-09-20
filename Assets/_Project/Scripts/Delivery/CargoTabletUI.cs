@@ -222,7 +222,7 @@ public class CargoTabletUI : MonoBehaviour
     {
         if (Keyboard.current != null)
         {
-            if (Keyboard.current.tabKey.wasPressedThisFrame ||
+            if (KeyBindingManager.WasPressedThisFrame(GameAction.Tablet) ||
                 Keyboard.current.tKey.wasPressedThisFrame ||
                 Keyboard.current.mKey.wasPressedThisFrame ||
                 Keyboard.current.iKey.wasPressedThisFrame)
