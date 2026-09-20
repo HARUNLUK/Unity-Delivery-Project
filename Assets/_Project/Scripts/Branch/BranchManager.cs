@@ -20,6 +20,25 @@ public class BranchManager : MonoBehaviour
     [Tooltip("Optional fallback physical in-world upgrade terminal / desk")]
     public BranchUpgradeTerminal upgradeTerminal;
 
+    [Header("--- KARAKTERİN DIŞARIDA SPAWN OLACAĞI NOKTA (EXTERIOR SPAWN) ---")]
+    [Tooltip("If true, triggers a smooth transition screen and teleports the character outside looking at the upgraded branch")]
+    public bool enableUpgradeTransition = true;
+
+    [Tooltip("Karakterin yükseltme sonrasında dışarıda doğacağı Spawn Noktası (Sahnedeki bir Transform nesnesini buraya sürükleyebilirsiniz)")]
+    public Transform playerExteriorSpawnPoint;
+
+    [Tooltip("Karakterin spawn olduğunda bakacağı hedef Transform (Boş bırakılırsa doğrudan şube binasına bakar)")]
+    public Transform playerLookTarget;
+
+    [Tooltip("Eğer sahnede bir Transform atanmamışsa, şube merkezinden yerel ofset")]
+    public Vector3 defaultExteriorOffset = new Vector3(0f, 0f, -14f);
+
+    [Tooltip("Otomatik spawn için şube binası önü mesafesi")]
+    public float autoExteriorDistance = 14f;
+
+    [Tooltip("Kameranın şube binasına bakış yükseklik ofseti")]
+    public float lookAtHeightOffset = 2.5f;
+
     [Header("--- CARGO TYPE UNLOCK LEVELS & SPAWN CHANCES ---")]
     [Tooltip("Minimum branch level required for Standard cargo")]
     public int standardRequiredLevel = 1;
@@ -421,9 +440,135 @@ public class BranchManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Attempts to upgrade the branch to the next tier. Deducts money and applies visual transformations.
+    /// Calculates the outside viewpoint position and target look position for the given branch tier.
+    /// Prioritizes tier-specific spawn points first, then BranchManager's playerExteriorSpawnPoint.
     /// </summary>
-    public bool TryUpgradeBranch()
+    public (Vector3 spawnPos, Vector3 lookAtPos) GetExteriorViewpoint(BranchTier tier)
+    {
+        Transform searchRoot = activeBuildingInstance != null ? activeBuildingInstance.transform : (tier != null && tier.sceneBuildingRoot != null ? tier.sceneBuildingRoot.transform : (buildingContainer != null ? buildingContainer : transform));
+        Vector3 branchOrigin = searchRoot != null ? searchRoot.position : transform.position;
+        Vector3 defaultLookTarget = branchOrigin + Vector3.up * lookAtHeightOffset;
+
+        // 1. Check if Tier has a direct exteriorSpawnPoint assigned
+        if (tier != null && tier.exteriorSpawnPoint != null)
+        {
+            Vector3 sPos = tier.exteriorSpawnPoint.position;
+            Vector3 lPos = tier.lookTarget != null ? tier.lookTarget.position : defaultLookTarget;
+            return (sPos, lPos);
+        }
+
+        // 2. Check if BranchManager has a global playerExteriorSpawnPoint assigned in Inspector
+        if (playerExteriorSpawnPoint != null)
+        {
+            Vector3 sPos = playerExteriorSpawnPoint.position;
+            Vector3 lPos = playerLookTarget != null ? playerLookTarget.position : defaultLookTarget;
+            return (sPos, lPos);
+        }
+
+        // 3. Check if active building prefab or scene root has an ExteriorViewpoint child anchor
+        if (searchRoot != null)
+        {
+            Transform[] allChildren = searchRoot.GetComponentsInChildren<Transform>(true);
+            foreach (Transform child in allChildren)
+            {
+                if (child == searchRoot) continue;
+                string n = child.name;
+                if (n.IndexOf("Exterior", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("Outside", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("Spawn", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("Entrance", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("Viewpoint", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return (child.position, defaultLookTarget);
+                }
+            }
+        }
+
+        // 4. Procedural outside viewpoint in front of building
+        Vector3 forwardDir = searchRoot != null ? searchRoot.forward : transform.forward;
+        Vector3 offset = (tier != null && tier.customExteriorOffset != Vector3.zero) ? tier.customExteriorOffset : defaultExteriorOffset;
+        Vector3 rawSpawnPos;
+
+        if (offset != Vector3.zero)
+        {
+            rawSpawnPos = branchOrigin + (searchRoot != null ? searchRoot.TransformDirection(offset) : offset);
+        }
+        else
+        {
+            rawSpawnPos = branchOrigin - (forwardDir * autoExteriorDistance);
+        }
+
+        // Raycast to snap cleanly to ground
+        Vector3 safeSpawnPos = rawSpawnPos;
+        if (Physics.Raycast(rawSpawnPos + Vector3.up * 8f, Vector3.down, out RaycastHit hit, 20f, ~0, QueryTriggerInteraction.Ignore))
+        {
+            safeSpawnPos = hit.point + Vector3.up * 0.1f;
+        }
+
+        return (safeSpawnPos, defaultLookTarget);
+    }
+
+    [ContextMenu("Create Exterior Spawn Point Anchor in Scene")]
+    public void CreateExteriorSpawnPointAnchor()
+    {
+        Transform existing = transform.Find("Player_Exterior_SpawnPoint");
+        if (existing == null)
+        {
+            GameObject spawnObj = new GameObject("Player_Exterior_SpawnPoint");
+            spawnObj.transform.SetParent(transform, false);
+            spawnObj.transform.localPosition = defaultExteriorOffset != Vector3.zero ? defaultExteriorOffset : new Vector3(0f, 0f, -autoExteriorDistance);
+            spawnObj.transform.localRotation = Quaternion.identity;
+            existing = spawnObj.transform;
+        }
+
+        playerExteriorSpawnPoint = existing;
+        Debug.Log($"<color=#32FF64>[BranchManager] Spawn Point Anchor created and assigned: '{existing.name}'</color>");
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        // Visual Gizmo for exterior spawn point in Scene view
+        Vector3 sPos = Vector3.zero;
+        Vector3 lPos = Vector3.zero;
+        bool hasPoint = false;
+
+        BranchTier current = CurrentTier;
+        if (current != null && current.exteriorSpawnPoint != null)
+        {
+            sPos = current.exteriorSpawnPoint.position;
+            lPos = current.lookTarget != null ? current.lookTarget.position : (transform.position + Vector3.up * lookAtHeightOffset);
+            hasPoint = true;
+        }
+        else if (playerExteriorSpawnPoint != null)
+        {
+            sPos = playerExteriorSpawnPoint.position;
+            lPos = playerLookTarget != null ? playerLookTarget.position : (transform.position + Vector3.up * lookAtHeightOffset);
+            hasPoint = true;
+        }
+        else
+        {
+            (sPos, lPos) = GetExteriorViewpoint(current);
+            hasPoint = true;
+        }
+
+        if (hasPoint)
+        {
+            // Draw spawn position sphere
+            Gizmos.color = new Color(0.1f, 0.9f, 1.0f, 0.85f);
+            Gizmos.DrawWireSphere(sPos + Vector3.up * 0.9f, 0.45f);
+            Gizmos.DrawLine(sPos, sPos + Vector3.up * 1.8f);
+
+            // Draw line to look target
+            Gizmos.color = new Color(0.2f, 1.0f, 0.4f, 0.75f);
+            Gizmos.DrawLine(sPos + Vector3.up * 1.7f, lPos);
+            Gizmos.DrawWireSphere(lPos, 0.35f);
+        }
+    }
+
+    /// <summary>
+    /// Attempts to upgrade the branch to the next tier. Deducts money, plays transition screen, applies visual transformations, and teleports player outside.
+    /// </summary>
+    public bool TryUpgradeBranch(bool withTransition = true)
     {
         if (!HasNextTier)
         {
@@ -450,19 +595,62 @@ public class BranchManager : MonoBehaviour
             PlayerEconomyManager.Instance.DeductCash(next.upgradeCost);
         }
 
+        int oldLevel = currentBranchLevel;
         currentBranchLevel++;
         SaveBranchLevel();
 
+        BranchTier upgradedTier = CurrentTier;
+
+        // Check if cinematic transition UI should play
+        BranchUpgradeTransitionUI transitionUI = BranchUpgradeTransitionUI.Instance;
+        if (transitionUI == null) transitionUI = UnityEngine.Object.FindAnyObjectByType<BranchUpgradeTransitionUI>();
+
+        if (withTransition && enableUpgradeTransition && Application.isPlaying)
+        {
+            if (transitionUI != null)
+            {
+                transitionUI.PlayUpgradeSequence(
+                    oldLevel,
+                    currentBranchLevel,
+                    upgradedTier,
+                    onBlackoutAction: () =>
+                    {
+                        // 1. Swap building visuals under blackout
+                        ApplyTierVisuals(false);
+
+                        // 2. Relocate player outside and aim camera at the new branch
+                        (Vector3 spawnPos, Vector3 lookAtPos) = GetExteriorViewpoint(upgradedTier);
+                        FPSPlayerController player = FPSPlayerController.Instance != null ? FPSPlayerController.Instance : UnityEngine.Object.FindAnyObjectByType<FPSPlayerController>();
+                        if (player != null)
+                        {
+                            player.TeleportAndLookAt(spawnPos, lookAtPos);
+                        }
+
+                        Debug.Log($"<color=#32FFFF>[BRANCH UPGRADED] Level {currentBranchLevel} ({upgradedTier.tierName})! Player relocated to outside viewpoint: {spawnPos}</color>");
+                        OnBranchUpgraded?.Invoke(currentBranchLevel, upgradedTier);
+                    }
+                );
+                return true;
+            }
+        }
+
+        // Fallback immediate upgrade (e.g. In Edit mode or if transitions disabled)
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlayLevelUp();
         }
 
-        // Update visuals without altering user-designed generator positions
         ApplyTierVisuals(false);
 
-        Debug.Log($"<color=#32FFFF>[BRANCH UPGRADED] Level {currentBranchLevel} ({CurrentTier.tierName})!</color>");
-        OnBranchUpgraded?.Invoke(currentBranchLevel, CurrentTier);
+        (Vector3 fallbackSpawn, Vector3 fallbackLook) = GetExteriorViewpoint(upgradedTier);
+        FPSPlayerController fallbackPlayer = FPSPlayerController.Instance != null ? FPSPlayerController.Instance : UnityEngine.Object.FindAnyObjectByType<FPSPlayerController>();
+        if (fallbackPlayer != null)
+        {
+            fallbackPlayer.TeleportAndLookAt(fallbackSpawn, fallbackLook);
+        }
+
+        Debug.Log($"<color=#32FFFF>[BRANCH UPGRADED] Level {currentBranchLevel} ({upgradedTier.tierName})!</color>");
+        OnBranchUpgraded?.Invoke(currentBranchLevel, upgradedTier);
 
         return true;
     }

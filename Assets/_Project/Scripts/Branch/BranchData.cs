@@ -34,4 +34,14 @@ public class BranchTier
 
     [Tooltip("If already placed in scene, direct scene GameObject reference for this tier")]
     public GameObject sceneBuildingRoot;
+
+    [Header("--- KARAKTER SPAWN & BAKIŞ NOKTASI (SEVİYE BAZLI - OPSİYONEL) ---")]
+    [Tooltip("Bu seviyeye yükseltildiğinde karakterin dışarıda doğacağı özel Transform noktası (Boşsa BranchManager üzerindeki genel spawn noktası kullanılır)")]
+    public Transform exteriorSpawnPoint;
+
+    [Tooltip("Karakterin doğduğunda bakacağı hedef Transform (Boşsa doğrudan şube binasına bakar)")]
+    public Transform lookTarget;
+
+    [Tooltip("Dış mekan spawn pozisyonu için şube merkezinden yerel ofset (Spawn noktası Transform'u atanmamışsa kullanılır)")]
+    public Vector3 customExteriorOffset = Vector3.zero;
 }

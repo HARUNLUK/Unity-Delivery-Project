@@ -245,7 +245,11 @@ public class FPSPlayerController : MonoBehaviour
         if (DeliverySelectionUI.Instance != null && DeliverySelectionUI.Instance.IsOpen)
             return true;
 
-        // 6. Direct scene hierarchy fallback for DaySummaryPanel
+        // 6. Branch Upgrade Cinematic Transition
+        if (BranchUpgradeTransitionUI.IsTransitioning)
+            return true;
+
+        // 7. Direct scene hierarchy fallback for DaySummaryPanel
         GameObject dsp = GameObject.Find("DaySummaryPanel");
         if (dsp != null && dsp.activeInHierarchy)
             return true;
@@ -1267,6 +1271,54 @@ public class FPSPlayerController : MonoBehaviour
         playerCamera.transform.localPosition = Vector3.zero;
         playerCamera.transform.localRotation = Quaternion.identity;
         if (cameraHolder != null) cameraHolder.localRotation = Quaternion.identity;
+    }
+
+    /// <summary>
+    /// Teleports the player character to a world position, rotates the body (yaw), and pitches the camera towards a target point.
+    /// Safely handles CharacterController enable/disable and Physics transform syncing.
+    /// </summary>
+    public void TeleportAndLookAt(Vector3 targetPosition, Vector3 lookTargetPoint)
+    {
+        // 1. If currently inside vehicle or holding something, detach cleanly
+        if (!isOnFoot && currentVehicle != null)
+        {
+            currentVehicle.ExitVehicle();
+        }
+
+        if (grabber != null && grabber.IsHoldingObject)
+        {
+            grabber.ReleaseObject(Vector3.zero);
+        }
+
+        if (controller != null) controller.enabled = false;
+
+        transform.position = targetPosition;
+
+        Vector3 dir = lookTargetPoint - targetPosition;
+        Vector3 flatDir = new Vector3(dir.x, 0f, dir.z);
+
+        if (flatDir.sqrMagnitude > 0.001f)
+        {
+            Quaternion targetRot = Quaternion.LookRotation(flatDir);
+            transform.rotation = targetRot;
+        }
+
+        // Calculate vertical pitch angle towards look target
+        float horizontalDist = flatDir.magnitude;
+        float eyeHeight = cameraHolder != null ? cameraHolder.localPosition.y : 1.7f;
+        float verticalDist = dir.y - eyeHeight;
+        float targetPitch = -Mathf.Atan2(verticalDist, Mathf.Max(0.1f, horizontalDist)) * Mathf.Rad2Deg;
+        targetPitch = Mathf.Clamp(targetPitch, minPitch, maxPitch);
+
+        pitch = targetPitch;
+        if (cameraHolder != null)
+        {
+            cameraHolder.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+        }
+
+        Physics.SyncTransforms();
+
+        if (controller != null && isOnFoot) controller.enabled = true;
     }
 
     /// <summary>
