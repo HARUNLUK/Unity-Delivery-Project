@@ -187,7 +187,9 @@ public class FPSPlayerController : MonoBehaviour
 
     private void Start()
     {
-        // Deactivate any conflicting scene cameras so FPS Camera is 100% in control
+        bool inMainMenu = GameMenuManager.Instance != null && GameMenuManager.Instance.startInMainMenu && GameMenuManager.Instance.CurrentState == GameFlowState.MainMenu;
+
+        // Deactivate any duplicate non-player cameras
         Camera[] allCameras = Object.FindObjectsByType<Camera>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
         foreach (var cam in allCameras)
         {
@@ -197,8 +199,28 @@ public class FPSPlayerController : MonoBehaviour
             }
         }
 
-        SetOnFootActive(true);
-        LockCursor(true);
+        if (inMainMenu)
+        {
+            SetOnFootActive(false);
+            if (playerCamera != null) playerCamera.enabled = true;
+            if (MainMenuCameraController.Instance != null)
+            {
+                MainMenuCameraController.Instance.SetMenuMode(true);
+            }
+            LockCursor(false);
+        }
+        else
+        {
+            SetOnFootActive(true);
+            if (playerCamera != null) playerCamera.enabled = true;
+            LockCursor(true);
+        }
+
+        if (SettingsManager.Instance != null)
+        {
+            mouseSensitivity = SettingsManager.Instance.mouseSensitivity;
+            inVehicleMouseSensitivity = SettingsManager.Instance.mouseSensitivity;
+        }
 
         if (overrideStartingCash && PlayerEconomyManager.Instance != null)
         {
@@ -225,6 +247,10 @@ public class FPSPlayerController : MonoBehaviour
 
     public static bool IsAnyUIOpen()
     {
+        // 0. Main Menu, Pause Menu, Settings, or Transition
+        if (GameMenuManager.Instance != null && GameMenuManager.Instance.IsMenuOrPauseOpen)
+            return true;
+
         // 1. Tablet UI
         if (CargoTabletUI.Instance != null && CargoTabletUI.Instance.IsTabletOpen)
             return true;

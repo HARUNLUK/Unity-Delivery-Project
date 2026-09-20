@@ -92,6 +92,20 @@ public class MainHUDController : MonoBehaviour
         }
     }
 
+    public void SetHUDVisible(bool visible)
+    {
+        if (clockText != null && clockText.transform.parent != null && clockText.transform.parent != transform)
+        {
+            clockText.transform.parent.gameObject.SetActive(visible);
+        }
+        else
+        {
+            if (clockText != null) clockText.gameObject.SetActive(visible);
+            if (remainingCargoText != null) remainingCargoText.gameObject.SetActive(visible);
+            if (balanceEarningsText != null) balanceEarningsText.gameObject.SetActive(visible);
+        }
+    }
+
     public void RefreshAll()
     {
         RefreshCargoCount();
