@@ -302,12 +302,12 @@ public class CommercialHubUIManager : MonoBehaviour
 
         if (insuranceStatusText != null)
         {
-            insuranceStatusText.text = LocalizationManager.GetFormat("insurance_current_policy", "<b>Current Policy:</b> <color=#32FF64>{0}</color>", InsuranceAgencyManager.Instance.GetTierName());
+            insuranceStatusText.text = LocalizationManager.GetFormat("insurance_current_policy", InsuranceAgencyManager.Instance.GetTierName());
         }
 
         if (insuranceBalanceText != null)
         {
-            insuranceBalanceText.text = LocalizationManager.GetFormat("insurance_wallet", "<b>Wallet Balance:</b> <color=#32FF64>${0:N0}</color>", balance);
+            insuranceBalanceText.text = LocalizationManager.GetFormat("insurance_wallet", balance);
         }
 
         InsuranceAgencyManager ins = InsuranceAgencyManager.Instance;
@@ -321,7 +321,7 @@ public class CommercialHubUIManager : MonoBehaviour
             }
             else
             {
-                if (txt != null) txt.text = LocalizationManager.GetFormat("insurance_btn_tier2_buy", "🛡️ Purchase Silver Insurance (${0:N0})", ins.tier2UpgradeCost);
+                if (txt != null) txt.text = LocalizationManager.GetFormat("insurance_btn_tier2_buy", ins.tier2UpgradeCost);
                 insuranceTier2UpgradeBtn.interactable = true;
             }
         }
@@ -336,7 +336,7 @@ public class CommercialHubUIManager : MonoBehaviour
             }
             else
             {
-                if (txt != null) txt.text = LocalizationManager.GetFormat("insurance_btn_tier3_buy", "🛡️ Purchase Gold Full Insurance (${0:N0})", ins.tier3UpgradeCost);
+                if (txt != null) txt.text = LocalizationManager.GetFormat("insurance_btn_tier3_buy", ins.tier3UpgradeCost);
                 insuranceTier3UpgradeBtn.interactable = (tier >= 2);
             }
         }
@@ -396,17 +396,17 @@ public class CommercialHubUIManager : MonoBehaviour
 
         if (dispatchStatusText != null)
         {
-            dispatchStatusText.text = LocalizationManager.GetFormat("dispatch_status", "<b>Hub Level:</b> Level {0}  |  <b>Active Couriers:</b> {1} Couriers", level, couriers);
+            dispatchStatusText.text = LocalizationManager.GetFormat("dispatch_status", level, couriers);
         }
 
         if (dispatchRevenueInfoText != null)
         {
-            dispatchRevenueInfoText.text = LocalizationManager.GetFormat("dispatch_revenue_info", "<b>Daily Passive Revenue:</b> <color=#32FF64>+${0:N0} / Day</color> (Auto-deposited at 18:00 daily)", dailyRev);
+            dispatchRevenueInfoText.text = LocalizationManager.GetFormat("dispatch_revenue_info", dailyRev);
         }
 
         if (dispatchBalanceText != null)
         {
-            dispatchBalanceText.text = LocalizationManager.GetFormat("insurance_wallet", "<b>Wallet Balance:</b> <color=#32FF64>${0:N0}</color>", balance);
+            dispatchBalanceText.text = LocalizationManager.GetFormat("insurance_wallet", balance);
         }
 
         if (dispatchTier2UpgradeBtn != null)
@@ -414,12 +414,12 @@ public class CommercialHubUIManager : MonoBehaviour
             TextMeshProUGUI txt = dispatchTier2UpgradeBtn.GetComponentInChildren<TextMeshProUGUI>();
             if (level >= 2)
             {
-                if (txt != null) txt.text = LocalizationManager.GetFormat("dispatch_btn_tier2_active", "✅ Level 2 Active ({0} Couriers)", hub.level2Couriers);
+                if (txt != null) txt.text = LocalizationManager.GetFormat("dispatch_btn_tier2_active", hub.level2Couriers);
                 dispatchTier2UpgradeBtn.interactable = false;
             }
             else
             {
-                if (txt != null) txt.text = LocalizationManager.GetFormat("dispatch_btn_tier2_buy", "📦 Upgrade to Level 2 ({0} Couriers - +${1:N0}/Day) [${2:N0}]", hub.level2Couriers, hub.level2DailyRevenue, hub.level2UpgradeCost);
+                if (txt != null) txt.text = LocalizationManager.GetFormat("dispatch_btn_tier2_buy", hub.level2Couriers, hub.level2DailyRevenue, hub.level2UpgradeCost);
                 dispatchTier2UpgradeBtn.interactable = true;
             }
         }
@@ -429,12 +429,12 @@ public class CommercialHubUIManager : MonoBehaviour
             TextMeshProUGUI txt = dispatchTier3UpgradeBtn.GetComponentInChildren<TextMeshProUGUI>();
             if (level >= 3)
             {
-                if (txt != null) txt.text = LocalizationManager.GetFormat("dispatch_btn_tier3_active", "⭐ Level 3 Max Fleet ({0} Couriers)", hub.level3Couriers);
+                if (txt != null) txt.text = LocalizationManager.GetFormat("dispatch_btn_tier3_active", hub.level3Couriers);
                 dispatchTier3UpgradeBtn.interactable = false;
             }
             else
             {
-                if (txt != null) txt.text = LocalizationManager.GetFormat("dispatch_btn_tier3_buy", "📦 Upgrade to Level 3 ({0} Couriers - +${1:N0}/Day) [${2:N0}]", hub.level3Couriers, hub.level3DailyRevenue, hub.level3UpgradeCost);
+                if (txt != null) txt.text = LocalizationManager.GetFormat("dispatch_btn_tier3_buy", hub.level3Couriers, hub.level3DailyRevenue, hub.level3UpgradeCost);
                 dispatchTier3UpgradeBtn.interactable = (level >= 2);
             }
         }
@@ -496,12 +496,12 @@ public class CommercialHubUIManager : MonoBehaviour
 
         if (propertyModalReqText != null)
         {
-            propertyModalReqText.text = LocalizationManager.GetFormat("property_req_level", "Required Level: Level {0}", prop.requiredPlayerLevel);
+            propertyModalReqText.text = LocalizationManager.GetFormat("property_req_level", prop.requiredPlayerLevel);
         }
 
         if (propertyModalCostText != null)
         {
-            propertyModalCostText.text = LocalizationManager.GetFormat("property_price", "Price: ${0:N0}", prop.purchaseCost);
+            propertyModalCostText.text = LocalizationManager.GetFormat("property_price", prop.purchaseCost);
         }
 
         if (propertyModalBuyBtn != null)

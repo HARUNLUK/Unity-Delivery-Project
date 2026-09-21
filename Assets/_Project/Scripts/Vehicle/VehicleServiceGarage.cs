@@ -190,7 +190,7 @@ public class VehicleServiceGarage : MonoBehaviour
             OnVehicleRepaired?.Invoke(v);
 
             if (InteractionPromptHUD.Instance != null)
-                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_garage_repaired", "<color=#32FF64>🔧 {0} Repaired & Serviced!</color>", v.vehicleName), 2.5f);
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_garage_repaired", v.vehicleName), 2.5f);
 
             return true;
         }
@@ -268,7 +268,7 @@ public class VehicleServiceGarage : MonoBehaviour
             OnVehicleTuned?.Invoke(v, nextStage);
 
             if (InteractionPromptHUD.Instance != null)
-                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_garage_tuned_success", "<color=#32FF64>⚡ {0} Engine Upgraded to Stage {1}! (+{2:0}% Torque)</color>", v.vehicleName, nextStage, (GetTorqueMultiplierForStage(nextStage) - 1f) * 100f), 2.5f);
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_garage_tuned_success", v.vehicleName, nextStage, (GetTorqueMultiplierForStage(nextStage) - 1f) * 100f), 2.5f);
 
             return true;
         }
@@ -312,7 +312,7 @@ public class VehicleServiceGarage : MonoBehaviour
             if (!PlayerEconomyManager.Instance.SpendMoney(repaintCost))
             {
                 if (InteractionPromptHUD.Instance != null)
-                    InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_insufficient_funds_fuel", "<color=#FF3333>Insufficient Funds!</color>", repaintCost), 2.5f);
+                    InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_insufficient_funds_fuel", repaintCost), 2.5f);
                 return false;
             }
         }
@@ -329,7 +329,7 @@ public class VehicleServiceGarage : MonoBehaviour
 
         string hex = ColorUtility.ToHtmlStringRGB(chosenColor);
         if (InteractionPromptHUD.Instance != null)
-            InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_garage_painted_success", "<color=#{0}>🎨 {1} Custom Repainted!</color>", hex, v.vehicleName), 2.5f);
+            InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_garage_painted_success", hex, v.vehicleName), 2.5f);
 
         return true;
     }

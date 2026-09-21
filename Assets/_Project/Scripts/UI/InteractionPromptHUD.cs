@@ -60,19 +60,26 @@ public class InteractionPromptHUD : MonoBehaviour
     public TextMeshProUGUI heldCargoTypeText;
     public TextMeshProUGUI heldCargoStatusText;
     public TextMeshProUGUI heldCargoPercentageText;
+    public TextMeshProUGUI heldCargoRecipientLabelText;
     public TextMeshProUGUI heldCargoRecipientText;
+    public TextMeshProUGUI heldCargoAddressLabelText;
     public TextMeshProUGUI heldCargoAddressText;
+    public TextMeshProUGUI heldCargoClueLabelText;
     public TextMeshProUGUI heldCargoAddressDescText;
+    public TextMeshProUGUI heldCargoRewardLabelText;
     public TextMeshProUGUI heldCargoRewardText;
+    public TextMeshProUGUI heldCargoPenaltyLabelText;
     public TextMeshProUGUI heldCargoPenaltyText;
     public TextMeshProUGUI heldCargoActionHintText;
 
     [Header("--- VEHICLE DASHBOARD GAUGE (FUEL & CONDITION) ---")]
     public GameObject vehicleDashboardRoot;
     public GameObject fuelGaugePanel;
+    public TextMeshProUGUI fuelLabelText;
     public Image fuelBarFill;
     public TextMeshProUGUI fuelValueText;
     public GameObject conditionGaugePanel;
+    public TextMeshProUGUI conditionLabelText;
     public Image conditionBarFill;
     public TextMeshProUGUI conditionValueText;
 
@@ -89,6 +96,7 @@ public class InteractionPromptHUD : MonoBehaviour
     {
         LocalizationManager.OnLanguageChanged += HandleLanguageChanged;
         AddressLocalizationManager.OnLanguageChanged += HandleLanguageChanged;
+        RefreshLocalizedUI();
     }
 
     private void OnDisable()
@@ -99,6 +107,41 @@ public class InteractionPromptHUD : MonoBehaviour
 
     private void HandleLanguageChanged(string newLang)
     {
+        RefreshLocalizedUI();
+    }
+
+    public void RefreshLocalizedUI()
+    {
+        // 1. Held Cargo Side Card Labels
+        if (heldCargoHeaderText != null)
+            heldCargoHeaderText.text = LocalizationManager.Get("hud_held_cargo_header", "TAŞINAN KARGO");
+
+        if (heldCargoRecipientLabelText != null)
+            heldCargoRecipientLabelText.text = LocalizationManager.Get("hud_held_recipient", "ALICI:");
+
+        if (heldCargoAddressLabelText != null)
+            heldCargoAddressLabelText.text = LocalizationManager.Get("hud_held_address", "ADRES:");
+
+        if (heldCargoClueLabelText != null)
+            heldCargoClueLabelText.text = LocalizationManager.Get("hud_held_clue", "İPUCU & TARİF:");
+
+        if (heldCargoRewardLabelText != null)
+            heldCargoRewardLabelText.text = LocalizationManager.Get("hud_held_reward", "ÖDÜL:");
+
+        if (heldCargoPenaltyLabelText != null)
+            heldCargoPenaltyLabelText.text = LocalizationManager.Get("hud_held_penalty", "CEZA:");
+
+        if (heldCargoActionHintText != null)
+            heldCargoActionHintText.text = LocalizationManager.Get("hud_held_action_hint", "KONTROLLER: [Sol Tık] Fırlat (Şarjlı) | [Sağ Tık] Yavaşça Bırak");
+
+        // 2. Vehicle Dashboard Gauge Labels
+        if (fuelLabelText != null)
+            fuelLabelText.text = LocalizationManager.Get("hud_fuel_label", "YAKIT");
+
+        if (conditionLabelText != null)
+            conditionLabelText.text = LocalizationManager.Get("hud_condition_label", "KONDİSYON");
+
+        // 3. Re-evaluate currently held package info if card is visible
         if (currentHeldPackage != null && heldCargoPanel != null && heldCargoPanel.activeSelf)
         {
             ShowHeldCargoInfo(currentHeldPackage);
@@ -134,6 +177,7 @@ public class InteractionPromptHUD : MonoBehaviour
         HidePrompt();
         HideHeldCargoInfo();
         HideFuelHUD();
+        RefreshLocalizedUI();
     }
 
     private void Update()
@@ -577,7 +621,7 @@ public class InteractionPromptHUD : MonoBehaviour
 
     public void UpdateVehicleHUD(float currentFuel, float maxFuel, bool isLow, float currentCondition, float maxCondition)
     {
-        if (vehicleDashboardRoot == null || fuelValueText == null || fuelBarFill == null || conditionValueText == null || conditionBarFill == null)
+        if (vehicleDashboardRoot == null || fuelValueText == null || fuelBarFill == null || conditionValueText == null || conditionBarFill == null || fuelLabelText == null || conditionLabelText == null)
         {
             EnsureUI();
         }
@@ -595,19 +639,19 @@ public class InteractionPromptHUD : MonoBehaviour
             conditionGaugePanel.SetActive(true);
         }
 
+        if (fuelLabelText != null)
+            fuelLabelText.text = LocalizationManager.Get("hud_fuel_label", "YAKIT");
+
+        if (conditionLabelText != null)
+            conditionLabelText.text = LocalizationManager.Get("hud_condition_label", "KONDİSYON");
+
         float fuelPct = maxFuel > 0 ? Mathf.Clamp01(currentFuel / maxFuel) : 0f;
         float condPct = maxCondition > 0 ? Mathf.Clamp01(currentCondition / maxCondition) : 0f;
 
-        // 1. Fuel Bar & Value
+        // 1. Fuel Bar & Value - ONLY adjust width according to fuel percentage, NEVER touch image type or design
         if (fuelBarFill != null)
         {
-            if (fuelBarFill.type != Image.Type.Filled)
-            {
-                fuelBarFill.type = Image.Type.Filled;
-                fuelBarFill.fillMethod = Image.FillMethod.Horizontal;
-                fuelBarFill.fillOrigin = 0;
-            }
-            fuelBarFill.fillAmount = fuelPct;
+            SetBarFillWidth(fuelBarFill, fuelPct);
         }
 
         if (fuelValueText != null)
@@ -615,21 +659,42 @@ public class InteractionPromptHUD : MonoBehaviour
             fuelValueText.text = $"{currentFuel:F1}/{maxFuel:F1}L";
         }
 
-        // 2. Condition Bar & Value
+        // 2. Condition Bar & Value - ONLY adjust width according to condition percentage, NEVER touch image type or design
         if (conditionBarFill != null)
         {
-            if (conditionBarFill.type != Image.Type.Filled)
-            {
-                conditionBarFill.type = Image.Type.Filled;
-                conditionBarFill.fillMethod = Image.FillMethod.Horizontal;
-                conditionBarFill.fillOrigin = 0;
-            }
-            conditionBarFill.fillAmount = condPct;
+            SetBarFillWidth(conditionBarFill, condPct);
         }
 
         if (conditionValueText != null)
         {
             conditionValueText.text = $"{(condPct * 100f):F0}%";
+        }
+    }
+
+    private void SetBarFillWidth(Image fillImg, float fillPct)
+    {
+        if (fillImg == null) return;
+        fillPct = Mathf.Clamp01(fillPct);
+
+        RectTransform rt = fillImg.rectTransform;
+        if (rt != null)
+        {
+            rt.anchorMin = new Vector2(0f, 0f);
+            rt.anchorMax = new Vector2(fillPct, 1f);
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+        }
+
+        if (fillImg.gameObject != null)
+        {
+            if (fillPct <= 0.001f)
+            {
+                if (fillImg.gameObject.activeSelf) fillImg.gameObject.SetActive(false);
+            }
+            else
+            {
+                if (!fillImg.gameObject.activeSelf) fillImg.gameObject.SetActive(true);
+            }
         }
     }
 
@@ -737,24 +802,24 @@ public class InteractionPromptHUD : MonoBehaviour
         Transform top = sideCard.Find("Top");
         if (top != null)
         {
-            Transform headerT = top.Find("Header");
+            Transform headerT = top.Find("Header") ?? top.Find("header") ?? top.Find("Title") ?? top.Find("title");
             if (headerT != null) heldCargoHeaderText = headerT.GetComponent<TextMeshProUGUI>();
 
             Transform horiz = top.Find("Horizontal");
             if (horiz != null)
             {
-                Transform typeT = horiz.Find("Type");
+                Transform typeT = horiz.Find("Type") ?? horiz.Find("type");
                 if (typeT != null) heldCargoTypeText = typeT.GetComponent<TextMeshProUGUI>();
 
-                Transform statusT = horiz.Find("Status");
+                Transform statusT = horiz.Find("Status") ?? horiz.Find("status");
                 if (statusT != null) heldCargoStatusText = statusT.GetComponent<TextMeshProUGUI>();
 
-                Transform pctT = horiz.Find("Percentage");
+                Transform pctT = horiz.Find("Percentage") ?? horiz.Find("percentage");
                 if (pctT != null) heldCargoPercentageText = pctT.GetComponent<TextMeshProUGUI>();
             }
         }
 
-        if (heldCargoHeaderText == null) heldCargoHeaderText = FindTMPDirect(sideCard, "Header", "PackageHeader", "Title");
+        if (heldCargoHeaderText == null) heldCargoHeaderText = FindTMPRecursive(sideCard, "Header", "PackageHeader", "Title");
         if (heldCargoTypeText == null) heldCargoTypeText = FindTMPDirect(sideCard, "Type", "CargoType");
         if (heldCargoStatusText == null) heldCargoStatusText = FindTMPDirect(sideCard, "Status", "Durum");
         if (heldCargoPercentageText == null) heldCargoPercentageText = FindTMPDirect(sideCard, "Percentage", "Percent");
@@ -766,30 +831,91 @@ public class InteractionPromptHUD : MonoBehaviour
             Transform recipGroup = detail.Find("recipient");
             if (recipGroup != null)
             {
-                Transform val = recipGroup.Find("value");
+                Transform val = recipGroup.Find("value") ?? recipGroup.Find("Value");
                 if (val != null) heldCargoRecipientText = val.GetComponent<TextMeshProUGUI>();
+
+                Transform title = recipGroup.Find("title") ?? recipGroup.Find("Title") ?? recipGroup.Find("label") ?? recipGroup.Find("Label") ?? recipGroup.Find("Text") ?? recipGroup.Find("Header");
+                if (title != null) heldCargoRecipientLabelText = title.GetComponent<TextMeshProUGUI>();
+
+                if (heldCargoRecipientLabelText == null)
+                {
+                    var tmps = recipGroup.GetComponentsInChildren<TextMeshProUGUI>(true);
+                    foreach (var t in tmps)
+                    {
+                        if (t != heldCargoRecipientText)
+                        {
+                            heldCargoRecipientLabelText = t;
+                            break;
+                        }
+                    }
+                }
             }
 
             Transform addrGroup = detail.Find("address");
             if (addrGroup != null)
             {
-                Transform val = addrGroup.Find("value");
+                Transform val = addrGroup.Find("value") ?? addrGroup.Find("Value");
                 if (val != null) heldCargoAddressText = val.GetComponent<TextMeshProUGUI>();
+
+                Transform title = addrGroup.Find("title") ?? addrGroup.Find("Title") ?? addrGroup.Find("label") ?? addrGroup.Find("Label") ?? addrGroup.Find("Text") ?? addrGroup.Find("Header");
+                if (title != null) heldCargoAddressLabelText = title.GetComponent<TextMeshProUGUI>();
+
+                if (heldCargoAddressLabelText == null)
+                {
+                    var tmps = addrGroup.GetComponentsInChildren<TextMeshProUGUI>(true);
+                    foreach (var t in tmps)
+                    {
+                        if (t != heldCargoAddressText)
+                        {
+                            heldCargoAddressLabelText = t;
+                            break;
+                        }
+                    }
+                }
             }
         }
+        if (heldCargoRecipientLabelText == null) heldCargoRecipientLabelText = FindTMPRecursive(sideCard, "RecipientLabel", "LabelRecipient", "recipient/title", "recipient/label");
+        if (heldCargoRecipientText == null) heldCargoRecipientText = FindTMPRecursive(sideCard, "RecipientValue", "RecipientText", "recipient/value");
+        if (heldCargoAddressLabelText == null) heldCargoAddressLabelText = FindTMPRecursive(sideCard, "AddressLabel", "LabelAddress", "address/title", "address/label");
+        if (heldCargoAddressText == null) heldCargoAddressText = FindTMPRecursive(sideCard, "AddressValue", "AddressText", "address/value");
 
-        // ClueBox -> ClueScrollView -> Content -> AddressDescription
+        // ClueBox -> ClueTitle and ClueScrollView/Content/AddressDescription
         Transform clueBox = sideCard.Find("ClueBox");
         if (clueBox != null)
         {
-            Transform descT = clueBox.Find("ClueScrollView/Content/AddressDescription");
-            if (descT == null) descT = clueBox.Find("AddressDescription");
+            Transform title = clueBox.Find("ClueTitle") ?? clueBox.Find("clueTitle") ?? clueBox.Find("title") ?? clueBox.Find("Title") ?? clueBox.Find("Header") ?? clueBox.Find("label");
+            if (title != null) heldCargoClueLabelText = title.GetComponent<TextMeshProUGUI>();
+
+            Transform descT = clueBox.Find("ClueScrollView/Content/AddressDescription") ?? clueBox.Find("Content/AddressDescription") ?? clueBox.Find("AddressDescription");
+            if (descT == null)
+            {
+                var allT = clueBox.GetComponentsInChildren<Transform>(true);
+                foreach (var t in allT)
+                {
+                    if (t.name.IndexOf("Description", System.StringComparison.OrdinalIgnoreCase) >= 0 || t.name.IndexOf("AddressDescription", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        descT = t;
+                        break;
+                    }
+                }
+            }
             if (descT != null) heldCargoAddressDescText = descT.GetComponent<TextMeshProUGUI>();
+
+            if (heldCargoClueLabelText == null)
+            {
+                var tmps = clueBox.GetComponentsInChildren<TextMeshProUGUI>(true);
+                foreach (var t in tmps)
+                {
+                    if (t != heldCargoAddressDescText)
+                    {
+                        heldCargoClueLabelText = t;
+                        break;
+                    }
+                }
+            }
         }
-        if (heldCargoAddressDescText == null)
-        {
-            heldCargoAddressDescText = FindTMPDirect(sideCard, "AddressDescription", "Description", "ClueDesc");
-        }
+        if (heldCargoClueLabelText == null) heldCargoClueLabelText = FindTMPRecursive(sideCard, "ClueHeader", "ClueLabel", "ClueTitle", "ClueBox/ClueTitle");
+        if (heldCargoAddressDescText == null) heldCargoAddressDescText = FindTMPRecursive(sideCard, "AddressDescription", "Description", "ClueDesc");
 
         // Bottom -> reward / value and penalty / value
         Transform bottom = sideCard.Find("Bottom");
@@ -798,37 +924,58 @@ public class InteractionPromptHUD : MonoBehaviour
             Transform rewardGroup = bottom.Find("reward");
             if (rewardGroup != null)
             {
-                Transform val = rewardGroup.Find("value");
+                Transform val = rewardGroup.Find("value") ?? rewardGroup.Find("Value");
                 if (val != null) heldCargoRewardText = val.GetComponent<TextMeshProUGUI>();
+
+                Transform title = rewardGroup.Find("title") ?? rewardGroup.Find("Title") ?? rewardGroup.Find("label") ?? rewardGroup.Find("Label") ?? rewardGroup.Find("Text") ?? rewardGroup.Find("Header");
+                if (title != null) heldCargoRewardLabelText = title.GetComponent<TextMeshProUGUI>();
+
+                if (heldCargoRewardLabelText == null)
+                {
+                    var tmps = rewardGroup.GetComponentsInChildren<TextMeshProUGUI>(true);
+                    foreach (var t in tmps)
+                    {
+                        if (t != heldCargoRewardText)
+                        {
+                            heldCargoRewardLabelText = t;
+                            break;
+                        }
+                    }
+                }
             }
 
             Transform penaltyGroup = bottom.Find("penalty");
             if (penaltyGroup != null)
             {
-                Transform val = penaltyGroup.Find("value");
+                Transform val = penaltyGroup.Find("value") ?? penaltyGroup.Find("Value");
                 if (val != null) heldCargoPenaltyText = val.GetComponent<TextMeshProUGUI>();
+
+                Transform title = penaltyGroup.Find("title") ?? penaltyGroup.Find("Title") ?? penaltyGroup.Find("label") ?? penaltyGroup.Find("Label") ?? penaltyGroup.Find("Text") ?? penaltyGroup.Find("Header");
+                if (title != null) heldCargoPenaltyLabelText = title.GetComponent<TextMeshProUGUI>();
+
+                if (heldCargoPenaltyLabelText == null)
+                {
+                    var tmps = penaltyGroup.GetComponentsInChildren<TextMeshProUGUI>(true);
+                    foreach (var t in tmps)
+                    {
+                        if (t != heldCargoPenaltyText)
+                        {
+                            heldCargoPenaltyLabelText = t;
+                            break;
+                        }
+                    }
+                }
             }
         }
-    }
+        if (heldCargoRewardLabelText == null) heldCargoRewardLabelText = FindTMPRecursive(sideCard, "RewardLabel", "LabelReward", "reward/title", "reward/label");
+        if (heldCargoRewardText == null) heldCargoRewardText = FindTMPRecursive(sideCard, "RewardValue", "RewardText", "reward/value");
+        if (heldCargoPenaltyLabelText == null) heldCargoPenaltyLabelText = FindTMPRecursive(sideCard, "PenaltyLabel", "LabelPenalty", "penalty/title", "penalty/label");
+        if (heldCargoPenaltyText == null) heldCargoPenaltyText = FindTMPRecursive(sideCard, "PenaltyValue", "PenaltyText", "penalty/value");
 
-    private void AlignFillToParent(Image fillImg)
-    {
-        if (fillImg == null) return;
-        RectTransform rt = fillImg.rectTransform;
-        if (rt != null)
-        {
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.one;
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
-            rt.pivot = new Vector2(0.5f, 0.5f);
-        }
-        if (fillImg.type != Image.Type.Filled)
-        {
-            fillImg.type = Image.Type.Filled;
-            fillImg.fillMethod = Image.FillMethod.Horizontal;
-            fillImg.fillOrigin = 0;
-        }
+        // Action hint / controls hint
+        Transform actionHintT = sideCard.Find("ActionLabel") ?? sideCard.Find("ActionHint") ?? sideCard.Find("Controls");
+        if (actionHintT != null) heldCargoActionHintText = actionHintT.GetComponent<TextMeshProUGUI>();
+        if (heldCargoActionHintText == null) heldCargoActionHintText = FindTMPRecursive(sideCard, "ActionLabel", "ActionHint", "ActionHintText", "Controls", "Hint");
     }
 
     private void BindVehicleDashboardReferences(Transform dashRoot)
@@ -852,13 +999,15 @@ public class InteractionPromptHUD : MonoBehaviour
         }
         fuelGaugePanel = fCard != null ? fCard.gameObject : vehicleDashboardRoot;
 
-        Transform fValT = (fCard ?? dashRoot).Find("Horizontal/FuelValue");
-        if (fValT == null) fValT = (fCard ?? dashRoot).Find("FuelValue");
+        Transform fTitleT = (fCard ?? dashRoot).Find("Horizontal/FuelTitle") ?? (fCard ?? dashRoot).Find("FuelTitle") ?? (fCard ?? dashRoot).Find("Horizontal/FuelLabel") ?? (fCard ?? dashRoot).Find("FuelLabel");
+        if (fTitleT != null) fuelLabelText = fTitleT.GetComponent<TextMeshProUGUI>();
+        if (fuelLabelText == null) fuelLabelText = FindTMPRecursive(fCard ?? dashRoot, "FuelTitle", "FuelLabel", "FuelHeader");
+
+        Transform fValT = (fCard ?? dashRoot).Find("Horizontal/FuelValue") ?? (fCard ?? dashRoot).Find("FuelValue");
         if (fValT != null) fuelValueText = fValT.GetComponent<TextMeshProUGUI>();
         if (fuelValueText == null) fuelValueText = FindTMPRecursive(fCard ?? dashRoot, "FuelValue", "FuelVal", "FuelAmount", "FuelText");
 
-        Transform fFillT = (fCard ?? dashRoot).Find("FuelBarBg/FuelBarFill");
-        if (fFillT == null) fFillT = (fCard ?? dashRoot).Find("FuelBarFill");
+        Transform fFillT = (fCard ?? dashRoot).Find("FuelBarBg/FuelBarFill") ?? (fCard ?? dashRoot).Find("FuelBarFill");
         if (fFillT != null) fuelBarFill = fFillT.GetComponent<Image>();
         if (fuelBarFill == null) fuelBarFill = FindImageRecursive(fCard ?? dashRoot, "FuelBarFill", "FuelFill", "FuelBar");
 
@@ -878,13 +1027,15 @@ public class InteractionPromptHUD : MonoBehaviour
         }
         conditionGaugePanel = cCard != null ? cCard.gameObject : vehicleDashboardRoot;
 
-        Transform cValT = (cCard ?? dashRoot).Find("Horizontal/CondValue");
-        if (cValT == null) cValT = (cCard ?? dashRoot).Find("CondValue");
+        Transform cTitleT = (cCard ?? dashRoot).Find("Horizontal/CondTitle") ?? (cCard ?? dashRoot).Find("CondTitle") ?? (cCard ?? dashRoot).Find("Horizontal/CondLabel") ?? (cCard ?? dashRoot).Find("CondLabel");
+        if (cTitleT != null) conditionLabelText = cTitleT.GetComponent<TextMeshProUGUI>();
+        if (conditionLabelText == null) conditionLabelText = FindTMPRecursive(cCard ?? dashRoot, "CondTitle", "CondLabel", "ConditionTitle", "ConditionLabel");
+
+        Transform cValT = (cCard ?? dashRoot).Find("Horizontal/CondValue") ?? (cCard ?? dashRoot).Find("CondValue");
         if (cValT != null) conditionValueText = cValT.GetComponent<TextMeshProUGUI>();
         if (conditionValueText == null) conditionValueText = FindTMPRecursive(cCard ?? dashRoot, "CondValue", "ConditionValue", "CondVal", "ConditionText", "CondText");
 
-        Transform cFillT = (cCard ?? dashRoot).Find("CondBarBg/CondBarFill");
-        if (cFillT == null) cFillT = (cCard ?? dashRoot).Find("CondBarFill");
+        Transform cFillT = (cCard ?? dashRoot).Find("CondBarBg/CondBarFill") ?? (cCard ?? dashRoot).Find("CondBarFill");
         if (cFillT != null) conditionBarFill = cFillT.GetComponent<Image>();
         if (conditionBarFill == null) conditionBarFill = FindImageRecursive(cCard ?? dashRoot, "CondBarFill", "ConditionBarFill", "CondFill", "ConditionFill");
     }
@@ -898,7 +1049,7 @@ public class InteractionPromptHUD : MonoBehaviour
             return;
         }
 
-        if (heldCargoPanel == null)
+        if (heldCargoPanel == null || heldCargoRecipientText == null || heldCargoRecipientLabelText == null)
         {
             EnsureUI();
         }
@@ -907,6 +1058,28 @@ public class InteractionPromptHUD : MonoBehaviour
         {
             heldCargoPanel.SetActive(true);
         }
+
+        // Always ensure static localized labels are up-to-date
+        if (heldCargoHeaderText != null)
+            heldCargoHeaderText.text = LocalizationManager.Get("hud_held_cargo_header", "TAŞINAN KARGO");
+
+        if (heldCargoRecipientLabelText != null)
+            heldCargoRecipientLabelText.text = LocalizationManager.Get("hud_held_recipient", "ALICI:");
+
+        if (heldCargoAddressLabelText != null)
+            heldCargoAddressLabelText.text = LocalizationManager.Get("hud_held_address", "ADRES:");
+
+        if (heldCargoClueLabelText != null)
+            heldCargoClueLabelText.text = LocalizationManager.Get("hud_held_clue", "İPUCU & TARİF:");
+
+        if (heldCargoRewardLabelText != null)
+            heldCargoRewardLabelText.text = LocalizationManager.Get("hud_held_reward", "ÖDÜL:");
+
+        if (heldCargoPenaltyLabelText != null)
+            heldCargoPenaltyLabelText.text = LocalizationManager.Get("hud_held_penalty", "CEZA:");
+
+        if (heldCargoActionHintText != null)
+            heldCargoActionHintText.text = LocalizationManager.Get("hud_held_action_hint", "KONTROLLER: [Sol Tık] Fırlat (Şarjlı) | [Sağ Tık] Yavaşça Bırak");
 
         string recipient = !string.IsNullOrEmpty(pkg.EffectiveRecipientName) ? pkg.EffectiveRecipientName : pkg.recipientName;
         string address = !string.IsNullOrEmpty(pkg.EffectiveAddressName) ? pkg.EffectiveAddressName : pkg.targetAddressName;
@@ -925,7 +1098,7 @@ public class InteractionPromptHUD : MonoBehaviour
         
         if (heldCargoAddressDescText != null)
         {
-            heldCargoAddressDescText.text = !string.IsNullOrEmpty(desc) ? desc : "";
+            heldCargoAddressDescText.text = !string.IsNullOrEmpty(desc) ? desc : LocalizationManager.Get("cargo_no_clue", "Bu adres için özel bir ipucu bulunmuyor.");
         }
 
         if (heldCargoRewardText != null)

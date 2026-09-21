@@ -79,7 +79,7 @@ public class MainHUDController : MonoBehaviour
     {
         if (clockText != null && DayTimeManager.Instance != null)
         {
-            string dayLabel = LocalizationManager.GetFormat("hud_day", "GÜN {0}", DayTimeManager.Instance.CurrentDay);
+            string dayLabel = LocalizationManager.GetFormat("hud_day", DayTimeManager.Instance.CurrentDay);
             clockText.text = $"<size=75%>{dayLabel}</size>  <mspace=0.6em>{DayTimeManager.Instance.GetFormattedTime()}</mspace>";
         }
 

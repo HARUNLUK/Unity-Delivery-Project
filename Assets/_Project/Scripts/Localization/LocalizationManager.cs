@@ -189,18 +189,12 @@ public class LocalizationManager : MonoBehaviour
 
     /// <summary>
     /// Returns the formatted localized string for the specified key using string.Format.
+    /// If key is found in the dictionary, formats its localized string with args.
+    /// If key is not found, formats key as raw template with args.
     /// </summary>
     public static string GetFormat(string key, params object[] args)
     {
-        return GetFormat(key, key, args);
-    }
-
-    /// <summary>
-    /// Returns the formatted localized string for the specified key using string.Format with custom fallback.
-    /// </summary>
-    public static string GetFormat(string key, string fallback, params object[] args)
-    {
-        string raw = Get(key, fallback);
+        string raw = Get(key, key);
         if (args == null || args.Length == 0) return raw;
 
         try

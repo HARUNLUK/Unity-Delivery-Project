@@ -61,7 +61,7 @@ public class DeliverySelectionUI : MonoBehaviour
 
         if (addressTitleText != null)
         {
-            addressTitleText.text = LocalizationManager.GetFormat("delivery_selection_title", "DELIVERY DESTINATION: {0}", zone.EffectiveAddressName);
+            addressTitleText.text = LocalizationManager.GetFormat("delivery_selection_title", zone.EffectiveAddressName);
         }
 
         if (feedbackText != null)
@@ -143,7 +143,7 @@ public class DeliverySelectionUI : MonoBehaviour
 
         if (feedbackText != null)
         {
-            feedbackText.text = LocalizationManager.GetFormat("delivery_selection_selected", "Selected: {0} ({1})", cargo.trackingNumber, cargo.targetAddress);
+            feedbackText.text = LocalizationManager.GetFormat("delivery_selection_selected", cargo.trackingNumber, cargo.targetAddress);
         }
     }
 

@@ -176,37 +176,37 @@ public class DaySummaryManager : MonoBehaviour
         // 4. Populate UI Text Elements
         if (headerTitleText != null)
         {
-            headerTitleText.text = LocalizationManager.GetFormat("summary_title", "DAY {0} FINANCIAL SUMMARY", dayNum);
+            headerTitleText.text = LocalizationManager.GetFormat("summary_title", dayNum);
         }
 
         if (totalDeliveredText != null)
         {
             if (!string.IsNullOrEmpty(emergencyHospitalReason))
             {
-                totalDeliveredText.text = LocalizationManager.GetFormat("summary_emergency_hospital", "<color=#FF3333>🚨 EMERGENCY:</color> {0}\nDay {1} | Total Packages: {2}", emergencyHospitalReason, dayNum, totalCount);
+                totalDeliveredText.text = LocalizationManager.GetFormat("summary_emergency_hospital", emergencyHospitalReason, dayNum, totalCount);
             }
             else
             {
-                totalDeliveredText.text = LocalizationManager.GetFormat("summary_total_packages", "DAY {0} | Total Packages: {1}", dayNum, totalCount);
+                totalDeliveredText.text = LocalizationManager.GetFormat("summary_total_packages", dayNum, totalCount);
             }
         }
         
-        string correctText = LocalizationManager.GetFormat("summary_correct_deliveries", "[+] Correct Deliveries: {0} (+${1})", correctCount, totalReward - passiveIncome);
+        string correctText = LocalizationManager.GetFormat("summary_correct_deliveries", correctCount, totalReward - passiveIncome);
         if (passiveIncome > 0)
         {
-            correctText += LocalizationManager.GetFormat("summary_passive_income", " | Passive Hub Income: +${0}", passiveIncome);
+            correctText += LocalizationManager.GetFormat("summary_passive_income", passiveIncome);
         }
         if (correctDeliveriesText != null) correctDeliveriesText.text = correctText;
         
-        string wrongBreakdown = LocalizationManager.GetFormat("summary_penalties", "[-] Penalties: -${0}", totalPenalty - dailyRent);
-        if (brokenCount > 0) wrongBreakdown += LocalizationManager.GetFormat("summary_broken_count", " (Broken: {0})", brokenCount);
-        wrongBreakdown += LocalizationManager.GetFormat("summary_rent_deduct", " | Branch Rent: -${0}", dailyRent);
+        string wrongBreakdown = LocalizationManager.GetFormat("summary_penalties", totalPenalty - dailyRent);
+        if (brokenCount > 0) wrongBreakdown += LocalizationManager.GetFormat("summary_broken_count", brokenCount);
+        wrongBreakdown += LocalizationManager.GetFormat("summary_rent_deduct", dailyRent);
         if (wrongDeliveriesText != null) wrongDeliveriesText.text = wrongBreakdown;
         
         if (netEarningsText != null)
         {
             string profitLabel = netProfit >= 0 ? $"+${netProfit:N0}" : $"-${Mathf.Abs(netProfit):N0}";
-            netEarningsText.text = LocalizationManager.GetFormat("summary_today_net", "TODAY NET: {0} | TOTAL VAULT: ${1:N0}", profitLabel, totalVault);
+            netEarningsText.text = LocalizationManager.GetFormat("summary_today_net", profitLabel, totalVault);
             netEarningsText.color = netProfit >= 0 ? new Color(0.2f, 0.95f, 0.3f) : new Color(0.95f, 0.2f, 0.2f);
         }
 
@@ -216,7 +216,7 @@ public class DaySummaryManager : MonoBehaviour
             {
                 BranchTier currentTier = BranchManager.Instance.CurrentTier;
                 string tName = currentTier != null ? currentTier.tierName : "Branch";
-                progressionInfoText.text = LocalizationManager.GetFormat("summary_branch_level_badge", "BRANCH LEVEL {0} ({1})", BranchManager.Instance.CurrentBranchLevel, tName.ToUpper());
+                progressionInfoText.text = LocalizationManager.GetFormat("summary_branch_level_badge", BranchManager.Instance.CurrentBranchLevel, tName.ToUpper());
             }
             else
             {
@@ -229,7 +229,7 @@ public class DaySummaryManager : MonoBehaviour
             var btnText = restartDayButton.GetComponentInChildren<TextMeshProUGUI>();
             if (btnText != null)
             {
-                btnText.text = LocalizationManager.GetFormat("summary_btn_restart_day", "START NEXT DAY (DAY {0})", dayNum + 1);
+                btnText.text = LocalizationManager.GetFormat("summary_btn_restart_day", dayNum + 1);
             }
         }
 
@@ -264,12 +264,12 @@ public class DaySummaryManager : MonoBehaviour
 
             if (deliveredText != null)
             {
-                deliveredText.text = LocalizationManager.GetFormat("summary_delivered_to", "Delivered to: {0}", deliveredAddr);
+                deliveredText.text = LocalizationManager.GetFormat("summary_delivered_to", deliveredAddr);
             }
 
             if (targetText != null)
             {
-                targetText.text = LocalizationManager.GetFormat("summary_target", "Target: {0}", targetAddr);
+                targetText.text = LocalizationManager.GetFormat("summary_target", targetAddr);
             }
 
             if (resultText != null)
@@ -298,7 +298,7 @@ public class DaySummaryManager : MonoBehaviour
                 if (rowText != null)
                 {
                     string statusLabel = res.status == CargoDeliveryStatus.Correct ? $"[{LocalizationManager.Get("summary_status_correct", "CORRECT")}]" : $"[{LocalizationManager.Get("summary_status_broken", "BROKEN")}]";
-                    rowText.text = $"{LocalizationManager.GetFormat("summary_delivered_to", "Delivered to: {0}", deliveredAddr)}\n{LocalizationManager.GetFormat("summary_target", "Target: {0}", targetAddr)}   {statusLabel}";
+                    rowText.text = $"{LocalizationManager.GetFormat("summary_delivered_to", deliveredAddr)}\n{LocalizationManager.GetFormat("summary_target", targetAddr)}   {statusLabel}";
                 }
             }
         }

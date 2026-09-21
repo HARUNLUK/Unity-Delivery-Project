@@ -1101,11 +1101,11 @@ public class GameMenuManager : MonoBehaviour
 
         if (hasSave)
         {
-            mainMenuSaveInfoText.text = LocalizationManager.GetFormat("main_menu_save_info", "<color=#A0C8FF>Gün {0}</color>  |  <color=#A0C8FF>Şube:</color> <color=#FFFFFF>Lv.{1} ({2})</color>  |  <color=#A0C8FF>Kasa:</color> <color=#32FF64>${3:N0}</color>", day, level, tierName, cash);
+            mainMenuSaveInfoText.text = LocalizationManager.GetFormat("main_menu_save_info", day, level, tierName, cash);
         }
         else
         {
-            mainMenuSaveInfoText.text = LocalizationManager.GetFormat("main_menu_new_info", "<color=#A0C8FF>Yeni Kariyer:</color> <color=#FFFFFF>Lv.1 ({0})</color>  |  <color=#A0C8FF>Başlangıç:</color> <color=#32FF64>${1:N0}</color>", tierName, cash);
+            mainMenuSaveInfoText.text = LocalizationManager.GetFormat("main_menu_new_info", tierName, cash);
         }
     }
 

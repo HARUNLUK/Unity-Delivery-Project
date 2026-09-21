@@ -544,18 +544,7 @@ public static class GlassUIAssetGenerator
 
         // 4. Held Cargo Side Card (Untouched - user custom styled)
 
-        // 5. Vehicle Dashboard (Fuel & Condition)
-        Transform dash = canvas.transform.Find("VehicleDashboardPanel");
-        if (dash != null)
-        {
-            SetImageSprite(dash.Find("FuelGaugeCard")?.gameObject, glassCard, Color.white);
-            SetImageSprite(dash.Find("FuelGaugeCard/FuelBarBg")?.gameObject, barTrack, Color.white);
-            SetImageSprite(dash.Find("FuelGaugeCard/FuelBarBg/FuelBarFill")?.gameObject, barFill, new Color(0.2f, 0.95f, 0.45f), Image.Type.Filled);
-
-            SetImageSprite(dash.Find("ConditionGaugeCard")?.gameObject, glassCard, Color.white);
-            SetImageSprite(dash.Find("ConditionGaugeCard/CondBarBg")?.gameObject, barTrack, Color.white);
-            SetImageSprite(dash.Find("ConditionGaugeCard/CondBarBg/CondBarFill")?.gameObject, barFill, new Color(0.0f, 0.9f, 0.7f), Image.Type.Filled);
-        }
+        // 5. Vehicle Dashboard (Fuel & Condition) (Untouched - user custom styled)
 
         // 6. Tablet Panel
         Transform tablet = canvas.transform.Find("CargoTabletPanel");

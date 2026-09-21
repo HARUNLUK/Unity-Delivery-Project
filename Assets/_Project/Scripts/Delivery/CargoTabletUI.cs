@@ -585,12 +585,12 @@ public class CargoTabletUI : MonoBehaviour
 
         if (recipientNameText != null)
         {
-            recipientNameText.text = LocalizationManager.GetFormat("tablet_recipient", "Recipient: {0}", pkg.EffectiveRecipientName);
+            recipientNameText.text = LocalizationManager.GetFormat("tablet_recipient", pkg.EffectiveRecipientName);
         }
 
         if (targetAddressText != null)
         {
-            targetAddressText.text = LocalizationManager.GetFormat("tablet_address", "Address: {0}", pkg.EffectiveAddressName);
+            targetAddressText.text = LocalizationManager.GetFormat("tablet_address", pkg.EffectiveAddressName);
         }
 
         if (addressDescriptionText != null)
@@ -605,9 +605,9 @@ public class CargoTabletUI : MonoBehaviour
         currentSelectedCargo = cargo;
         if (detailCardRoot != null) detailCardRoot.SetActive(true);
 
-        if (trackingNumberText != null) trackingNumberText.text = LocalizationManager.GetFormat("tablet_tracking_no", "Tracking #: {0}", cargo.trackingNumber);
-        if (recipientNameText != null) recipientNameText.text = LocalizationManager.GetFormat("tablet_recipient", "Recipient: {0}", cargo.recipientName);
-        if (targetAddressText != null) targetAddressText.text = LocalizationManager.GetFormat("tablet_address", "Address: {0}", cargo.targetAddress);
+        if (trackingNumberText != null) trackingNumberText.text = LocalizationManager.GetFormat("tablet_tracking_no", cargo.trackingNumber);
+        if (recipientNameText != null) recipientNameText.text = LocalizationManager.GetFormat("tablet_recipient", cargo.recipientName);
+        if (targetAddressText != null) targetAddressText.text = LocalizationManager.GetFormat("tablet_address", cargo.targetAddress);
 
         if (addressDescriptionText != null)
         {
@@ -667,7 +667,7 @@ public class CargoTabletUI : MonoBehaviour
                 }
                 else
                 {
-                    label.text = $"<b>{v.vehicleName}</b>\n${v.purchasePrice:N0} ({LocalizationManager.GetFormat("vehicle_lvl_req", "Lvl {0}", v.requiredPlayerLevel)})";
+                    label.text = $"<b>{v.vehicleName}</b>\n${v.purchasePrice:N0} ({LocalizationManager.GetFormat("vehicle_lvl_req", v.requiredPlayerLevel)})";
                 }
                 label.raycastTarget = false;
             }
@@ -742,7 +742,7 @@ public class CargoTabletUI : MonoBehaviour
 
                 if (vehicleBuyButtonText != null)
                 {
-                    vehicleBuyButtonText.text = LocalizationManager.GetFormat("vehicle_btn_purchase", "PURCHASE VEHICLE (${0:N0})", v.purchasePrice);
+                    vehicleBuyButtonText.text = LocalizationManager.GetFormat("vehicle_btn_purchase", v.purchasePrice);
                 }
 
                 vehicleBuyButton.onClick.RemoveAllListeners();
@@ -795,7 +795,7 @@ public class CargoTabletUI : MonoBehaviour
                 {
                     if (vehicleRefuelButtonText != null)
                     {
-                        vehicleRefuelButtonText.text = LocalizationManager.GetFormat("vehicle_btn_emergency_fuel", "ORDER EMERGENCY REFUEL (+{0:F0}L / ${1})", fuelToAdd, fuelCost);
+                        vehicleRefuelButtonText.text = LocalizationManager.GetFormat("vehicle_btn_emergency_fuel", fuelToAdd, fuelCost);
                     }
 
                     vehicleRefuelButton.onClick.RemoveAllListeners();
@@ -808,7 +808,7 @@ public class CargoTabletUI : MonoBehaviour
                             PopulateVehicleList();
                             if (InteractionPromptHUD.Instance != null)
                             {
-                                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_emergency_fuel_delivered", "<color=#32FF64>[EMERGENCY FUEL] +{0:F0}L Roadside Fuel Delivered to {1}! (-${2})</color>", fuelToAdd, v.vehicleName, fuelCost));
+                                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_emergency_fuel_delivered", fuelToAdd, v.vehicleName, fuelCost));
                             }
                         }
                         else
@@ -816,7 +816,7 @@ public class CargoTabletUI : MonoBehaviour
                             FlashButtonError(vehicleRefuelButton, new Color(0.12f, 0.65f, 0.35f));
                             if (InteractionPromptHUD.Instance != null)
                             {
-                                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_insufficient_funds_fuel", "<color=#FF5555>[INSUFFICIENT FUNDS] Need ${0} for emergency fuel delivery!</color>", fuelCost));
+                                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_insufficient_funds_fuel", fuelCost));
                             }
                         }
                     });
@@ -839,7 +839,7 @@ public class CargoTabletUI : MonoBehaviour
 
                 if (vehicleRecallButtonText != null)
                 {
-                    vehicleRecallButtonText.text = fee > 0 ? LocalizationManager.GetFormat("vehicle_btn_recall_fee", "RECALL TO GARAGE (${0})", fee) : LocalizationManager.Get("vehicle_btn_recall_free", "RECALL TO WAREHOUSE GARAGE");
+                    vehicleRecallButtonText.text = fee > 0 ? LocalizationManager.GetFormat("vehicle_btn_recall_fee", fee) : LocalizationManager.Get("vehicle_btn_recall_free", "RECALL TO WAREHOUSE GARAGE");
                 }
 
                 vehicleRecallButton.onClick.RemoveAllListeners();
@@ -855,7 +855,7 @@ public class CargoTabletUI : MonoBehaviour
                             FlashButtonError(vehicleRecallButton, new Color(0.15f, 0.45f, 0.75f));
                             if (InteractionPromptHUD.Instance != null)
                             {
-                                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_insufficient_funds_recall", "<color=#FF4444>[INSUFFICIENT FUNDS] Need ${0} to recall {1}! (Balance: ${2})</color>", currentFee, v.vehicleName, curBalance));
+                                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_insufficient_funds_recall", currentFee, v.vehicleName, curBalance));
                             }
                             return;
                         }
@@ -866,7 +866,7 @@ public class CargoTabletUI : MonoBehaviour
                     if (InteractionPromptHUD.Instance != null)
                     {
                         string feeMsg = currentFee > 0 ? $" (-${currentFee})" : "";
-                        InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_garage_recall_success", "<color=#32FFFF>[GARAGE RECALL] {0} recovered to warehouse garage!{1}</color>", v.vehicleName, feeMsg));
+                        InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_garage_recall_success", v.vehicleName, feeMsg));
                     }
                 });
             }
@@ -885,7 +885,7 @@ public class CargoTabletUI : MonoBehaviour
 
         if (current != null)
         {
-            if (currentBranchTitleText != null) currentBranchTitleText.text = $"<b>{current.tierName}</b> ({LocalizationManager.GetFormat("branch_required_level", "Level {0}", current.tierLevel)})";
+            if (currentBranchTitleText != null) currentBranchTitleText.text = $"<b>{current.tierName}</b> ({LocalizationManager.GetFormat("branch_required_level", current.tierLevel)})";
             if (currentBranchDescText != null) currentBranchDescText.text = current.description;
             if (currentBranchCapacityText != null) currentBranchCapacityText.text = $"<b>{LocalizationManager.Get("branch_daily_capacity", "Daily Parcel Limit:")}</b> {current.dailyPackageCapacity} {LocalizationManager.Get("unit_packages_per_day", "Packages / Day")}";
             if (currentBranchRentText != null) currentBranchRentText.text = $"<b>{LocalizationManager.Get("branch_daily_rent", "Daily Rent:")}</b> ${current.dailyRent} / {LocalizationManager.Get("unit_day", "Day")}";
@@ -898,7 +898,7 @@ public class CargoTabletUI : MonoBehaviour
             if (nextBranchTitleText != null)
             {
                 nextBranchTitleText.gameObject.SetActive(true);
-                nextBranchTitleText.text = $"<b>{next.tierName}</b> ({LocalizationManager.GetFormat("branch_required_level", "Level {0}", next.tierLevel)})";
+                nextBranchTitleText.text = $"<b>{next.tierName}</b> ({LocalizationManager.GetFormat("branch_required_level", next.tierLevel)})";
             }
             if (nextBranchDescText != null)
             {
@@ -922,7 +922,7 @@ public class CargoTabletUI : MonoBehaviour
                 branchUpgradeButton.interactable = true;
                 if (branchUpgradeButtonText != null)
                 {
-                    branchUpgradeButtonText.text = LocalizationManager.GetFormat("branch_btn_upgrade", "UPGRADE BRANCH (${0:N0})", next.upgradeCost);
+                    branchUpgradeButtonText.text = LocalizationManager.GetFormat("branch_btn_upgrade", next.upgradeCost);
                 }
             }
 
