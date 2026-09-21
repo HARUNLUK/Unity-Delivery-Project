@@ -353,6 +353,13 @@ public class GameMenuManager : MonoBehaviour
                 fpsLimitDropdown = graphicsSection.transform.Find("FpsLimitRow/Dropdown")?.GetComponent<TMP_Dropdown>();
             }
 
+            if (languageDropdown == null && settingsPanel != null)
+            {
+                languageDropdown = settingsPanel.transform.Find("SettingsCard/ContentArea/LanguageRow/Dropdown")?.GetComponent<TMP_Dropdown>() ??
+                                   settingsPanel.transform.Find("SettingsCard/LanguageRow/Dropdown")?.GetComponent<TMP_Dropdown>() ??
+                                   settingsPanel.GetComponentInChildren<SettingsLanguageUI>(true)?.languageDropdown;
+            }
+
             if (controlsSection != null)
             {
                 mouseSensSlider = controlsSection.transform.Find("MouseSensRow/Slider")?.GetComponent<Slider>();
@@ -1902,7 +1909,7 @@ public class GameMenuManager : MonoBehaviour
             SetButtonText(resetKeybindingsBtn, LocalizationManager.Get("btn_reset_defaults", "Varsayılana Sıfırla"));
 
             var kbTitle = settingsPanel.transform.Find("SettingsCard/ContentArea/ControlsSection/KeybindingsHeaderRow/HeaderTitle")?.GetComponent<TextMeshProUGUI>();
-            if (kbTitle != null) kbTitle.text = LocalizationManager.Get("setting_keybindings_title", "<color=#32FFFF><b>TUŞ ATAMALARI:</b></color> <size=80%><color=#85A8C8>(Değiştirmek istediğiniz tuşa tıklayın)</color></size>");
+            if (kbTitle != null) kbTitle.text = LocalizationManager.Get("setting_keybindings_title", "<color=#32FFFF><b>TUŞ ATAMALARI:</b></color>");
 
             // Refresh Fullscreen options text
             if (fullscreenDropdown != null)

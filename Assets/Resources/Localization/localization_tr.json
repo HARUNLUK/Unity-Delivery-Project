@@ -147,7 +147,7 @@
     },
     {
       "key": "setting_keybindings_title",
-      "value": "<color=#32FFFF><b>TUŞ ATAMALARI:</b></color> <size=80%><color=#85A8C8>(Değiştirmek istediğiniz tuşa tıklayın)</color></size>"
+      "value": "<color=#32FFFF><b>TUŞ ATAMALARI:</b></color>"
     },
     {
       "key": "btn_reset_defaults",
@@ -455,7 +455,7 @@
     },
     {
       "key": "vehicle_btn_emergency_fuel",
-      "value": "ACİL YAKIT SİPARİŞİ (+{0:F0}L / ${1})"
+      "value": "BENZİN TAKVİYE SERVİSİ (${0:N0})"
     },
     {
       "key": "vehicle_btn_recall_fee",
@@ -895,7 +895,7 @@
     },
     {
       "key": "prompt_insufficient_funds_fuel",
-      "value": "<color=#FF5555>[YETERSİZ BAKİYE] Acil yakıt servisi için ${0} gerekli!</color>"
+      "value": "<color=#FF5555>[YETERSİZ BAKİYE] Benzin takviye servisi için ${0:N0} gerekli!</color>"
     },
     {
       "key": "prompt_insufficient_funds_recall",
@@ -903,7 +903,7 @@
     },
     {
       "key": "prompt_emergency_fuel_delivered",
-      "value": "<color=#32FF64>[ACİL YAKIT] +{0:F0}L Yol Yardımı Yakıtı {1} Aracına Dolduruldu! (-${2})</color>"
+      "value": "<color=#32FF64>⛽ [BENZİN TAKVİYE] {1} Aracının Yakıt Deposu Fullendi! (-${2:N0})</color>"
     },
     {
       "key": "prompt_insufficient_branch_level",

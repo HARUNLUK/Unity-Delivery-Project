@@ -52,6 +52,8 @@ public class CargoTabletUI : MonoBehaviour
     public TextMeshProUGUI vehicleBuyButtonText;
     public Button vehicleRefuelButton;
     public TextMeshProUGUI vehicleRefuelButtonText;
+    [Tooltip("Emergency roadside fuel support service fee ($) to completely fill vehicle fuel tank")]
+    public int emergencyRefuelCost = 1000;
     public Button vehicleRecallButton;
     public TextMeshProUGUI vehicleRecallButtonText;
 
@@ -761,7 +763,7 @@ public class CargoTabletUI : MonoBehaviour
             }
         }
 
-        // Emergency Roadside Refuel Button
+        // Emergency Roadside Refuel Support Service Button
         if (vehicleRefuelButton != null)
         {
             if (!v.IsUnlocked)
@@ -772,14 +774,14 @@ public class CargoTabletUI : MonoBehaviour
             {
                 vehicleRefuelButton.gameObject.SetActive(true);
                 vehicleRefuelButton.interactable = true;
-                float fuelToAdd = Mathf.Min(15f, v.maxFuel - v.currentFuel);
-                int fuelCost = Mathf.RoundToInt(fuelToAdd * 3f);
+                float fuelToAdd = Mathf.Max(0f, v.maxFuel - v.currentFuel);
+                int fuelCost = emergencyRefuelCost;
 
                 if (fuelToAdd <= 0.2f)
                 {
                     if (vehicleRefuelButtonText != null)
                     {
-                        vehicleRefuelButtonText.text = LocalizationManager.Get("vehicle_btn_fuel_full", "FUEL TANK FULL (100%)");
+                        vehicleRefuelButtonText.text = LocalizationManager.Get("vehicle_btn_fuel_full", "YAKIT DEPOSU DOLU (%100)");
                     }
 
                     vehicleRefuelButton.onClick.RemoveAllListeners();
@@ -787,7 +789,7 @@ public class CargoTabletUI : MonoBehaviour
                         if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
                         if (InteractionPromptHUD.Instance != null)
                         {
-                            InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.Get("prompt_gas_station_full", "<color=#32FF64>[TANK FULL] Your fuel tank is completely full.</color>"));
+                            InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.Get("prompt_gas_station_full", "<color=#32FF64>[DEPO DOLU] Yakıt deponuz zaten tamamen dolu.</color>"));
                         }
                     });
                 }
@@ -795,7 +797,7 @@ public class CargoTabletUI : MonoBehaviour
                 {
                     if (vehicleRefuelButtonText != null)
                     {
-                        vehicleRefuelButtonText.text = LocalizationManager.GetFormat("vehicle_btn_emergency_fuel", fuelToAdd, fuelCost);
+                        vehicleRefuelButtonText.text = LocalizationManager.GetFormat("vehicle_btn_emergency_fuel", fuelCost);
                     }
 
                     vehicleRefuelButton.onClick.RemoveAllListeners();

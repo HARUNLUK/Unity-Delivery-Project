@@ -455,7 +455,7 @@
     },
     {
       "key": "vehicle_btn_emergency_fuel",
-      "value": "ORDER EMERGENCY REFUEL (+{0:F0}L / ${1})"
+      "value": "EMERGENCY FUEL SERVICE (${0:N0})"
     },
     {
       "key": "vehicle_btn_recall_fee",
@@ -895,7 +895,7 @@
     },
     {
       "key": "prompt_insufficient_funds_fuel",
-      "value": "<color=#FF5555>[INSUFFICIENT FUNDS] Need ${0} for emergency fuel delivery!</color>"
+      "value": "<color=#FF5555>[INSUFFICIENT FUNDS] Emergency fuel service requires ${0:N0}!</color>"
     },
     {
       "key": "prompt_insufficient_funds_recall",
@@ -903,7 +903,7 @@
     },
     {
       "key": "prompt_emergency_fuel_delivered",
-      "value": "<color=#32FF64>[EMERGENCY FUEL] +{0:F0}L Roadside Fuel Delivered to {1}! (-${2})</color>"
+      "value": "<color=#32FF64>⛽ [FUEL SERVICE] {1}'s Fuel Tank Refilled to Full! (-${2:N0})</color>"
     },
     {
       "key": "prompt_insufficient_branch_level",

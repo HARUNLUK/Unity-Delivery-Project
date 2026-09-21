@@ -717,7 +717,7 @@ public static class DeliveryUIBuilder
         vrbtObj.transform.SetParent(vRefuelBtnObj.transform, false);
         RectTransform vrbtRect = vrbtObj.AddComponent<RectTransform>();
         vrbtRect.anchorMin = Vector2.zero; vrbtRect.anchorMax = Vector2.one; vrbtRect.sizeDelta = Vector2.zero;
-        TextMeshProUGUI vRefuelTxt = AddTextMeshPro(vrbtObj, "ORDER EMERGENCY REFUEL (+15L / $45)", 20, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
+        TextMeshProUGUI vRefuelTxt = AddTextMeshPro(vrbtObj, "BENZİN TAKVİYE SERVİSİ ($1,000)", 20, FontStyles.Bold, TextAlignmentOptions.Center, Color.white);
 
         // Warehouse Garage Recall Button
         GameObject vRecallBtnObj = new GameObject("RecallButton");
