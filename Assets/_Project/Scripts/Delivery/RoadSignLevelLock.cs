@@ -159,14 +159,8 @@ public class RoadSignLevelLock : MonoBehaviour
             if (lockTextMesh != null)
             {
                 lockTextMesh.gameObject.SetActive(true);
-                if (string.IsNullOrEmpty(lockTextFormat) || lockTextFormat == "LEVEL {0} REQUIRED" || lockTextFormat == "SEVİYE {0} GEREKLİ")
-                {
-                    lockTextMesh.text = LocalizationManager.GetFormat("sign_level_required", requiredLevel);
-                }
-                else
-                {
-                    lockTextMesh.text = string.Format(lockTextFormat, requiredLevel);
-                }
+                string formatStr = LocalizationManager.Get("sign_level_required", "SEVİYE {0} GEREKLİ");
+                lockTextMesh.text = string.Format(formatStr, requiredLevel);
                 lockTextMesh.color = lockTextColor;
             }
         }

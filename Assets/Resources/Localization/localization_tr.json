@@ -75,7 +75,7 @@
     },
     {
       "key": "settings_title",
-      "value": "<b>AYARLAR - SETTINGS</b>"
+      "value": "<b>AYARLAR</b>"
     },
     {
       "key": "tab_audio",
@@ -1016,6 +1016,118 @@
     {
       "key": "game_over_badge",
       "value": "🚨 ŞİRKET TASFİYESİ & İFLAS 🚨"
+    },
+    {
+      "key": "key_action_forward",
+      "value": "• <b>İleri Yürüme / Gaza Bas</b>"
+    },
+    {
+      "key": "key_action_backward",
+      "value": "• <b>Geri Yürüme / Fren</b>"
+    },
+    {
+      "key": "key_action_left",
+      "value": "• <b>Sola Dön / Sol Direksiyon</b>"
+    },
+    {
+      "key": "key_action_right",
+      "value": "• <b>Sağa Dön / Sağ Direksiyon</b>"
+    },
+    {
+      "key": "key_action_sprint",
+      "value": "• <b>Hızlı Koşma (Sprint)</b>"
+    },
+    {
+      "key": "key_action_jump",
+      "value": "• <b>Zıplama / Araç El Freni</b>"
+    },
+    {
+      "key": "key_action_interact",
+      "value": "• <b>Etkileşim / Kargo Alma / Dükkan</b>"
+    },
+    {
+      "key": "key_action_vehicle",
+      "value": "• <b>Araca Binme / Araçtan İnme</b>"
+    },
+    {
+      "key": "key_action_tablet",
+      "value": "• <b>Kargo Tableti / GPS Harita</b>"
+    },
+    {
+      "key": "key_action_camera",
+      "value": "• <b>Kamera Modu (FPS / TPS)</b>"
+    },
+    {
+      "key": "key_action_throw_cargo",
+      "value": "• <b>Koli Fırlatma (Şarjlı)</b>"
+    },
+    {
+      "key": "key_action_drop_cargo",
+      "value": "• <b>Koliyi Yavaşça Bırakma</b>"
+    },
+    {
+      "key": "sign_level_required",
+      "value": "SEVİYE {0} GEREKLİ"
+    },
+    {
+      "key": "sign_for_sale",
+      "value": "SATILIK"
+    },
+    {
+      "key": "sign_closed",
+      "value": "KAPALI"
+    },
+    {
+      "key": "property_for_sale_sign_format",
+      "value": "{0}\n\n<color=green>Fiyat: ${1:N0}</color>\n<color=yellow>Gereken: Seviye {2}</color>"
+    },
+    {
+      "key": "property_showroom_name",
+      "value": "Araç Galerisi & Showroom"
+    },
+    {
+      "key": "property_showroom_sign",
+      "value": "✨ VIP ARAÇ GALERİSİ & SHOWROOM ✨"
+    },
+    {
+      "key": "property_showroom_desc",
+      "value": "Yeni kargo araçları satın alabileceğiniz showroom ve galeri."
+    },
+    {
+      "key": "property_insurance_name",
+      "value": "Kargo Sigorta & Güvenlik Acentesi"
+    },
+    {
+      "key": "property_insurance_sign",
+      "value": "🛡️ GÜVEN KARGO SİGORTA & TEMİNAT ACENTESİ"
+    },
+    {
+      "key": "property_insurance_desc",
+      "value": "Teslimat kolilerinizi hasar ve çalınmaya karşı sigortalatabileceğiniz acente."
+    },
+    {
+      "key": "property_service_garage_name",
+      "value": "Oto Servis & Modifiye Garajı"
+    },
+    {
+      "key": "property_service_garage_sign",
+      "value": "🔧 OTO SERVİS, TAMİR & MODİFİYE GARAJI 🔧"
+    },
+    {
+      "key": "property_service_garage_desc",
+      "value": "Araçlarınızı tamir ettirebileceğiniz, yakıt ikmali yapabileceğiniz ve modifiye edebileceğiniz tam teşekküllü garaj."
+    },
+    {
+      "key": "property_logistics_name",
+      "value": "Bölge Kargo Dağıtım Şubesi"
+    },
+    {
+      "key": "property_logistics_sign",
+      "value": "📦 BÖLGE KARGO DAĞITIM ŞUBESİ & LOJİSTİK 📦"
+    },
+    {
+      "key": "property_logistics_desc",
+      "value": "Kuryeler istihdam ederek pasif gelir elde edebileceğiniz lojistik dağıtım merkezi."
     }
   ]
 }

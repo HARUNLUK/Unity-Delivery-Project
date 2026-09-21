@@ -1900,7 +1900,7 @@ public class GameMenuManager : MonoBehaviour
         if (settingsPanel != null)
         {
             var sTitle = settingsPanel.transform.Find("SettingsCard/SettingsTitle")?.GetComponent<TextMeshProUGUI>();
-            if (sTitle != null) sTitle.text = LocalizationManager.Get("settings_title", "<b>AYARLAR - SETTINGS</b>");
+            if (sTitle != null) sTitle.text = LocalizationManager.Get("settings_title", "<b>AYARLAR</b>");
 
             SetButtonText(tabAudioBtn, LocalizationManager.Get("tab_audio", "SES"));
             SetButtonText(tabGraphicsBtn, LocalizationManager.Get("tab_graphics", "GRAFİK"));
@@ -1908,40 +1908,91 @@ public class GameMenuManager : MonoBehaviour
             SetButtonText(settingsBackButton, LocalizationManager.Get("btn_save_return", "KAYDET VE GERİ DÖN"));
             SetButtonText(resetKeybindingsBtn, LocalizationManager.Get("btn_reset_defaults", "Varsayılana Sıfırla"));
 
-            var kbTitle = settingsPanel.transform.Find("SettingsCard/ContentArea/ControlsSection/KeybindingsHeaderRow/HeaderTitle")?.GetComponent<TextMeshProUGUI>();
-            if (kbTitle != null) kbTitle.text = LocalizationManager.Get("setting_keybindings_title", "<color=#32FFFF><b>TUŞ ATAMALARI:</b></color>");
-
-            // Refresh Fullscreen options text
-            if (fullscreenDropdown != null)
+            // 4.1 Audio Section Row Labels
+            if (audioSection != null)
             {
-                int curVal = fullscreenDropdown.value;
-                fullscreenDropdown.ClearOptions();
-                fullscreenDropdown.AddOptions(new List<string> {
-                    LocalizationManager.Get("disp_fullscreen", "Tam Ekran (Exclusive)"),
-                    LocalizationManager.Get("disp_borderless", "Kenarlıksız (Borderless)"),
-                    LocalizationManager.Get("disp_windowed", "Pencereli (Windowed)")
-                });
-                fullscreenDropdown.value = curVal;
-                fullscreenDropdown.RefreshShownValue();
+                SetRowLabel(audioSection, "MasterVolRow", "setting_master_vol", "Ana Ses (Master):");
+                SetRowLabel(audioSection, "MusicVolRow", "setting_music_vol", "Müzik Ses Şiddeti:");
+                SetRowLabel(audioSection, "SfxVolRow", "setting_sfx_vol", "Ses Efektleri (SFX):");
+                SetRowLabel(audioSection, "AmbienceVolRow", "setting_ambience_vol", "Çevre & Vadi Atmosferi:");
+                SetRowLabel(audioSection, "UiVolRow", "setting_ui_vol", "Arayüz & Bildirimler:");
             }
 
-            if (fpsLimitDropdown != null)
+            // 4.2 Graphics Section Row Labels & Dropdowns
+            if (graphicsSection != null)
             {
-                int curVal = fpsLimitDropdown.value;
-                fpsLimitDropdown.ClearOptions();
-                fpsLimitDropdown.AddOptions(new List<string> { "30 FPS", "60 FPS", "120 FPS", "144 FPS", LocalizationManager.Get("fps_unlimited", "Sınırsız (Unlimited)") });
-                fpsLimitDropdown.value = curVal;
-                fpsLimitDropdown.RefreshShownValue();
+                SetRowLabel(graphicsSection, "LanguageRow", "setting_language", "Oyun Dili (Language):");
+                SetRowLabel(graphicsSection, "QualityRow", "setting_quality", "Grafik Kalitesi:");
+                SetRowLabel(graphicsSection, "FullscreenRow", "setting_display_mode", "Ekran Modu:");
+                SetRowLabel(graphicsSection, "ResolutionRow", "setting_resolution", "Çözünürlük:");
+                SetRowLabel(graphicsSection, "VsyncRow", "setting_vsync", "Dikey Senkronizasyon (V-Sync):");
+                SetRowLabel(graphicsSection, "FpsLimitRow", "setting_target_fps", "Hedef Kare Hızı (FPS Limit):");
+
+                if (qualityDropdown != null)
+                {
+                    int curVal = qualityDropdown.value;
+                    qualityDropdown.ClearOptions();
+                    qualityDropdown.AddOptions(new List<string> {
+                        LocalizationManager.Get("quality_low", "Düşük (Low)"),
+                        LocalizationManager.Get("quality_med", "Orta (Medium)"),
+                        LocalizationManager.Get("quality_high", "Yüksek (High)"),
+                        LocalizationManager.Get("quality_ultra", "Ultra")
+                    });
+                    qualityDropdown.value = curVal;
+                    qualityDropdown.RefreshShownValue();
+                }
+
+                if (fullscreenDropdown != null)
+                {
+                    int curVal = fullscreenDropdown.value;
+                    fullscreenDropdown.ClearOptions();
+                    fullscreenDropdown.AddOptions(new List<string> {
+                        LocalizationManager.Get("disp_fullscreen", "Tam Ekran (Exclusive)"),
+                        LocalizationManager.Get("disp_borderless", "Kenarlıksız (Borderless)"),
+                        LocalizationManager.Get("disp_windowed", "Pencereli (Windowed)")
+                    });
+                    fullscreenDropdown.value = curVal;
+                    fullscreenDropdown.RefreshShownValue();
+                }
+
+                if (fpsLimitDropdown != null)
+                {
+                    int curVal = fpsLimitDropdown.value;
+                    fpsLimitDropdown.ClearOptions();
+                    fpsLimitDropdown.AddOptions(new List<string> { "30 FPS", "60 FPS", "120 FPS", "144 FPS", LocalizationManager.Get("fps_unlimited", "Sınırsız (Unlimited)") });
+                    fpsLimitDropdown.value = curVal;
+                    fpsLimitDropdown.RefreshShownValue();
+                }
+
+                if (languageDropdown != null)
+                {
+                    languageDropdown.value = LocalizationManager.IsTurkish ? 0 : 1;
+                    languageDropdown.RefreshShownValue();
+                }
             }
 
-            if (languageDropdown != null)
+            // 4.3 Controls Section Row Labels
+            if (controlsSection != null)
             {
-                languageDropdown.value = LocalizationManager.IsTurkish ? 0 : 1;
-                languageDropdown.RefreshShownValue();
+                SetRowLabel(controlsSection, "MouseSensRow", "setting_mouse_sens", "Fare Bakış Hassasiyeti:");
+                SetRowLabel(controlsSection, "InvertYRow", "setting_invert_y", "Fare Y-Ekseni Ters Çevir:");
+
+                var kbTitle = controlsSection.transform.Find("KeybindingsHeaderRow/HeaderTitle")?.GetComponent<TextMeshProUGUI>();
+                if (kbTitle != null) kbTitle.text = LocalizationManager.Get("setting_keybindings_title", "<color=#32FFFF><b>TUŞ ATAMALARI:</b></color>");
             }
         }
 
         RefreshAllKeybindingUI();
+    }
+
+    private static void SetRowLabel(GameObject parentSection, string rowName, string locKey, string fallback)
+    {
+        if (parentSection == null) return;
+        TextMeshProUGUI lbl = parentSection.transform.Find($"{rowName}/Label")?.GetComponent<TextMeshProUGUI>();
+        if (lbl != null)
+        {
+            lbl.text = LocalizationManager.Get(locKey, fallback);
+        }
     }
 
     private static void SetButtonText(Button btn, string txt)
@@ -1960,7 +2011,8 @@ public class GameMenuManager : MonoBehaviour
         if (activeRebindingAction.HasValue && activeRebindingText != null)
         {
             InputBindingData prev = KeyBindingManager.GetBinding(activeRebindingAction.Value);
-            activeRebindingText.text = prev.IsAssigned ? $"[ {prev.GetDisplayName()} ]" : "<color=#FF5555><b>[ Atanmadı ]</b></color>";
+            string unassigned = LocalizationManager.Get("btn_unassigned", "Atanmadı");
+            activeRebindingText.text = prev.IsAssigned ? $"[ {prev.GetDisplayName()} ]" : $"<color=#FF5555><b>[ {unassigned} ]</b></color>";
             activeRebindingText.color = prev.IsAssigned ? new Color(0.25f, 0.95f, 1.0f) : Color.white;
         }
 
@@ -1969,7 +2021,7 @@ public class GameMenuManager : MonoBehaviour
         activeRebindingText = btnText;
         rebindDebounceTimer = 0.15f;
 
-        btnText.text = "<color=#FFE600><b>[ Tuşa / Fareye Basın... ]</b></color>";
+        btnText.text = LocalizationManager.Get("btn_press_key", "<color=#FFE600><b>[ Tuşa / Fareye Basın... ]</b></color>");
         if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
     }
 
@@ -1978,7 +2030,8 @@ public class GameMenuManager : MonoBehaviour
         if (activeRebindingAction.HasValue && activeRebindingText != null)
         {
             InputBindingData prev = KeyBindingManager.GetBinding(activeRebindingAction.Value);
-            activeRebindingText.text = prev.IsAssigned ? $"[ {prev.GetDisplayName()} ]" : "<color=#FF5555><b>[ Atanmadı ]</b></color>";
+            string unassigned = LocalizationManager.Get("btn_unassigned", "Atanmadı");
+            activeRebindingText.text = prev.IsAssigned ? $"[ {prev.GetDisplayName()} ]" : $"<color=#FF5555><b>[ {unassigned} ]</b></color>";
             activeRebindingText.color = prev.IsAssigned ? new Color(0.25f, 0.95f, 1.0f) : Color.white;
         }
 
@@ -1990,6 +2043,7 @@ public class GameMenuManager : MonoBehaviour
 
     public void RefreshAllKeybindingUI()
     {
+        string unassignedStr = LocalizationManager.Get("btn_unassigned", "Atanmadı");
         foreach (var kvp in keybindingRowMap)
         {
             if (kvp.Value.text != null)
@@ -2002,10 +2056,47 @@ public class GameMenuManager : MonoBehaviour
                 }
                 else
                 {
-                    kvp.Value.text.text = "<color=#FF5555><b>[ Atanmadı ]</b></color>";
+                    kvp.Value.text.text = $"<color=#FF5555><b>[ {unassignedStr} ]</b></color>";
                 }
             }
         }
+
+        if (keybindingsContent != null)
+        {
+            foreach (GameAction action in Enum.GetValues(typeof(GameAction)))
+            {
+                Transform row = keybindingsContent.Find($"KeyRow_{action}");
+                if (row != null)
+                {
+                    TextMeshProUGUI actionLabel = row.Find("ActionLabel")?.GetComponent<TextMeshProUGUI>();
+                    if (actionLabel != null)
+                    {
+                        string locKey = GetActionLocKey(action);
+                        actionLabel.text = LocalizationManager.Get(locKey, actionLabel.text);
+                    }
+                }
+            }
+        }
+    }
+
+    private static string GetActionLocKey(GameAction action)
+    {
+        return action switch
+        {
+            GameAction.MoveForward => "key_action_forward",
+            GameAction.MoveBackward => "key_action_backward",
+            GameAction.MoveLeft => "key_action_left",
+            GameAction.MoveRight => "key_action_right",
+            GameAction.Sprint => "key_action_sprint",
+            GameAction.Jump => "key_action_jump",
+            GameAction.Interact => "key_action_interact",
+            GameAction.Vehicle => "key_action_vehicle",
+            GameAction.Tablet => "key_action_tablet",
+            GameAction.Camera => "key_action_camera",
+            GameAction.ThrowCargo => "key_action_throw_cargo",
+            GameAction.DropCargo => "key_action_drop_cargo",
+            _ => "key_action_" + action.ToString().ToLower()
+        };
     }
 
     public void ResetKeybindingsToDefault()

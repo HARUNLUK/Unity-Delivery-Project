@@ -486,12 +486,12 @@ public class CommercialHubUIManager : MonoBehaviour
 
         if (propertyModalTitleText != null)
         {
-            propertyModalTitleText.text = !string.IsNullOrEmpty(prop.displayName) ? prop.displayName.ToUpper() : LocalizationManager.Get("property_modal_default_title", "PURCHASE COMMERCIAL PROPERTY");
+            propertyModalTitleText.text = prop.GetLocalizedDisplayName().ToUpper();
         }
 
         if (propertyModalDescText != null)
         {
-            propertyModalDescText.text = prop.description;
+            propertyModalDescText.text = prop.GetLocalizedDescription();
         }
 
         if (propertyModalReqText != null)

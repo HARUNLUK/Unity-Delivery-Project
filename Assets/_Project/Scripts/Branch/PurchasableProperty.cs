@@ -79,6 +79,22 @@ public class PurchasableProperty : MonoBehaviour
         UpdateVisuals();
     }
 
+    private void OnEnable()
+    {
+        LocalizationManager.OnLanguageChanged += HandleLanguageChanged;
+        UpdateVisuals();
+    }
+
+    private void OnDisable()
+    {
+        LocalizationManager.OnLanguageChanged -= HandleLanguageChanged;
+    }
+
+    private void HandleLanguageChanged(string newLang)
+    {
+        UpdateVisuals();
+    }
+
     public void LoadState()
     {
         isUnlocked = PlayerPrefs.GetInt(PREF_KEY_PREFIX + propertyId, 0) == 1;
@@ -90,11 +106,51 @@ public class PurchasableProperty : MonoBehaviour
         PlayerPrefs.Save();
     }
 
+    public string GetLocalizedDisplayName()
+    {
+        return LocalizationManager.Get(propertyId + "_name", displayName);
+    }
+
+    public string GetLocalizedDescription()
+    {
+        return LocalizationManager.Get(propertyId + "_desc", description);
+    }
+
+    public string GetLocalizedSignTitle()
+    {
+        return LocalizationManager.Get(propertyId + "_sign", displayName);
+    }
+
     public void UpdateVisuals()
     {
         if (closedStateRoot != null) closedStateRoot.SetActive(!isUnlocked);
         if (unlockedStateRoot != null) unlockedStateRoot.SetActive(isUnlocked);
         if (forSaleSignboard != null) forSaleSignboard.SetActive(!isUnlocked);
+        UpdateSignText();
+    }
+
+    public void UpdateSignText()
+    {
+        string locName = GetLocalizedDisplayName();
+        string locSign = GetLocalizedSignTitle();
+
+        // 1. Update 3D Building Banner if present
+        TMPro.TextMeshPro bannerTmp = transform.Find("3D_Text")?.GetComponent<TMPro.TextMeshPro>();
+        if (bannerTmp != null)
+        {
+            bannerTmp.text = locSign;
+        }
+
+        // 2. Update Closed / For Sale Signboard text
+        TMPro.TextMeshPro signTmp = transform.Find("Sign_Text")?.GetComponent<TMPro.TextMeshPro>() ??
+                                    (forSaleSignboard != null ? forSaleSignboard.GetComponentInChildren<TMPro.TextMeshPro>(true) : null) ??
+                                    (closedStateRoot != null ? closedStateRoot.GetComponentInChildren<TMPro.TextMeshPro>(true) : null);
+
+        if (signTmp != null)
+        {
+            string signFormat = LocalizationManager.Get("property_for_sale_sign_format", "{0}\n\n<color=green>Fiyat: ${1:N0}</color>\n<color=yellow>Gereken: Seviye {2}</color>");
+            signTmp.text = string.Format(signFormat, locName.ToUpper(), purchaseCost, requiredPlayerLevel);
+        }
     }
 
     public string GetPromptText()

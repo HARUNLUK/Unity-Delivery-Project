@@ -147,7 +147,7 @@
     },
     {
       "key": "setting_keybindings_title",
-      "value": "<color=#32FFFF><b>KEYBINDINGS:</b></color> <size=80%><color=#85A8C8>(Click a key button to reassign)</color></size>"
+      "value": "<color=#32FFFF><b>KEYBINDINGS:</b></color> "
     },
     {
       "key": "btn_reset_defaults",
@@ -1016,6 +1016,118 @@
     {
       "key": "game_over_badge",
       "value": "🚨 COMPANY LIQUIDATION & BANKRUPTCY 🚨"
+    },
+    {
+      "key": "key_action_forward",
+      "value": "• <b>Walk Forward / Throttle</b>"
+    },
+    {
+      "key": "key_action_backward",
+      "value": "• <b>Walk Backward / Brake</b>"
+    },
+    {
+      "key": "key_action_left",
+      "value": "• <b>Steer Left / Move Left</b>"
+    },
+    {
+      "key": "key_action_right",
+      "value": "• <b>Steer Right / Move Right</b>"
+    },
+    {
+      "key": "key_action_sprint",
+      "value": "• <b>Sprint / Boost</b>"
+    },
+    {
+      "key": "key_action_jump",
+      "value": "• <b>Jump / Handbrake</b>"
+    },
+    {
+      "key": "key_action_interact",
+      "value": "• <b>Interact / Pick Cargo / Shop</b>"
+    },
+    {
+      "key": "key_action_vehicle",
+      "value": "• <b>Enter / Exit Vehicle</b>"
+    },
+    {
+      "key": "key_action_tablet",
+      "value": "• <b>Cargo Tablet / GPS Map</b>"
+    },
+    {
+      "key": "key_action_camera",
+      "value": "• <b>Camera View (FPS / TPS)</b>"
+    },
+    {
+      "key": "key_action_throw_cargo",
+      "value": "• <b>Throw Cargo (Charged)</b>"
+    },
+    {
+      "key": "key_action_drop_cargo",
+      "value": "• <b>Drop Cargo Gently</b>"
+    },
+    {
+      "key": "sign_level_required",
+      "value": "LEVEL {0} REQUIRED"
+    },
+    {
+      "key": "sign_for_sale",
+      "value": "FOR SALE"
+    },
+    {
+      "key": "sign_closed",
+      "value": "CLOSED"
+    },
+    {
+      "key": "property_for_sale_sign_format",
+      "value": "{0}\n\n<color=green>Price: ${1:N0}</color>\n<color=yellow>Required: Level {2}</color>"
+    },
+    {
+      "key": "property_showroom_name",
+      "value": "Vehicle Dealership & Showroom"
+    },
+    {
+      "key": "property_showroom_sign",
+      "value": "✨ VIP VEHICLE DEALERSHIP & SHOWROOM ✨"
+    },
+    {
+      "key": "property_showroom_desc",
+      "value": "Showroom and dealership where you can purchase new delivery vehicles."
+    },
+    {
+      "key": "property_insurance_name",
+      "value": "Cargo Insurance & Security Agency"
+    },
+    {
+      "key": "property_insurance_sign",
+      "value": "🛡️ SECURE CARGO INSURANCE & GUARANTEE AGENCY"
+    },
+    {
+      "key": "property_insurance_desc",
+      "value": "Agency where you can insure your delivery packages against damage and theft."
+    },
+    {
+      "key": "property_service_garage_name",
+      "value": "Auto Service & Workshop Garage"
+    },
+    {
+      "key": "property_service_garage_sign",
+      "value": "🔧 AUTO SERVICE, REPAIR & CUSTOM WORKSHOP 🔧"
+    },
+    {
+      "key": "property_service_garage_desc",
+      "value": "Full-fledged garage to repair, refuel, and customize your delivery vehicles."
+    },
+    {
+      "key": "property_logistics_name",
+      "value": "Regional Cargo Dispatch Hub"
+    },
+    {
+      "key": "property_logistics_sign",
+      "value": "📦 REGIONAL CARGO DISPATCH & LOGISTICS HUB 📦"
+    },
+    {
+      "key": "property_logistics_desc",
+      "value": "Logistics dispatch center to hire couriers and earn passive income."
     }
   ]
 }
