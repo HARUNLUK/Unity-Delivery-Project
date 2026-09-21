@@ -885,8 +885,19 @@ public class CargoTabletUI : MonoBehaviour
 
         if (current != null)
         {
-            if (currentBranchTitleText != null) currentBranchTitleText.text = $"<b>{current.tierName}</b> ({LocalizationManager.GetFormat("branch_required_level", current.tierLevel)})";
-            if (currentBranchDescText != null) currentBranchDescText.text = current.description;
+            if (currentBranchTitleText != null) currentBranchTitleText.text = $"<b>{current.GetLocalizedName()}</b> ({LocalizationManager.GetFormat("branch_required_level", current.tierLevel)})";
+            if (currentBranchDescText != null)
+            {
+                string descText = current.GetLocalizedDescription();
+                string perks = current.GetFormattedPerksText();
+                if (!string.IsNullOrEmpty(perks))
+                {
+                    string header = LocalizationManager.Get("branch_active_perks", "AKTİF ÖZELLİKLER:");
+                    if (!string.IsNullOrEmpty(descText)) descText += "\n\n";
+                    descText += $"<color=#A0C8FF><b>{header}</b></color>\n{perks}";
+                }
+                currentBranchDescText.text = descText;
+            }
             if (currentBranchCapacityText != null) currentBranchCapacityText.text = $"<b>{LocalizationManager.Get("branch_daily_capacity", "Daily Parcel Limit:")}</b> {current.dailyPackageCapacity} {LocalizationManager.Get("unit_packages_per_day", "Packages / Day")}";
             if (currentBranchRentText != null) currentBranchRentText.text = $"<b>{LocalizationManager.Get("branch_daily_rent", "Daily Rent:")}</b> ${current.dailyRent} / {LocalizationManager.Get("unit_day", "Day")}";
         }
@@ -898,12 +909,20 @@ public class CargoTabletUI : MonoBehaviour
             if (nextBranchTitleText != null)
             {
                 nextBranchTitleText.gameObject.SetActive(true);
-                nextBranchTitleText.text = $"<b>{next.tierName}</b> ({LocalizationManager.GetFormat("branch_required_level", next.tierLevel)})";
+                nextBranchTitleText.text = $"<b>{next.GetLocalizedName()}</b> ({LocalizationManager.GetFormat("branch_required_level", next.tierLevel)})";
             }
             if (nextBranchDescText != null)
             {
                 nextBranchDescText.gameObject.SetActive(true);
-                nextBranchDescText.text = next.description;
+                string descText = next.GetLocalizedDescription();
+                string perks = next.GetFormattedPerksText();
+                if (!string.IsNullOrEmpty(perks))
+                {
+                    string header = LocalizationManager.Get("branch_unlock_perks", "AÇILACAK AVANTAJLAR:");
+                    if (!string.IsNullOrEmpty(descText)) descText += "\n\n";
+                    descText += $"<color=#32FFFF><b>{header}</b></color>\n{perks}";
+                }
+                nextBranchDescText.text = descText;
             }
             if (nextBranchCapacityText != null)
             {

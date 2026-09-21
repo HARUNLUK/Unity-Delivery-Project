@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
@@ -766,21 +767,151 @@ public class FPSPlayerController : MonoBehaviour
         RaycastHit[] hits = Physics.RaycastAll(ray, interactionDistance, interactionLayers, QueryTriggerInteraction.Collide);
         if (hits == null || hits.Length == 0)
         {
-            hits = Physics.SphereCastAll(ray, 0.35f, interactionDistance, interactionLayers, QueryTriggerInteraction.Collide);
+            hits = Physics.SphereCastAll(ray, 0.22f, interactionDistance, interactionLayers, QueryTriggerInteraction.Collide);
         }
 
-        if (hits != null && hits.Length > 1)
-        {
-            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
-        }
-
-        // STEP 1: Process the closest direct interactable hit along the raycast.
+        // Filter out player colliders and non-interactive triggers (such as VehicleCargoBed.bedTrigger or boundary triggers)
+        List<RaycastHit> validHits = new List<RaycastHit>();
         if (hits != null)
         {
             foreach (var h in hits)
             {
                 if (h.collider == null || h.collider.transform.IsChildOf(transform)) continue;
 
+                // If collider is a trigger, only keep if it has an interactive terminal, property, or cargo component
+                if (h.collider.isTrigger)
+                {
+                    bool isInteractiveTrigger =
+                        h.collider.GetComponentInParent<BranchUpgradeTerminal>() != null ||
+                        h.collider.GetComponent<BranchUpgradeTerminal>() != null ||
+                        h.collider.GetComponentInParent<PurchasableProperty>() != null ||
+                        h.collider.GetComponent<PurchasableProperty>() != null ||
+                        h.collider.GetComponentInParent<InsuranceAgencyManager>() != null ||
+                        h.collider.GetComponent<InsuranceAgencyManager>() != null ||
+                        h.collider.GetComponentInParent<PassiveDispatchManager>() != null ||
+                        h.collider.GetComponent<PassiveDispatchManager>() != null ||
+                        h.collider.GetComponentInParent<PhysicalCargoPackage>() != null ||
+                        h.collider.GetComponent<PhysicalCargoPackage>() != null;
+
+                    if (!isInteractiveTrigger) continue;
+                }
+
+                validHits.Add(h);
+            }
+        }
+
+        if (validHits.Count > 1)
+        {
+            validHits.Sort((a, b) => a.distance.CompareTo(b.distance));
+        }
+
+        // STEP 1: Check if there is a directly targeted cargo package along the ray
+        PhysicalCargoPackage targetedPackage = null;
+        Rigidbody targetedRb = null;
+        RaycastHit packageHit = default;
+        bool hasPackageHit = false;
+
+        foreach (var h in validHits)
+        {
+            PhysicalCargoPackage pkg = h.collider.GetComponentInParent<PhysicalCargoPackage>();
+            if (pkg == null) pkg = h.collider.GetComponent<PhysicalCargoPackage>();
+            Rigidbody rb = null;
+
+            if (pkg != null)
+            {
+                rb = pkg.GetComponent<Rigidbody>();
+            }
+            else
+            {
+                Rigidbody attached = h.collider.attachedRigidbody;
+                if (attached != null && !attached.isKinematic && h.collider.GetComponentInParent<DrivableVehicle>() == null)
+                {
+                    rb = attached;
+                }
+            }
+
+            if (pkg != null || (rb != null && !rb.isKinematic))
+            {
+                targetedPackage = pkg;
+                targetedRb = rb;
+                packageHit = h;
+                hasPackageHit = true;
+                break;
+            }
+        }
+
+        // Check if there is a solid terminal or closed tailgate physically blocking access to the package
+        bool isTerminalInFront = false;
+        VehicleTailgate closedTailgateInFront = null;
+
+        if (hasPackageHit)
+        {
+            foreach (var h in validHits)
+            {
+                if (h.distance >= packageHit.distance) break;
+
+                // Terminal or Property in front?
+                if (h.collider.GetComponentInParent<BranchUpgradeTerminal>() != null ||
+                    h.collider.GetComponentInParent<PurchasableProperty>() != null ||
+                    h.collider.GetComponentInParent<InsuranceAgencyManager>() != null ||
+                    h.collider.GetComponentInParent<PassiveDispatchManager>() != null)
+                {
+                    isTerminalInFront = true;
+                    break;
+                }
+
+                // Closed Tailgate in front?
+                VehicleTailgate tg = h.collider.GetComponent<VehicleTailgate>();
+                if (tg == null) tg = h.collider.GetComponentInParent<VehicleTailgate>();
+                if (tg == null)
+                {
+                    DrivableVehicle v = h.collider.GetComponentInParent<DrivableVehicle>();
+                    if (v != null && v.rearTailgate != null)
+                    {
+                        float distToTg = Vector3.Distance(h.point, v.rearTailgate.transform.position);
+                        if (distToTg < 1.8f) tg = v.rearTailgate;
+                    }
+                }
+
+                if (tg != null && !tg.isOpen)
+                {
+                    closedTailgateInFront = tg;
+                    break;
+                }
+            }
+        }
+
+        // Direct cargo package priority (inside open trunk, on ground, on tables, in warehouse)
+        if (hasPackageHit && !isTerminalInFront && closedTailgateInFront == null)
+        {
+            UpdateCargoFocus(targetedPackage);
+            if (interactPressed && grabber != null)
+            {
+                UpdateCargoFocus(null);
+                Rigidbody rbToGrab = targetedPackage != null ? targetedPackage.GetComponent<Rigidbody>() : targetedRb;
+                if (rbToGrab != null)
+                {
+                    if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+                    grabber.GrabObject(rbToGrab);
+                    afterGrabSafetyTimer = 0.25f;
+                    currentDropHoldTime = 0f;
+                }
+                return;
+            }
+
+            if (InteractionPromptHUD.Instance != null)
+            {
+                string targetName = (targetedPackage != null) ? LocalizationManager.Get("prompt_target_cargo") : LocalizationManager.Get("prompt_target_object");
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_pickup_cargo", targetName));
+            }
+            return;
+        }
+
+        // STEP 1.2: Process other interactable targets in distance order
+        if (validHits.Count > 0)
+        {
+            foreach (var h in validHits)
+            {
                 // 1. Branch Upgrade Terminal
                 BranchUpgradeTerminal terminal = h.collider.GetComponentInParent<BranchUpgradeTerminal>();
                 if (terminal == null) terminal = h.collider.GetComponent<BranchUpgradeTerminal>();
@@ -900,7 +1031,7 @@ public class FPSPlayerController : MonoBehaviour
                     return;
                 }
 
-                // 5. Physical Cargo Package or Grabbable Dynamic Rigidbody
+                // 5. Physical Cargo Package or Grabbable Dynamic Rigidbody (Fallback if reached)
                 PhysicalCargoPackage pkg = h.collider.GetComponentInParent<PhysicalCargoPackage>();
                 if (pkg == null) pkg = h.collider.GetComponent<PhysicalCargoPackage>();
                 Rigidbody targetRb = null;

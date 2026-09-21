@@ -72,6 +72,11 @@ public class VehicleCargoBed : MonoBehaviour
         if (bedTrigger != null)
         {
             bedTrigger.isTrigger = true;
+            int ignoreRaycastLayer = LayerMask.NameToLayer("Ignore Raycast");
+            if (ignoreRaycastLayer >= 0)
+            {
+                bedTrigger.gameObject.layer = ignoreRaycastLayer;
+            }
         }
     }
 

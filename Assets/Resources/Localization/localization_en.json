@@ -498,6 +498,74 @@
       "value": "MAXIMUM BRANCH LEVEL REACHED"
     },
     {
+      "key": "branch_active_perks",
+      "value": "ACTIVE FEATURES:"
+    },
+    {
+      "key": "branch_unlock_perks",
+      "value": "UPGRADE UNLOCKS:"
+    },
+    {
+      "key": "branch_tier1_name",
+      "value": "Starter Garage"
+    },
+    {
+      "key": "branch_tier1_desc",
+      "value": "Entry-level parcel warehouse and garage. Basic package volume and low operating rent."
+    },
+    {
+      "key": "branch_tier1_perk1",
+      "value": "8 Packages / Day Limit"
+    },
+    {
+      "key": "branch_tier1_perk2",
+      "value": "Standard Cargo Dispatch ($80 - $180)"
+    },
+    {
+      "key": "branch_tier1_perk3",
+      "value": "Maple Town District Deliveries"
+    },
+    {
+      "key": "branch_tier2_name",
+      "value": "Regional Hub"
+    },
+    {
+      "key": "branch_tier2_desc",
+      "value": "Expanded parcel capacity and auto service garage access."
+    },
+    {
+      "key": "branch_tier2_perk1",
+      "value": "14 Packages / Day Limit (+6 Packages)"
+    },
+    {
+      "key": "branch_tier2_perk2",
+      "value": "Auto Service & Repair Garage Level Requirement"
+    },
+    {
+      "key": "branch_tier3_name",
+      "value": "District Distribution Center"
+    },
+    {
+      "key": "branch_tier3_desc",
+      "value": "Maximum parcel capacity and high-yield explosive cargo deliveries."
+    },
+    {
+      "key": "branch_tier3_perk1",
+      "value": "20 Packages / Day Limit (+6 Packages)"
+    },
+    {
+      "key": "branch_tier3_perk2",
+      "value": "Explosive Cargo Unlocked (TNT / Chemical - High Yield)"
+    },
+    {
+      "key": "prompt_barrier_locked",
+      "value": "🚫 [LOCKED] Branch Level {0} required for this district!"
+    },
+    {
+      "key": "prompt_debt_warning",
+      "value": "⚠️ WARNING: If your debt reaches -${0:N0}, your company will go bankrupt!"
+    },
+    {
       "key": "delivery_selection_title",
       "value": "DELIVERY DESTINATION: {0}"
     },
@@ -799,11 +867,11 @@
     },
     {
       "key": "prompt_branch_terminal_next",
-      "value": "<color=#32FF64>[E] Open Branch Terminal</color> -> Level {0}: {1} (${2:N0})"
+      "value": "<color=#32FF64>[E] Open Branch Terminal</color>"
     },
     {
       "key": "prompt_branch_terminal_max",
-      "value": "<color=#32FFFF>[E] Open Branch Terminal</color> [{0} - MAX LEVEL]"
+      "value": "<color=#32FFFF>[E] Open Branch Terminal</color>"
     },
     {
       "key": "prompt_branch_terminal_opened",

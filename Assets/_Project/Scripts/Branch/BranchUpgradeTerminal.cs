@@ -89,11 +89,11 @@ public class BranchUpgradeTerminal : MonoBehaviour
 
         if (next != null)
         {
-            return LocalizationManager.GetFormat("prompt_branch_terminal_next", next.tierLevel, next.tierName, next.upgradeCost);
+            return LocalizationManager.GetFormat("prompt_branch_terminal_next", next.tierLevel, next.GetLocalizedName(), next.upgradeCost);
         }
         else
         {
-            string tName = current != null ? current.tierName : LocalizationManager.Get("branch_badge_max");
+            string tName = current != null ? current.GetLocalizedName() : LocalizationManager.Get("branch_badge_max");
             return LocalizationManager.GetFormat("prompt_branch_terminal_max", tName);
         }
     }

@@ -46,12 +46,12 @@ public class BranchManager : MonoBehaviour
     public float standardSpawnWeight = 50f;
 
     [Tooltip("Minimum branch level required for Fragile cargo")]
-    public int fragileRequiredLevel = 5;
+    public int fragileRequiredLevel = 2;
     [Range(0f, 100f), Tooltip("Fragile cargo spawn weight / probability")]
     public float fragileSpawnWeight = 30f;
 
     [Tooltip("Minimum branch level required for Express cargo")]
-    public int expressRequiredLevel = 8;
+    public int expressRequiredLevel = 2;
     [Range(0f, 100f), Tooltip("Express cargo spawn weight / probability")]
     public float expressSpawnWeight = 20f;
 
@@ -258,6 +258,11 @@ public class BranchManager : MonoBehaviour
         }
     }
 
+    private void OnValidate()
+    {
+        SanitizeTierNamesAndDescriptions();
+    }
+
     public void EnsureReferences()
     {
         SanitizeTierNamesAndDescriptions();
@@ -280,48 +285,55 @@ public class BranchManager : MonoBehaviour
 
     public void SanitizeTierNamesAndDescriptions()
     {
-        if (branchTiers == null || branchTiers.Count == 0) return;
+        if (branchTiers == null || branchTiers.Count == 0)
+        {
+            PopulateDefaultTiers();
+            return;
+        }
 
+        // Populate missing default names or fix mismatched descriptions
         foreach (var t in branchTiers)
         {
             if (t == null) continue;
             switch (t.tierLevel)
             {
                 case 1:
-                    if (string.IsNullOrEmpty(t.tierName) || t.tierName.Contains("Kul") || t.tierName.Contains("Dağ") || t.tierName.Contains("Başlangıç"))
+                    if (string.IsNullOrEmpty(t.tierName)) t.tierName = "Starter Garage";
+                    if (string.IsNullOrEmpty(t.description) || t.description.StartsWith("Starter branch.")) t.description = "Temel koli depolama alanı ve başlangıç dağıtım ofisi.";
+                    if (t.dailyPackageCapacity <= 0 || t.dailyPackageCapacity == 5) t.dailyPackageCapacity = 8;
+                    if (t.dailyRent <= 0) t.dailyRent = 50;
+                    t.unlockedPerks = new string[]
                     {
-                        t.tierName = "Starter Garage";
-                        t.description = "Entry-level parcel warehouse and garage. Basic package volume and low operating rent.";
-                    }
-                    if (t.dailyPackageCapacity == 10 || t.dailyPackageCapacity == 4)
-                    {
-                        t.dailyPackageCapacity = 5;
-                    }
+                        "8 Koli / Gün Kapasitesi",
+                        "Standart Kargo Dağıtımı ($80 - $180)",
+                        "Maple Town Bölgesi Teslimatları"
+                    };
                     break;
                 case 2:
-                    if (string.IsNullOrEmpty(t.tierName) || t.tierName.Contains("Şube") || t.tierName.Contains("Lojistik") || t.tierName.Contains("Orta"))
+                    if (string.IsNullOrEmpty(t.tierName)) t.tierName = "Regional Hub";
+                    t.description = "Genişletilmiş koli kapasitesi ve oto tamir/servis garajı erişimi.";
+                    if (t.dailyPackageCapacity <= 0 || t.dailyPackageCapacity == 10) t.dailyPackageCapacity = 14;
+                    if (t.dailyRent <= 0) t.dailyRent = 120;
+                    if (t.upgradeCost <= 0) t.upgradeCost = 1200;
+                    if (t.requiredPlayerLevel <= 0) t.requiredPlayerLevel = 2;
+                    t.unlockedPerks = new string[]
                     {
-                        t.tierName = "Regional Hub";
-                        t.description = "Expanded logistics hub with improved daily parcel limits and high earnings potential.";
-                    }
-                    if (t.dailyPackageCapacity == 10)
-                    {
-                        t.dailyPackageCapacity = 8;
-                    }
+                        "14 Koli / Gün Kapasitesi (+6 Koli)",
+                        "Oto Sanayi & Tamir Garajı Seviye Yeterliliği"
+                    };
                     break;
                 case 3:
-                    if (string.IsNullOrEmpty(t.tierName) || t.tierName.Contains("Bölge") || t.tierName.Contains("Merkez") || t.tierName.Contains("Büyük"))
+                    if (string.IsNullOrEmpty(t.tierName) || t.tierName == "Regional Hub") t.tierName = "District Distribution Center";
+                    t.description = "Maksimum koli kapasitesi ve yüksek kazançlı patlayıcı kargo sevkiyatı.";
+                    if (t.dailyPackageCapacity <= 0) t.dailyPackageCapacity = 20;
+                    if (t.dailyRent <= 0) t.dailyRent = 280;
+                    if (t.upgradeCost <= 0) t.upgradeCost = 3500;
+                    if (t.requiredPlayerLevel <= 0) t.requiredPlayerLevel = 3;
+                    t.unlockedPerks = new string[]
                     {
-                        t.tierName = "District Distribution Center";
-                        t.description = "Large scale logistics center with high yield for express and fragile shipments.";
-                    }
-                    break;
-                case 4:
-                    if (string.IsNullOrEmpty(t.tierName) || t.tierName.Contains("Kompleks") || t.tierName.Contains("Filo") || t.tierName.Contains("Mega Lojistik"))
-                    {
-                        t.tierName = "Mega Logistics Complex";
-                        t.description = "Ultimate fleet management headquarters and maximum throughput capacity.";
-                    }
+                        "20 Koli / Gün Kapasitesi (+6 Koli)",
+                        "Patlayıcı Kargo Açılır (TNT / Kimyasal - Yüksek Kazanç)"
+                    };
                     break;
             }
         }
@@ -335,41 +347,47 @@ public class BranchManager : MonoBehaviour
             {
                 tierLevel = 1,
                 tierName = "Starter Garage",
-                description = "Entry-level parcel warehouse and garage. Basic package volume and low operating rent.",
+                description = "Temel koli depolama alanı ve başlangıç dağıtım ofisi.",
+                unlockedPerks = new string[]
+                {
+                    "8 Koli / Gün Kapasitesi",
+                    "Standart Kargo Dağıtımı ($80 - $180)",
+                    "Maple Town Bölgesi Teslimatları"
+                },
                 upgradeCost = 0,
                 requiredPlayerLevel = 1,
-                dailyPackageCapacity = 5,
+                dailyPackageCapacity = 8,
                 dailyRent = 50
             },
             new BranchTier
             {
                 tierLevel = 2,
                 tierName = "Regional Hub",
-                description = "Expanded logistics hub with improved daily parcel limits and high earnings potential.",
+                description = "Genişletilmiş koli kapasitesi ve oto tamir/servis garajı erişimi.",
+                unlockedPerks = new string[]
+                {
+                    "14 Koli / Gün Kapasitesi (+6 Koli)",
+                    "Oto Sanayi & Tamir Garajı Seviye Yeterliliği"
+                },
                 upgradeCost = 1200,
                 requiredPlayerLevel = 2,
-                dailyPackageCapacity = 8,
+                dailyPackageCapacity = 14,
                 dailyRent = 120
             },
             new BranchTier
             {
                 tierLevel = 3,
                 tierName = "District Distribution Center",
-                description = "Large scale logistics center with high yield for express and fragile shipments.",
+                description = "Maksimum koli kapasitesi ve yüksek kazançlı patlayıcı kargo sevkiyatı.",
+                unlockedPerks = new string[]
+                {
+                    "20 Koli / Gün Kapasitesi (+6 Koli)",
+                    "Patlayıcı Kargo Açılır (TNT / Kimyasal - Yüksek Kazanç)"
+                },
                 upgradeCost = 3500,
-                requiredPlayerLevel = 4,
-                dailyPackageCapacity = 14,
+                requiredPlayerLevel = 3,
+                dailyPackageCapacity = 20,
                 dailyRent = 280
-            },
-            new BranchTier
-            {
-                tierLevel = 4,
-                tierName = "Mega Logistics Complex",
-                description = "Ultimate fleet management headquarters and maximum throughput capacity.",
-                upgradeCost = 8000,
-                requiredPlayerLevel = 6,
-                dailyPackageCapacity = 22,
-                dailyRent = 550
             }
         };
     }

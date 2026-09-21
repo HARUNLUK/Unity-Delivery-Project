@@ -498,6 +498,74 @@
       "value": "MAKSİMUM ŞUBE SEVİYESİNE ULAŞILDI"
     },
     {
+      "key": "branch_active_perks",
+      "value": "AKTİF ÖZELLİKLER:"
+    },
+    {
+      "key": "branch_unlock_perks",
+      "value": "AÇILACAK AVANTAJLAR:"
+    },
+    {
+      "key": "branch_tier1_name",
+      "value": "Başlangıç Garajı"
+    },
+    {
+      "key": "branch_tier1_desc",
+      "value": "Temel koli depolama alanı ve başlangıç dağıtım ofisi."
+    },
+    {
+      "key": "branch_tier1_perk1",
+      "value": "8 Koli / Gün Kapasitesi"
+    },
+    {
+      "key": "branch_tier1_perk2",
+      "value": "Standart Kargo Dağıtımı ($80 - $180)"
+    },
+    {
+      "key": "branch_tier1_perk3",
+      "value": "Maple Town Bölgesi Teslimatları"
+    },
+    {
+      "key": "branch_tier2_name",
+      "value": "Bölgesel Dağıtım Şubesi"
+    },
+    {
+      "key": "branch_tier2_desc",
+      "value": "Genişletilmiş koli kapasitesi ve oto tamir/servis garajı erişimi."
+    },
+    {
+      "key": "branch_tier2_perk1",
+      "value": "14 Koli / Gün Kapasitesi (+6 Koli)"
+    },
+    {
+      "key": "branch_tier2_perk2",
+      "value": "Oto Sanayi & Tamir Garajı Seviye Yeterliliği"
+    },
+    {
+      "key": "branch_tier3_name",
+      "value": "Büyük Lojistik Merkezi"
+    },
+    {
+      "key": "branch_tier3_desc",
+      "value": "Maksimum koli kapasitesi ve yüksek kazançlı patlayıcı kargo sevkiyatı."
+    },
+    {
+      "key": "branch_tier3_perk1",
+      "value": "20 Koli / Gün Kapasitesi (+6 Koli)"
+    },
+    {
+      "key": "branch_tier3_perk2",
+      "value": "Patlayıcı Kargo Açılır (TNT / Kimyasal - Yüksek Kazanç)"
+    },
+    {
+      "key": "prompt_barrier_locked",
+      "value": "🚫 [KİLİTLİ] Bu bölgeye geçiş için Şube Seviyesi {0} gereklidir!"
+    },
+    {
+      "key": "prompt_debt_warning",
+      "value": "⚠️ DİKKAT: Borcunuz -${0:N0} sınırına ulaşırsa şirketiniz iflas edecektir!"
+    },
+    {
       "key": "delivery_selection_title",
       "value": "TESLİMAT NOKTASI: {0}"
     },
@@ -799,11 +867,11 @@
     },
     {
       "key": "prompt_branch_terminal_next",
-      "value": "<color=#32FF64>[E] Şube Terminalini Aç</color> -> Seviye {0}: {1} (${2:N0})"
+      "value": "<color=#32FF64>[E] Şube Terminalini Aç</color>"
     },
     {
       "key": "prompt_branch_terminal_max",
-      "value": "<color=#32FFFF>[E] Şube Terminalini Aç</color> [{0} - MAKSİMUM SEVİYE]"
+      "value": "<color=#32FFFF>[E] Şube Terminalini Aç</color>"
     },
     {
       "key": "prompt_branch_terminal_opened",

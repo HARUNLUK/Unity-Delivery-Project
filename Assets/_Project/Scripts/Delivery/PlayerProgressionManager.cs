@@ -55,11 +55,10 @@ public class PlayerProgressionManager : MonoBehaviour
 
         switch (warehouseLevel)
         {
-            case 1: return 5;
-            case 2: return 8;
-            case 3: return 14;
-            case 4: return 22;
-            default: return 5 + (warehouseLevel * 4);
+            case 1: return 8;
+            case 2: return 14;
+            case 3: return 20;
+            default: return 20;
         }
     }
 
@@ -75,8 +74,7 @@ public class PlayerProgressionManager : MonoBehaviour
             case 1: return 50;
             case 2: return 120;
             case 3: return 280;
-            case 4: return 550;
-            default: return warehouseLevel * 150;
+            default: return 280;
         }
     }
 
@@ -108,10 +106,9 @@ public class PlayerProgressionManager : MonoBehaviour
     {
         switch (targetLevel)
         {
-            case 2: return 600;
-            case 3: return 1800;
-            case 4: return 4500;
-            default: return targetLevel * 2000;
+            case 2: return 1200;
+            case 3: return 3500;
+            default: return 3500;
         }
     }
 

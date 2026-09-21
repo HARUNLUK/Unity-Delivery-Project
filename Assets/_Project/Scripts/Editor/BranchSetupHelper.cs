@@ -30,18 +30,23 @@ public static class BranchSetupHelper
             Object.DestroyImmediate(child.gameObject);
         }
 
-        // 2. Ensure default tiers are populated
+        // 2. Ensure default tiers are populated & sanitized
         if (bm.branchTiers == null || bm.branchTiers.Count == 0)
         {
             bm.PopulateDefaultTiers();
         }
+        else
+        {
+            bm.SanitizeTierNamesAndDescriptions();
+        }
 
         Selection.activeGameObject = branchObj;
+        EditorUtility.SetDirty(bm);
         EditorUtility.SetDirty(branchObj);
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         AssetDatabase.SaveAssets();
 
-        Debug.Log("<color=#32FF64>[BranchSetupHelper] Branch_Manager successfully created and configured.</color>");
+        Debug.Log("<color=#32FF64>[BranchSetupHelper] Branch_Manager successfully created, sanitized and configured.</color>");
     }
 }
 #endif

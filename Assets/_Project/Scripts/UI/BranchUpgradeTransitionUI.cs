@@ -145,10 +145,16 @@ public class BranchUpgradeTransitionUI : MonoBehaviour
         }
 
         // 3. Prepare UI Elements
-        string tierNameStr = newTier != null ? newTier.tierName : $"Tier {newLevel}";
-        int cap = newTier != null ? newTier.dailyPackageCapacity : (newLevel * 4);
+        string tierNameStr = newTier != null ? newTier.GetLocalizedName() : $"Tier {newLevel}";
+        int cap = newTier != null ? newTier.dailyPackageCapacity : (newLevel * 6);
         int rent = newTier != null ? newTier.dailyRent : (newLevel * 60);
-        string desc = newTier != null ? newTier.description : (LocalizationManager.IsTurkish ? "Genişletilmiş lojistik ve dağıtım kapasitesi." : "Expanded logistics and distribution capacity.");
+        string desc = newTier != null ? newTier.GetLocalizedDescription() : "";
+        string perks = newTier != null ? newTier.GetFormattedPerksText() : "";
+        if (!string.IsNullOrEmpty(perks))
+        {
+            if (!string.IsNullOrEmpty(desc)) desc += "\n";
+            desc += perks;
+        }
 
         if (badgeText != null)
         {
