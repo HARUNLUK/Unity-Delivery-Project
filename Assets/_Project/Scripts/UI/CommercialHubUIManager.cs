@@ -132,6 +132,27 @@ public class CommercialHubUIManager : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        LocalizationManager.OnLanguageChanged += HandleLanguageChanged;
+    }
+
+    private void OnDisable()
+    {
+        LocalizationManager.OnLanguageChanged -= HandleLanguageChanged;
+    }
+
+    private void HandleLanguageChanged(string newLang)
+    {
+        if (garagePanelRoot != null && garagePanelRoot.activeSelf) RefreshGarageUI();
+        if (insurancePanelRoot != null && insurancePanelRoot.activeSelf) RefreshInsuranceUI();
+        if (dispatchPanelRoot != null && dispatchPanelRoot.activeSelf) RefreshDispatchUI();
+        if (propertyModalRoot != null && propertyModalRoot.activeSelf && activePropertyToBuy != null)
+        {
+            OpenPropertyPurchaseModal(activePropertyToBuy);
+        }
+    }
+
     // ==========================================
     // 1. GARAGE WORKSHOP PANEL
     // ==========================================
@@ -180,6 +201,77 @@ public class CommercialHubUIManager : MonoBehaviour
     public void RefreshGarageUI()
     {
         if (activeGarageVehicle == null) return;
+
+        if (garageTitleText != null)
+        {
+            garageTitleText.text = LocalizationManager.Get("garage_title", "AUTO SERVICE & WORKSHOP GARAGE");
+        }
+
+        if (garageVehicleStatusText != null)
+        {
+            int hp = Mathf.RoundToInt(activeGarageVehicle.ConditionPercentage * 100f);
+            garageVehicleStatusText.text = LocalizationManager.GetFormat("vehicle_health_status", hp);
+        }
+
+        if (garageTuningInfoText != null && VehicleServiceGarage.Instance != null)
+        {
+            int stage = VehicleServiceGarage.Instance.GetVehicleTuningStage(activeGarageVehicle.EffectiveVehicleId);
+            string stageDesc = stage == 0 ? "Stock" : (stage == 1 ? "+15% Torque" : (stage == 2 ? "+30% Torque" : "+45% Torque Max"));
+            garageTuningInfoText.text = LocalizationManager.GetFormat("garage_tuning_info", stage, stageDesc);
+        }
+
+        if (garageRepairBtn != null && VehicleServiceGarage.Instance != null)
+        {
+            var txt = garageRepairBtn.GetComponentInChildren<TextMeshProUGUI>();
+            if (txt != null)
+            {
+                int cost = VehicleServiceGarage.Instance.repairCost;
+                txt.text = LocalizationManager.GetFormat("garage_btn_repair", cost);
+            }
+        }
+
+        if (garageTuneBtn != null && VehicleServiceGarage.Instance != null)
+        {
+            var txt = garageTuneBtn.GetComponentInChildren<TextMeshProUGUI>();
+            if (txt != null)
+            {
+                int currentStage = VehicleServiceGarage.Instance.GetVehicleTuningStage(activeGarageVehicle.EffectiveVehicleId);
+                if (currentStage >= 3)
+                {
+                    txt.text = LocalizationManager.Get("garage_btn_tune_max", "⭐ MAXIMUM ENGINE PERFORMANCE (STAGE 3)");
+                    garageTuneBtn.interactable = false;
+                }
+                else
+                {
+                    int nextStage = currentStage + 1;
+                    int cost = VehicleServiceGarage.Instance.GetTuningCostForStage(nextStage);
+                    txt.text = LocalizationManager.GetFormat("garage_btn_tune", nextStage, cost);
+                    garageTuneBtn.interactable = true;
+                }
+            }
+        }
+
+        if (garageDriveBtn != null)
+        {
+            var txt = garageDriveBtn.GetComponentInChildren<TextMeshProUGUI>();
+            if (txt != null) txt.text = LocalizationManager.Get("garage_btn_drive", "🚗 DRIVE VEHICLE");
+        }
+
+        if (garageCloseBtn != null)
+        {
+            var txt = garageCloseBtn.GetComponentInChildren<TextMeshProUGUI>();
+            if (txt != null) txt.text = LocalizationManager.Get("btn_close", "CLOSE (ESC)");
+        }
+
+        if (garagePaintSectionTitle != null)
+        {
+            garagePaintSectionTitle.text = LocalizationManager.Get("garage_paint_title", "CUSTOM BODY PAINT & WRAP");
+        }
+
+        if (garagePaintDescText != null)
+        {
+            garagePaintDescText.text = LocalizationManager.Get("garage_paint_desc", "Paint and finish your delivery vehicle.");
+        }
 
         if (garageCondBarFill != null)
         {
@@ -300,6 +392,12 @@ public class CommercialHubUIManager : MonoBehaviour
         int tier = InsuranceAgencyManager.Instance.InsuranceTier;
         int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
 
+        TextMeshProUGUI titleTmp = insurancePanelRoot != null ? FindTMPRecursive(insurancePanelRoot.transform, "Title", "Header") : null;
+        if (titleTmp != null)
+        {
+            titleTmp.text = LocalizationManager.Get("insurance_title", "CARGO INSURANCE AND SECURITY AGENCY");
+        }
+
         if (insuranceStatusText != null)
         {
             insuranceStatusText.text = LocalizationManager.GetFormat("insurance_current_policy", InsuranceAgencyManager.Instance.GetTierName());
@@ -308,6 +406,12 @@ public class CommercialHubUIManager : MonoBehaviour
         if (insuranceBalanceText != null)
         {
             insuranceBalanceText.text = LocalizationManager.GetFormat("insurance_wallet", balance);
+        }
+
+        if (insuranceCloseBtn != null)
+        {
+            var txt = insuranceCloseBtn.GetComponentInChildren<TextMeshProUGUI>();
+            if (txt != null) txt.text = LocalizationManager.Get("btn_close", "CLOSE (ESC)");
         }
 
         InsuranceAgencyManager ins = InsuranceAgencyManager.Instance;
@@ -394,6 +498,12 @@ public class CommercialHubUIManager : MonoBehaviour
         int dailyRev = hub.GetDailyPassiveRevenue();
         int balance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 0;
 
+        TextMeshProUGUI titleTmp = dispatchPanelRoot != null ? FindTMPRecursive(dispatchPanelRoot.transform, "Title", "Header") : null;
+        if (titleTmp != null)
+        {
+            titleTmp.text = LocalizationManager.Get("dispatch_title", "REGIONAL DISPATCH HUB (PASSIVE FLEET)");
+        }
+
         if (dispatchStatusText != null)
         {
             dispatchStatusText.text = LocalizationManager.GetFormat("dispatch_status", level, couriers);
@@ -407,6 +517,12 @@ public class CommercialHubUIManager : MonoBehaviour
         if (dispatchBalanceText != null)
         {
             dispatchBalanceText.text = LocalizationManager.GetFormat("insurance_wallet", balance);
+        }
+
+        if (dispatchCloseBtn != null)
+        {
+            var txt = dispatchCloseBtn.GetComponentInChildren<TextMeshProUGUI>();
+            if (txt != null) txt.text = LocalizationManager.Get("btn_close", "CLOSE (ESC)");
         }
 
         if (dispatchTier2UpgradeBtn != null)
@@ -509,6 +625,12 @@ public class CommercialHubUIManager : MonoBehaviour
             propertyModalBuyBtn.interactable = true;
             var buyTxt = propertyModalBuyBtn.GetComponentInChildren<TextMeshProUGUI>();
             if (buyTxt != null) buyTxt.text = LocalizationManager.Get("property_btn_buy", "PURCHASE PROPERTY");
+        }
+
+        if (propertyModalCancelBtn != null)
+        {
+            var cancelTxt = propertyModalCancelBtn.GetComponentInChildren<TextMeshProUGUI>();
+            if (cancelTxt != null) cancelTxt.text = LocalizationManager.Get("btn_cancel", "CANCEL");
         }
     }
 

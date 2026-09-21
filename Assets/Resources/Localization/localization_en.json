@@ -1082,6 +1082,18 @@
       "value": "{0}\n\n<color=green>Price: ${1:N0}</color>\n<color=yellow>Required: Level {2}</color>"
     },
     {
+      "key": "property_coming_soon_sign_format",
+      "value": "{0}\n\n<color=yellow>{1}</color>"
+    },
+    {
+      "key": "sign_coming_soon",
+      "value": "COMING SOON"
+    },
+    {
+      "key": "vehicle_health_status",
+      "value": "<b>Vehicle Health:</b> <color=#32FF64>{0}% (Good Condition)</color>"
+    },
+    {
       "key": "property_showroom_name",
       "value": "Vehicle Dealership & Showroom"
     },
@@ -1091,6 +1103,18 @@
     },
     {
       "key": "property_showroom_desc",
+      "value": "Showroom and dealership where you can purchase new delivery vehicles."
+    },
+    {
+      "key": "property_vehicle_showroom_name",
+      "value": "Vehicle Dealership & Showroom"
+    },
+    {
+      "key": "property_vehicle_showroom_sign",
+      "value": "✨ VIP VEHICLE DEALERSHIP & SHOWROOM ✨"
+    },
+    {
+      "key": "property_vehicle_showroom_desc",
       "value": "Showroom and dealership where you can purchase new delivery vehicles."
     },
     {
@@ -1106,6 +1130,18 @@
       "value": "Agency where you can insure your delivery packages against damage and theft."
     },
     {
+      "key": "property_insurance_agency_name",
+      "value": "Cargo Insurance & Security Agency"
+    },
+    {
+      "key": "property_insurance_agency_sign",
+      "value": "🛡️ SECURE CARGO INSURANCE & GUARANTEE AGENCY"
+    },
+    {
+      "key": "property_insurance_agency_desc",
+      "value": "Agency where you can insure your delivery packages against damage and theft."
+    },
+    {
       "key": "property_service_garage_name",
       "value": "Auto Service & Workshop Garage"
     },
@@ -1118,6 +1154,18 @@
       "value": "Full-fledged garage to repair, refuel, and customize your delivery vehicles."
     },
     {
+      "key": "property_garage_name",
+      "value": "Auto Service & Workshop Garage"
+    },
+    {
+      "key": "property_garage_sign",
+      "value": "🔧 AUTO SERVICE, REPAIR & CUSTOM WORKSHOP 🔧"
+    },
+    {
+      "key": "property_garage_desc",
+      "value": "Full-fledged garage to repair, refuel, and customize your delivery vehicles."
+    },
+    {
       "key": "property_logistics_name",
       "value": "Regional Cargo Dispatch Hub"
     },
@@ -1127,6 +1175,18 @@
     },
     {
       "key": "property_logistics_desc",
+      "value": "Logistics dispatch center to hire couriers and earn passive income."
+    },
+    {
+      "key": "property_logistics_hub_name",
+      "value": "Regional Cargo Dispatch Hub"
+    },
+    {
+      "key": "property_logistics_hub_sign",
+      "value": "📦 REGIONAL CARGO DISPATCH & LOGISTICS HUB 📦"
+    },
+    {
+      "key": "property_logistics_hub_desc",
       "value": "Logistics dispatch center to hire couriers and earn passive income."
     }
   ]

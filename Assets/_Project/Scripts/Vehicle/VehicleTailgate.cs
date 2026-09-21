@@ -77,7 +77,11 @@ public class VehicleTailgate : MonoBehaviour
                 ? (openSound != null ? openSound : (AudioManager.Instance != null ? AudioManager.Instance.vehicleTailgateOpen : null))
                 : (closeSound != null ? closeSound : (AudioManager.Instance != null ? AudioManager.Instance.vehicleTailgateClose : null));
 
-            if (clipToPlay != null) audioSource.PlayOneShot(clipToPlay);
+            if (clipToPlay != null)
+            {
+                float masterSfx = (AudioManager.Instance != null) ? AudioManager.Instance.sfxVolume * AudioManager.Instance.masterVolume : 1f;
+                audioSource.PlayOneShot(clipToPlay, masterSfx);
+            }
         }
     }
 

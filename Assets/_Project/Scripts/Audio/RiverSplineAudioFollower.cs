@@ -139,6 +139,12 @@ public class RiverSplineAudioFollower : MonoBehaviour
         {
             transform.position = Vector3.Lerp(transform.position, targetPoint, Time.deltaTime * smoothSpeed);
         }
+
+        if (audioSource != null)
+        {
+            float masterAmbience = (AudioManager.Instance != null) ? AudioManager.Instance.ambienceVolume * AudioManager.Instance.masterVolume : 1f;
+            audioSource.volume = 0.65f * masterAmbience;
+        }
     }
 
     /// <summary>

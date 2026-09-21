@@ -325,6 +325,27 @@ public class AudioManager : MonoBehaviour
         }
     }
 
+    public void SetVolumeChannels(float master, float music, float sfx, float ambience, float ui)
+    {
+        masterVolume = Mathf.Clamp01(master);
+        musicVolume = Mathf.Clamp01(music);
+        sfxVolume = Mathf.Clamp01(sfx);
+        ambienceVolume = Mathf.Clamp01(ambience);
+        uiVolume = Mathf.Clamp01(ui);
+
+        AudioListener.volume = masterVolume;
+
+        if (ambienceAudioSource != null && ambienceAudioSource.isPlaying)
+        {
+            ambienceAudioSource.volume = ambientDayValleyVolume * ambienceVolume * masterVolume;
+        }
+
+        if (musicAudioSource != null && musicAudioSource.isPlaying)
+        {
+            musicAudioSource.volume = backgroundMusicVolume * musicVolume * masterVolume;
+        }
+    }
+
     #region --- 2D & 3D PLAYBACK CORE HELPERS ---
 
     public void Play2DSound(AudioClip clip, float volumeScale = 1.0f, float pitch = 1.0f)
@@ -343,6 +364,8 @@ public class AudioManager : MonoBehaviour
     {
         if (clip == null) return;
         EnsureAudioSources();
+
+        float effectiveVol = Mathf.Clamp01(volumeScale * sfxVolume * masterVolume);
 
         AudioSource availableSource = null;
         for (int i = 0; i < audioSourcePool.Count; i++)
@@ -365,12 +388,12 @@ public class AudioManager : MonoBehaviour
             availableSource.minDistance = minDistance;
             availableSource.maxDistance = maxDistance;
             availableSource.pitch = pitch;
-            availableSource.volume = volumeScale * sfxVolume * masterVolume;
-            availableSource.PlayOneShot(clip);
+            availableSource.volume = effectiveVol;
+            availableSource.PlayOneShot(clip, effectiveVol);
         }
         else
         {
-            AudioSource.PlayClipAtPoint(clip, position, volumeScale * sfxVolume * masterVolume);
+            AudioSource.PlayClipAtPoint(clip, position, effectiveVol);
         }
     }
 

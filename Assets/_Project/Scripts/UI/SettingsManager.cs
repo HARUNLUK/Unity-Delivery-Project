@@ -190,6 +190,8 @@ public class SettingsManager : MonoBehaviour
     #region --- AUDIO APPLICATION ---
     public void ApplyAudioSettings()
     {
+        AudioListener.volume = Mathf.Clamp01(masterVolume);
+
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.masterVolume = masterVolume;
@@ -204,30 +206,35 @@ public class SettingsManager : MonoBehaviour
     {
         masterVolume = Mathf.Clamp01(val);
         ApplyAudioSettings();
+        SaveAllSettings();
     }
 
     public void SetMusicVolume(float val)
     {
         musicVolume = Mathf.Clamp01(val);
         ApplyAudioSettings();
+        SaveAllSettings();
     }
 
     public void SetSfxVolume(float val)
     {
         sfxVolume = Mathf.Clamp01(val);
         ApplyAudioSettings();
+        SaveAllSettings();
     }
 
     public void SetAmbienceVolume(float val)
     {
         ambienceVolume = Mathf.Clamp01(val);
         ApplyAudioSettings();
+        SaveAllSettings();
     }
 
     public void SetUiVolume(float val)
     {
         uiVolume = Mathf.Clamp01(val);
         ApplyAudioSettings();
+        SaveAllSettings();
     }
     #endregion
 

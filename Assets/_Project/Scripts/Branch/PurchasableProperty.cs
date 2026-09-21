@@ -108,16 +108,40 @@ public class PurchasableProperty : MonoBehaviour
 
     public string GetLocalizedDisplayName()
     {
+        if (LocalizationManager.HasKey(propertyId + "_name"))
+            return LocalizationManager.Get(propertyId + "_name");
+
+        if (propertyId.Contains("insurance")) return LocalizationManager.Get("property_insurance_name", displayName);
+        if (propertyId.Contains("logistics") || propertyId.Contains("dispatch")) return LocalizationManager.Get("property_logistics_name", displayName);
+        if (propertyId.Contains("showroom") || propertyId.Contains("dealership")) return LocalizationManager.Get("property_showroom_name", displayName);
+        if (propertyId.Contains("service") || propertyId.Contains("garage")) return LocalizationManager.Get("property_service_garage_name", displayName);
+
         return LocalizationManager.Get(propertyId + "_name", displayName);
     }
 
     public string GetLocalizedDescription()
     {
+        if (LocalizationManager.HasKey(propertyId + "_desc"))
+            return LocalizationManager.Get(propertyId + "_desc");
+
+        if (propertyId.Contains("insurance")) return LocalizationManager.Get("property_insurance_desc", description);
+        if (propertyId.Contains("logistics") || propertyId.Contains("dispatch")) return LocalizationManager.Get("property_logistics_desc", description);
+        if (propertyId.Contains("showroom") || propertyId.Contains("dealership")) return LocalizationManager.Get("property_showroom_desc", description);
+        if (propertyId.Contains("service") || propertyId.Contains("garage")) return LocalizationManager.Get("property_service_garage_desc", description);
+
         return LocalizationManager.Get(propertyId + "_desc", description);
     }
 
     public string GetLocalizedSignTitle()
     {
+        if (LocalizationManager.HasKey(propertyId + "_sign"))
+            return LocalizationManager.Get(propertyId + "_sign");
+
+        if (propertyId.Contains("insurance")) return LocalizationManager.Get("property_insurance_sign", displayName);
+        if (propertyId.Contains("logistics") || propertyId.Contains("dispatch")) return LocalizationManager.Get("property_logistics_sign", displayName);
+        if (propertyId.Contains("showroom") || propertyId.Contains("dealership")) return LocalizationManager.Get("property_showroom_sign", displayName);
+        if (propertyId.Contains("service") || propertyId.Contains("garage")) return LocalizationManager.Get("property_service_garage_sign", displayName);
+
         return LocalizationManager.Get(propertyId + "_sign", displayName);
     }
 
@@ -134,22 +158,34 @@ public class PurchasableProperty : MonoBehaviour
         string locName = GetLocalizedDisplayName();
         string locSign = GetLocalizedSignTitle();
 
-        // 1. Update 3D Building Banner if present
-        TMPro.TextMeshPro bannerTmp = transform.Find("3D_Text")?.GetComponent<TMPro.TextMeshPro>();
-        if (bannerTmp != null)
+        // Find all TextMeshPro instances in the entire property hierarchy (including inactive)
+        TMPro.TextMeshPro[] allTmps = GetComponentsInChildren<TMPro.TextMeshPro>(true);
+        foreach (var tmp in allTmps)
         {
-            bannerTmp.text = locSign;
-        }
+            if (tmp == null) continue;
+            string goName = tmp.gameObject.name;
+            Transform parentT = tmp.transform.parent;
+            string parentName = parentT != null ? parentT.name : "";
 
-        // 2. Update Closed / For Sale Signboard text
-        TMPro.TextMeshPro signTmp = transform.Find("Sign_Text")?.GetComponent<TMPro.TextMeshPro>() ??
-                                    (forSaleSignboard != null ? forSaleSignboard.GetComponentInChildren<TMPro.TextMeshPro>(true) : null) ??
-                                    (closedStateRoot != null ? closedStateRoot.GetComponentInChildren<TMPro.TextMeshPro>(true) : null);
-
-        if (signTmp != null)
-        {
-            string signFormat = LocalizationManager.Get("property_for_sale_sign_format", "{0}\n\n<color=green>Fiyat: ${1:N0}</color>\n<color=yellow>Gereken: Seviye {2}</color>");
-            signTmp.text = string.Format(signFormat, locName.ToUpper(), purchaseCost, requiredPlayerLevel);
+            if (goName == "Sign_Text" || parentName.Contains("ForSale") || goName.Contains("Signboard"))
+            {
+                if (disablePurchase)
+                {
+                    string comingSoonFormat = LocalizationManager.Get("property_coming_soon_sign_format", "{0}\n\n<color=yellow>{1}</color>");
+                    string comingSoonWord = LocalizationManager.Get("sign_coming_soon", "COMING SOON");
+                    tmp.text = string.Format(comingSoonFormat, locName.ToUpper(), comingSoonWord);
+                }
+                else
+                {
+                    string signFormat = LocalizationManager.Get("property_for_sale_sign_format", "{0}\n\n<color=green>Price: ${1:N0}</color>\n<color=yellow>Required: Level {2}</color>");
+                    tmp.text = string.Format(signFormat, locName.ToUpper(), purchaseCost, requiredPlayerLevel);
+                }
+            }
+            else if (goName == "3D_Text" || goName.Contains("Header") || goName.Contains("Banner") ||
+                     parentName.Contains("Header") || (parentName.Contains("Sign") && !parentName.Contains("ForSale")))
+            {
+                tmp.text = locSign;
+            }
         }
     }
 

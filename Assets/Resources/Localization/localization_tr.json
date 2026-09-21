@@ -1082,6 +1082,18 @@
       "value": "{0}\n\n<color=green>Fiyat: ${1:N0}</color>\n<color=yellow>Gereken: Seviye {2}</color>"
     },
     {
+      "key": "property_coming_soon_sign_format",
+      "value": "{0}\n\n<color=yellow>{1}</color>"
+    },
+    {
+      "key": "sign_coming_soon",
+      "value": "YAKINDA"
+    },
+    {
+      "key": "vehicle_health_status",
+      "value": "<b>Araç Sağlığı:</b> <color=#32FF64>%{0} (İyi Durumda)</color>"
+    },
+    {
       "key": "property_showroom_name",
       "value": "Araç Galerisi & Showroom"
     },
@@ -1091,6 +1103,18 @@
     },
     {
       "key": "property_showroom_desc",
+      "value": "Yeni kargo araçları satın alabileceğiniz showroom ve galeri."
+    },
+    {
+      "key": "property_vehicle_showroom_name",
+      "value": "Araç Galerisi & Showroom"
+    },
+    {
+      "key": "property_vehicle_showroom_sign",
+      "value": "✨ VIP ARAÇ GALERİSİ & SHOWROOM ✨"
+    },
+    {
+      "key": "property_vehicle_showroom_desc",
       "value": "Yeni kargo araçları satın alabileceğiniz showroom ve galeri."
     },
     {
@@ -1106,6 +1130,18 @@
       "value": "Teslimat kolilerinizi hasar ve çalınmaya karşı sigortalatabileceğiniz acente."
     },
     {
+      "key": "property_insurance_agency_name",
+      "value": "Kargo Sigorta & Güvenlik Acentesi"
+    },
+    {
+      "key": "property_insurance_agency_sign",
+      "value": "🛡️ GÜVEN KARGO SİGORTA & TEMİNAT ACENTESİ"
+    },
+    {
+      "key": "property_insurance_agency_desc",
+      "value": "Teslimat kolilerinizi hasar ve çalınmaya karşı sigortalatabileceğiniz acente."
+    },
+    {
       "key": "property_service_garage_name",
       "value": "Oto Servis & Modifiye Garajı"
     },
@@ -1118,6 +1154,18 @@
       "value": "Araçlarınızı tamir ettirebileceğiniz, yakıt ikmali yapabileceğiniz ve modifiye edebileceğiniz tam teşekküllü garaj."
     },
     {
+      "key": "property_garage_name",
+      "value": "Oto Servis & Modifiye Garajı"
+    },
+    {
+      "key": "property_garage_sign",
+      "value": "🔧 OTO SERVİS, TAMİR & MODİFİYE GARAJI 🔧"
+    },
+    {
+      "key": "property_garage_desc",
+      "value": "Araçlarınızı tamir ettirebileceğiniz, yakıt ikmali yapabileceğiniz ve modifiye edebileceğiniz tam teşekküllü garaj."
+    },
+    {
       "key": "property_logistics_name",
       "value": "Bölge Kargo Dağıtım Şubesi"
     },
@@ -1127,6 +1175,18 @@
     },
     {
       "key": "property_logistics_desc",
+      "value": "Kuryeler istihdam ederek pasif gelir elde edebileceğiniz lojistik dağıtım merkezi."
+    },
+    {
+      "key": "property_logistics_hub_name",
+      "value": "Bölge Kargo Dağıtım Şubesi"
+    },
+    {
+      "key": "property_logistics_hub_sign",
+      "value": "📦 BÖLGE KARGO DAĞITIM ŞUBESİ & LOJİSTİK 📦"
+    },
+    {
+      "key": "property_logistics_hub_desc",
       "value": "Kuryeler istihdam ederek pasif gelir elde edebileceğiniz lojistik dağıtım merkezi."
     }
   ]

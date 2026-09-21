@@ -355,11 +355,13 @@ public class AITrafficVehicle : MonoBehaviour
         // 2. FORWARD RADAR & COLLISION DETECTION
         CheckFrontRadar();
 
-        // Update 3D Engine Audio Pitch with speed
+        // Update 3D Engine Audio Pitch & Volume with speed and audio manager settings
         if (engineAudioSource != null && engineAudioSource.isPlaying)
         {
             float speedRatio = Mathf.Clamp01(currentSpeed / Mathf.Max(1f, cruiseSpeed));
             engineAudioSource.pitch = baseEnginePitch * Mathf.Lerp(0.85f, 1.35f, speedRatio);
+            float masterSfx = (AudioManager.Instance != null) ? AudioManager.Instance.sfxVolume * AudioManager.Instance.masterVolume : 1f;
+            engineAudioSource.volume = Mathf.Lerp(0.35f, 0.65f, speedRatio) * masterSfx;
         }
 
         // Honk horn when blocked by player (on-foot or in car) or obstacle in front

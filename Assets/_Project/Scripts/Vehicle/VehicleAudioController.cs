@@ -239,12 +239,16 @@ public class VehicleAudioController : MonoBehaviour
 
         if (isReversing)
         {
+            float managerVol = AudioManager.Instance != null ? AudioManager.Instance.vehicleReverseBeepVolume * AudioManager.Instance.sfxVolume * AudioManager.Instance.masterVolume : 0.65f;
             if (!reverseSource.isPlaying && AudioManager.Instance != null && AudioManager.Instance.vehicleReverseBeepLoop != null)
             {
                 reverseSource.clip = AudioManager.Instance.vehicleReverseBeepLoop;
-                float managerVol = AudioManager.Instance != null ? AudioManager.Instance.vehicleReverseBeepVolume * AudioManager.Instance.sfxVolume * AudioManager.Instance.masterVolume : 0.65f;
                 reverseSource.volume = managerVol;
                 reverseSource.Play();
+            }
+            else if (reverseSource.isPlaying)
+            {
+                reverseSource.volume = managerVol;
             }
         }
         else
@@ -270,14 +274,18 @@ public class VehicleAudioController : MonoBehaviour
 
         if (isBraking)
         {
+            float managerVol = AudioManager.Instance != null ? AudioManager.Instance.vehicleBrakeSqueakVolume * AudioManager.Instance.sfxVolume * AudioManager.Instance.masterVolume : 0.70f;
             if (!brakeSource.isPlaying && AudioManager.Instance != null && AudioManager.Instance.vehicleBrakeSqueak != null)
             {
                 brakeSource.clip = AudioManager.Instance.vehicleBrakeSqueak;
                 brakeSource.loop = true;
-                float managerVol = AudioManager.Instance != null ? AudioManager.Instance.vehicleBrakeSqueakVolume * AudioManager.Instance.sfxVolume * AudioManager.Instance.masterVolume : 0.70f;
                 brakeSource.volume = managerVol;
                 brakeSource.pitch = Random.Range(0.96f, 1.04f);
                 brakeSource.Play();
+            }
+            else if (brakeSource.isPlaying)
+            {
+                brakeSource.volume = managerVol;
             }
         }
         else
