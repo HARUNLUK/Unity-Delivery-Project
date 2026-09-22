@@ -172,7 +172,7 @@ public static class GarageWorkshopUIBuilder
         cbTxtObj.transform.SetParent(closeBtnObj.transform, false);
         RectTransform cbtRt = cbTxtObj.AddComponent<RectTransform>();
         cbtRt.anchorMin = Vector2.zero; cbtRt.anchorMax = Vector2.one; cbtRt.sizeDelta = Vector2.zero;
-        AddTMP(cbTxtObj, "Kapat ", 13, FontStyles.Bold, Color.white, TextAlignmentOptions.Center);
+        AddTMP(cbTxtObj, "Kapat", 13, FontStyles.Bold, Color.white, TextAlignmentOptions.Center);
 
         // Split Content Container (Horizontal Layout)
         GameObject contentObj = new GameObject("ContentSplit");
@@ -212,7 +212,7 @@ public static class GarageWorkshopUIBuilder
         GameObject lHeadObj = new GameObject("LeftHeader");
         lHeadObj.transform.SetParent(leftCol.transform, false);
         lHeadObj.AddComponent<LayoutElement>().preferredHeight = 22;
-        AddTMP(lHeadObj, " ARAÇ DURUMU & HASAR ONARIMI", 14, FontStyles.Bold, new Color(0.39f, 0.82f, 1f), TextAlignmentOptions.Left);
+        AddTMP(lHeadObj, "ARAÇ DURUMU & HASAR ONARIMI", 14, FontStyles.Bold, new Color(0.39f, 0.82f, 1f), TextAlignmentOptions.Left);
 
         // Status Line Box (Condition Only)
         GameObject statusBox = new GameObject("StatusBox");
@@ -266,7 +266,7 @@ public static class GarageWorkshopUIBuilder
         repTxtObj.transform.SetParent(repBtnObj.transform, false);
         RectTransform rptRt = repTxtObj.AddComponent<RectTransform>();
         rptRt.anchorMin = Vector2.zero; rptRt.anchorMax = Vector2.one; rptRt.sizeDelta = Vector2.zero;
-        AddTMP(repTxtObj, " Aracı Tamir Et ($150)", 14, FontStyles.Bold, Color.white, TextAlignmentOptions.Center);
+        AddTMP(repTxtObj, "Aracı Tamir Et ($150)", 14, FontStyles.Bold, Color.white, TextAlignmentOptions.Center);
 
         // Service Info Box (Recessed)
         GameObject infoBox = new GameObject("ServiceInfoBox");
@@ -281,7 +281,7 @@ public static class GarageWorkshopUIBuilder
 
         GameObject ibHeadObj = new GameObject("InfoHead");
         ibHeadObj.transform.SetParent(infoBox.transform, false);
-        AddTMP(ibHeadObj, "💡 SERVİS & HASAR BİLGİSİ", 12, FontStyles.Bold, new Color(1f, 0.78f, 0.2f), TextAlignmentOptions.Left);
+        AddTMP(ibHeadObj, "SERVİS & HASAR BİLGİSİ", 12, FontStyles.Bold, new Color(1f, 0.78f, 0.2f), TextAlignmentOptions.Left);
 
         GameObject ibDescObj = new GameObject("InfoDesc");
         ibDescObj.transform.SetParent(infoBox.transform, false);
@@ -300,7 +300,7 @@ public static class GarageWorkshopUIBuilder
         driveTxtObj.transform.SetParent(driveBtnObj.transform, false);
         RectTransform drtRt = driveTxtObj.AddComponent<RectTransform>();
         drtRt.anchorMin = Vector2.zero; drtRt.anchorMax = Vector2.one; drtRt.sizeDelta = Vector2.zero;
-        AddTMP(driveTxtObj, "🏎️ Aracı Sür & Atölyeden Çık", 14, FontStyles.Bold, Color.white, TextAlignmentOptions.Center);
+        AddTMP(driveTxtObj, "Aracı Sür & Atölyeden Çık", 14, FontStyles.Bold, Color.white, TextAlignmentOptions.Center);
 
         // =========================================================================
         // RIGHT COLUMN: PAINT & COLOR WORKSHOP TILES
@@ -323,7 +323,7 @@ public static class GarageWorkshopUIBuilder
         GameObject rHeadObj = new GameObject("RightHeader");
         rHeadObj.transform.SetParent(rightCol.transform, false);
         rHeadObj.AddComponent<LayoutElement>().preferredHeight = 22;
-        AddTMP(rHeadObj, "🎨 GÖVDE & PARÇA BOYAMA ATÖLYESİ", 14, FontStyles.Bold, new Color(1f, 0.85f, 0.2f), TextAlignmentOptions.Left);
+        AddTMP(rHeadObj, "GÖVDE & PARÇA BOYAMA ATÖLYESİ", 14, FontStyles.Bold, new Color(1f, 0.85f, 0.2f), TextAlignmentOptions.Left);
 
         // Paint Info Box
         GameObject paintInfoBox = new GameObject("PaintInfoBox");
@@ -360,18 +360,18 @@ public static class GarageWorkshopUIBuilder
         grid.startAxis = GridLayoutGroup.Axis.Horizontal;
         grid.childAlignment = TextAnchor.UpperCenter;
 
-        (string name, string hex, string emoji)[] palette = new (string, string, string)[]
+        (string name, string hex)[] palette = new (string, string)[]
         {
-            ("Kırmızı", "#C5221F", "🔴"),
-            ("Mavi", "#1A73E8", "🔵"),
-            ("Siyah", "#1E1E24", "🖤"),
-            ("Beyaz", "#F8F9FA", "⚪"),
-            ("Sarı", "#FBBC04", "🟡"),
-            ("Yeşil", "#1E8E3E", "🟢"),
-            ("Turuncu", "#E8710A", "🟠"),
-            ("Mor", "#9334E8", "🟣"),
-            ("Gri", "#5F6368", "🔘"),
-            ("Turkuaz", "#00BCD4", "🩵")
+            ("Kırmızı", "#C5221F"),
+            ("Mavi", "#1A73E8"),
+            ("Siyah", "#1E1E24"),
+            ("Beyaz", "#F8F9FA"),
+            ("Sarı", "#FBBC04"),
+            ("Yeşil", "#1E8E3E"),
+            ("Turuncu", "#E8710A"),
+            ("Mor", "#9334E8"),
+            ("Gri", "#5F6368"),
+            ("Turkuaz", "#00BCD4")
         };
 
         for (int i = 0; i < palette.Length; i++)

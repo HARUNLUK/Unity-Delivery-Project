@@ -68,6 +68,7 @@ public class DeliveryTutorialUI : MonoBehaviour
         Instance = this;
         EnsureTutorialUI();
         BindButtons();
+        UpdateContent();
 
         if (tutorialPanelRoot != null)
         {
@@ -78,11 +79,23 @@ public class DeliveryTutorialUI : MonoBehaviour
     private void OnEnable()
     {
         BindButtons();
+        LocalizationManager.OnLanguageChanged += HandleLanguageChanged;
+    }
+
+    private void OnDisable()
+    {
+        LocalizationManager.OnLanguageChanged -= HandleLanguageChanged;
+    }
+
+    private void HandleLanguageChanged(string newLang)
+    {
+        UpdateContent();
     }
 
     private void Start()
     {
         BindButtons();
+        UpdateContent();
 
         // Check if tutorial should automatically open on game start
         if (autoShowOnGameStart)
@@ -206,6 +219,7 @@ public class DeliveryTutorialUI : MonoBehaviour
     {
         EnsureTutorialUI();
         BindButtons();
+        UpdateContent();
 
         if (tutorialPanelRoot == null) return;
 
@@ -292,7 +306,13 @@ public class DeliveryTutorialUI : MonoBehaviour
     {
         if (startButton == null && tutorialPanelRoot != null)
         {
-            startButton = tutorialPanelRoot.GetComponentInChildren<Button>(true);
+            startButton = FindButtonRecursive(tutorialPanelRoot.transform, "Start_Game_Button", "StartButton", "OkButton", "ConfirmButton");
+            if (startButton == null) startButton = tutorialPanelRoot.GetComponentInChildren<Button>(true);
+        }
+
+        if (closeButton == null && tutorialPanelRoot != null)
+        {
+            closeButton = FindButtonRecursive(tutorialPanelRoot.transform, "Close_X_Button", "CloseButton", "X_Button");
         }
 
         if (startButton != null)
@@ -310,13 +330,99 @@ public class DeliveryTutorialUI : MonoBehaviour
 
     public void UpdateContent()
     {
-        // Intentionally empty: styles, texts, and visuals are customized directly in Unity Editor by the user.
+        bool isTr = LocalizationManager.IsTurkish;
+
+        if (tutorialPanelRoot != null)
+        {
+            if (titleText == null) titleText = FindTMPRecursive(tutorialPanelRoot.transform, "Header_Title_Text", "TitleText", "HeaderTitle", "Title");
+            if (leftCaptionText == null) leftCaptionText = FindTMPRecursive(tutorialPanelRoot.transform, "Left_Caption_Text", "CaptionText", "LeftCaption");
+            if (objectiveBodyText == null) objectiveBodyText = FindTMPRecursive(tutorialPanelRoot.transform, "Objective_Body_Text", "BodyText", "ObjectiveText");
+            if (deliveryPointImageUI == null) deliveryPointImageUI = FindImageRecursive(tutorialPanelRoot.transform, "Delivery_Point_Image", "TutorialImage", "Image");
+            if (startButton == null) startButton = FindButtonRecursive(tutorialPanelRoot.transform, "Start_Game_Button", "StartButton", "OkButton");
+        }
+
+        if (titleText != null)
+        {
+            titleText.text = LocalizationManager.Get("tutorial_title", 
+                isTr ? "<b>LOJİSTİK VE KARGO TESLİMAT REHBERİ</b>" : "<b>LOGISTICS & DELIVERY GUIDE</b>");
+        }
+
+        if (leftCaptionText != null)
+        {
+            leftCaptionText.text = LocalizationManager.Get("tutorial_image_caption", 
+                isTr ? "<b>Teslimat Noktası (Posta Kutusu)</b>\n<size=15><color=#A0C8FF>Kargoları binaların önündeki bu sarı/yeşil teslimat alanına veya posta kutusunun yanına bırakın.</color></size>" 
+                     : "<b>Delivery Point (Mailbox / Drop Zone)</b>\n<size=15><color=#A0C8FF>Leave packages at these yellow/green delivery zones or near the mailbox in front of target buildings.</color></size>");
+        }
+
+        if (objectiveBodyText != null)
+        {
+            string fallbackBody = isTr
+                ? "<b>OYUNUN AMACI VE ÇALIŞMA KURALLARI</b>\n\n" +
+                  "<color=#FFD232><b>1. Kargoları Al ve Araca Yükle:</b></color>\n" +
+                  "Depodaki veya şubendeki günlük kargoları <b>[E]</b> tuşuyla tutup aracının kasasına yerleştir.\n\n" +
+                  "<color=#32FF64><b>2. Hedef Teslimat Noktasına Bırak:</b></color>\n" +
+                  "Koli etiketindeki adresi ve alıcıyı bul. Şehirdeki ilgili binanın önünde yer alan <b>Posta Kutusu / Teslimat Alanına</b> kargoyu güvenle bırak.\n\n" +
+                  "<color=#FFAA33><b>3. Gün Sonu Değerlendirmesi (18:00):</b></color>\n" +
+                  "Saat 18:00'de vardiya biter. Doğru adresteki kargolardan <b>Teslimat Ücreti ($)</b> kazanırsın. Yanlış adrese bırakılan veya kırılan kargolardan ise <b>Ceza Kesilir!</b>\n\n" +
+                  "<color=#00E5FF><b>4. Kırılabilir & Özel Kargolar:</b></color>\n" +
+                  "Kırılabilir (Fragile) kargoları fırlatmayın! <b>[TAB]</b> tuşuyla tabletinizi açıp siparişleri, araç durumunu ve şube yükseltmelerini yönetin."
+                : "<b>GAME OBJECTIVE & WORK RULES</b>\n\n" +
+                  "<color=#FFD232><b>1. Collect & Load Cargo:</b></color>\n" +
+                  "Pick up daily packages from your warehouse/branch using <b>[E]</b> and load them onto your vehicle bed.\n\n" +
+                  "<color=#32FF64><b>2. Drop at Target Delivery Point:</b></color>\n" +
+                  "Check the label address and recipient name. Safely place the package at the <b>Mailbox / Delivery Zone</b> in front of the target building.\n\n" +
+                  "<color=#FFAA33><b>3. End of Day Evaluation (18:00):</b></color>\n" +
+                  "Your shift ends at 18:00. Correctly delivered packages grant <b>Delivery Earnings ($)</b>. Wrong addresses or broken packages incur <b>Penalties!</b>\n\n" +
+                  "<color=#00E5FF><b>4. Fragile & Special Cargo:</b></color>\n" +
+                  "Do not throw fragile packages! Press <b>[TAB]</b> to open your tablet to manage orders, vehicle condition, and branch upgrades.";
+
+            objectiveBodyText.text = LocalizationManager.Get("tutorial_objective_body", fallbackBody);
+        }
+
+        if (startButton != null)
+        {
+            var btnText = startButton.GetComponentInChildren<TextMeshProUGUI>();
+            if (btnText != null)
+            {
+                btnText.text = LocalizationManager.Get("tutorial_btn_start", 
+                    isTr ? "<b>ANLADIM, VARDİYAYA BAŞLA</b>" : "<b>GOT IT, START SHIFT</b>");
+            }
+        }
+
+        // Also update F1 hint text if present in bottom bar
+        if (tutorialPanelRoot != null)
+        {
+            var hintTexts = tutorialPanelRoot.GetComponentsInChildren<TextMeshProUGUI>(true);
+            foreach (var t in hintTexts)
+            {
+                if (t != null && (t.gameObject.name.Contains("F1_Hint") || t.gameObject.name.Contains("Hint")))
+                {
+                    t.text = LocalizationManager.Get("tutorial_f1_hint", 
+                        isTr ? "<color=#64A0FF>[F1]</color> <color=#A0B0C0>Tuşu ile rehberi istediğiniz zaman tekrar açabilirsiniz.</color>" 
+                             : "<color=#64A0FF>[F1]</color> <color=#A0B0C0>Key to reopen the guide at any time.</color>");
+                    break;
+                }
+            }
+        }
+
+        if (deliveryPointImageUI != null && tutorialImage != null)
+        {
+            deliveryPointImageUI.sprite = tutorialImage;
+            deliveryPointImageUI.preserveAspect = preserveImageAspect;
+        }
     }
 
     public void EnsureTutorialUI()
     {
         if (tutorialPanelRoot != null)
         {
+            if (titleText == null) titleText = FindTMPRecursive(tutorialPanelRoot.transform, "Header_Title_Text", "TitleText", "HeaderTitle", "Title");
+            if (leftCaptionText == null) leftCaptionText = FindTMPRecursive(tutorialPanelRoot.transform, "Left_Caption_Text", "CaptionText", "LeftCaption");
+            if (objectiveBodyText == null) objectiveBodyText = FindTMPRecursive(tutorialPanelRoot.transform, "Objective_Body_Text", "BodyText", "ObjectiveText");
+            if (deliveryPointImageUI == null) deliveryPointImageUI = FindImageRecursive(tutorialPanelRoot.transform, "Delivery_Point_Image", "TutorialImage", "Image");
+            if (startButton == null) startButton = FindButtonRecursive(tutorialPanelRoot.transform, "Start_Game_Button", "StartButton", "OkButton");
+            if (closeButton == null) closeButton = FindButtonRecursive(tutorialPanelRoot.transform, "Close_X_Button", "CloseButton", "X_Button");
+
             BindButtons();
             return;
         }
@@ -332,6 +438,14 @@ public class DeliveryTutorialUI : MonoBehaviour
             {
                 tutorialPanelRoot = foundRoot.gameObject;
                 panelCanvasGroup = tutorialPanelRoot.GetComponent<CanvasGroup>();
+                
+                if (titleText == null) titleText = FindTMPRecursive(tutorialPanelRoot.transform, "Header_Title_Text", "TitleText", "HeaderTitle", "Title");
+                if (leftCaptionText == null) leftCaptionText = FindTMPRecursive(tutorialPanelRoot.transform, "Left_Caption_Text", "CaptionText", "LeftCaption");
+                if (objectiveBodyText == null) objectiveBodyText = FindTMPRecursive(tutorialPanelRoot.transform, "Objective_Body_Text", "BodyText", "ObjectiveText");
+                if (deliveryPointImageUI == null) deliveryPointImageUI = FindImageRecursive(tutorialPanelRoot.transform, "Delivery_Point_Image", "TutorialImage", "Image");
+                if (startButton == null) startButton = FindButtonRecursive(tutorialPanelRoot.transform, "Start_Game_Button", "StartButton", "OkButton");
+                if (closeButton == null) closeButton = FindButtonRecursive(tutorialPanelRoot.transform, "Close_X_Button", "CloseButton", "X_Button");
+
                 BindButtons();
                 return;
             }
@@ -602,5 +716,54 @@ public class DeliveryTutorialUI : MonoBehaviour
 
         cg.alpha = to;
         onComplete?.Invoke();
+    }
+
+    private static TextMeshProUGUI FindTMPRecursive(Transform root, params string[] names)
+    {
+        if (root == null) return null;
+        var list = root.GetComponentsInChildren<TextMeshProUGUI>(true);
+        foreach (var n in names)
+        {
+            foreach (var t in list)
+            {
+                if (t != null && t.gameObject.name.Equals(n, System.StringComparison.OrdinalIgnoreCase)) return t;
+            }
+        }
+        foreach (var n in names)
+        {
+            foreach (var t in list)
+            {
+                if (t != null && t.gameObject.name.IndexOf(n, System.StringComparison.OrdinalIgnoreCase) >= 0) return t;
+            }
+        }
+        return null;
+    }
+
+    private static Image FindImageRecursive(Transform root, params string[] names)
+    {
+        if (root == null) return null;
+        var list = root.GetComponentsInChildren<Image>(true);
+        foreach (var n in names)
+        {
+            foreach (var img in list)
+            {
+                if (img != null && img.gameObject.name.Equals(n, System.StringComparison.OrdinalIgnoreCase)) return img;
+            }
+        }
+        return null;
+    }
+
+    private static Button FindButtonRecursive(Transform root, params string[] names)
+    {
+        if (root == null) return null;
+        var list = root.GetComponentsInChildren<Button>(true);
+        foreach (var n in names)
+        {
+            foreach (var b in list)
+            {
+                if (b != null && b.gameObject.name.Equals(n, System.StringComparison.OrdinalIgnoreCase)) return b;
+            }
+        }
+        return null;
     }
 }

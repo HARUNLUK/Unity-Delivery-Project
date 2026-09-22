@@ -49,8 +49,13 @@ public class CommercialHubUIManager : MonoBehaviour
 
     // --- GARAGE UI REFS ---
     private TextMeshProUGUI garageTitleText;
+    private TextMeshProUGUI garageSubtitleText;
+    private TextMeshProUGUI garageLeftHeader;
     private TextMeshProUGUI garageVehicleStatusText;
+    private TextMeshProUGUI garageInfoHead;
+    private TextMeshProUGUI garageInfoDesc;
     private TextMeshProUGUI garageTuningInfoText;
+    private TextMeshProUGUI garageRightHeader;
     private TextMeshProUGUI garagePaintSectionTitle;
     private TextMeshProUGUI garagePaintDescText;
     private TextMeshProUGUI garageCurrentColorText;
@@ -207,10 +212,30 @@ public class CommercialHubUIManager : MonoBehaviour
             garageTitleText.text = LocalizationManager.Get("garage_title", "AUTO SERVICE & WORKSHOP GARAGE");
         }
 
+        if (garageSubtitleText != null)
+        {
+            garageSubtitleText.text = LocalizationManager.Get("garage_subtitle", "Araç bakım onarımı ve özel fırın boyama merkezi");
+        }
+
+        if (garageLeftHeader != null)
+        {
+            garageLeftHeader.text = LocalizationManager.Get("garage_left_header", "ARAÇ DURUMU VE HASAR ONARIMI");
+        }
+
         if (garageVehicleStatusText != null)
         {
             int hp = Mathf.RoundToInt(activeGarageVehicle.ConditionPercentage * 100f);
             garageVehicleStatusText.text = LocalizationManager.GetFormat("vehicle_health_status", hp);
+        }
+
+        if (garageInfoHead != null)
+        {
+            garageInfoHead.text = LocalizationManager.Get("garage_info_head", "SERVİS VE HASAR BİLGİSİ");
+        }
+
+        if (garageInfoDesc != null)
+        {
+            garageInfoDesc.text = LocalizationManager.Get("garage_info_desc", "Araç hasar aldığında maksimum yol tutuş performansı düşebilir. Görevler arasında aracınızı periyodik olarak tamir ettirmeniz önerilir.");
         }
 
         if (garageTuningInfoText != null && VehicleServiceGarage.Instance != null)
@@ -238,7 +263,7 @@ public class CommercialHubUIManager : MonoBehaviour
                 int currentStage = VehicleServiceGarage.Instance.GetVehicleTuningStage(activeGarageVehicle.EffectiveVehicleId);
                 if (currentStage >= 3)
                 {
-                    txt.text = LocalizationManager.Get("garage_btn_tune_max", "⭐ MAXIMUM ENGINE PERFORMANCE (STAGE 3)");
+                    txt.text = LocalizationManager.Get("garage_btn_tune_max", "MAXIMUM ENGINE PERFORMANCE (STAGE 3)");
                     garageTuneBtn.interactable = false;
                 }
                 else
@@ -254,13 +279,18 @@ public class CommercialHubUIManager : MonoBehaviour
         if (garageDriveBtn != null)
         {
             var txt = garageDriveBtn.GetComponentInChildren<TextMeshProUGUI>();
-            if (txt != null) txt.text = LocalizationManager.Get("garage_btn_drive", "🚗 DRIVE VEHICLE");
+            if (txt != null) txt.text = LocalizationManager.Get("garage_btn_drive", "START & DRIVE VEHICLE");
         }
 
         if (garageCloseBtn != null)
         {
             var txt = garageCloseBtn.GetComponentInChildren<TextMeshProUGUI>();
-            if (txt != null) txt.text = LocalizationManager.Get("garage_btn_close", "Kapat ");
+            if (txt != null) txt.text = LocalizationManager.Get("garage_btn_close", "Kapat");
+        }
+
+        if (garageRightHeader != null)
+        {
+            garageRightHeader.text = LocalizationManager.Get("garage_right_header", "GÖVDE VE PARÇA BOYAMA ATÖLYESİ");
         }
 
         if (garagePaintSectionTitle != null)
@@ -271,6 +301,37 @@ public class CommercialHubUIManager : MonoBehaviour
         if (garagePaintDescText != null)
         {
             garagePaintDescText.text = LocalizationManager.Get("garage_paint_desc", "Paint and finish your delivery vehicle.");
+        }
+
+        if (garageCurrentColorText != null)
+        {
+            string hex = "#" + ColorUtility.ToHtmlStringRGB(activeGarageVehicle.GetCurrentColor());
+            int cost = VehicleServiceGarage.Instance != null ? VehicleServiceGarage.Instance.repaintCost : 250;
+            garageCurrentColorText.text = LocalizationManager.GetFormat("garage_current_color_cost", hex, cost);
+        }
+
+        if (garagePanelRoot != null)
+        {
+            string[] colorKeys = new string[] {
+                "color_red", "color_blue", "color_black", "color_white", "color_yellow",
+                "color_green", "color_orange", "color_purple", "color_gray", "color_cyan"
+            };
+            string[] defaultColorNames = new string[] {
+                "Kırmızı", "Mavi", "Siyah", "Beyaz", "Sarı",
+                "Yeşil", "Turuncu", "Mor", "Gri", "Turkuaz"
+            };
+            for (int i = 0; i < colorKeys.Length; i++)
+            {
+                Transform tP = FindTransformRecursive(garagePanelRoot.transform, $"PaintBtn_{i}");
+                if (tP != null)
+                {
+                    TextMeshProUGUI btnTxt = FindTMPRecursive(tP, "Text");
+                    if (btnTxt != null)
+                    {
+                        btnTxt.text = LocalizationManager.Get(colorKeys[i], defaultColorNames[i]);
+                    }
+                }
+            }
         }
 
         if (garageCondBarFill != null)
@@ -764,8 +825,13 @@ public class CommercialHubUIManager : MonoBehaviour
     {
         if (root == null) return;
         garageTitleText = FindTMPRecursive(root.transform, "Title");
+        garageSubtitleText = FindTMPRecursive(root.transform, "Subtitle");
+        garageLeftHeader = FindTMPRecursive(root.transform, "LeftHeader");
         garageVehicleStatusText = FindTMPRecursive(root.transform, "Status");
+        garageInfoHead = FindTMPRecursive(root.transform, "InfoHead");
+        garageInfoDesc = FindTMPRecursive(root.transform, "InfoDesc");
         garageTuningInfoText = FindTMPRecursive(root.transform, "TuningInfo");
+        garageRightHeader = FindTMPRecursive(root.transform, "RightHeader");
 
         garageRepairBtn = FindButtonRecursive(root.transform, "RepairBtn");
         if (garageRepairBtn != null)
@@ -804,16 +870,16 @@ public class CommercialHubUIManager : MonoBehaviour
 
         (string name, string hex, bool darkText)[] palette = new (string, string, bool)[]
         {
-            ("🔴 Kırmızı", "#C5221F", false),
-            ("🔵 Mavi", "#1A73E8", false),
-            ("🖤 Siyah", "#1E1E24", false),
-            ("⚪ Beyaz", "#F8F9FA", true),
-            ("🟡 Sarı", "#FBBC04", true),
-            ("🟢 Yeşil", "#1E8E3E", false),
-            ("🟠 Turuncu", "#E8710A", false),
-            ("🟣 Mor", "#9334E8", false),
-            ("🔘 Gri", "#5F6368", false),
-            ("🩵 Turkuaz", "#00BCD4", false)
+            ("Kırmızı", "#C5221F", false),
+            ("Mavi", "#1A73E8", false),
+            ("Siyah", "#1E1E24", false),
+            ("Beyaz", "#F8F9FA", true),
+            ("Sarı", "#FBBC04", true),
+            ("Yeşil", "#1E8E3E", false),
+            ("Turuncu", "#E8710A", false),
+            ("Mor", "#9334E8", false),
+            ("Gri", "#5F6368", false),
+            ("Turkuaz", "#00BCD4", false)
         };
 
         for (int i = 0; i < palette.Length; i++)
@@ -924,7 +990,7 @@ public class CommercialHubUIManager : MonoBehaviour
     {
         GameObject root = CreateDarkPanel(parent, "InsuranceAgencyPanel", new Vector2(850, 580));
 
-        CreateTMPText(root, "Title", "🛡️ KARGO SİGORTA & GÜVENLİK ACENTESİ", 28, FontStyles.Bold, new Color(1f, 0.82f, 0.2f), TextAlignmentOptions.Center);
+        CreateTMPText(root, "Title", "KARGO SİGORTA & GÜVENLİK ACENTESİ", 28, FontStyles.Bold, new Color(1f, 0.82f, 0.2f), TextAlignmentOptions.Center);
 
         insuranceStatusText = CreateTMPText(root, "Status", "Mevcut Poliçeniz: Temel Kasko (%30 Hasar İndirimi)", 22, FontStyles.Bold, new Color(0.3f, 1f, 0.4f), TextAlignmentOptions.Center);
         SetRectAnchors(insuranceStatusText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -85), new Vector2(800, 35));
@@ -933,15 +999,15 @@ public class CommercialHubUIManager : MonoBehaviour
         SetRectAnchors(insuranceBalanceText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -125), new Vector2(800, 30));
 
         // Tier 2 Button
-        insuranceTier2UpgradeBtn = CreateButton(root, "Tier2Btn", "🛡️ Gümüş Kasko Satın Al ($3.000)\n<size=16>%60 Hasar İndirimi + %50 Yanlış Adres Koruması</size>", new Vector2(0, -200), new Vector2(750, 75), new Color(0.2f, 0.5f, 0.7f));
+        insuranceTier2UpgradeBtn = CreateButton(root, "Tier2Btn", "Gümüş Kasko Satın Al ($3.000)\n<size=16>%60 Hasar İndirimi + %50 Yanlış Adres Koruması</size>", new Vector2(0, -200), new Vector2(750, 75), new Color(0.2f, 0.5f, 0.7f));
         insuranceTier2UpgradeBtn.onClick.AddListener(OnInsuranceUpgradeTierClicked);
 
         // Tier 3 Button
-        insuranceTier3UpgradeBtn = CreateButton(root, "Tier3Btn", "⭐ Altın Tam Kasko Satın Al ($7.500)\n<size=16>%100 Hasar Koruması ($0 Ceza) + %75 Yanlış Adres Koruması</size>", new Vector2(0, -300), new Vector2(750, 75), new Color(0.85f, 0.65f, 0.1f));
+        insuranceTier3UpgradeBtn = CreateButton(root, "Tier3Btn", "Altın Tam Kasko Satın Al ($7.500)\n<size=16>%100 Hasar Koruması ($0 Ceza) + %75 Yanlış Adres Koruması</size>", new Vector2(0, -300), new Vector2(750, 75), new Color(0.85f, 0.65f, 0.1f));
         insuranceTier3UpgradeBtn.onClick.AddListener(OnInsuranceUpgradeTierClicked);
 
         // Close
-        insuranceCloseBtn = CreateButton(root, "CloseBtn", "Kapat ", new Vector2(0, -420), new Vector2(750, 56), new Color(0.35f, 0.38f, 0.45f));
+        insuranceCloseBtn = CreateButton(root, "CloseBtn", "Kapat", new Vector2(0, -420), new Vector2(750, 56), new Color(0.35f, 0.38f, 0.45f));
         insuranceCloseBtn.onClick.AddListener(CloseAllPanels);
 
         return root;
@@ -951,7 +1017,7 @@ public class CommercialHubUIManager : MonoBehaviour
     {
         GameObject root = CreateDarkPanel(parent, "PassiveDispatchPanel", new Vector2(850, 580));
 
-        CreateTMPText(root, "Title", "📦 BÖLGE DAĞITIM ŞUBESİ & PASİF GELİR MERKEZİ", 28, FontStyles.Bold, new Color(0.3f, 0.9f, 0.5f), TextAlignmentOptions.Center);
+        CreateTMPText(root, "Title", "BÖLGE DAĞITIM ŞUBESİ & PASİF GELİR MERKEZİ", 28, FontStyles.Bold, new Color(0.3f, 0.9f, 0.5f), TextAlignmentOptions.Center);
 
         dispatchStatusText = CreateTMPText(root, "Status", "Şube Seviyesi: Seviye 1  |  Kurye Sayısı: 2 Kurye", 22, FontStyles.Bold, Color.white, TextAlignmentOptions.Center);
         SetRectAnchors(dispatchStatusText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -85), new Vector2(800, 35));
@@ -963,15 +1029,15 @@ public class CommercialHubUIManager : MonoBehaviour
         SetRectAnchors(dispatchBalanceText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -165), new Vector2(800, 30));
 
         // Tier 2
-        dispatchTier2UpgradeBtn = CreateButton(root, "Tier2Btn", "📦 Seviye 2'ye Yükselt (5 Kurye - +$2.200/Gün) [$6.000]", new Vector2(0, -240), new Vector2(750, 65), new Color(0.2f, 0.6f, 0.35f));
+        dispatchTier2UpgradeBtn = CreateButton(root, "Tier2Btn", "Seviye 2'ye Yükselt (5 Kurye - +$2.200/Gün) [$6.000]", new Vector2(0, -240), new Vector2(750, 65), new Color(0.2f, 0.6f, 0.35f));
         dispatchTier2UpgradeBtn.onClick.AddListener(OnDispatchUpgradeClicked);
 
         // Tier 3
-        dispatchTier3UpgradeBtn = CreateButton(root, "Tier3Btn", "⭐ Seviye 3'e Yükselt (10 Kurye - +$4.800/Gün) [$14.000]", new Vector2(0, -325), new Vector2(750, 65), new Color(0.7f, 0.45f, 0.15f));
+        dispatchTier3UpgradeBtn = CreateButton(root, "Tier3Btn", "Seviye 3'ye Yükselt (10 Kurye - +$4.800/Gün) [$14.000]", new Vector2(0, -325), new Vector2(750, 65), new Color(0.7f, 0.45f, 0.15f));
         dispatchTier3UpgradeBtn.onClick.AddListener(OnDispatchUpgradeClicked);
 
         // Close
-        dispatchCloseBtn = CreateButton(root, "CloseBtn", "Kapat ", new Vector2(0, -420), new Vector2(750, 56), new Color(0.35f, 0.38f, 0.45f));
+        dispatchCloseBtn = CreateButton(root, "CloseBtn", "Kapat", new Vector2(0, -420), new Vector2(750, 56), new Color(0.35f, 0.38f, 0.45f));
         dispatchCloseBtn.onClick.AddListener(CloseAllPanels);
 
         return root;

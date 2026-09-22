@@ -706,6 +706,10 @@
       "value": "Delivered to: {0}"
     },
     {
+      "key": "summary_delivered_to_label",
+      "value": "Delivered to:"
+    },
+    {
       "key": "summary_target",
       "value": "Target: {0}"
     },
@@ -734,12 +738,92 @@
       "value": "UNDELIVERED"
     },
     {
+      "key": "summary_recipient_target_label",
+      "value": "Recipient & Target:"
+    },
+    {
+      "key": "recipient_default",
+      "value": "Recipient"
+    },
+    {
+      "key": "summary_unknown_address",
+      "value": "(Unknown Address)"
+    },
+    {
+      "key": "summary_status_express_late",
+      "value": "Late"
+    },
+    {
       "key": "summary_btn_restart_day",
       "value": "START NEXT DAY (DAY {0})"
     },
     {
       "key": "garage_title",
       "value": "AUTO SERVICE & TUNING GARAGE"
+    },
+    {
+      "key": "garage_subtitle",
+      "value": "Vehicle maintenance, repair and custom spray paint shop"
+    },
+    {
+      "key": "garage_left_header",
+      "value": "VEHICLE STATUS & REPAIR"
+    },
+    {
+      "key": "garage_info_head",
+      "value": "SERVICE & DAMAGE INFO"
+    },
+    {
+      "key": "garage_info_desc",
+      "value": "Vehicle handling and performance can degrade when damaged. It is recommended to repair your vehicle between delivery shifts."
+    },
+    {
+      "key": "garage_right_header",
+      "value": "BODY & PART PAINT SHOP"
+    },
+    {
+      "key": "garage_current_color_cost",
+      "value": "<b>Current Color:</b> <color={0}>■ {0}</color>  |  <b>Paint Fee:</b> <color=#32FF64>${1:N0}</color>"
+    },
+    {
+      "key": "color_red",
+      "value": "Red"
+    },
+    {
+      "key": "color_blue",
+      "value": "Blue"
+    },
+    {
+      "key": "color_black",
+      "value": "Black"
+    },
+    {
+      "key": "color_white",
+      "value": "White"
+    },
+    {
+      "key": "color_yellow",
+      "value": "Yellow"
+    },
+    {
+      "key": "color_green",
+      "value": "Green"
+    },
+    {
+      "key": "color_orange",
+      "value": "Orange"
+    },
+    {
+      "key": "color_purple",
+      "value": "Purple"
+    },
+    {
+      "key": "color_gray",
+      "value": "Gray"
+    },
+    {
+      "key": "color_cyan",
+      "value": "Turquoise"
     },
     {
       "key": "garage_tuning_info",
@@ -751,7 +835,7 @@
     },
     {
       "key": "garage_paint_desc",
-      "value": "Repaint and custom finish your delivery vehicle."
+      "value": "Target Areas: Body, Hood, Doors and Bumpers"
     },
     {
       "key": "garage_paint_cost",
@@ -763,19 +847,19 @@
     },
     {
       "key": "garage_btn_tune",
-      "value": " STAGE {0} ENGINE TUNING (${1:N0})"
+      "value": "STAGE {0} ENGINE TUNING (${1:N0})"
     },
     {
       "key": "garage_btn_tune_max",
-      "value": "⭐ MAXIMUM ENGINE PERFORMANCE (STAGE 3)"
+      "value": "MAXIMUM ENGINE PERFORMANCE (STAGE 3)"
     },
     {
       "key": "garage_btn_drive",
-      "value": "🚗 START & DRIVE VEHICLE"
+      "value": "START & DRIVE VEHICLE"
     },
     {
       "key": "garage_btn_close",
-      "value": "Close "
+      "value": "Close"
     },
     {
       "key": "btn_close",
@@ -1011,11 +1095,11 @@
     },
     {
       "key": "prompt_garage_tuned_success",
-      "value": "<color=#32FF64> {0} Engine Upgraded to Stage {1}! (+{2:0}% Torque)</color>"
+      "value": "<color=#32FF64>{0} Engine Upgraded to Stage {1}! (+{2:0}% Torque)</color>"
     },
     {
       "key": "prompt_garage_painted_success",
-      "value": "<color=#{0}>🎨 {1} Custom Repainted!</color>"
+      "value": "<color=#{0}>{1} Custom Repainted!</color>"
     },
     {
       "key": "prompt_gas_station_name",
@@ -1308,6 +1392,14 @@
     {
       "key": "vehicle_tutorial_btn_start",
       "value": "GOT IT, START DRIVING"
+    },
+    {
+      "key": "tutorial_f1_hint",
+      "value": "<color=#64A0FF>[F1]</color> <color=#A0B0C0>Key to reopen the guide at any time.</color>"
+    },
+    {
+      "key": "vehicle_tutorial_f2_hint",
+      "value": "<color=#64A0FF>[F2]</color> <color=#A0B0C0>Key to reopen the driving guide at any time.</color>"
     }
   ]
 }

@@ -53,7 +53,9 @@ public class VehicleTutorialUI : MonoBehaviour
         }
 
         Instance = this;
+        EnsureReferences();
         BindButtons();
+        UpdateContent();
 
         if (tutorialPanelRoot != null)
         {
@@ -65,16 +67,25 @@ public class VehicleTutorialUI : MonoBehaviour
     {
         BindButtons();
         DrivableVehicle.OnPlayerEnteredVehicle += HandlePlayerEnteredVehicle;
+        LocalizationManager.OnLanguageChanged += HandleLanguageChanged;
     }
 
     private void OnDisable()
     {
         DrivableVehicle.OnPlayerEnteredVehicle -= HandlePlayerEnteredVehicle;
+        LocalizationManager.OnLanguageChanged -= HandleLanguageChanged;
+    }
+
+    private void HandleLanguageChanged(string newLang)
+    {
+        UpdateContent();
     }
 
     private void Start()
     {
+        EnsureReferences();
         BindButtons();
+        UpdateContent();
         if (tutorialPanelRoot != null)
         {
             tutorialPanelRoot.SetActive(false);
@@ -162,6 +173,7 @@ public class VehicleTutorialUI : MonoBehaviour
 
     public void ShowTutorial()
     {
+        EnsureReferences();
         BindButtons();
 
         if (tutorialPanelRoot == null) return;
@@ -319,11 +331,102 @@ public class VehicleTutorialUI : MonoBehaviour
             }
         }
 
+        // Also update F2 hint text if present in bottom bar
+        if (tutorialPanelRoot != null)
+        {
+            var hintTexts = tutorialPanelRoot.GetComponentsInChildren<TextMeshProUGUI>(true);
+            foreach (var t in hintTexts)
+            {
+                if (t != null && (t.gameObject.name.Contains("F2_Hint") || t.gameObject.name.Contains("F1_Hint") || t.gameObject.name.Contains("Hint")))
+                {
+                    t.text = LocalizationManager.Get("vehicle_tutorial_f2_hint", 
+                        isTr ? "<color=#64A0FF>[F2]</color> <color=#A0B0C0>Tuşu ile sürüş rehberini istediğiniz zaman tekrar açabilirsiniz.</color>" 
+                             : "<color=#64A0FF>[F2]</color> <color=#A0B0C0>Key to reopen the driving guide at any time.</color>");
+                    break;
+                }
+            }
+        }
+
         if (vehicleImageUI != null && tutorialImage != null)
         {
             vehicleImageUI.sprite = tutorialImage;
             vehicleImageUI.preserveAspect = preserveImageAspect;
         }
+    }
+
+    public void EnsureReferences()
+    {
+        if (tutorialPanelRoot == null)
+        {
+            Canvas canvas = UnityEngine.Object.FindAnyObjectByType<Canvas>();
+            if (canvas != null)
+            {
+                Transform foundRoot = canvas.transform.Find("VehicleTutorial_Modal_Root");
+                if (foundRoot != null)
+                {
+                    tutorialPanelRoot = foundRoot.gameObject;
+                }
+            }
+        }
+
+        if (tutorialPanelRoot != null)
+        {
+            if (panelCanvasGroup == null) panelCanvasGroup = tutorialPanelRoot.GetComponent<CanvasGroup>();
+            if (titleText == null) titleText = FindTMPRecursive(tutorialPanelRoot.transform, "Header_Title_Text", "TitleText", "HeaderTitle", "Title");
+            if (leftCaptionText == null) leftCaptionText = FindTMPRecursive(tutorialPanelRoot.transform, "Left_Caption_Text", "CaptionText", "LeftCaption");
+            if (objectiveBodyText == null) objectiveBodyText = FindTMPRecursive(tutorialPanelRoot.transform, "Objective_Body_Text", "BodyText", "ObjectiveText");
+            if (vehicleImageUI == null) vehicleImageUI = FindImageRecursive(tutorialPanelRoot.transform, "Delivery_Point_Image", "VehicleImage", "TutorialImage", "Image");
+            if (startButton == null) startButton = FindButtonRecursive(tutorialPanelRoot.transform, "Start_Game_Button", "StartButton", "OkButton", "ConfirmButton");
+        }
+    }
+
+    private static TextMeshProUGUI FindTMPRecursive(Transform root, params string[] names)
+    {
+        if (root == null) return null;
+        var list = root.GetComponentsInChildren<TextMeshProUGUI>(true);
+        foreach (var n in names)
+        {
+            foreach (var t in list)
+            {
+                if (t != null && t.gameObject.name.Equals(n, System.StringComparison.OrdinalIgnoreCase)) return t;
+            }
+        }
+        foreach (var n in names)
+        {
+            foreach (var t in list)
+            {
+                if (t != null && t.gameObject.name.IndexOf(n, System.StringComparison.OrdinalIgnoreCase) >= 0) return t;
+            }
+        }
+        return null;
+    }
+
+    private static Image FindImageRecursive(Transform root, params string[] names)
+    {
+        if (root == null) return null;
+        var list = root.GetComponentsInChildren<Image>(true);
+        foreach (var n in names)
+        {
+            foreach (var img in list)
+            {
+                if (img != null && img.gameObject.name.Equals(n, System.StringComparison.OrdinalIgnoreCase)) return img;
+            }
+        }
+        return null;
+    }
+
+    private static Button FindButtonRecursive(Transform root, params string[] names)
+    {
+        if (root == null) return null;
+        var list = root.GetComponentsInChildren<Button>(true);
+        foreach (var n in names)
+        {
+            foreach (var b in list)
+            {
+                if (b != null && b.gameObject.name.Equals(n, System.StringComparison.OrdinalIgnoreCase)) return b;
+            }
+        }
+        return null;
     }
 
     private IEnumerator FadeCanvasGroup(CanvasGroup cg, float from, float to, float duration, Action onComplete = null)

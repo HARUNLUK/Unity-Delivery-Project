@@ -706,6 +706,10 @@
       "value": "Teslim Edilen: {0}"
     },
     {
+      "key": "summary_delivered_to_label",
+      "value": "Teslim Edilen:"
+    },
+    {
       "key": "summary_target",
       "value": "Hedef: {0}"
     },
@@ -734,12 +738,92 @@
       "value": "TESLİM EDİLMEDİ"
     },
     {
+      "key": "summary_recipient_target_label",
+      "value": "Alıcı & Hedef:"
+    },
+    {
+      "key": "recipient_default",
+      "value": "Alıcı"
+    },
+    {
+      "key": "summary_unknown_address",
+      "value": "(Bilinmeyen Adres)"
+    },
+    {
+      "key": "summary_status_express_late",
+      "value": "Gecikti"
+    },
+    {
       "key": "summary_btn_restart_day",
       "value": "YENİ GÜNE BAŞLA (GÜN {0})"
     },
     {
       "key": "garage_title",
       "value": "OTO SERVİS & MODİFİYE GARAJI"
+    },
+    {
+      "key": "garage_subtitle",
+      "value": "Araç bakım onarımı ve özel fırın boyama merkezi"
+    },
+    {
+      "key": "garage_left_header",
+      "value": "ARAÇ DURUMU VE HASAR ONARIMI"
+    },
+    {
+      "key": "garage_info_head",
+      "value": "SERVİS VE HASAR BİLGİSİ"
+    },
+    {
+      "key": "garage_info_desc",
+      "value": "Araç hasar aldığında maksimum yol tutuş performansı düşebilir. Görevler arasında aracınızı periyodik olarak tamir ettirmeniz önerilir."
+    },
+    {
+      "key": "garage_right_header",
+      "value": "GÖVDE VE PARÇA BOYAMA ATÖLYESİ"
+    },
+    {
+      "key": "garage_current_color_cost",
+      "value": "<b>Mevcut Renk:</b> <color={0}>■ {0}</color>  |  <b>Boya Ücreti:</b> <color=#32FF64>${1:N0}</color>"
+    },
+    {
+      "key": "color_red",
+      "value": "Kırmızı"
+    },
+    {
+      "key": "color_blue",
+      "value": "Mavi"
+    },
+    {
+      "key": "color_black",
+      "value": "Siyah"
+    },
+    {
+      "key": "color_white",
+      "value": "Beyaz"
+    },
+    {
+      "key": "color_yellow",
+      "value": "Sarı"
+    },
+    {
+      "key": "color_green",
+      "value": "Yeşil"
+    },
+    {
+      "key": "color_orange",
+      "value": "Turuncu"
+    },
+    {
+      "key": "color_purple",
+      "value": "Mor"
+    },
+    {
+      "key": "color_gray",
+      "value": "Gri"
+    },
+    {
+      "key": "color_cyan",
+      "value": "Turkuaz"
     },
     {
       "key": "garage_tuning_info",
@@ -751,7 +835,7 @@
     },
     {
       "key": "garage_paint_desc",
-      "value": "Aracınızı dilediğiniz renge boyayın ve cilalayın."
+      "value": "Boyanacak Hedefler: Gövde, Kaput, Kapılar ve Tamponlar"
     },
     {
       "key": "garage_paint_cost",
@@ -763,19 +847,19 @@
     },
     {
       "key": "garage_btn_tune",
-      "value": " STAGE {0} MOTOR MODİFİYESİ (${1:N0})"
+      "value": "STAGE {0} MOTOR MODİFİYESİ (${1:N0})"
     },
     {
       "key": "garage_btn_tune_max",
-      "value": "⭐ MAKSİMUM MOTOR PERFORMANSI (STAGE 3)"
+      "value": "MAKSİMUM MOTOR PERFORMANSI (STAGE 3)"
     },
     {
       "key": "garage_btn_drive",
-      "value": "🚗 ARACI ÇALIŞTIR VE SÜR"
+      "value": "ARACI ÇALIŞTIR VE SÜR"
     },
     {
       "key": "garage_btn_close",
-      "value": "Kapat "
+      "value": "Kapat"
     },
     {
       "key": "btn_close",
@@ -1011,11 +1095,11 @@
     },
     {
       "key": "prompt_garage_tuned_success",
-      "value": "<color=#32FF64> {0} Motor Stage {1} Yapıldı! (+{2:0}% Tork)</color>"
+      "value": "<color=#32FF64>{0} Motor Stage {1} Yapıldı! (+{2:0}% Tork)</color>"
     },
     {
       "key": "prompt_garage_painted_success",
-      "value": "<color=#{0}>🎨 {1} Yeni Rengine Boyandı!</color>"
+      "value": "<color=#{0}>{1} Yeni Rengine Boyandı!</color>"
     },
     {
       "key": "prompt_gas_station_name",
@@ -1308,6 +1392,14 @@
     {
       "key": "vehicle_tutorial_btn_start",
       "value": "ANLADIM, SÜRÜŞE BAŞLA"
+    },
+    {
+      "key": "tutorial_f1_hint",
+      "value": "<color=#64A0FF>[F1]</color> <color=#A0B0C0>Tuşu ile rehberi istediğiniz zaman tekrar açabilirsiniz.</color>"
+    },
+    {
+      "key": "vehicle_tutorial_f2_hint",
+      "value": "<color=#64A0FF>[F2]</color> <color=#A0B0C0>Tuşu ile sürüş rehberini istediğiniz zaman tekrar açabilirsiniz.</color>"
     }
   ]
 }
