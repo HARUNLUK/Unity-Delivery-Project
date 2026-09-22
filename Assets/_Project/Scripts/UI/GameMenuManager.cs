@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 #if UNITY_EDITOR
@@ -50,6 +51,7 @@ public class GameMenuManager : MonoBehaviour
     }
 
     public static bool SkipMainMenuOnNextLoad { get; set; } = false;
+    public static bool IsStartingNewGame { get; set; } = false;
 
     [Header("--- INITIAL FLOW STATE ---")]
     [Tooltip("If true, scene launches into the Main Menu with cinematic shop view. If false, starts directly in gameplay.")]
@@ -214,6 +216,15 @@ public class GameMenuManager : MonoBehaviour
         {
             SkipMainMenuOnNextLoad = false;
             InitializeDirectGameplay();
+
+            if (IsStartingNewGame)
+            {
+                IsStartingNewGame = false;
+                if (DeliveryTutorialUI.Instance != null)
+                {
+                    DeliveryTutorialUI.Instance.CheckAndShowOnGameplayStart(isNewGame: true);
+                }
+            }
         }
         else if (startInMainMenu)
         {
@@ -1392,8 +1403,25 @@ public class GameMenuManager : MonoBehaviour
         UpdateMainMenuSaveStats();
         UpdateMainMenuButtons();
 
-        // 11. Start game transition as a NEW GAME
-        StartGameplayTransition(isNewGame: true);
+        // 11. Instruct GameMenuManager to skip Main Menu and open tutorial on fresh scene load
+        SkipMainMenuOnNextLoad = true;
+        IsStartingNewGame = true;
+
+        // 12. Fade out and reload the scene fresh to completely reset the world, character spawn, physics, and cargo!
+        PlayTransitionSequence(
+            onBlackout: () =>
+            {
+                Scene currentScene = SceneManager.GetActiveScene();
+                if (currentScene.buildIndex >= 0)
+                {
+                    SceneManager.LoadScene(currentScene.buildIndex);
+                }
+                else
+                {
+                    SceneManager.LoadScene(currentScene.name);
+                }
+            }
+        );
     }
 
     private void StartGameplayTransition(bool isNewGame = false)

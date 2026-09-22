@@ -112,16 +112,22 @@ public class DeliveryTutorialUI : MonoBehaviour
 
         if (isNewGame)
         {
-            // For a brand new game, always show tutorial
+            // For a brand new game, show tutorial once
             StartCoroutine(DelayedShowTutorial(0.45f));
             return;
         }
 
-        bool dontShow = PlayerPrefs.GetInt(PREF_TUTORIAL_DONT_SHOW, 0) == 1;
+        // Check if tutorial was already shown before in this save career
+        bool alreadySeen = PlayerPrefs.GetInt(PREF_TUTORIAL_DONT_SHOW, 0) == 1 || PlayerPrefs.GetInt("Delivery_Tutorial_Seen", 0) == 1;
+        if (alreadySeen)
+        {
+            return;
+        }
+
         int currentDay = DayTimeManager.Instance != null ? DayTimeManager.Instance.CurrentDay : PlayerPrefs.GetInt("Delivery_CurrentDay", 1);
 
-        // If it's Day 1 and player hasn't opted out, display tutorial with a tiny delay so scene settles smoothly
-        if (!dontShow && currentDay == 1)
+        // If it's Day 1 and player hasn't seen it yet, display tutorial once
+        if (currentDay == 1)
         {
             StartCoroutine(DelayedShowTutorial(0.45f));
         }
@@ -225,12 +231,10 @@ public class DeliveryTutorialUI : MonoBehaviour
     {
         if (!isTutorialOpen && (tutorialPanelRoot == null || !tutorialPanelRoot.activeSelf)) return;
 
-        // Save Don't Show Again preference if toggle exists
-        if (dontShowAgainToggle != null && dontShowAgainToggle.isOn)
-        {
-            PlayerPrefs.SetInt(PREF_TUTORIAL_DONT_SHOW, 1);
-            PlayerPrefs.Save();
-        }
+        // Permanently record that tutorial has been seen so it never auto-pops again
+        PlayerPrefs.SetInt(PREF_TUTORIAL_DONT_SHOW, 1);
+        PlayerPrefs.SetInt("Delivery_Tutorial_Seen", 1);
+        PlayerPrefs.Save();
 
         if (AudioManager.Instance != null)
         {
