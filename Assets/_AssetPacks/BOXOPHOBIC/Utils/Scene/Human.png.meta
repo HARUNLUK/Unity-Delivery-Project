@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: 6fd05189f16020c478274741984eaa17
+AssetOrigin:
+  serializedVersion: 1
+  productId: 107400
+  packageName: FREE Skybox Extended Shader
+  packageVersion: 2.7.0
+  assetPath: Assets/BOXOPHOBIC/Utils/Scene/Human.png
+  uploadId: 991516
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -67,20 +74,20 @@ TextureImporter:
   swizzle: 50462976
   cookieLightType: 0
   platformSettings:
-  - serializedVersion: 3
+  - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 2048
+    maxTextureSize: 1024
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
+    compressionQuality: 75
+    crunchedCompression: 1
     allowsAlphaSplitting: 0
     overridden: 0
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 3
+  - serializedVersion: 4
     buildTarget: Standalone
     maxTextureSize: 2048
     resizeAlgorithm: 0
@@ -93,8 +100,21 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 3
+  - serializedVersion: 4
     buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -110,6 +130,7 @@ TextureImporter:
     serializedVersion: 2
     sprites: []
     outline: []
+    customData: 
     physicsShape: []
     bones: []
     spriteID: 
@@ -119,16 +140,11 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
     nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 107400
-  packageName: FREE Skybox Extended Shader
-  packageVersion: 2.7.0
-  assetPath: Assets/BOXOPHOBIC/Utils/Scene/Human.png
-  uploadId: 991516

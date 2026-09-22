@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: d8f8e3d7fed9c834b9feeb32026dff3e
+AssetOrigin:
+  serializedVersion: 1
+  productId: 107400
+  packageName: FREE Skybox Extended Shader
+  packageVersion: 2.7.0
+  assetPath: Assets/BOXOPHOBIC/Utils/Settings/HD Sky.exr
+  uploadId: 991516
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -56,9 +63,7 @@ TextureImporter:
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 0
-  spriteTessellationMethod: 0
   spriteTessellationDetail: -1
-  spriteGeometrySubdivision: -1
   textureType: 0
   textureShape: 2
   singleChannelComponent: 0
@@ -74,6 +79,19 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
+    maxTextureSize: 1024
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 75
+    crunchedCompression: 1
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -86,7 +104,7 @@ TextureImporter:
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
-    buildTarget: Standalone
+    buildTarget: WebGL
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -120,10 +138,3 @@ TextureImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 107400
-  packageName: FREE Skybox Extended Shader
-  packageVersion: 2.7.0
-  assetPath: Assets/BOXOPHOBIC/Utils/Settings/HD Sky.exr
-  uploadId: 991516

@@ -75,15 +75,28 @@ public class MainHUDController : MonoBehaviour
         }
     }
 
+    private int lastCachedDay = -1;
+    private string lastCachedTimeString = "";
+    private int lastRemainingCargo = -1;
+    private int lastTotalCargo = -1;
+    private int lastEarningsBalance = int.MinValue;
+
     private void Update()
     {
         if (clockText != null && DayTimeManager.Instance != null)
         {
-            string dayLabel = LocalizationManager.GetFormat("hud_day", DayTimeManager.Instance.CurrentDay);
-            clockText.text = $"<size=75%>{dayLabel}</size>  <mspace=0.6em>{DayTimeManager.Instance.GetFormattedTime()}</mspace>";
+            int currentDay = DayTimeManager.Instance.CurrentDay;
+            string currentTime = DayTimeManager.Instance.GetFormattedTime();
+            if (currentDay != lastCachedDay || !string.Equals(currentTime, lastCachedTimeString, System.StringComparison.Ordinal))
+            {
+                lastCachedDay = currentDay;
+                lastCachedTimeString = currentTime;
+                string dayLabel = LocalizationManager.GetFormat("hud_day", currentDay);
+                clockText.text = $"<size=75%>{dayLabel}</size>  <mspace=0.6em>{currentTime}</mspace>";
+            }
         }
 
-        if (Time.frameCount % 30 == 0)
+        if ((Time.frameCount & 31) == 0)
         {
             RefreshCargoCount();
         }
@@ -98,24 +111,40 @@ public class MainHUDController : MonoBehaviour
     {
         if (remainingCargoText == null) return;
 
-        PhysicalCargoPackage[] scenePackages = Object.FindObjectsByType<PhysicalCargoPackage>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-        if (scenePackages != null && scenePackages.Length > 0)
+        var scenePackages = PhysicalCargoPackage.AllPackages;
+        int total = scenePackages.Count;
+
+        if (total > 0)
         {
             int remaining = 0;
-            foreach (var p in scenePackages)
+            for (int i = 0; i < total; i++)
             {
+                var p = scenePackages[i];
                 if (p != null && p.FindNearbyDeliveryPoint() == null && !p.isBroken)
                 {
                     remaining++;
                 }
             }
-            remainingCargoText.text = $"{remaining} / {scenePackages.Length}";
+
+            if (remaining != lastRemainingCargo || total != lastTotalCargo)
+            {
+                lastRemainingCargo = remaining;
+                lastTotalCargo = total;
+                remainingCargoText.text = $"{remaining} / {total}";
+            }
             return;
         }
 
         if (VanInventory.Instance != null)
         {
-            remainingCargoText.text = $"{VanInventory.Instance.RemainingCargoCount} / {VanInventory.Instance.dailyPackageCount}";
+            int rem = VanInventory.Instance.RemainingCargoCount;
+            int tot = VanInventory.Instance.dailyPackageCount;
+            if (rem != lastRemainingCargo || tot != lastTotalCargo)
+            {
+                lastRemainingCargo = rem;
+                lastTotalCargo = tot;
+                remainingCargoText.text = $"{rem} / {tot}";
+            }
         }
     }
 
@@ -123,6 +152,9 @@ public class MainHUDController : MonoBehaviour
     {
         if (balanceEarningsText != null)
         {
+            if (liveBalance == lastEarningsBalance) return;
+            lastEarningsBalance = liveBalance;
+
             if (liveBalance >= 0)
             {
                 balanceEarningsText.text = $"${liveBalance:N0}";

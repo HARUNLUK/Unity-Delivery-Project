@@ -91,6 +91,9 @@ public class FPSPlayerController : MonoBehaviour
     private bool wasGroundedLastFrame = true;
     private float previousAirborneVelocityY = 0f;
     private PhysicalCargoPackage currentlyFocusedPackage = null;
+    private static readonly RaycastHit[] interactionHitsBuffer = new RaycastHit[32];
+    private static readonly List<RaycastHit> validHitsCache = new List<RaycastHit>(32);
+    private static readonly System.Comparison<RaycastHit> hitDistanceComparison = (a, b) => a.distance.CompareTo(b.distance);
 
     private void UpdateCargoFocus(PhysicalCargoPackage newTarget)
     {
@@ -770,48 +773,47 @@ public class FPSPlayerController : MonoBehaviour
 
         if (playerCamera == null) return;
 
-        // Perform raycast / spherecast with RaycastAll to avoid static shop/building geometry blocking interactables
+        // Perform NonAlloc raycast / spherecast to avoid GC heap churn
         Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
-        RaycastHit[] hits = Physics.RaycastAll(ray, interactionDistance, interactionLayers, QueryTriggerInteraction.Collide);
-        if (hits == null || hits.Length == 0)
+        int hitCount = Physics.RaycastNonAlloc(ray, interactionHitsBuffer, interactionDistance, interactionLayers, QueryTriggerInteraction.Collide);
+        if (hitCount == 0)
         {
-            hits = Physics.SphereCastAll(ray, 0.22f, interactionDistance, interactionLayers, QueryTriggerInteraction.Collide);
+            hitCount = Physics.SphereCastNonAlloc(ray, 0.22f, interactionHitsBuffer, interactionDistance, interactionLayers, QueryTriggerInteraction.Collide);
         }
 
-        // Filter out player colliders and non-interactive triggers (such as VehicleCargoBed.bedTrigger or boundary triggers)
-        List<RaycastHit> validHits = new List<RaycastHit>();
-        if (hits != null)
+        validHitsCache.Clear();
+        for (int i = 0; i < hitCount; i++)
         {
-            foreach (var h in hits)
+            var h = interactionHitsBuffer[i];
+            if (h.collider == null || h.collider.transform.IsChildOf(transform)) continue;
+
+            // If collider is a trigger, only keep if it has an interactive terminal, property, or cargo component
+            if (h.collider.isTrigger)
             {
-                if (h.collider == null || h.collider.transform.IsChildOf(transform)) continue;
+                bool isInteractiveTrigger =
+                    h.collider.GetComponentInParent<BranchUpgradeTerminal>() != null ||
+                    h.collider.GetComponent<BranchUpgradeTerminal>() != null ||
+                    h.collider.GetComponentInParent<PurchasableProperty>() != null ||
+                    h.collider.GetComponent<PurchasableProperty>() != null ||
+                    h.collider.GetComponentInParent<InsuranceAgencyManager>() != null ||
+                    h.collider.GetComponent<InsuranceAgencyManager>() != null ||
+                    h.collider.GetComponentInParent<PassiveDispatchManager>() != null ||
+                    h.collider.GetComponent<PassiveDispatchManager>() != null ||
+                    h.collider.GetComponentInParent<PhysicalCargoPackage>() != null ||
+                    h.collider.GetComponent<PhysicalCargoPackage>() != null;
 
-                // If collider is a trigger, only keep if it has an interactive terminal, property, or cargo component
-                if (h.collider.isTrigger)
-                {
-                    bool isInteractiveTrigger =
-                        h.collider.GetComponentInParent<BranchUpgradeTerminal>() != null ||
-                        h.collider.GetComponent<BranchUpgradeTerminal>() != null ||
-                        h.collider.GetComponentInParent<PurchasableProperty>() != null ||
-                        h.collider.GetComponent<PurchasableProperty>() != null ||
-                        h.collider.GetComponentInParent<InsuranceAgencyManager>() != null ||
-                        h.collider.GetComponent<InsuranceAgencyManager>() != null ||
-                        h.collider.GetComponentInParent<PassiveDispatchManager>() != null ||
-                        h.collider.GetComponent<PassiveDispatchManager>() != null ||
-                        h.collider.GetComponentInParent<PhysicalCargoPackage>() != null ||
-                        h.collider.GetComponent<PhysicalCargoPackage>() != null;
-
-                    if (!isInteractiveTrigger) continue;
-                }
-
-                validHits.Add(h);
+                if (!isInteractiveTrigger) continue;
             }
+
+            validHitsCache.Add(h);
         }
 
-        if (validHits.Count > 1)
+        if (validHitsCache.Count > 1)
         {
-            validHits.Sort((a, b) => a.distance.CompareTo(b.distance));
+            validHitsCache.Sort(hitDistanceComparison);
         }
+
+        List<RaycastHit> validHits = validHitsCache;
 
         // STEP 1: Check if there is a directly targeted cargo package along the ray
         PhysicalCargoPackage targetedPackage = null;

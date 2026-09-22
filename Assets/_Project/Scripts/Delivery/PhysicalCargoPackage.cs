@@ -109,13 +109,43 @@ public class PhysicalCargoPackage : MonoBehaviour
         spawnImmunityUntil = Time.time + spawnImmunityDuration;
     }
 
+    private int sleepCheckFrameOffset = -1;
+
     private void Update()
     {
-        UpdateFocusIndicator();
+        if (isCurrentlyFocused || focusVisualScale > 0.001f)
+        {
+            UpdateFocusIndicator();
+        }
+
+        // Rigidbody Sleeping Optimization for stationary packages in cargo bed or warehouse
+        if (sleepCheckFrameOffset < 0) sleepCheckFrameOffset = (gameObject.GetHashCode() & 0x7FFFFFFF) % 8;
+
+        if (((Time.frameCount + sleepCheckFrameOffset) & 7) == 0)
+        {
+            if (isInVehicleBed && !isBeingCarried && rb != null && !rb.isKinematic && !rb.IsSleeping())
+            {
+                if (rb.linearVelocity.sqrMagnitude < 0.02f && rb.angularVelocity.sqrMagnitude < 0.02f)
+                {
+                    rb.Sleep();
+                }
+            }
+        }
+    }
+
+    public static readonly List<PhysicalCargoPackage> AllPackages = new List<PhysicalCargoPackage>();
+
+    private void OnEnable()
+    {
+        if (!AllPackages.Contains(this))
+        {
+            AllPackages.Add(this);
+        }
     }
 
     private void OnDisable()
     {
+        AllPackages.Remove(this);
         isCurrentlyFocused = false;
         if (focusIndicatorObj != null)
         {

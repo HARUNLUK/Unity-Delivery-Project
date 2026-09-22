@@ -779,12 +779,18 @@ public class AITrafficVehicle : MonoBehaviour
         public float maxDistance;
     }
 
+    private static readonly LaserRay[] sharedLaserRays = new LaserRay[10];
+    private int frameOffset = -1;
+
     /// <summary>
     /// Multi-point forward laser Raycast system and direct physical proximity barrier.
     /// Tightly bounded to the vehicle's driving path corridor to eliminate phantom stops from diagonal/sidewalk/opposite lane objects.
+    /// Optimized with Zero-GC preallocated buffer, distance-based LOD, and fast layer/rigidbody filtering.
     /// </summary>
     private void CheckFrontRadar()
     {
+        if (frameOffset < 0) frameOffset = (gameObject.GetHashCode() & 0x7FFFFFFF) % 4;
+
         float closestDist = float.MaxValue;
         bool hitObstacle = false;
         bool hitPlayer = false;
@@ -806,29 +812,46 @@ public class AITrafficVehicle : MonoBehaviour
         float innerRayOffset = carPhysicalHalfWidth * 0.45f;
         float outerRayOffset = carPhysicalHalfWidth * 0.80f;
 
-        // 1. MULTI-POINT FORWARD LASER RAYCAST GRID (Tightly aligned to vehicle body width)
-        LaserRay[] rays = new LaserRay[]
+        Vector3 playerPos = FPSPlayerController.Instance != null 
+            ? FPSPlayerController.Instance.transform.position 
+            : (Camera.main != null ? Camera.main.transform.position : Vector3.zero);
+        float distSqrToPlayer = (playerPos != Vector3.zero) ? (transform.position - playerPos).sqrMagnitude : 0f;
+
+        // 1. MULTI-POINT FORWARD LASER RAYCAST GRID (Distance LOD: Far >85m = 0 rays, Mid 35m-85m = 3 rays, Near <35m = 10 rays)
+        int rayCount = 0;
+        if (distSqrToPlayer <= 85f * 85f)
         {
-            // Main Headlight Level (Center, Inner-Left, Inner-Right, Outer-Left, Outer-Right)
-            new LaserRay { origin = mainOrigin, direction = transform.forward, maxDistance = sensorDistance },
-            new LaserRay { origin = mainOrigin - (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance },
-            new LaserRay { origin = mainOrigin + (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance },
-            new LaserRay { origin = mainOrigin - (transform.right * outerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.9f },
-            new LaserRay { origin = mainOrigin + (transform.right * outerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.9f },
+            if (distSqrToPlayer > 35f * 35f)
+            {
+                // Mid LOD: 3 center/inner rays on alternating frames
+                if (((Time.frameCount + frameOffset) & 1) == 0)
+                {
+                    sharedLaserRays[0] = new LaserRay { origin = mainOrigin, direction = transform.forward, maxDistance = sensorDistance };
+                    sharedLaserRays[1] = new LaserRay { origin = mainOrigin - (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance };
+                    sharedLaserRays[2] = new LaserRay { origin = mainOrigin + (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance };
+                    rayCount = 3;
+                }
+            }
+            else
+            {
+                // Near LOD: Full 10 laser rays
+                sharedLaserRays[0] = new LaserRay { origin = mainOrigin, direction = transform.forward, maxDistance = sensorDistance };
+                sharedLaserRays[1] = new LaserRay { origin = mainOrigin - (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance };
+                sharedLaserRays[2] = new LaserRay { origin = mainOrigin + (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance };
+                sharedLaserRays[3] = new LaserRay { origin = mainOrigin - (transform.right * outerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.9f };
+                sharedLaserRays[4] = new LaserRay { origin = mainOrigin + (transform.right * outerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.9f };
+                sharedLaserRays[5] = new LaserRay { origin = lowOrigin, direction = transform.forward, maxDistance = sensorDistance * 0.75f };
+                sharedLaserRays[6] = new LaserRay { origin = lowOrigin - (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.75f };
+                sharedLaserRays[7] = new LaserRay { origin = lowOrigin + (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.75f };
+                sharedLaserRays[8] = new LaserRay { origin = mainOrigin - (transform.right * outerRayOffset), direction = (Quaternion.Euler(0, -4.0f, 0) * transform.forward), maxDistance = 3.5f };
+                sharedLaserRays[9] = new LaserRay { origin = mainOrigin + (transform.right * outerRayOffset), direction = (Quaternion.Euler(0, 4.0f, 0) * transform.forward), maxDistance = 3.5f };
+                rayCount = 10;
+            }
+        }
 
-            // Lower Bumper Level (Catches low obstacles, sports cars, pedestrians)
-            new LaserRay { origin = lowOrigin, direction = transform.forward, maxDistance = sensorDistance * 0.75f },
-            new LaserRay { origin = lowOrigin - (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.75f },
-            new LaserRay { origin = lowOrigin + (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.75f },
-
-            // Subtle Lateral Feeler Rays (Only 4.0 degrees, short range for tight turning clearance)
-            new LaserRay { origin = mainOrigin - (transform.right * outerRayOffset), direction = (Quaternion.Euler(0, -4.0f, 0) * transform.forward), maxDistance = 3.5f },
-            new LaserRay { origin = mainOrigin + (transform.right * outerRayOffset), direction = (Quaternion.Euler(0, 4.0f, 0) * transform.forward), maxDistance = 3.5f }
-        };
-
-        for (int i = 0; i < rays.Length; i++)
+        for (int i = 0; i < rayCount; i++)
         {
-            var r = rays[i];
+            var r = sharedLaserRays[i];
             if (Physics.Raycast(r.origin, r.direction, out RaycastHit hit, r.maxDistance, obstacleLayers, QueryTriggerInteraction.Ignore))
             {
                 if (!IsValidObstacleHit(hit)) continue;
@@ -851,7 +874,7 @@ public class AITrafficVehicle : MonoBehaviour
                     closestDist = hit.distance;
                 }
 
-                if (hit.collider.GetComponentInParent<FPSPlayerController>() != null ||
+                if (hit.collider.transform.root == FPSPlayerController.Instance?.transform ||
                     hit.collider.GetComponentInParent<DrivableVehicle>() != null ||
                     hit.collider.GetComponentInParent<CarController>() != null)
                 {
@@ -913,10 +936,6 @@ public class AITrafficVehicle : MonoBehaviour
         }
 
         // 4. PLAYER CHARACTER PROXIMITY HARD BARRIER (On-foot)
-        Vector3 playerPos = FPSPlayerController.Instance != null 
-            ? FPSPlayerController.Instance.transform.position 
-            : (Camera.main != null ? Camera.main.transform.position : Vector3.zero);
-
         if (playerPos != Vector3.zero)
         {
             Vector3 toPlayer = playerPos - transform.position;
@@ -1018,6 +1037,7 @@ public class AITrafficVehicle : MonoBehaviour
     /// <summary>
     /// Validates if a raycast hit represents an actual obstacle in the driving lane.
     /// Excludes road meshes, terrain, sidewalks, curbs, and roadside scenery so cars maintain constant speed.
+    /// Optimized with Zero-GC fast filtering.
     /// </summary>
     private bool IsValidObstacleHit(RaycastHit hit)
     {
@@ -1027,38 +1047,15 @@ public class AITrafficVehicle : MonoBehaviour
         // 1. Ignore own vehicle colliders
         if (IsOwnCollider(col)) return false;
 
-        // 2. Ignore Player-Only Barriers, Invisible Walls, Gates, Level Locks, Cubes, and Borders
+        // 2. Ignore Player-Only Barriers
         if (col.GetComponentInParent<PlayerOnlyBarrier>() != null) return false;
 
-        string colName = col.gameObject.name.ToLower();
-        if (colName.Contains("wall") || colName.Contains("duvar") || colName.Contains("barrier") || 
-            colName.Contains("barikat") || colName.Contains("border") || colName.Contains("limit") || 
-            colName.Contains("gate") || colName.Contains("block") || colName.Contains("kilit") || 
-            colName.Contains("lock") || colName.Contains("invisible") || colName.Contains("cube") ||
-            colName.Contains("boundary") || colName.Contains("obstacle") || colName.Contains("blockade"))
+        // Fast path: ALL actual dynamic obstacles (Player, Drivable Vehicle, AI Traffic, Cargo, dynamic rigidbodies)
+        // have an attached Rigidbody or CharacterController. Static environment meshes have neither.
+        Rigidbody attachedRb = col.attachedRigidbody;
+        if (attachedRb == null && col.GetComponentInParent<CharacterController>() == null)
         {
-            // If this object is not a player or vehicle, never consider it an obstacle for AI traffic
-            if (col.GetComponentInParent<FPSPlayerController>() == null &&
-                col.GetComponentInParent<DrivableVehicle>() == null &&
-                col.GetComponentInParent<CarController>() == null &&
-                col.GetComponentInParent<AITrafficVehicle>() == null)
-            {
-                return false;
-            }
-        }
-
-        string hitLayerName = LayerMask.LayerToName(col.gameObject.layer).ToLower();
-        if (hitLayerName.Contains("playeronly") || hitLayerName.Contains("demobarrier") || 
-            hitLayerName.Contains("playerbarrier") || hitLayerName.Contains("invisiblewall") || 
-            hitLayerName.Contains("roadlock") || hitLayerName.Contains("levelbarrier") ||
-            hitLayerName.Contains("wall") || hitLayerName.Contains("barrier") || hitLayerName.Contains("zone"))
-        {
-            if (col.GetComponentInParent<FPSPlayerController>() == null && 
-                col.GetComponentInParent<DrivableVehicle>() == null && 
-                col.GetComponentInParent<CarController>() == null)
-            {
-                return false;
-            }
+            return false;
         }
 
         // 3. Ignore terrain, road, ground, sidewalk surface or slope
@@ -1071,7 +1068,7 @@ public class AITrafficVehicle : MonoBehaviour
         if (col.GetComponentInParent<AITrafficVehicle>() != null) return true;
 
         // 6. Real Obstacle B: The Player (On-foot)
-        if (col.GetComponentInParent<FPSPlayerController>() != null || col.CompareTag("Player")) return true;
+        if (col.CompareTag("Player") || (FPSPlayerController.Instance != null && col.transform.root == FPSPlayerController.Instance.transform)) return true;
 
         // 7. Real Obstacle C: Player's Drivable Vehicles (Driving or parked)
         if (col.GetComponentInParent<DrivableVehicle>() != null || col.GetComponentInParent<CarController>() != null) return true;
@@ -1080,10 +1077,8 @@ public class AITrafficVehicle : MonoBehaviour
         if (col.GetComponentInParent<PhysicalCargoPackage>() != null) return true;
 
         // 9. Real Obstacle E: Movable dynamic physics objects (Only non-kinematic Rigidbodies)
-        Rigidbody rb = col.GetComponentInParent<Rigidbody>();
-        if (rb != null && !rb.isKinematic) return true;
+        if (attachedRb != null && !attachedRb.isKinematic) return true;
 
-        // ALL other static objects (buildings, trees, lamp posts, fences, walls, cubes) are NEVER obstacles for AI
         return false;
     }
 
