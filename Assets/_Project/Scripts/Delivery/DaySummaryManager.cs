@@ -89,21 +89,22 @@ public class DaySummaryManager : MonoBehaviour
 
         EnsureSummaryReferences();
 
+        // 0. Close and hide all other active panels, modals, prompts, and held/driving player states
+        CloseOtherActivePanels();
+
         if (summaryPanelRoot != null)
         {
             summaryPanelRoot.SetActive(true);
+            summaryPanelRoot.transform.SetAsLastSibling();
             if (AudioManager.Instance != null)
             {
                 AudioManager.Instance.PlayTabletOpen();
             }
         }
 
-        if (CargoTabletUI.Instance != null)
-        {
-            CargoTabletUI.Instance.CloseTablet();
-        }
-
         FPSPlayerController.LockCursor(false);
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
 
         // 1. Gather all physical cargo packages in the scene
         PhysicalCargoPackage[] scenePackages = Object.FindObjectsByType<PhysicalCargoPackage>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
@@ -235,6 +236,111 @@ public class DaySummaryManager : MonoBehaviour
 
         // 5. Detaylı Liste Satırlarını Oluştur
         PopulateResultsList(results);
+    }
+
+    private void CloseOtherActivePanels()
+    {
+        // 1. Tablet UI
+        if (CargoTabletUI.Instance != null && CargoTabletUI.Instance.IsTabletOpen)
+        {
+            CargoTabletUI.Instance.CloseTablet();
+        }
+
+        // 2. Commercial Hub UI (Garage Workshop, Insurance Agency, Dispatch Hub, Property Purchase Modal)
+        if (CommercialHubUIManager.Instance != null && CommercialHubUIManager.Instance.IsAnyPanelOpen)
+        {
+            CommercialHubUIManager.Instance.CloseAllPanels();
+        }
+
+        // 3. Delivery Selection Zone Dropdown
+        if (DeliverySelectionUI.Instance != null && DeliverySelectionUI.Instance.IsOpen)
+        {
+            DeliverySelectionUI.Instance.ClosePanel();
+        }
+
+        // 4. In-Game Prompts, Gauges, Charge Bars, and Held Cargo Cards
+        if (InteractionPromptHUD.Instance != null)
+        {
+            InteractionPromptHUD.Instance.HidePrompt();
+            InteractionPromptHUD.Instance.HideHeldCargoInfo();
+            InteractionPromptHUD.Instance.HideThrowCharge();
+            InteractionPromptHUD.Instance.HideFuelHUD();
+            InteractionPromptHUD.Instance.SuppressPrompts(9999f);
+        }
+
+        // 5. Delivery Feedback Notification Popups
+        if (DeliveryNotificationHUD.Instance != null && DeliveryNotificationHUD.Instance.notificationRoot != null)
+        {
+            DeliveryNotificationHUD.Instance.notificationRoot.SetActive(false);
+        }
+
+        // 6. Branch Upgrade Transition Overlay
+        if (BranchUpgradeTransitionUI.Instance != null)
+        {
+            BranchUpgradeTransitionUI.Instance.HideImmediate();
+        }
+
+        // 7. Menus & Modals (Pause Menu, Settings, New Game Modal)
+        if (GameMenuManager.Instance != null)
+        {
+            if (GameMenuManager.Instance.pauseMenuPanel != null && GameMenuManager.Instance.pauseMenuPanel.activeSelf)
+            {
+                GameMenuManager.Instance.pauseMenuPanel.SetActive(false);
+            }
+            if (GameMenuManager.Instance.settingsPanel != null && GameMenuManager.Instance.settingsPanel.activeSelf)
+            {
+                GameMenuManager.Instance.settingsPanel.SetActive(false);
+            }
+            if (GameMenuManager.Instance.newGameModalPanel != null && GameMenuManager.Instance.newGameModalPanel.activeSelf)
+            {
+                GameMenuManager.Instance.newGameModalPanel.SetActive(false);
+            }
+        }
+
+        // 8. Player State: safely release any held cargo and exit vehicle if driving
+        FPSPlayerController player = FPSPlayerController.Instance != null ? FPSPlayerController.Instance : Object.FindAnyObjectByType<FPSPlayerController>();
+        if (player != null)
+        {
+            if (player.grabber != null && player.grabber.IsHoldingObject)
+            {
+                player.grabber.ReleaseObject(Vector3.zero);
+            }
+            if (!player.IsOnFoot && player.currentVehicle != null)
+            {
+                player.currentVehicle.ExitVehicle();
+            }
+        }
+
+        // 9. Comprehensive Canvas Panel Sweep (deactivate known active dialogs/modals in scene)
+        var allCanvases = Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        string[] panelsToDeactivate = new string[]
+        {
+            "CargoTabletPanel",
+            "GarageWorkshopPanel",
+            "InsuranceAgencyPanel",
+            "PassiveDispatchPanel",
+            "PropertyPurchaseModal",
+            "DeliverySelectionPanel",
+            "PauseMenuPanel",
+            "SettingsPanel",
+            "HeldCargoSideCard",
+            "InteractionPromptBox",
+            "ThrowSlideBG",
+            "VehicleDashboardPanel"
+        };
+
+        foreach (var canvas in allCanvases)
+        {
+            if (canvas == null) continue;
+            foreach (var panelName in panelsToDeactivate)
+            {
+                Transform t = FindTransformRecursive(canvas.transform, panelName);
+                if (t != null && t.gameObject != summaryPanelRoot && t.gameObject.activeSelf)
+                {
+                    t.gameObject.SetActive(false);
+                }
+            }
+        }
     }
 
     private void PopulateResultsList(List<CargoDeliveryResult> results)

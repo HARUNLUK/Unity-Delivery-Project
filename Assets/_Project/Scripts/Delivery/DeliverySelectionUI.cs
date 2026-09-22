@@ -168,4 +168,11 @@ public class DeliverySelectionUI : MonoBehaviour
 
         FPSPlayerController.LockCursor(true);
     }
+
+    public void ClosePanel()
+    {
+        if (panelRoot != null) panelRoot.SetActive(false);
+        selectedCargoItem = null;
+        currentActiveZone = null;
+    }
 }
