@@ -596,6 +596,18 @@ public class AudioManager : MonoBehaviour
         if (uiTabletClose != null) Play2DSound(uiTabletClose, uiTabletCloseVolume);
     }
 
+    public void PlayMenuOpen()
+    {
+        if (uiTabletOpen != null) Play2DSound(uiTabletOpen, uiTabletOpenVolume);
+        else PlayButtonClick();
+    }
+
+    public void PlayMenuClose()
+    {
+        if (uiTabletClose != null) Play2DSound(uiTabletClose, uiTabletCloseVolume);
+        else PlayButtonClick();
+    }
+
     public void PlayTabSwitch()
     {
         if (uiTabSwitch != null) Play2DSound(uiTabSwitch, uiTabSwitchVolume);

@@ -276,7 +276,15 @@ public class FPSPlayerController : MonoBehaviour
         if (BranchUpgradeTransitionUI.IsTransitioning)
             return true;
 
-        // 7. Direct scene hierarchy fallback for DaySummaryPanel
+        // 7. Delivery Tutorial Guide
+        if (DeliveryTutorialUI.Instance != null && DeliveryTutorialUI.Instance.IsOpen)
+            return true;
+
+        // 8. Game Over Screen
+        if (GameOverManager.Instance != null && GameOverManager.Instance.IsGameOver)
+            return true;
+
+        // 9. Direct scene hierarchy fallback for DaySummaryPanel
         GameObject dsp = GameObject.Find("DaySummaryPanel");
         if (dsp != null && dsp.activeInHierarchy)
             return true;

@@ -1200,6 +1200,22 @@
     {
       "key": "property_logistics_hub_desc",
       "value": "Kuryeler istihdam ederek pasif gelir elde edebileceğiniz lojistik dağıtım merkezi."
+    },
+    {
+      "key": "tutorial_title",
+      "value": "<b>LOJİSTİK VE KARGO TESLİMAT REHBERİ</b>"
+    },
+    {
+      "key": "tutorial_image_caption",
+      "value": "<b>Teslimat Noktası (Posta Kutusu)</b>\n<size=15><color=#A0C8FF>Kargoları binaların önündeki bu sarı/yeşil teslimat alanına veya posta kutusunun yanına bırakın.</color></size>"
+    },
+    {
+      "key": "tutorial_objective_body",
+      "value": "<b>OYUNUN AMACI VE ÇALIŞMA KURALLARI</b>\n\n<color=#FFD232><b>1. Kargoları Al ve Araca Yükle:</b></color>\nDepodaki veya şubendeki günlük kargoları <b>[E]</b> tuşuyla tutup aracının kasasına yerleştir.\n\n<color=#32FF64><b>2. Hedef Teslimat Noktasına Bırak:</b></color>\nKoli etiketindeki adresi ve alıcıyı bul. Şehirdeki ilgili binanın önünde yer alan <b>Posta Kutusu / Teslimat Alanına</b> kargoyu güvenle bırak.\n\n<color=#FFAA33><b>3. Gün Sonu Değerlendirmesi (18:00):</b></color>\nSaat 18:00'de vardiya biter. Doğru adresteki kargolardan <b>Teslimat Ücreti ($)</b> kazanırsın. Yanlış adrese bırakılan veya kırılan kargolardan ise <b>Ceza Kesilir!</b>\n\n<color=#00E5FF><b>4. Kırılabilir & Özel Kargolar:</b></color>\nKırılabilir (Fragile) kargoları fırlatmayın! <b>[TAB]</b> tuşuyla tabletinizi açıp siparişleri ve araç durumunu kontrol edin."
+    },
+    {
+      "key": "tutorial_btn_start",
+      "value": "ANLADIM, VARDİYAYA BAŞLA"
     }
   ]
 }

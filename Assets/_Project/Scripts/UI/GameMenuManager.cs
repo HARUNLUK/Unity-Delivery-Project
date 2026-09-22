@@ -1042,6 +1042,11 @@ public class GameMenuManager : MonoBehaviour
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
         if (settingsPanel != null) settingsPanel.SetActive(false);
         if (newGameModalPanel != null) newGameModalPanel.SetActive(false);
+
+        if (DeliveryTutorialUI.Instance != null)
+        {
+            DeliveryTutorialUI.Instance.CheckAndShowOnGameplayStart(isNewGame: false);
+        }
     }
 
     public static bool HasSaveData()
@@ -1260,7 +1265,7 @@ public class GameMenuManager : MonoBehaviour
             AudioManager.Instance.PlayButtonClick();
         }
 
-        StartGameplayTransition();
+        StartGameplayTransition(isNewGame: false);
     }
 
     public void OnNewGameButtonClicked()
@@ -1375,19 +1380,23 @@ public class GameMenuManager : MonoBehaviour
             PlayerPrefs.SetInt("Delivery_PassiveDispatchLevel", 1);
         }
 
-        // 8. Set Save Game flag
+        // 8. Reset tutorial preferences so the tutorial guide opens on the new game
+        PlayerPrefs.DeleteKey(DeliveryTutorialUI.PREF_TUTORIAL_DONT_SHOW);
+        PlayerPrefs.DeleteKey("Delivery_Tutorial_Seen");
+
+        // 9. Set Save Game flag
         PlayerPrefs.SetInt("Delivery_HasSaveGame", 1);
         PlayerPrefs.Save();
 
-        // 9. Update stats display and buttons
+        // 10. Update stats display and buttons
         UpdateMainMenuSaveStats();
         UpdateMainMenuButtons();
 
-        // 10. Start game transition
-        StartGameplayTransition();
+        // 11. Start game transition as a NEW GAME
+        StartGameplayTransition(isNewGame: true);
     }
 
-    private void StartGameplayTransition()
+    private void StartGameplayTransition(bool isNewGame = false)
     {
         PlayTransitionSequence(
             onBlackout: () =>
@@ -1426,6 +1435,11 @@ public class GameMenuManager : MonoBehaviour
             {
                 currentState = GameFlowState.Playing;
                 FPSPlayerController.LockCursor(true);
+
+                if (DeliveryTutorialUI.Instance != null)
+                {
+                    DeliveryTutorialUI.Instance.CheckAndShowOnGameplayStart(isNewGame);
+                }
             }
         );
     }

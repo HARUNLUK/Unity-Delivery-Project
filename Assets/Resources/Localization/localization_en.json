@@ -1200,6 +1200,22 @@
     {
       "key": "property_logistics_hub_desc",
       "value": "Logistics dispatch center to hire couriers and earn passive income."
+    },
+    {
+      "key": "tutorial_title",
+      "value": "<b>LOGISTICS & DELIVERY GUIDE</b>"
+    },
+    {
+      "key": "tutorial_image_caption",
+      "value": "<b>Delivery Point (Mailbox / Drop Zone)</b>\n<size=15><color=#A0C8FF>Leave packages at these yellow/green delivery zones or near the mailbox in front of target buildings.</color></size>"
+    },
+    {
+      "key": "tutorial_objective_body",
+      "value": "<b>GAME OBJECTIVE & WORK RULES</b>\n\n<color=#FFD232><b>1. Collect & Load Cargo:</b></color>\nPick up daily packages from your warehouse/branch using <b>[E]</b> and load them onto your vehicle bed.\n\n<color=#32FF64><b>2. Drop at Target Delivery Point:</b></color>\nCheck the label address and recipient name. Safely place the package at the <b>Mailbox / Delivery Zone</b> in front of the target building.\n\n<color=#FFAA33><b>3. End of Day Evaluation (18:00):</b></color>\nYour shift ends at 18:00. Correctly delivered packages grant <b>Delivery Earnings ($)</b>. Wrong addresses or broken packages incur <b>Penalties!</b>\n\n<color=#00E5FF><b>4. Fragile & Special Cargo:</b></color>\nDo not throw fragile packages! Press <b>[TAB]</b> to open your tablet to check active orders and vehicle status."
+    },
+    {
+      "key": "tutorial_btn_start",
+      "value": "GOT IT, START SHIFT"
     }
   ]
 }
