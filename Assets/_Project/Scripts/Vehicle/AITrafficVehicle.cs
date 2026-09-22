@@ -61,6 +61,13 @@ public class AITrafficVehicle : MonoBehaviour
     [Tooltip("Wheel radius in meters used for calculating rotational speed")]
     public float wheelRadius = 0.35f;
 
+    [Header("--- HORN SETTINGS (KORNA AYARLARI) ---")]
+    [Tooltip("Minimum seconds between horn honks when blocked by player/obstacle (default: 60.0s = 1 minute)")]
+    public float hornInterval = 60.0f;
+
+    [Tooltip("Initial delay before first horn honk when newly blocked (seconds)")]
+    public float initialHornDelay = 8.0f;
+
     [Header("--- POST-COLLISION & ANTI-STUCK ---")]
     [Tooltip("Duration to pause and wait after colliding with the player (seconds)")]
     public float playerCollisionPauseDuration = 3.5f;
@@ -100,6 +107,7 @@ public class AITrafficVehicle : MonoBehaviour
     public bool isTransitioningJunction = false;
     private float junctionTransitionProgress = 0f;
     private float junctionTransitionDuration = 1.0f;
+    private float approxCurveLength = 5.0f;
     private Vector3 bezierP0, bezierP1, bezierP2, bezierP3;
     private SplineTrafficManager.TrafficPathBranch pendingBranch;
     private float pendingBranchDistance;
@@ -253,7 +261,7 @@ public class AITrafficVehicle : MonoBehaviour
         uTurnProgress = 0f;
         isTransitioningJunction = false;
         junctionTransitionProgress = 0f;
-        hornCooldownTimer = Random.Range(2.0f, 4.0f);
+        hornCooldownTimer = Random.Range(initialHornDelay * 0.8f, initialHornDelay * 1.3f);
         baseEnginePitch = Random.Range(0.82f, 1.25f);
 
         // Start 3D Engine Audio with randomized pitch
@@ -304,11 +312,27 @@ public class AITrafficVehicle : MonoBehaviour
         }
     }
 
+    private void OnCollisionStay(Collision collision)
+    {
+        if (collision != null && collision.gameObject != null)
+        {
+            HandleVehicleCollisionStay(collision.gameObject);
+        }
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         if (other != null && other.gameObject != null)
         {
             HandleVehicleCollision(other.gameObject);
+        }
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        if (other != null && other.gameObject != null)
+        {
+            HandleVehicleCollisionStay(other.gameObject);
         }
     }
 
@@ -328,6 +352,24 @@ public class AITrafficVehicle : MonoBehaviour
             stunTimer = playerCollisionPauseDuration;
             currentSpeed = 0f;
             targetSpeed = 0f;
+        }
+    }
+
+    private void HandleVehicleCollisionStay(GameObject otherObj)
+    {
+        if (otherObj == null) return;
+
+        bool isPlayer = (otherObj.GetComponentInParent<FPSPlayerController>() != null ||
+                         otherObj.GetComponentInParent<DrivableVehicle>() != null ||
+                         otherObj.GetComponentInParent<CarController>() != null);
+
+        if (isPlayer)
+        {
+            // Instantly freeze speeds to eliminate kinematic pushing / battering-ram effect
+            currentSpeed = 0f;
+            targetSpeed = 0f;
+            isStunnedByCollision = true;
+            if (stunTimer < 1.5f) stunTimer = 1.5f;
         }
     }
 
@@ -364,7 +406,7 @@ public class AITrafficVehicle : MonoBehaviour
             engineAudioSource.volume = Mathf.Lerp(0.35f, 0.65f, speedRatio) * masterSfx;
         }
 
-        // Honk horn when blocked by player (on-foot or in car) or obstacle in front
+        // Honk horn when blocked by player (on-foot or in car) or obstacle in front (1 minute interval)
         if (isObstacleDetected && (isPlayerInFront || closestObstacleDistance <= hardStopDistance + 1.5f))
         {
             hornCooldownTimer -= Time.deltaTime;
@@ -374,33 +416,62 @@ public class AITrafficVehicle : MonoBehaviour
                 {
                     AudioManager.Instance.PlayTrafficHorn(transform.position);
                 }
-                hornCooldownTimer = Random.Range(3.0f, 5.5f);
+                // Cooldown: 1 minute (approx 58s - 64s around hornInterval)
+                hornCooldownTimer = hornInterval + Random.Range(-2.0f, 4.0f);
             }
         }
         else
         {
-            // Ready quick honk reaction time (0.8s - 1.2s) for when blocked next time
-            hornCooldownTimer = Mathf.Min(hornCooldownTimer, Random.Range(0.8f, 1.2f));
+            // Reset to initial reaction delay if path clears
+            if (hornCooldownTimer < initialHornDelay)
+            {
+                hornCooldownTimer = initialHornDelay + Random.Range(0f, 3.0f);
+            }
         }
 
         // 3. SPEED ADJUSTMENT (ACCELERATION & BRAKING)
         float accelRate = (targetSpeed < currentSpeed) ? brakeDeceleration : acceleration;
         currentSpeed = Mathf.MoveTowards(currentSpeed, targetSpeed, accelRate * Time.deltaTime);
 
-        // 4. ANTI-JAM DEADLOCK RECOVERY (Despawns after 10s motionless ONLY if player is NOT in front)
-        if (currentSpeed < 0.3f && !isStunnedByCollision)
+        // 4. ANTI-JAM DEADLOCK RECOVERY (Despawns after motionless duration if player is parked / blocked)
+        if (currentSpeed < 0.25f && !isStunnedByCollision)
         {
+            bool isPlayerMoving = false;
             if (isPlayerInFront)
             {
-                // Player or player's car is in front: patiently wait without despawning!
+                if (FPSPlayerController.Instance != null && FPSPlayerController.Instance.Controller != null && FPSPlayerController.Instance.Controller.velocity.sqrMagnitude > 0.1f)
+                {
+                    isPlayerMoving = true;
+                }
+                else if (DrivableVehicle.AllDrivableVehicles != null)
+                {
+                    for (int i = 0; i < DrivableVehicle.AllDrivableVehicles.Count; i++)
+                    {
+                        var dv = DrivableVehicle.AllDrivableVehicles[i];
+                        if (dv != null && dv.gameObject.activeInHierarchy)
+                        {
+                            Rigidbody dvRb = dv.GetComponent<Rigidbody>();
+                            if (dvRb != null && dvRb.linearVelocity.sqrMagnitude > 0.1f)
+                            {
+                                isPlayerMoving = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (isPlayerInFront && isPlayerMoving)
+            {
+                // Player is actively driving in front: wait patiently without despawning
                 stoppedDuration = 0f;
             }
             else
             {
+                // Player is parked, absent, or AI car is stuck: accumulate timer and safely despawn to free the road and player
                 stoppedDuration += Time.deltaTime;
                 if (stoppedDuration >= maxStuckDuration)
                 {
-                    // Car has been motionless for 10 seconds without player in front: recycle to pool
                     trafficManager.DespawnVehicle(this);
                     return;
                 }
@@ -414,6 +485,11 @@ public class AITrafficVehicle : MonoBehaviour
         // 5. CUL-DE-SAC / ROUND CAP SMOOTH 180-DEGREE FORWARD U-TURN ARC
         if (isPerformingUTurn)
         {
+            if (isObstacleDetected && closestObstacleDistance <= hardStopDistance)
+            {
+                currentSpeed = 0f;
+                targetSpeed = 0f;
+            }
             UpdateCulDeSacUTurn();
             AnimateWheels();
             return;
@@ -422,6 +498,11 @@ public class AITrafficVehicle : MonoBehaviour
         // 5.5. JUNCTION / INTERSECTION SMOOTH BEZIER TURNING
         if (isTransitioningJunction)
         {
+            if (isObstacleDetected && closestObstacleDistance <= hardStopDistance)
+            {
+                currentSpeed = 0f;
+                targetSpeed = 0f;
+            }
             UpdateJunctionTransition();
             AnimateWheels();
             return;
@@ -553,9 +634,9 @@ public class AITrafficVehicle : MonoBehaviour
 
         // Maintain constant cruising speed without artificial slowdown during path/point transitions
         float turnSpeed = cruiseSpeed;
-        float approxCurveLen = Mathf.Max(2.0f, chordLen * 1.15f);
+        approxCurveLength = Mathf.Max(2.0f, chordLen * 1.15f);
 
-        junctionTransitionDuration = Mathf.Max(0.2f, approxCurveLen / Mathf.Max(1.0f, turnSpeed));
+        junctionTransitionDuration = Mathf.Max(0.2f, approxCurveLength / Mathf.Max(1.0f, turnSpeed));
         junctionTransitionProgress = 0f;
         isTransitioningJunction = true;
 
@@ -569,11 +650,10 @@ public class AITrafficVehicle : MonoBehaviour
 
     private void UpdateJunctionTransition()
     {
-        junctionTransitionProgress += Time.deltaTime;
-        float t = Mathf.Clamp01(junctionTransitionProgress / Mathf.Max(0.1f, junctionTransitionDuration));
-
-        // Uniform linear progress (no ease-in/ease-out slowdown at waypoint/junction points!)
-        float smoothT = t;
+        // Advance progress based on current movement speed (pauses if stopped by obstacle/player)
+        float moveDist = currentSpeed * Time.deltaTime;
+        junctionTransitionProgress += moveDist / Mathf.Max(1.0f, approxCurveLength);
+        float smoothT = Mathf.Clamp01(junctionTransitionProgress);
 
         // Cubic Bezier interpolation
         Vector3 p01 = Vector3.Lerp(bezierP0, bezierP1, smoothT);
@@ -596,7 +676,7 @@ public class AITrafficVehicle : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * 14.0f);
         }
 
-        if (junctionTransitionProgress >= junctionTransitionDuration)
+        if (junctionTransitionProgress >= 1.0f)
         {
             // Transition smoothly finished at destination lane on new road!
             isTransitioningJunction = false;
@@ -647,8 +727,9 @@ public class AITrafficVehicle : MonoBehaviour
 
     private void UpdateCulDeSacUTurn()
     {
-        float arcSpeed = cruiseSpeed;
-        uTurnProgress += (arcSpeed * Time.deltaTime) / Mathf.Max(1.0f, uTurnLength);
+        // Advance progress based on current movement speed (pauses if stopped by obstacle/player)
+        float moveDist = currentSpeed * Time.deltaTime;
+        uTurnProgress += moveDist / Mathf.Max(1.0f, uTurnLength);
 
         float theta = Mathf.Clamp01(uTurnProgress) * Mathf.PI; // 0 to 180 degrees
         Vector3 arcPos, arcTangent;
@@ -715,15 +796,15 @@ public class AITrafficVehicle : MonoBehaviour
             ? (boxCollider.size.x * 0.5f)
             : (raySpreadWidth > 0.1f ? raySpreadWidth : 0.9f);
 
-        // Clearance corridor width: car width + tight safety margin
-        float corridorHalfWidth = carPhysicalHalfWidth + lateralSafetyMargin;
+        // Clearance corridor width: exact car physical half width + narrow safety margin (0.12m)
+        float corridorHalfWidth = carPhysicalHalfWidth + Mathf.Min(lateralSafetyMargin, 0.12f);
 
         Vector3 frontBumper = transform.position + (transform.forward * (forwardExtent - 0.05f));
         Vector3 mainOrigin = frontBumper + (Vector3.up * sensorHeight);
         Vector3 lowOrigin = frontBumper + (Vector3.up * Mathf.Max(0.25f, sensorHeight * 0.45f));
 
-        float innerRayOffset = carPhysicalHalfWidth * 0.5f;
-        float outerRayOffset = carPhysicalHalfWidth * 0.85f;
+        float innerRayOffset = carPhysicalHalfWidth * 0.45f;
+        float outerRayOffset = carPhysicalHalfWidth * 0.80f;
 
         // 1. MULTI-POINT FORWARD LASER RAYCAST GRID (Tightly aligned to vehicle body width)
         LaserRay[] rays = new LaserRay[]
@@ -740,9 +821,9 @@ public class AITrafficVehicle : MonoBehaviour
             new LaserRay { origin = lowOrigin - (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.75f },
             new LaserRay { origin = lowOrigin + (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.75f },
 
-            // Subtle Lateral Feeler Rays (Only 4.5 degrees, short range for tight turning clearance)
-            new LaserRay { origin = mainOrigin - (transform.right * outerRayOffset), direction = (Quaternion.Euler(0, -4.5f, 0) * transform.forward), maxDistance = 4.5f },
-            new LaserRay { origin = mainOrigin + (transform.right * outerRayOffset), direction = (Quaternion.Euler(0, 4.5f, 0) * transform.forward), maxDistance = 4.5f }
+            // Subtle Lateral Feeler Rays (Only 4.0 degrees, short range for tight turning clearance)
+            new LaserRay { origin = mainOrigin - (transform.right * outerRayOffset), direction = (Quaternion.Euler(0, -4.0f, 0) * transform.forward), maxDistance = 3.5f },
+            new LaserRay { origin = mainOrigin + (transform.right * outerRayOffset), direction = (Quaternion.Euler(0, 4.0f, 0) * transform.forward), maxDistance = 3.5f }
         };
 
         for (int i = 0; i < rays.Length; i++)
@@ -752,10 +833,17 @@ public class AITrafficVehicle : MonoBehaviour
             {
                 if (!IsValidObstacleHit(hit)) continue;
 
-                // Validate that the hit point is genuinely within the vehicle's driving corridor
+                // Validate that the hit point is strictly ahead of the bumper and genuinely inside corridor
                 Vector3 toHit = hit.point - transform.position;
+                float hitFwd = Vector3.Dot(toHit, transform.forward);
                 float hitSide = Mathf.Abs(Vector3.Dot(toHit, transform.right));
-                if (hitSide > corridorHalfWidth) continue;
+
+                // Hit must be in front of the front bumper
+                if (hitFwd < (forwardExtent - 0.1f)) continue;
+
+                // Narrow corridor threshold at long distances so road bends don't catch roadside objects
+                float effectiveCorridor = (hit.distance > 10.0f) ? (corridorHalfWidth * 0.85f) : corridorHalfWidth;
+                if (hitSide > effectiveCorridor) continue;
 
                 hitObstacle = true;
                 if (hit.distance < closestDist)
@@ -786,7 +874,7 @@ public class AITrafficVehicle : MonoBehaviour
             }
         }
 
-        // 3. PHYSICAL 3D PROXIMITY BARRIER (Eliminates vehicle overlapping/tailgating before it can start)
+        // 3. PHYSICAL 3D PROXIMITY BARRIER (Eliminates vehicle overlapping/tailgating against other AI vehicles)
         if (trafficManager != null && trafficManager.ActiveVehicles != null)
         {
             var activeList = trafficManager.ActiveVehicles;
@@ -801,13 +889,24 @@ public class AITrafficVehicle : MonoBehaviour
                 float sideDist = Mathf.Abs(Vector3.Dot(toOther, transform.right));
                 float yDist = Mathf.Abs(toOther.y);
 
-                // If other vehicle is inside our driving corridor in front
-                if (fwdDist > 0.05f && fwdDist < 5.2f && sideDist <= (corridorHalfWidth + 0.15f) && yDist < 2.5f)
+                float otherForwardExtent = (other.boxCollider != null && other.boxCollider.size.z > 0.1f)
+                    ? (other.boxCollider.center.z + other.boxCollider.size.z * 0.5f)
+                    : 2.0f;
+                float otherHalfWidth = (other.boxCollider != null && other.boxCollider.size.x > 0.1f)
+                    ? (other.boxCollider.size.x * 0.5f)
+                    : 0.9f;
+
+                float bumperToBumperDist = fwdDist - forwardExtent - otherForwardExtent;
+                float requiredAiClearance = carPhysicalHalfWidth + otherHalfWidth + 0.12f;
+
+                // If other vehicle is inside our driving corridor strictly in front
+                if (bumperToBumperDist >= -0.2f && bumperToBumperDist < 6.0f && sideDist < requiredAiClearance && yDist < 2.5f)
                 {
                     hitObstacle = true;
-                    if (fwdDist < closestDist)
+                    float effectiveBumperDist = Mathf.Max(0.05f, bumperToBumperDist);
+                    if (effectiveBumperDist < closestDist)
                     {
-                        closestDist = fwdDist;
+                        closestDist = effectiveBumperDist;
                     }
                 }
             }
@@ -828,20 +927,19 @@ public class AITrafficVehicle : MonoBehaviour
             // Distance measured from front bumper
             float playerDistFromBumper = playerFwd - forwardExtent;
 
-            // Detect player if inside vehicle's driving path corridor (with safety margin)
-            if (playerDistFromBumper > -0.6f && playerDistFromBumper < sensorDistance && playerSide <= (corridorHalfWidth + 0.65f) && playerY < 3.5f)
+            // Detect player strictly if ahead of the front bumper and inside driving corridor
+            if (playerDistFromBumper >= 0.1f && playerDistFromBumper < sensorDistance && playerSide <= (corridorHalfWidth + 0.25f) && playerY < 3.5f)
             {
                 hitObstacle = true;
                 hitPlayer = true;
-                float effectiveDist = Mathf.Max(0.05f, playerDistFromBumper);
-                if (effectiveDist < closestDist)
+                if (playerDistFromBumper < closestDist)
                 {
-                    closestDist = effectiveDist;
+                    closestDist = playerDistFromBumper;
                 }
             }
         }
 
-        // 5. PLAYER DRIVABLE VEHICLES PROXIMITY (Player's driven car or parked car blocking the road)
+        // 5. PLAYER DRIVABLE VEHICLES PROXIMITY (Player's driven car or parked car)
         if (DrivableVehicle.AllDrivableVehicles != null)
         {
             for (int i = 0; i < DrivableVehicle.AllDrivableVehicles.Count; i++)
@@ -854,14 +952,27 @@ public class AITrafficVehicle : MonoBehaviour
                 float carSide = Mathf.Abs(Vector3.Dot(toCar, transform.right));
                 float carY = Mathf.Abs(toCar.y);
 
-                float carDistFromBumper = carFwd - forwardExtent;
+                float playerCarHalfWidth = 1.0f;
+                float playerCarHalfLength = 2.2f;
+                BoxCollider dvCol = dv.GetComponent<BoxCollider>();
+                if (dvCol != null && dvCol.size.x > 0.1f)
+                {
+                    playerCarHalfWidth = dvCol.size.x * 0.5f;
+                    playerCarHalfLength = dvCol.size.z * 0.5f;
+                }
 
-                // Only consider if car is inside our lane/corridor directly ahead
-                if (carDistFromBumper > -0.6f && carDistFromBumper < sensorDistance && carSide <= (corridorHalfWidth + 0.50f) && carY < 3.5f)
+                // Metric distance from AI front bumper to player car's rear/front boundary
+                float frontToRearDist = carFwd - forwardExtent - playerCarHalfLength;
+
+                // Total lateral clearance required between centerlines to pass without touching
+                float requiredClearance = carPhysicalHalfWidth + playerCarHalfWidth + 0.15f;
+
+                // Only consider as front obstacle if player car is strictly ahead and lateral clearance overlaps
+                if (frontToRearDist >= -0.2f && frontToRearDist < sensorDistance && carSide < requiredClearance && carY < 3.5f)
                 {
                     hitObstacle = true;
                     hitPlayer = true;
-                    float effectiveDist = Mathf.Max(0.05f, carDistFromBumper);
+                    float effectiveDist = Mathf.Max(0.05f, frontToRearDist);
                     if (effectiveDist < closestDist)
                     {
                         closestDist = effectiveDist;
@@ -1208,14 +1319,14 @@ public class AITrafficVehicle : MonoBehaviour
             ? (boxCollider.size.x * 0.5f)
             : (raySpreadWidth > 0.1f ? raySpreadWidth : 0.9f);
 
-        float corridorHalfWidth = carPhysicalHalfWidth + lateralSafetyMargin;
+        float corridorHalfWidth = carPhysicalHalfWidth + Mathf.Min(lateralSafetyMargin, 0.12f);
 
         Vector3 frontBumper = transform.position + (transform.forward * (forwardExtent - 0.05f));
         Vector3 mainOrigin = frontBumper + (Vector3.up * sensorHeight);
         Vector3 lowOrigin = frontBumper + (Vector3.up * Mathf.Max(0.25f, sensorHeight * 0.45f));
 
-        float innerRayOffset = carPhysicalHalfWidth * 0.5f;
-        float outerRayOffset = carPhysicalHalfWidth * 0.85f;
+        float innerRayOffset = carPhysicalHalfWidth * 0.45f;
+        float outerRayOffset = carPhysicalHalfWidth * 0.80f;
 
         LaserRay[] rays = new LaserRay[]
         {
@@ -1227,8 +1338,8 @@ public class AITrafficVehicle : MonoBehaviour
             new LaserRay { origin = lowOrigin, direction = transform.forward, maxDistance = sensorDistance * 0.75f },
             new LaserRay { origin = lowOrigin - (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.75f },
             new LaserRay { origin = lowOrigin + (transform.right * innerRayOffset), direction = transform.forward, maxDistance = sensorDistance * 0.75f },
-            new LaserRay { origin = mainOrigin - (transform.right * outerRayOffset), direction = (Quaternion.Euler(0, -4.5f, 0) * transform.forward), maxDistance = 4.5f },
-            new LaserRay { origin = mainOrigin + (transform.right * outerRayOffset), direction = (Quaternion.Euler(0, 4.5f, 0) * transform.forward), maxDistance = 4.5f }
+            new LaserRay { origin = mainOrigin - (transform.right * outerRayOffset), direction = (Quaternion.Euler(0, -4.0f, 0) * transform.forward), maxDistance = 3.5f },
+            new LaserRay { origin = mainOrigin + (transform.right * outerRayOffset), direction = (Quaternion.Euler(0, 4.0f, 0) * transform.forward), maxDistance = 3.5f }
         };
 
         for (int i = 0; i < rays.Length; i++)
@@ -1239,8 +1350,11 @@ public class AITrafficVehicle : MonoBehaviour
                 if (IsValidObstacleHit(hit))
                 {
                     Vector3 toHit = hit.point - transform.position;
+                    float hitFwd = Vector3.Dot(toHit, transform.forward);
                     float hitSide = Mathf.Abs(Vector3.Dot(toHit, transform.right));
-                    if (hitSide <= corridorHalfWidth)
+                    float effectiveCorridor = (hit.distance > 10.0f) ? (corridorHalfWidth * 0.85f) : corridorHalfWidth;
+
+                    if (hitFwd >= (forwardExtent - 0.1f) && hitSide <= effectiveCorridor)
                     {
                         Gizmos.color = Color.red;
                         Gizmos.DrawLine(r.origin, hit.point);

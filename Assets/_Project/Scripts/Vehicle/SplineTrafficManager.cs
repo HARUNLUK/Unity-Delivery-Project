@@ -744,6 +744,24 @@ public class SplineTrafficManager : MonoBehaviour
             }
         }
 
+        // 1.5. Distance check against all player drivable vehicles (parked or driving)
+        if (DrivableVehicle.AllDrivableVehicles != null)
+        {
+            float minPlayerSpacing = minSpacing * 1.2f;
+            float sqrPlayerSpacing = minPlayerSpacing * minPlayerSpacing;
+            for (int i = 0; i < DrivableVehicle.AllDrivableVehicles.Count; i++)
+            {
+                var dv = DrivableVehicle.AllDrivableVehicles[i];
+                if (dv != null && dv.gameObject.activeInHierarchy)
+                {
+                    if ((dv.transform.position - pos).sqrMagnitude < sqrPlayerSpacing)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+
         // 2. Physical 3D overlap check: ensure no player car, traffic car, or physics obstacle exists at spawn spot
         Collider[] hits = Physics.OverlapSphere(pos + (Vector3.up * 0.8f), 2.5f, ~0, QueryTriggerInteraction.Ignore);
         for (int i = 0; i < hits.Length; i++)
