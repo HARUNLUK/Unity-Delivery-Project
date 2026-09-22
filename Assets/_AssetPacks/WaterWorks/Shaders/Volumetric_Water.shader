@@ -62,6 +62,7 @@ Shader "GapperGames/Volumetric_Water"
         #define VARYINGS_NEED_FOG_AND_VERTEX_LIGHT
         #define FEATURES_GRAPH_VERTEX
 
+    #include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShaderPass.hlsl"
     #define SHADERPASS SHADERPASS_FORWARD
     #define REQUIRE_DEPTH_TEXTURE
     #define REQUIRE_OPAQUE_TEXTURE
@@ -74,7 +75,6 @@ Shader "GapperGames/Volumetric_Water"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl"
         //#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DBuffer.hlsl"
-        //#include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShaderPass.hlsl"
 
     struct Attributes
     {

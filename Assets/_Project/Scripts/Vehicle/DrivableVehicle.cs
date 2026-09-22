@@ -401,7 +401,23 @@ public class DrivableVehicle : MonoBehaviour
             // 2. Debounce to prevent immediate exit on the frame of entry
             if (!isUIOpen && Time.time - enterTimestamp > 0.35f)
             {
-                bool exitPressed = KeyBindingManager.WasPressedThisFrame(GameAction.Interact) || KeyBindingManager.WasPressedThisFrame(GameAction.Vehicle);
+                bool atPump = FuelStationPump.IsVehicleNearAnyPump(this);
+                bool isRefueling = FuelStationPump.IsAnyPumpRefuelingVehicle(this);
+
+                bool exitPressed = false;
+                if (!isRefueling)
+                {
+                    if (atPump)
+                    {
+                        // While at fuel pump: [F] is used for refueling directly from the driver's seat.
+                        // Only [E] (Interact) will exit the vehicle, preventing accidental dismount during refueling.
+                        exitPressed = KeyBindingManager.WasPressedThisFrame(GameAction.Interact);
+                    }
+                    else
+                    {
+                        exitPressed = KeyBindingManager.WasPressedThisFrame(GameAction.Interact) || KeyBindingManager.WasPressedThisFrame(GameAction.Vehicle);
+                    }
+                }
 
                 if (exitPressed)
                 {

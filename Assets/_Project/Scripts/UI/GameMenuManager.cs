@@ -371,6 +371,8 @@ public class GameMenuManager : MonoBehaviour
                                    settingsPanel.GetComponentInChildren<SettingsLanguageUI>(true)?.languageDropdown;
             }
 
+            EnsureAllDropdownTemplates();
+
             if (controlsSection != null)
             {
                 mouseSensSlider = controlsSection.transform.Find("MouseSensRow/Slider")?.GetComponent<Slider>();
@@ -597,6 +599,7 @@ public class GameMenuManager : MonoBehaviour
             gvlg.childControlWidth = true;
             gvlg.childControlHeight = false;
 
+            languageDropdown = CreateDropdown("LanguageRow", graphicsSection.transform, "Oyun Dili / Language:", fontAsset);
             qualityDropdown = CreateDropdown("QualityRow", graphicsSection.transform, "Grafik Kalitesi:", fontAsset);
             fullscreenDropdown = CreateDropdown("FullscreenRow", graphicsSection.transform, "Ekran Modu:", fontAsset);
             resolutionDropdown = CreateDropdown("ResolutionRow", graphicsSection.transform, "Çözünürlük:", fontAsset);
@@ -781,7 +784,7 @@ public class GameMenuManager : MonoBehaviour
         GameObject row = new GameObject(name, typeof(RectTransform));
         row.transform.SetParent(parent, false);
         RectTransform rrt = row.GetComponent<RectTransform>();
-        rrt.sizeDelta = new Vector2(0, 40);
+        rrt.sizeDelta = new Vector2(0, 42);
         rrt.localScale = Vector3.one;
 
         GameObject lblObj = CreateElement("Label", row.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(10, 0), new Vector2(280, 36));
@@ -792,18 +795,69 @@ public class GameMenuManager : MonoBehaviour
         lbl.alignment = TextAlignmentOptions.Left;
         lbl.color = new Color(0.85f, 0.92f, 1f);
 
-        GameObject ddObj = CreateElement("Dropdown", row.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-10, 0), new Vector2(360, 38));
-        Image ddImg = ddObj.AddComponent<Image>();
-        ddImg.color = new Color(0.10f, 0.14f, 0.22f, 0.95f);
+        // Build fully working dropdown using TMP_DefaultControls factory (template, viewport, items, scrollbar)
+        TMP_DefaultControls.Resources res = new TMP_DefaultControls.Resources();
+        GameObject ddObj = TMP_DefaultControls.CreateDropdown(res);
+        ddObj.name = "Dropdown";
+        ddObj.transform.SetParent(row.transform, false);
 
-        TMP_Dropdown dd = ddObj.AddComponent<TMP_Dropdown>();
-        GameObject captionObj = CreateElement("Label", ddObj.transform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(-20, 0));
-        TextMeshProUGUI caption = captionObj.AddComponent<TextMeshProUGUI>();
-        if (font != null) caption.font = font;
-        caption.fontSize = 16;
-        caption.alignment = TextAlignmentOptions.Left;
-        caption.color = Color.white;
-        dd.captionText = caption;
+        RectTransform ddRt = ddObj.GetComponent<RectTransform>();
+        ddRt.anchorMin = new Vector2(1f, 0.5f);
+        ddRt.anchorMax = new Vector2(1f, 0.5f);
+        ddRt.pivot = new Vector2(1f, 0.5f);
+        ddRt.anchoredPosition = new Vector2(-10, 0);
+        ddRt.sizeDelta = new Vector2(360, 38);
+
+        Image ddImg = ddObj.GetComponent<Image>();
+        if (ddImg != null)
+        {
+            ddImg.color = new Color(0.10f, 0.14f, 0.22f, 0.95f);
+        }
+
+        TMP_Dropdown dd = ddObj.GetComponent<TMP_Dropdown>();
+        if (dd.captionText != null)
+        {
+            if (font != null) dd.captionText.font = font;
+            dd.captionText.fontSize = 16;
+            dd.captionText.alignment = TextAlignmentOptions.Left;
+            dd.captionText.color = Color.white;
+            RectTransform capRt = dd.captionText.GetComponent<RectTransform>();
+            if (capRt != null)
+            {
+                capRt.offsetMin = new Vector2(14, 0);
+                capRt.offsetMax = new Vector2(-36, 0);
+            }
+        }
+
+        if (dd.template != null)
+        {
+            RectTransform tempRt = dd.template;
+            tempRt.anchorMin = new Vector2(0f, 0f);
+            tempRt.anchorMax = new Vector2(1f, 0f);
+            tempRt.pivot = new Vector2(0.5f, 1f);
+            tempRt.anchoredPosition = new Vector2(0, -4);
+            tempRt.sizeDelta = new Vector2(0, 180);
+
+            Image tempImg = dd.template.GetComponent<Image>();
+            if (tempImg != null)
+            {
+                tempImg.color = new Color(0.06f, 0.09f, 0.15f, 0.98f);
+            }
+        }
+
+        if (dd.itemText != null)
+        {
+            if (font != null) dd.itemText.font = font;
+            dd.itemText.fontSize = 15;
+            dd.itemText.alignment = TextAlignmentOptions.Left;
+            dd.itemText.color = new Color(0.9f, 0.95f, 1f);
+            RectTransform itemTextRt = dd.itemText.GetComponent<RectTransform>();
+            if (itemTextRt != null)
+            {
+                itemTextRt.offsetMin = new Vector2(28, 0);
+                itemTextRt.offsetMax = new Vector2(-10, 0);
+            }
+        }
 
         return dd;
     }
@@ -1771,8 +1825,93 @@ public class GameMenuManager : MonoBehaviour
         }
     }
 
+    public void EnsureAllDropdownTemplates()
+    {
+        EnsureDropdownHasTemplate(qualityDropdown, 160f);
+        EnsureDropdownHasTemplate(fullscreenDropdown, 130f);
+        EnsureDropdownHasTemplate(resolutionDropdown, 220f);
+        EnsureDropdownHasTemplate(fpsLimitDropdown, 160f);
+    }
+
+    private void EnsureDropdownHasTemplate(TMP_Dropdown targetDropdown, float height = 180f)
+    {
+        if (targetDropdown == null) return;
+        if (targetDropdown.template != null && targetDropdown.itemText != null) return;
+
+        // Check if targetDropdown already has a child named "Template"
+        Transform existingChildTemplate = targetDropdown.transform.Find("Template");
+        if (existingChildTemplate != null)
+        {
+            targetDropdown.template = existingChildTemplate.GetComponent<RectTransform>();
+            targetDropdown.itemText = existingChildTemplate.GetComponentInChildren<TextMeshProUGUI>(true);
+            var imgs = existingChildTemplate.GetComponentsInChildren<Image>(true);
+            foreach (var img in imgs)
+            {
+                if (img.gameObject.name.IndexOf("check", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    targetDropdown.itemImage = img;
+                    break;
+                }
+            }
+            if (targetDropdown.template != null && targetDropdown.itemText != null)
+            {
+                targetDropdown.template.gameObject.SetActive(false);
+                return;
+            }
+        }
+
+        // 1. If languageDropdown has a template, clone it!
+        if (languageDropdown != null && languageDropdown.template != null)
+        {
+            RectTransform cloned = Instantiate(languageDropdown.template, targetDropdown.transform, false);
+            cloned.name = "Template";
+            cloned.anchorMin = new Vector2(0f, 0f);
+            cloned.anchorMax = new Vector2(1f, 0f);
+            cloned.pivot = new Vector2(0.5f, 1f);
+            cloned.anchoredPosition = new Vector2(0, -4);
+            cloned.sizeDelta = new Vector2(0, height);
+
+            targetDropdown.template = cloned;
+            targetDropdown.itemText = cloned.GetComponentInChildren<TextMeshProUGUI>(true);
+
+            var imgs = cloned.GetComponentsInChildren<Image>(true);
+            foreach (var img in imgs)
+            {
+                if (img.gameObject.name.IndexOf("check", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    targetDropdown.itemImage = img;
+                    break;
+                }
+            }
+
+            cloned.gameObject.SetActive(false);
+            return;
+        }
+
+        // 2. Fallback using TMP_DefaultControls
+        TMP_DefaultControls.Resources res = new TMP_DefaultControls.Resources();
+        GameObject dummy = TMP_DefaultControls.CreateDropdown(res);
+        TMP_Dropdown dummyDd = dummy.GetComponent<TMP_Dropdown>();
+        if (dummyDd != null && dummyDd.template != null)
+        {
+            RectTransform cloned = Instantiate(dummyDd.template, targetDropdown.transform, false);
+            cloned.name = "Template";
+            cloned.anchorMin = new Vector2(0f, 0f);
+            cloned.anchorMax = new Vector2(1f, 0f);
+            cloned.pivot = new Vector2(0.5f, 1f);
+            cloned.anchoredPosition = new Vector2(0, -4);
+            cloned.sizeDelta = new Vector2(0, height);
+
+            targetDropdown.template = cloned;
+            targetDropdown.itemText = cloned.GetComponentInChildren<TextMeshProUGUI>(true);
+            cloned.gameObject.SetActive(false);
+        }
+        Destroy(dummy);
+    }
+
     private void InitializeSettingsUI()
     {
+        EnsureAllDropdownTemplates();
         if (SettingsManager.Instance == null) return;
 
         // Populate Language Dropdown
@@ -1802,34 +1941,43 @@ public class GameMenuManager : MonoBehaviour
         {
             resolutionDropdown.ClearOptions();
             List<string> options = new List<string>();
-            int currentResIdx = 0;
 
-            Resolution[] resList = SettingsManager.Instance.AvailableResolutions;
+            Resolution[] resList = SettingsManager.Instance != null ? SettingsManager.Instance.AvailableResolutions : Screen.resolutions;
             if (resList != null && resList.Length > 0)
             {
                 for (int i = 0; i < resList.Length; i++)
                 {
-                    string option = $"{resList[i].width} x {resList[i].height} @ {(int)Math.Round(resList[i].refreshRateRatio.value)}Hz";
-                    options.Add(option);
-                    if (resList[i].width == Screen.currentResolution.width &&
-                        resList[i].height == Screen.currentResolution.height)
-                    {
-                        currentResIdx = i;
-                    }
+                    int hz = (int)Math.Round(resList[i].refreshRateRatio.value);
+                    string hzStr = hz > 0 ? $" @ {hz}Hz" : "";
+                    options.Add($"{resList[i].width} x {resList[i].height}{hzStr}");
                 }
-                resolutionDropdown.AddOptions(options);
-                resolutionDropdown.value = SettingsManager.Instance.resolutionIndex >= 0 ? SettingsManager.Instance.resolutionIndex : currentResIdx;
-                resolutionDropdown.RefreshShownValue();
             }
+
+            if (options.Count == 0)
+            {
+                options.Add("1920 x 1080 @ 60Hz");
+            }
+
+            resolutionDropdown.AddOptions(options);
+            int selectedRes = SettingsManager.Instance != null && SettingsManager.Instance.resolutionIndex >= 0 ? SettingsManager.Instance.resolutionIndex : 0;
+            resolutionDropdown.value = Mathf.Clamp(selectedRes, 0, options.Count - 1);
+            resolutionDropdown.RefreshShownValue();
         }
 
         // Populate Quality Dropdown
+        // Populate Quality Dropdown (Düşük, Orta, Yüksek, Ultra)
         if (qualityDropdown != null)
         {
             qualityDropdown.ClearOptions();
-            List<string> qOptions = new List<string>(QualitySettings.names);
+            List<string> qOptions = new List<string> {
+                LocalizationManager.Get("quality_low", "Düşük (Low)"),
+                LocalizationManager.Get("quality_med", "Orta (Medium)"),
+                LocalizationManager.Get("quality_high", "Yüksek (High)"),
+                LocalizationManager.Get("quality_ultra", "Ultra")
+            };
             qualityDropdown.AddOptions(qOptions);
-            qualityDropdown.value = SettingsManager.Instance.qualityLevel;
+            int curQ = SettingsManager.Instance != null ? SettingsManager.Instance.qualityLevel : 2;
+            qualityDropdown.value = Mathf.Clamp(curQ, 0, qOptions.Count - 1);
             qualityDropdown.RefreshShownValue();
         }
 
@@ -1886,9 +2034,27 @@ public class GameMenuManager : MonoBehaviour
         if (uiVolumeValText != null) uiVolumeValText.text = $"%{(int)(sm.uiVolume * 100)}";
 
         // 2. Graphics & Language
-        if (languageDropdown != null) languageDropdown.value = LocalizationManager.IsTurkish ? 0 : 1;
-        if (qualityDropdown != null) qualityDropdown.value = sm.qualityLevel;
-        if (fullscreenDropdown != null) fullscreenDropdown.value = sm.fullscreenMode;
+        if (languageDropdown != null) { languageDropdown.value = LocalizationManager.IsTurkish ? 0 : 1; languageDropdown.RefreshShownValue(); }
+        if (qualityDropdown != null) { qualityDropdown.value = sm.qualityLevel; qualityDropdown.RefreshShownValue(); }
+        if (fullscreenDropdown != null) { fullscreenDropdown.value = sm.fullscreenMode; fullscreenDropdown.RefreshShownValue(); }
+        if (resolutionDropdown != null)
+        {
+            if (sm.resolutionIndex >= 0 && sm.resolutionIndex < resolutionDropdown.options.Count)
+            {
+                resolutionDropdown.value = sm.resolutionIndex;
+            }
+            resolutionDropdown.RefreshShownValue();
+        }
+        if (fpsLimitDropdown != null)
+        {
+            int curFps = sm.targetFps;
+            if (curFps == 30) fpsLimitDropdown.value = 0;
+            else if (curFps == 60) fpsLimitDropdown.value = 1;
+            else if (curFps == 120) fpsLimitDropdown.value = 2;
+            else if (curFps == 144) fpsLimitDropdown.value = 3;
+            else fpsLimitDropdown.value = 4;
+            fpsLimitDropdown.RefreshShownValue();
+        }
         if (vsyncToggle != null) vsyncToggle.isOn = sm.vsyncEnabled;
 
         // 3. Controls
@@ -2345,6 +2511,10 @@ public class GameMenuManager : MonoBehaviour
             vsyncToggle.onValueChanged.AddListener(isOn =>
             {
                 SettingsManager.Instance.SetVSync(isOn);
+                if (isOn && fpsLimitDropdown != null)
+                {
+                    fpsLimitDropdown.SetValueWithoutNotify(4); // Unlimited (VSync controls sync)
+                }
             });
         }
 
@@ -2360,6 +2530,10 @@ public class GameMenuManager : MonoBehaviour
                 else if (idx == 3) fps = 144;
                 else fps = -1;
                 SettingsManager.Instance.SetTargetFps(fps);
+                if (fps > 0 && vsyncToggle != null)
+                {
+                    vsyncToggle.SetIsOnWithoutNotify(false);
+                }
             });
         }
 

@@ -57,7 +57,7 @@ public class SettingsManager : MonoBehaviour
     [Range(0f, 1f)] public float uiVolume = 0.85f;
 
     [Header("--- GRAPHICS SETTINGS ---")]
-    public int qualityLevel = 1; // 0: Mobile (Low), 1: PC (High/Ultra)
+    public int qualityLevel = 2; // 0: Düşük, 1: Orta, 2: Yüksek, 3: Ultra
     public int fullscreenMode = 0; // 0: Exclusive Fullscreen, 1: Borderless Windowed, 2: Windowed
     public int resolutionIndex = -1;
     public bool vsyncEnabled = true;
@@ -95,7 +95,63 @@ public class SettingsManager : MonoBehaviour
 
     private void CacheResolutions()
     {
-        availableResolutions = Screen.resolutions;
+        Resolution[] rawResolutions = Screen.resolutions;
+        List<Resolution> filtered = new List<Resolution>();
+
+        if (rawResolutions != null && rawResolutions.Length > 0)
+        {
+            var uniqueDict = new Dictionary<string, Resolution>();
+            for (int i = 0; i < rawResolutions.Length; i++)
+            {
+                var r = rawResolutions[i];
+                if (r.width < 640 || r.height < 480) continue;
+                string key = $"{r.width}x{r.height}";
+                if (!uniqueDict.ContainsKey(key) || r.refreshRateRatio.value > uniqueDict[key].refreshRateRatio.value)
+                {
+                    uniqueDict[key] = r;
+                }
+            }
+
+            filtered.AddRange(uniqueDict.Values);
+            filtered.Sort((a, b) =>
+            {
+                int cmp = b.width.CompareTo(a.width);
+                if (cmp != 0) return cmp;
+                return b.height.CompareTo(a.height);
+            });
+        }
+
+        // If in Editor or raw resolutions returned empty/few, ensure common 16:9 resolutions are available
+        int[][] commonRes = new int[][]
+        {
+            new int[] { 2560, 1440 },
+            new int[] { 1920, 1080 },
+            new int[] { 1600, 900 },
+            new int[] { 1366, 768 },
+            new int[] { 1280, 720 },
+            new int[] { 1024, 768 },
+            new int[] { 800, 600 }
+        };
+
+        foreach (var cr in commonRes)
+        {
+            if (!filtered.Exists(r => r.width == cr[0] && r.height == cr[1]))
+            {
+                Resolution fallbackRes = Screen.currentResolution;
+                fallbackRes.width = cr[0];
+                fallbackRes.height = cr[1];
+                filtered.Add(fallbackRes);
+            }
+        }
+
+        filtered.Sort((a, b) =>
+        {
+            int cmp = b.width.CompareTo(a.width);
+            if (cmp != 0) return cmp;
+            return b.height.CompareTo(a.height);
+        });
+
+        availableResolutions = filtered.ToArray();
     }
 
     public void LoadAllSettings()
@@ -107,24 +163,31 @@ public class SettingsManager : MonoBehaviour
         ambienceVolume = PlayerPrefs.GetFloat(KEY_AMBIENCE_VOL, 0.6f);
         uiVolume = PlayerPrefs.GetFloat(KEY_UI_VOL, 0.85f);
 
-        // 2. Graphics (Default to PC Quality Level 1 on Standalone/Editor)
-        int defaultQuality = Mathf.Max(0, QualitySettings.names.Length - 1); // Highest quality (1: PC)
-        if (PlayerPrefs.HasKey(KEY_QUALITY_LEVEL))
-        {
-            qualityLevel = PlayerPrefs.GetInt(KEY_QUALITY_LEVEL, defaultQuality);
-            // If saved as 0 on PC/Standalone from previous test, recover to PC quality
-            if (qualityLevel < 1 && QualitySettings.names.Length > 1 && Application.platform == RuntimePlatform.WindowsEditor || Application.platform == RuntimePlatform.WindowsPlayer)
-            {
-                qualityLevel = 1;
-            }
-        }
-        else
-        {
-            qualityLevel = defaultQuality;
-        }
+        // 2. Graphics (0: Düşük, 1: Orta, 2: Yüksek, 3: Ultra)
+        qualityLevel = Mathf.Clamp(PlayerPrefs.GetInt(KEY_QUALITY_LEVEL, 2), 0, 3);
 
         fullscreenMode = PlayerPrefs.GetInt(KEY_FULLSCREEN_MODE, 0);
         resolutionIndex = PlayerPrefs.GetInt(KEY_RESOLUTION_INDEX, -1);
+        if (availableResolutions != null && availableResolutions.Length > 0)
+        {
+            if (resolutionIndex < 0 || resolutionIndex >= availableResolutions.Length)
+            {
+                resolutionIndex = 0;
+                for (int i = 0; i < availableResolutions.Length; i++)
+                {
+                    if (availableResolutions[i].width == Screen.currentResolution.width &&
+                        availableResolutions[i].height == Screen.currentResolution.height)
+                    {
+                        resolutionIndex = i;
+                        break;
+                    }
+                    if (availableResolutions[i].width == 1920 && availableResolutions[i].height == 1080)
+                    {
+                        resolutionIndex = i;
+                    }
+                }
+            }
+        }
         vsyncEnabled = PlayerPrefs.GetInt(KEY_VSYNC, 1) == 1;
         targetFps = PlayerPrefs.GetInt(KEY_TARGET_FPS, 60);
 
@@ -241,10 +304,66 @@ public class SettingsManager : MonoBehaviour
     #region --- GRAPHICS APPLICATION ---
     public void ApplyGraphicsSettings()
     {
-        // 1. Quality Level
-        if (qualityLevel >= 0 && qualityLevel < QualitySettings.names.Length)
+        // 1. Quality Level (0: Düşük, 1: Orta, 2: Yüksek, 3: Ultra)
+        qualityLevel = Mathf.Clamp(qualityLevel, 0, 3);
+
+        int baseLevel = (qualityLevel == 0) ? 0 : 1;
+        if (baseLevel < QualitySettings.names.Length)
         {
-            QualitySettings.SetQualityLevel(qualityLevel, true);
+            QualitySettings.SetQualityLevel(baseLevel, true);
+        }
+
+        var urpAsset = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline as UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset;
+
+        switch (qualityLevel)
+        {
+            case 0: // DÜŞÜK (LOW)
+                QualitySettings.lodBias = 0.7f;
+                QualitySettings.shadowDistance = 35f;
+                QualitySettings.anisotropicFiltering = AnisotropicFiltering.Disable;
+                QualitySettings.globalTextureMipmapLimit = 1;
+                if (urpAsset != null)
+                {
+                    urpAsset.renderScale = 0.75f;
+                    urpAsset.shadowDistance = 35f;
+                }
+                break;
+
+            case 1: // ORTA (MEDIUM)
+                QualitySettings.lodBias = 1.0f;
+                QualitySettings.shadowDistance = 60f;
+                QualitySettings.anisotropicFiltering = AnisotropicFiltering.Enable;
+                QualitySettings.globalTextureMipmapLimit = 0;
+                if (urpAsset != null)
+                {
+                    urpAsset.renderScale = 0.85f;
+                    urpAsset.shadowDistance = 60f;
+                }
+                break;
+
+            case 2: // YÜKSEK (HIGH)
+                QualitySettings.lodBias = 1.5f;
+                QualitySettings.shadowDistance = 100f;
+                QualitySettings.anisotropicFiltering = AnisotropicFiltering.ForceEnable;
+                QualitySettings.globalTextureMipmapLimit = 0;
+                if (urpAsset != null)
+                {
+                    urpAsset.renderScale = 1.0f;
+                    urpAsset.shadowDistance = 100f;
+                }
+                break;
+
+            case 3: // ULTRA
+                QualitySettings.lodBias = 2.2f;
+                QualitySettings.shadowDistance = 150f;
+                QualitySettings.anisotropicFiltering = AnisotropicFiltering.ForceEnable;
+                QualitySettings.globalTextureMipmapLimit = 0;
+                if (urpAsset != null)
+                {
+                    urpAsset.renderScale = 1.0f;
+                    urpAsset.shadowDistance = 150f;
+                }
+                break;
         }
 
         // 2. V-Sync & Target FPS
@@ -269,8 +388,8 @@ public class SettingsManager : MonoBehaviour
 
     public void SetQualityLevel(int level)
     {
-        qualityLevel = Mathf.Clamp(level, 0, Mathf.Max(0, QualitySettings.names.Length - 1));
-        QualitySettings.SetQualityLevel(qualityLevel, true);
+        qualityLevel = Mathf.Clamp(level, 0, 3);
+        ApplyGraphicsSettings();
     }
 
     public void SetFullscreenMode(int mode)
@@ -305,9 +424,20 @@ public class SettingsManager : MonoBehaviour
     public void SetTargetFps(int fps)
     {
         targetFps = fps;
-        if (!vsyncEnabled)
+        if (targetFps > 0)
         {
+            // Explicit FPS cap: turn off vsync so targetFrameRate takes immediate effect
+            vsyncEnabled = false;
+            QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = targetFps;
+        }
+        else
+        {
+            // Unlimited (-1)
+            if (!vsyncEnabled)
+            {
+                Application.targetFrameRate = -1;
+            }
         }
     }
     #endregion

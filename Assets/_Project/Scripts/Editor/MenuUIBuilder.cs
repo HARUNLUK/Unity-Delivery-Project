@@ -519,19 +519,68 @@ public static class MenuUIBuilder
         lbl.alignment = TextAlignmentOptions.Left;
         lbl.color = new Color(0.85f, 0.92f, 1f);
 
-        GameObject ddObj = CreateUIElement("Dropdown", row.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-10, 0), new Vector2(360, 38));
-        Image ddImg = ddObj.AddComponent<Image>();
-        ddImg.color = new Color(0.10f, 0.14f, 0.22f, 0.95f);
+        TMP_DefaultControls.Resources res = new TMP_DefaultControls.Resources();
+        GameObject ddObj = TMP_DefaultControls.CreateDropdown(res);
+        ddObj.name = "Dropdown";
+        ddObj.transform.SetParent(row.transform, false);
 
-        TMP_Dropdown dd = ddObj.AddComponent<TMP_Dropdown>();
+        RectTransform ddRt = ddObj.GetComponent<RectTransform>();
+        ddRt.anchorMin = new Vector2(1f, 0.5f);
+        ddRt.anchorMax = new Vector2(1f, 0.5f);
+        ddRt.pivot = new Vector2(1f, 0.5f);
+        ddRt.anchoredPosition = new Vector2(-10, 0);
+        ddRt.sizeDelta = new Vector2(360, 38);
 
-        GameObject captionObj = CreateUIElement("Label", ddObj.transform, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(-20, 0));
-        TextMeshProUGUI caption = captionObj.AddComponent<TextMeshProUGUI>();
-        if (font != null) caption.font = font;
-        caption.fontSize = 16;
-        caption.alignment = TextAlignmentOptions.Left;
-        caption.color = Color.white;
-        dd.captionText = caption;
+        Image ddImg = ddObj.GetComponent<Image>();
+        if (ddImg != null)
+        {
+            ddImg.color = new Color(0.10f, 0.14f, 0.22f, 0.95f);
+        }
+
+        TMP_Dropdown dd = ddObj.GetComponent<TMP_Dropdown>();
+        if (dd.captionText != null)
+        {
+            if (font != null) dd.captionText.font = font;
+            dd.captionText.fontSize = 16;
+            dd.captionText.alignment = TextAlignmentOptions.Left;
+            dd.captionText.color = Color.white;
+            RectTransform capRt = dd.captionText.GetComponent<RectTransform>();
+            if (capRt != null)
+            {
+                capRt.offsetMin = new Vector2(14, 0);
+                capRt.offsetMax = new Vector2(-36, 0);
+            }
+        }
+
+        if (dd.template != null)
+        {
+            RectTransform tempRt = dd.template;
+            tempRt.anchorMin = new Vector2(0f, 0f);
+            tempRt.anchorMax = new Vector2(1f, 0f);
+            tempRt.pivot = new Vector2(0.5f, 1f);
+            tempRt.anchoredPosition = new Vector2(0, -4);
+            tempRt.sizeDelta = new Vector2(0, 180);
+
+            Image tempImg = dd.template.GetComponent<Image>();
+            if (tempImg != null)
+            {
+                tempImg.color = new Color(0.06f, 0.09f, 0.15f, 0.98f);
+            }
+        }
+
+        if (dd.itemText != null)
+        {
+            if (font != null) dd.itemText.font = font;
+            dd.itemText.fontSize = 15;
+            dd.itemText.alignment = TextAlignmentOptions.Left;
+            dd.itemText.color = new Color(0.9f, 0.95f, 1f);
+            RectTransform itemTextRt = dd.itemText.GetComponent<RectTransform>();
+            if (itemTextRt != null)
+            {
+                itemTextRt.offsetMin = new Vector2(28, 0);
+                itemTextRt.offsetMax = new Vector2(-10, 0);
+            }
+        }
 
         return dd;
     }

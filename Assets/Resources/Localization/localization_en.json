@@ -263,7 +263,7 @@
     },
     {
       "key": "hud_remaining_cargo",
-      "value": "Remaining: {0} / {1}"
+      "value": "{0} / {1}"
     },
     {
       "key": "hud_held_cargo_header",
@@ -968,6 +968,10 @@
     {
       "key": "prompt_gas_station_hold_refuel",
       "value": "<b>{0}</b>: Hold <color=#32FF64>[F]</color> or <color=#32FF64>[E]</color> -> <b>Refuel Vehicle</b> (${1:F0}/L)"
+    },
+    {
+      "key": "prompt_gas_station_hold_refuel_in_car",
+      "value": "<b>{0}</b>: Hold <color=#32FF64>[F]</color> -> <b>Refuel</b> (${1:F0}/L) | <color=#FFCC00>[E]</color> Exit"
     },
     {
       "key": "prompt_explosion_emergency",

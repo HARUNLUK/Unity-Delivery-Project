@@ -263,7 +263,7 @@
     },
     {
       "key": "hud_remaining_cargo",
-      "value": "Kalan: {0} / {1}"
+      "value": "{0} / {1}"
     },
     {
       "key": "hud_held_cargo_header",
@@ -968,6 +968,10 @@
     {
       "key": "prompt_gas_station_hold_refuel",
       "value": "<b>{0}</b>: <color=#32FF64>[F]</color> veya <color=#32FF64>[E]</color> Basılı Tut -> <b>Yakıt Doldur</b> (${1:F0}/L)"
+    },
+    {
+      "key": "prompt_gas_station_hold_refuel_in_car",
+      "value": "<b>{0}</b>: <color=#32FF64>[F]</color> Basılı Tut -> <b>Yakıt Doldur</b> (${1:F0}/L) | <color=#FFCC00>[E]</color> İn"
     },
     {
       "key": "prompt_explosion_emergency",

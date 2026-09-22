@@ -19,6 +19,9 @@ public class FuelStationPump : MonoBehaviour
     [Tooltip("Optional light that turns green while pumping fuel")]
     public Light pumpStatusLight;
 
+    [Tooltip("Maximum interaction and detection distance from pump center in meters")]
+    public float interactionDistance = 8.5f;
+
     private Collider triggerCollider;
     private float accumulatedCost = 0f;
     private bool isActivelyRefueling = false;
@@ -26,6 +29,42 @@ public class FuelStationPump : MonoBehaviour
     private readonly HashSet<Collider> insideColliders = new HashSet<Collider>();
     private bool wasShowingPrompt = false;
     private float lastErrorSoundTime = 0f;
+
+    private static readonly List<FuelStationPump> activePumps = new List<FuelStationPump>();
+
+    public static bool IsVehicleNearAnyPump(DrivableVehicle veh)
+    {
+        if (veh == null) return false;
+        for (int i = 0; i < activePumps.Count; i++)
+        {
+            var p = activePumps[i];
+            if (p != null && p.gameObject.activeInHierarchy)
+            {
+                if (Vector3.Distance(p.transform.position, veh.transform.position) <= p.interactionDistance)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static bool IsAnyPumpRefuelingVehicle(DrivableVehicle veh)
+    {
+        if (veh == null) return false;
+        for (int i = 0; i < activePumps.Count; i++)
+        {
+            var p = activePumps[i];
+            if (p != null && p.gameObject.activeInHierarchy && p.isActivelyRefueling)
+            {
+                if (Vector3.Distance(p.transform.position, veh.transform.position) <= p.interactionDistance)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     private void Awake()
     {
@@ -37,6 +76,14 @@ public class FuelStationPump : MonoBehaviour
 
         EnsurePumpAudioSource();
         SetPumpLightActive(false);
+    }
+
+    private void OnEnable()
+    {
+        if (!activePumps.Contains(this))
+        {
+            activePumps.Add(this);
+        }
     }
 
     private void EnsurePumpAudioSource()
@@ -59,11 +106,15 @@ public class FuelStationPump : MonoBehaviour
 
     private void OnDisable()
     {
+        activePumps.Remove(this);
         StopPumpingAudio();
+        SetPumpLightActive(false);
+        isActivelyRefueling = false;
         if (wasShowingPrompt && InteractionPromptHUD.Instance != null)
         {
             InteractionPromptHUD.Instance.HidePrompt();
         }
+        wasShowingPrompt = false;
         insideColliders.Clear();
     }
 
@@ -94,12 +145,18 @@ public class FuelStationPump : MonoBehaviour
 
     private void Update()
     {
-        // 1. Clean up stale/destroyed colliders
-        insideColliders.RemoveWhere(c => c == null || !c.gameObject.activeInHierarchy);
+        // 1. Clean up stale/destroyed colliders and those beyond interaction distance
+        insideColliders.RemoveWhere(c => c == null || !c.gameObject.activeInHierarchy || Vector3.Distance(transform.position, c.transform.position) > interactionDistance);
 
         // 2. Identify target vehicle and whether player/car is present at this pump
         DrivableVehicle targetVehicle = FindActiveVehicle();
         bool isPlayerPresent = IsPlayerNearPump();
+
+        // Strict distance re-verification
+        if (targetVehicle != null && Vector3.Distance(transform.position, targetVehicle.transform.position) > interactionDistance)
+        {
+            targetVehicle = null;
+        }
 
         if (targetVehicle == null && !isPlayerPresent)
         {
@@ -142,6 +199,7 @@ public class FuelStationPump : MonoBehaviour
             {
                 StopPumpingAudio();
                 SetPumpLightActive(false);
+                isActivelyRefueling = false;
             }
 
             if (InteractionPromptHUD.Instance != null)
@@ -280,7 +338,9 @@ public class FuelStationPump : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_gas_station_hold_refuel", GetStationDisplayName(), pricePerLiter));
+                bool isOnFoot = FPSPlayerController.Instance != null && FPSPlayerController.Instance.IsOnFoot;
+                string promptKey = isOnFoot ? "prompt_gas_station_hold_refuel" : "prompt_gas_station_hold_refuel_in_car";
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat(promptKey, GetStationDisplayName(), pricePerLiter));
                 wasShowingPrompt = true;
             }
         }
@@ -292,30 +352,28 @@ public class FuelStationPump : MonoBehaviour
         if (FPSPlayerController.Instance != null && !FPSPlayerController.Instance.IsOnFoot && FPSPlayerController.Instance.currentVehicleTransform != null)
         {
             DrivableVehicle drivenVeh = FPSPlayerController.Instance.currentVehicleTransform.GetComponent<DrivableVehicle>();
-            if (drivenVeh != null)
+            if (drivenVeh != null && Vector3.Distance(transform.position, drivenVeh.transform.position) <= interactionDistance)
             {
-                if (IsInsideTrigger(drivenVeh.gameObject) || Vector3.Distance(transform.position, drivenVeh.transform.position) <= 12f)
-                {
-                    return drivenVeh;
-                }
+                return drivenVeh;
             }
         }
 
-        // 2. Search inside tracked trigger colliders
+        // 2. Search inside tracked trigger colliders within distance
         foreach (Collider col in insideColliders)
         {
             if (col == null) continue;
+            if (Vector3.Distance(transform.position, col.transform.position) > interactionDistance) continue;
             DrivableVehicle v = col.GetComponentInParent<DrivableVehicle>();
             if (v == null) v = col.GetComponent<DrivableVehicle>();
-            if (v != null) return v;
+            if (v != null && Vector3.Distance(transform.position, v.transform.position) <= interactionDistance) return v;
         }
 
-        // 3. If player is on foot near the pump, find nearest vehicle in vicinity
+        // 3. If player is on foot near the pump, find nearest vehicle within interactionDistance
         if (IsPlayerNearPump())
         {
             DrivableVehicle[] allVehicles = UnityEngine.Object.FindObjectsByType<DrivableVehicle>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
             DrivableVehicle closest = null;
-            float minDist = 11.0f; // 11 meters detection bubble around pump
+            float minDist = interactionDistance;
 
             foreach (var veh in allVehicles)
             {
@@ -338,17 +396,23 @@ public class FuelStationPump : MonoBehaviour
     {
         if (FPSPlayerController.Instance == null) return false;
 
-        // Check if player collider is inside trigger
-        if (IsInsideTrigger(FPSPlayerController.Instance.gameObject)) return true;
-
-        // Proximity fallback
         float dist = Vector3.Distance(transform.position, FPSPlayerController.Instance.transform.position);
-        return dist <= 8.5f;
+        if (dist > interactionDistance) return false;
+
+        // If player is driving a vehicle, check vehicle distance rather than player position
+        if (!FPSPlayerController.Instance.IsOnFoot && FPSPlayerController.Instance.currentVehicleTransform != null)
+        {
+            float vDist = Vector3.Distance(transform.position, FPSPlayerController.Instance.currentVehicleTransform.position);
+            return vDist <= interactionDistance;
+        }
+
+        return dist <= interactionDistance;
     }
 
     private bool IsInsideTrigger(GameObject obj)
     {
         if (obj == null) return false;
+        if (Vector3.Distance(transform.position, obj.transform.position) > interactionDistance) return false;
 
         foreach (var col in insideColliders)
         {
