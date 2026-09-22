@@ -346,6 +346,34 @@
       "value": "Stabilite"
     },
     {
+      "key": "badge_explosive_danger",
+      "value": "PATLAYICI - TEHLİKE"
+    },
+    {
+      "key": "badge_explosive_stability",
+      "value": "PATLAYICI DENGESİ %{0}"
+    },
+    {
+      "key": "badge_exploded",
+      "value": "PATLADI / İMHA OLDU"
+    },
+    {
+      "key": "badge_broken",
+      "value": "KIRILDI / HASARLI"
+    },
+    {
+      "key": "badge_fragile",
+      "value": "HASSAS"
+    },
+    {
+      "key": "badge_fragile_health",
+      "value": "HASSAS %{0}"
+    },
+    {
+      "key": "badge_express",
+      "value": "EKSPRES - {0}"
+    },
+    {
       "key": "cargo_no_clue",
       "value": "Bu adres için özel bir ipucu bulunmuyor."
     },
@@ -476,6 +504,46 @@
     {
       "key": "vehicle_btn_recall_free",
       "value": "ŞUBE GARAJINA ÇEK (Ücretsiz)"
+    },
+    {
+      "key": "vehicle_name_pickup_truck",
+      "value": "Pikap Kamyonet"
+    },
+    {
+      "key": "vehicle_desc_pickup_truck",
+      "value": "Çevik ve pratik başlangıç seviyesi kargo dağıtım aracı."
+    },
+    {
+      "key": "vehicle_name_pickup",
+      "value": "Pikap Kamyonet"
+    },
+    {
+      "key": "vehicle_desc_pickup",
+      "value": "Çevik ve pratik başlangıç seviyesi kargo dağıtım aracı."
+    },
+    {
+      "key": "vehicle_name_driveable_van",
+      "value": "Ticari Kargo Van"
+    },
+    {
+      "key": "vehicle_desc_driveable_van",
+      "value": "Yüksek koli taşıma kapasitesine sahip geniş ticari teslimat aracı."
+    },
+    {
+      "key": "vehicle_name_cargo_van",
+      "value": "Ticari Kargo Van"
+    },
+    {
+      "key": "vehicle_desc_cargo_van",
+      "value": "Yüksek koli taşıma kapasitesine sahip geniş ticari teslimat aracı."
+    },
+    {
+      "key": "vehicle_name_cargo_van_01",
+      "value": "Ağır Kargo Van"
+    },
+    {
+      "key": "vehicle_desc_cargo_van_01",
+      "value": "Yüksek koli kapasitesine sahip ticari kargo teslimat aracı."
     },
     {
       "key": "branch_current_title",

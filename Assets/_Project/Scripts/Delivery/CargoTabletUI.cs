@@ -255,6 +255,12 @@ public class CargoTabletUI : MonoBehaviour
         }
 
         UpdateTabVisuals();
+        if (isTabletOpen)
+        {
+            if (currentTab == TabletTab.CargoInventory) PopulateCargoList();
+            else if (currentTab == TabletTab.VehicleDealership) PopulateVehicleList();
+            else if (currentTab == TabletTab.BranchOffice) PopulateBranchInfo();
+        }
     }
 
     private void HandleBranchUpgraded(int lvl, BranchTier tier)
@@ -776,13 +782,14 @@ public class CargoTabletUI : MonoBehaviour
             TextMeshProUGUI label = cardObj.GetComponentInChildren<TextMeshProUGUI>();
             if (label != null)
             {
+                string vName = v.GetLocalizedName();
                 if (v.IsUnlocked)
                 {
-                    label.text = $"<b>{v.vehicleName}</b>\n[{LocalizationManager.Get("vehicle_status_owned", "OWNED")}]";
+                    label.text = $"<b>{vName}</b>\n[{LocalizationManager.Get("vehicle_status_owned", "OWNED")}]";
                 }
                 else
                 {
-                    label.text = $"<b>{v.vehicleName}</b>\n${v.purchasePrice:N0} ({LocalizationManager.GetFormat("vehicle_lvl_req", v.requiredPlayerLevel)})";
+                    label.text = $"<b>{vName}</b>\n${v.purchasePrice:N0} ({LocalizationManager.GetFormat("vehicle_lvl_req", v.requiredPlayerLevel)})";
                 }
                 label.raycastTarget = false;
             }
@@ -829,8 +836,8 @@ public class CargoTabletUI : MonoBehaviour
 
         if (vehicleDetailRoot != null) vehicleDetailRoot.SetActive(true);
 
-        if (vehicleNameText != null) vehicleNameText.text = v.vehicleName;
-        if (vehicleDescText != null) vehicleDescText.text = v.description;
+        if (vehicleNameText != null) vehicleNameText.text = v.GetLocalizedName();
+        if (vehicleDescText != null) vehicleDescText.text = v.GetLocalizedDescription();
 
         float fuelPct = v.maxFuel > 0 ? (v.currentFuel / v.maxFuel) * 100f : 0f;
         string fuelColor = v.currentFuel <= 0.05f ? "#FF4444" : (fuelPct < 25f ? "#FFAA33" : "#32FF64");
@@ -923,7 +930,7 @@ public class CargoTabletUI : MonoBehaviour
                             PopulateVehicleList();
                             if (InteractionPromptHUD.Instance != null)
                             {
-                                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_emergency_fuel_delivered", fuelToAdd, v.vehicleName, fuelCost));
+                                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_emergency_fuel_delivered", fuelToAdd, v.GetLocalizedName(), fuelCost));
                             }
                         }
                         else

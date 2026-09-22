@@ -227,6 +227,61 @@ public class DrivableVehicle : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Returns localized display name of the vehicle from localization database.
+    /// </summary>
+    public string GetLocalizedName()
+    {
+        string id = EffectiveVehicleId;
+        string key1 = "vehicle_name_" + id;
+        if (LocalizationManager.HasKey(key1)) return LocalizationManager.Get(key1);
+
+        if (!string.IsNullOrEmpty(vehicleId))
+        {
+            string key2 = "vehicle_name_" + vehicleId.ToLower().Trim();
+            if (LocalizationManager.HasKey(key2)) return LocalizationManager.Get(key2);
+        }
+
+        string cleanName = !string.IsNullOrEmpty(vehicleName) ? vehicleName.ToLower().Replace(" ", "_").Trim() : "";
+        if (!string.IsNullOrEmpty(cleanName))
+        {
+            string key3 = "vehicle_name_" + cleanName;
+            if (LocalizationManager.HasKey(key3)) return LocalizationManager.Get(key3);
+        }
+
+        return !string.IsNullOrEmpty(vehicleName) ? vehicleName : "Vehicle";
+    }
+
+    /// <summary>
+    /// Returns localized description of the vehicle from localization database.
+    /// </summary>
+    public string GetLocalizedDescription()
+    {
+        string id = EffectiveVehicleId;
+        string key1 = "vehicle_desc_" + id;
+        if (LocalizationManager.HasKey(key1)) return LocalizationManager.Get(key1);
+
+        if (!string.IsNullOrEmpty(vehicleId))
+        {
+            string key2 = "vehicle_desc_" + vehicleId.ToLower().Trim();
+            if (LocalizationManager.HasKey(key2)) return LocalizationManager.Get(key2);
+        }
+
+        string cleanName = !string.IsNullOrEmpty(vehicleName) ? vehicleName.ToLower().Replace(" ", "_").Trim() : "";
+        if (!string.IsNullOrEmpty(cleanName))
+        {
+            string key3 = "vehicle_desc_" + cleanName;
+            if (LocalizationManager.HasKey(key3)) return LocalizationManager.Get(key3);
+        }
+
+        if (!string.IsNullOrEmpty(description) && LocalizationManager.HasKey(description))
+        {
+            return LocalizationManager.Get(description);
+        }
+
+        return !string.IsNullOrEmpty(description) ? description : "";
+    }
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();

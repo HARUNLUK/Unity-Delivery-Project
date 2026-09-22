@@ -417,7 +417,14 @@ public class BranchManager : MonoBehaviour
     public int GetDailyRent()
     {
         BranchTier tier = CurrentTier;
-        return tier != null ? tier.dailyRent : 50;
+        if (tier != null && tier.dailyRent > 0) return tier.dailyRent;
+        switch (currentBranchLevel)
+        {
+            case 1: return 50;
+            case 2: return 120;
+            case 3: return 280;
+            default: return 280;
+        }
     }
 
     public CargoWarehouseGenerator GetActiveWarehouseGenerator()
@@ -956,6 +963,7 @@ public class BranchManager : MonoBehaviour
     public void SaveBranchLevel()
     {
         PlayerPrefs.SetInt(PREFS_BRANCH_LEVEL, currentBranchLevel);
+        PlayerPrefs.SetInt("Delivery_WarehouseLevel", currentBranchLevel);
         PlayerPrefs.Save();
     }
 
@@ -970,6 +978,8 @@ public class BranchManager : MonoBehaviour
     {
         currentBranchLevel = 1;
         SaveBranchLevel();
+        PlayerPrefs.SetInt("Delivery_WarehouseLevel", 1);
+        PlayerPrefs.Save();
         ApplyTierVisuals(false);
         MigrateCargoOnBranchUpgrade(0, 1);
         RelocateVehiclesToBranchParking(CurrentTier);

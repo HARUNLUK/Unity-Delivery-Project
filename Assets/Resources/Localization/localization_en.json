@@ -346,6 +346,34 @@
       "value": "Stability"
     },
     {
+      "key": "badge_explosive_danger",
+      "value": "EXPLOSIVE - DANGER"
+    },
+    {
+      "key": "badge_explosive_stability",
+      "value": "EXPLOSIVE STABILITY {0}%"
+    },
+    {
+      "key": "badge_exploded",
+      "value": "EXPLODED / DESTROYED"
+    },
+    {
+      "key": "badge_broken",
+      "value": "BROKEN / DAMAGED"
+    },
+    {
+      "key": "badge_fragile",
+      "value": "FRAGILE"
+    },
+    {
+      "key": "badge_fragile_health",
+      "value": "FRAGILE {0}%"
+    },
+    {
+      "key": "badge_express",
+      "value": "EXPRESS - {0}"
+    },
+    {
       "key": "cargo_no_clue",
       "value": "No specific visual clue available for this address."
     },
@@ -476,6 +504,46 @@
     {
       "key": "vehicle_btn_recall_free",
       "value": "RECALL TO WAREHOUSE GARAGE"
+    },
+    {
+      "key": "vehicle_name_pickup_truck",
+      "value": "Pickup Truck"
+    },
+    {
+      "key": "vehicle_desc_pickup_truck",
+      "value": "Agile and practical entry-level cargo vehicle."
+    },
+    {
+      "key": "vehicle_name_pickup",
+      "value": "Pickup Truck"
+    },
+    {
+      "key": "vehicle_desc_pickup",
+      "value": "Agile and practical entry-level cargo vehicle."
+    },
+    {
+      "key": "vehicle_name_driveable_van",
+      "value": "Commercial Cargo Van"
+    },
+    {
+      "key": "vehicle_desc_driveable_van",
+      "value": "Commercial delivery vehicle with high parcel capacity."
+    },
+    {
+      "key": "vehicle_name_cargo_van",
+      "value": "Commercial Cargo Van"
+    },
+    {
+      "key": "vehicle_desc_cargo_van",
+      "value": "Commercial delivery vehicle with high parcel capacity."
+    },
+    {
+      "key": "vehicle_name_cargo_van_01",
+      "value": "Heavy Cargo Van"
+    },
+    {
+      "key": "vehicle_desc_cargo_van_01",
+      "value": "Commercial delivery vehicle with high parcel capacity."
     },
     {
       "key": "branch_current_title",

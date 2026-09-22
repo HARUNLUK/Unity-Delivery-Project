@@ -2,6 +2,9 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 using TMPro;
 
 /// <summary>
@@ -107,14 +110,41 @@ public class VehicleTutorialUI : MonoBehaviour
 
     private void Update()
     {
-        if (toggleKey != KeyCode.None && Input.GetKeyDown(toggleKey))
+        // Don't process tutorial keys or remain open if in main menu
+        if (GameMenuManager.Instance != null && GameMenuManager.Instance.CurrentState == GameFlowState.MainMenu)
+        {
+            if (isTutorialOpen) HideTutorial();
+            return;
+        }
+
+        bool togglePressed = false;
+        bool escapePressed = false;
+
+#if ENABLE_INPUT_SYSTEM
+        if (Keyboard.current != null)
+        {
+            togglePressed = (toggleKey == KeyCode.F2 && Keyboard.current.f2Key.wasPressedThisFrame)
+                || (toggleKey == KeyCode.F1 && Keyboard.current.f1Key.wasPressedThisFrame);
+            escapePressed = Keyboard.current.escapeKey.wasPressedThisFrame;
+        }
+#endif
+#if ENABLE_LEGACY_INPUT_MANAGER
+        try
+        {
+            if (toggleKey != KeyCode.None) togglePressed |= Input.GetKeyDown(toggleKey);
+            escapePressed |= Input.GetKeyDown(KeyCode.Escape);
+        }
+        catch { }
+#endif
+
+        if (togglePressed)
         {
             if (isTutorialOpen) HideTutorial();
             else ShowTutorial();
             return;
         }
 
-        if (isTutorialOpen && Input.GetKeyDown(KeyCode.Escape))
+        if (isTutorialOpen && escapePressed)
         {
             HideTutorial();
             return;

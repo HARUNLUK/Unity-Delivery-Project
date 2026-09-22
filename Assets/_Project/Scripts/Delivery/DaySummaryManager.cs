@@ -158,7 +158,20 @@ public class DaySummaryManager : MonoBehaviour
             totalReward += passiveIncome;
         }
 
-        int dailyRent = PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.GetDailyWarehouseRent() : 50;
+        int dailyRent = 50;
+        if (BranchManager.Instance != null)
+        {
+            dailyRent = BranchManager.Instance.GetDailyRent();
+        }
+        else if (PlayerProgressionManager.Instance != null)
+        {
+            dailyRent = PlayerProgressionManager.Instance.GetDailyWarehouseRent();
+        }
+        else
+        {
+            int lvl = PlayerPrefs.GetInt("Delivery_BranchLevel", PlayerPrefs.GetInt("Delivery_WarehouseLevel", 1));
+            dailyRent = lvl == 2 ? 120 : (lvl >= 3 ? 280 : 50);
+        }
         totalPenalty += dailyRent;
 
         int netProfit = totalReward - totalPenalty;

@@ -143,16 +143,23 @@ public class PhysicalCargoPackage : MonoBehaviour
         {
             AllPackages.Add(this);
         }
+        LocalizationManager.OnLanguageChanged += HandleLanguageChanged;
     }
 
     private void OnDisable()
     {
+        LocalizationManager.OnLanguageChanged -= HandleLanguageChanged;
         AllPackages.Remove(this);
         isCurrentlyFocused = false;
         if (focusIndicatorObj != null)
         {
             focusIndicatorObj.SetActive(false);
         }
+    }
+
+    private void HandleLanguageChanged(string lang)
+    {
+        UpdateLabelText();
     }
 
     private void OnDestroy()
@@ -944,18 +951,46 @@ public class PhysicalCargoPackage : MonoBehaviour
         string shortAddress = TruncateWithEllipsis(targetAddressName, 18);
 
         string badge = "";
-        if (isExploded) badge = "<color=#FF0000>[💥 EXPLODED / DESTROYED]</color>\n";
-        else if (isBroken) badge = "<color=#FF2222>[BROKEN / DAMAGED]</color>\n";
+        if (isExploded)
+        {
+            string txt = LocalizationManager.Get("badge_exploded", "EXPLODED / DESTROYED");
+            badge = $"<color=#FF0000>[{txt}]</color>\n";
+        }
+        else if (isBroken)
+        {
+            string txt = LocalizationManager.Get("badge_broken", "BROKEN / DAMAGED");
+            badge = $"<color=#FF2222>[{txt}]</color>\n";
+        }
         else if (cargoType == CargoType.Fragile)
         {
-            if (health < 100f) badge = $"<color=#FF5500>[FRAGILE {Mathf.CeilToInt(health)}%]</color>\n";
-            else badge = "<color=#FF5500>[FRAGILE]</color>\n";
+            if (health < 100f)
+            {
+                string txt = LocalizationManager.GetFormat("badge_fragile_health", Mathf.CeilToInt(health));
+                badge = $"<color=#FF5500>[{txt}]</color>\n";
+            }
+            else
+            {
+                string txt = LocalizationManager.Get("badge_fragile", "FRAGILE");
+                badge = $"<color=#FF5500>[{txt}]</color>\n";
+            }
         }
-        else if (cargoType == CargoType.Express) badge = $"<color=#0088FF>[EXPRESS - {GetFormattedTargetDeliveryTime()}]</color>\n";
+        else if (cargoType == CargoType.Express)
+        {
+            string txt = LocalizationManager.GetFormat("badge_express", GetFormattedTargetDeliveryTime());
+            badge = $"<color=#0088FF>[{txt}]</color>\n";
+        }
         else if (cargoType == CargoType.Explosive)
         {
-            if (health < 100f) badge = $"<color=#FF3300>[EXPLOSIVE 🔥 STABILITY {Mathf.CeilToInt(health)}%]</color>\n";
-            else badge = "<color=#FF3300>[EXPLOSIVE - DANGER 🔥]</color>\n";
+            if (health < 100f)
+            {
+                string txt = LocalizationManager.GetFormat("badge_explosive_stability", Mathf.CeilToInt(health));
+                badge = $"<color=#FF3300>[{txt}]</color>\n";
+            }
+            else
+            {
+                string txt = LocalizationManager.Get("badge_explosive_danger", "EXPLOSIVE - DANGER");
+                badge = $"<color=#FF3300>[{txt}]</color>\n";
+            }
         }
 
         labelText.text = $"{badge}{shortRecipient}\n<size=85%>{shortAddress}</size>";
