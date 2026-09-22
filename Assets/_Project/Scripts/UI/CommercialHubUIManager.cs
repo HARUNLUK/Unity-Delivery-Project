@@ -260,7 +260,7 @@ public class CommercialHubUIManager : MonoBehaviour
         if (garageCloseBtn != null)
         {
             var txt = garageCloseBtn.GetComponentInChildren<TextMeshProUGUI>();
-            if (txt != null) txt.text = LocalizationManager.Get("btn_close", "CLOSE (ESC)");
+            if (txt != null) txt.text = LocalizationManager.Get("garage_btn_close", "Kapat ");
         }
 
         if (garagePaintSectionTitle != null)
@@ -411,7 +411,7 @@ public class CommercialHubUIManager : MonoBehaviour
         if (insuranceCloseBtn != null)
         {
             var txt = insuranceCloseBtn.GetComponentInChildren<TextMeshProUGUI>();
-            if (txt != null) txt.text = LocalizationManager.Get("btn_close", "CLOSE (ESC)");
+            if (txt != null) txt.text = LocalizationManager.Get("btn_close", "CLOSE ");
         }
 
         InsuranceAgencyManager ins = InsuranceAgencyManager.Instance;
@@ -522,7 +522,7 @@ public class CommercialHubUIManager : MonoBehaviour
         if (dispatchCloseBtn != null)
         {
             var txt = dispatchCloseBtn.GetComponentInChildren<TextMeshProUGUI>();
-            if (txt != null) txt.text = LocalizationManager.Get("btn_close", "CLOSE (ESC)");
+            if (txt != null) txt.text = LocalizationManager.Get("btn_close", "CLOSE ");
         }
 
         if (dispatchTier2UpgradeBtn != null)
@@ -941,7 +941,7 @@ public class CommercialHubUIManager : MonoBehaviour
         insuranceTier3UpgradeBtn.onClick.AddListener(OnInsuranceUpgradeTierClicked);
 
         // Close
-        insuranceCloseBtn = CreateButton(root, "CloseBtn", "❌ Kapat (ESC)", new Vector2(0, -420), new Vector2(750, 56), new Color(0.35f, 0.38f, 0.45f));
+        insuranceCloseBtn = CreateButton(root, "CloseBtn", "Kapat ", new Vector2(0, -420), new Vector2(750, 56), new Color(0.35f, 0.38f, 0.45f));
         insuranceCloseBtn.onClick.AddListener(CloseAllPanels);
 
         return root;
@@ -971,7 +971,7 @@ public class CommercialHubUIManager : MonoBehaviour
         dispatchTier3UpgradeBtn.onClick.AddListener(OnDispatchUpgradeClicked);
 
         // Close
-        dispatchCloseBtn = CreateButton(root, "CloseBtn", "❌ Kapat (ESC)", new Vector2(0, -420), new Vector2(750, 56), new Color(0.35f, 0.38f, 0.45f));
+        dispatchCloseBtn = CreateButton(root, "CloseBtn", "Kapat ", new Vector2(0, -420), new Vector2(750, 56), new Color(0.35f, 0.38f, 0.45f));
         dispatchCloseBtn.onClick.AddListener(CloseAllPanels);
 
         return root;

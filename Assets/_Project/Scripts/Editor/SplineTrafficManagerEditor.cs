@@ -72,7 +72,7 @@ public class SplineTrafficManagerEditor : Editor
         EditorGUILayout.BeginHorizontal();
 
         GUI.backgroundColor = new Color(0.9f, 0.8f, 0.3f);
-        if (GUILayout.Button("⚡ Yakın Çevre\n(20m - 120m | 25 Araç)", GUILayout.Height(36)))
+        if (GUILayout.Button(" Yakın Çevre\n(20m - 120m | 25 Araç)", GUILayout.Height(36)))
         {
             Undo.RecordObject(manager, "Apply Close Proximity Traffic");
             manager.minSpawnDistance = 20f;

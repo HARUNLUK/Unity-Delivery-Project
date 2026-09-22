@@ -56,7 +56,7 @@ graph TD
 
 ---
 
-## ⚡ Key Technical Features & Mechanics
+##  Key Technical Features & Mechanics
 
 ### 1. 🚗 Custom Vehicle Physics & Driving System (`CarController.cs`)
 - **Ackermann Differential Steering:** Realistic wheel turning geometry (40° inner wheel, 32° outer wheel) preventing tire scrubbing and providing intuitive cornering.
@@ -95,7 +95,7 @@ graph TD
 - **Constant Speed & Bézier Junction Turning:** Steady cruising speed (`cruiseSpeed`) across waypoints, turns, and roads with early turn anticipation (4.5m–8.5m in advance) and 180° forward U-turn loops at dead ends.
 - **Anti-Jam Recovery:** Motionless 10-second auto-despawn with player character and drivable vehicle immunity.
 
-### 6. 🛠️ Custom Unity Editor Tooling (`Tools ➔ Delivery Game`)
+### 6.  Custom Unity Editor Tooling (`Tools ➔ Delivery Game`)
 - **`VehicleSetupHelper`:** One-click utility that inspects raw 3D car meshes and automatically attaches `WheelCollider` pairs, seat anchors, physics rigidbodies, center-of-mass offsets, and vehicle controllers.
 - **`SplineRoadBuilderEditor` & `RoadTextureGenerator`:** In-editor procedural road mesh generation, sidewalk presets (`🚶 Sadece Kaldırım`), and procedural road texture creation.
 - **`SplineTrafficManagerEditor`:** Traffic branch visualizer, path rebuild utilities, and live fleet monitoring.

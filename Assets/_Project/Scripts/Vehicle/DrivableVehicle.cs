@@ -16,6 +16,9 @@ public class DrivableVehicle : MonoBehaviour
     [Tooltip("Short description of vehicle capabilities")]
     public string description = "Agile and practical entry-level cargo vehicle.";
 
+    public static event System.Action<DrivableVehicle> OnPlayerEnteredVehicle;
+    public static event System.Action<DrivableVehicle> OnPlayerExitedVehicle;
+
     [Header("--- ECONOMY & REQUIREMENTS ---")]
     [Tooltip("Purchase price in TL/USD. Set to 0 for free/starter vehicle")]
     public int purchasePrice = 0;
@@ -871,6 +874,7 @@ public class DrivableVehicle : MonoBehaviour
         }
 
         Debug.Log($"[DrivableVehicle] Player entered '{vehicleName}'. Press [E] to exit.");
+        OnPlayerEnteredVehicle?.Invoke(this);
     }
 
     public void UpdateDriverVisibility(VehicleCameraMode cameraMode)
@@ -1055,6 +1059,7 @@ public class DrivableVehicle : MonoBehaviour
         }
 
         Debug.Log($"[DrivableVehicle] Player exited '{vehicleName}'. On-foot controls restored at {spawnPos}.");
+        OnPlayerExitedVehicle?.Invoke(this);
     }
 
     private void FixedUpdate()

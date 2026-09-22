@@ -39,7 +39,7 @@ public class ProjectOptimizationTool : EditorWindow
             fontSize = 18,
             alignment = TextAnchor.MiddleCenter
         };
-        EditorGUILayout.LabelField("⚡ Performance & FPS Optimizer", titleStyle);
+        EditorGUILayout.LabelField(" Performance & FPS Optimizer", titleStyle);
         EditorGUILayout.LabelField("One-click CPU & GPU Optimization Suite", EditorStyles.centeredGreyMiniLabel);
         EditorGUILayout.Space(12);
 

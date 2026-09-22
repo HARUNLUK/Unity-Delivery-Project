@@ -147,7 +147,7 @@ public static class GarageWorkshopUIBuilder
 
         GameObject titleObj = new GameObject("Title");
         titleObj.transform.SetParent(titleBox.transform, false);
-        AddTMP(titleObj, "🔧 OTO TAMİR & BOYA ATÖLYESİ", 20, FontStyles.Bold, new Color(0.25f, 0.9f, 1f), TextAlignmentOptions.Left);
+        AddTMP(titleObj, "OTO TAMİR & BOYA ATÖLYESİ", 20, FontStyles.Bold, new Color(0.25f, 0.9f, 1f), TextAlignmentOptions.Left);
 
         GameObject subtitleObj = new GameObject("Subtitle");
         subtitleObj.transform.SetParent(titleBox.transform, false);
@@ -172,7 +172,7 @@ public static class GarageWorkshopUIBuilder
         cbTxtObj.transform.SetParent(closeBtnObj.transform, false);
         RectTransform cbtRt = cbTxtObj.AddComponent<RectTransform>();
         cbtRt.anchorMin = Vector2.zero; cbtRt.anchorMax = Vector2.one; cbtRt.sizeDelta = Vector2.zero;
-        AddTMP(cbTxtObj, "✕ Kapat (ESC)", 13, FontStyles.Bold, Color.white, TextAlignmentOptions.Center);
+        AddTMP(cbTxtObj, "Kapat ", 13, FontStyles.Bold, Color.white, TextAlignmentOptions.Center);
 
         // Split Content Container (Horizontal Layout)
         GameObject contentObj = new GameObject("ContentSplit");
@@ -212,7 +212,7 @@ public static class GarageWorkshopUIBuilder
         GameObject lHeadObj = new GameObject("LeftHeader");
         lHeadObj.transform.SetParent(leftCol.transform, false);
         lHeadObj.AddComponent<LayoutElement>().preferredHeight = 22;
-        AddTMP(lHeadObj, "🛠️ ARAÇ DURUMU & HASAR ONARIMI", 14, FontStyles.Bold, new Color(0.39f, 0.82f, 1f), TextAlignmentOptions.Left);
+        AddTMP(lHeadObj, " ARAÇ DURUMU & HASAR ONARIMI", 14, FontStyles.Bold, new Color(0.39f, 0.82f, 1f), TextAlignmentOptions.Left);
 
         // Status Line Box (Condition Only)
         GameObject statusBox = new GameObject("StatusBox");
@@ -266,7 +266,7 @@ public static class GarageWorkshopUIBuilder
         repTxtObj.transform.SetParent(repBtnObj.transform, false);
         RectTransform rptRt = repTxtObj.AddComponent<RectTransform>();
         rptRt.anchorMin = Vector2.zero; rptRt.anchorMax = Vector2.one; rptRt.sizeDelta = Vector2.zero;
-        AddTMP(repTxtObj, "🛠️ Aracı Tamir Et ($150)", 14, FontStyles.Bold, Color.white, TextAlignmentOptions.Center);
+        AddTMP(repTxtObj, " Aracı Tamir Et ($150)", 14, FontStyles.Bold, Color.white, TextAlignmentOptions.Center);
 
         // Service Info Box (Recessed)
         GameObject infoBox = new GameObject("ServiceInfoBox");

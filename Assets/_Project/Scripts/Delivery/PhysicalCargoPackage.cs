@@ -23,6 +23,8 @@ public struct CargoDeliveryResult
     public int xpAwarded;
     public bool isExpressBonus;
     public bool isBroken;
+    public float targetDeliveryHour;
+    public string formattedDeliveryTime;
 }
 
 [RequireComponent(typeof(Rigidbody), typeof(BoxCollider))]
@@ -346,7 +348,10 @@ public class PhysicalCargoPackage : MonoBehaviour
         }
         else if (cargoType == CargoType.Explosive)
         {
-            deliveryReward = Mathf.RoundToInt(deliveryReward * 2.8f); // Very high reward
+            float mult = (BranchManager.Instance != null && BranchManager.Instance.explosiveRewardMultiplier > 0f) 
+                ? BranchManager.Instance.explosiveRewardMultiplier 
+                : 5.0f;
+            deliveryReward = Mathf.RoundToInt(deliveryReward * mult); // Ultra high reward (5.0x)
             wrongPenalty = Mathf.Max(10, Mathf.RoundToInt(wrongPenalty * 0.25f)); // Very low penalty for unfulfilled explosive
             xpReward = Mathf.RoundToInt(xpReward * 2.5f);
         }
@@ -1034,10 +1039,12 @@ public class PhysicalCargoPackage : MonoBehaviour
             package = this,
             cargoType = cargoType,
             trackingNumber = tracking,
-            recipientName = recipientName,
-            targetAddress = targetAddressName,
+            recipientName = EffectiveRecipientName,
+            targetAddress = EffectiveAddressName,
             isBroken = isBroken,
-            isExpressBonus = false
+            isExpressBonus = false,
+            targetDeliveryHour = targetDeliveryHour,
+            formattedDeliveryTime = GetFormattedTargetDeliveryTime()
         };
 
         if (nearbyPoint != null)

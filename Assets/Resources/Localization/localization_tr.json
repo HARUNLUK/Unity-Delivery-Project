@@ -691,11 +691,11 @@
     },
     {
       "key": "garage_btn_repair",
-      "value": "🔧 TAMİR ET & BAKIM YAP (${0})"
+      "value": "TAMİR ET & BAKIM YAP (${0})"
     },
     {
       "key": "garage_btn_tune",
-      "value": "⚡ STAGE {0} MOTOR MODİFİYESİ (${1:N0})"
+      "value": " STAGE {0} MOTOR MODİFİYESİ (${1:N0})"
     },
     {
       "key": "garage_btn_tune_max",
@@ -707,7 +707,11 @@
     },
     {
       "key": "garage_btn_close",
-      "value": "KAPAT"
+      "value": "Kapat "
+    },
+    {
+      "key": "btn_close",
+      "value": "Kapat "
     },
     {
       "key": "insurance_title",
@@ -931,7 +935,7 @@
     },
     {
       "key": "prompt_garage_repaired",
-      "value": "<color=#32FF64>🔧 {0} Tamir Edildi & Bakımı Yapıldı!</color>"
+      "value": "<color=#32FF64>{0} Tamir Edildi & Bakımı Yapıldı!</color>"
     },
     {
       "key": "prompt_garage_tune_max",
@@ -939,7 +943,7 @@
     },
     {
       "key": "prompt_garage_tuned_success",
-      "value": "<color=#32FF64>⚡ {0} Motor Stage {1} Yapıldı! (+{2:0}% Tork)</color>"
+      "value": "<color=#32FF64> {0} Motor Stage {1} Yapıldı! (+{2:0}% Tork)</color>"
     },
     {
       "key": "prompt_garage_painted_success",
@@ -1163,7 +1167,7 @@
     },
     {
       "key": "property_service_garage_sign",
-      "value": "🔧 OTO SERVİS, TAMİR & MODİFİYE GARAJI 🔧"
+      "value": "OTO SERVİS, TAMİR & MODİFİYE GARAJI 🔧"
     },
     {
       "key": "property_service_garage_desc",
@@ -1175,7 +1179,7 @@
     },
     {
       "key": "property_garage_sign",
-      "value": "🔧 OTO SERVİS, TAMİR & MODİFİYE GARAJI 🔧"
+      "value": "OTO SERVİS, TAMİR & MODİFİYE GARAJI 🔧"
     },
     {
       "key": "property_garage_desc",
@@ -1220,6 +1224,22 @@
     {
       "key": "tutorial_btn_start",
       "value": "ANLADIM, VARDİYAYA BAŞLA"
+    },
+    {
+      "key": "vehicle_tutorial_title",
+      "value": "<b>ARAÇ SÜRÜŞ VE TAŞIMA REHBERİ</b>"
+    },
+    {
+      "key": "vehicle_tutorial_caption",
+      "value": "<b>Teslimat Aracı (Pickup / Van)</b>\n<size=15><color=#A0C8FF>Kargolarınızı kasa veya bagaj kısmına yükleyin, güvenli ve hızlı şekilde taşıyın.</color></size>"
+    },
+    {
+      "key": "vehicle_tutorial_body",
+      "value": "<color=#FFE600><b>1. SÜRÜŞ KONTROLLERİ</b></color>\n• <color=#32FFFF>[W / A / S / D]</color> veya Yön Tuşları ile gaz, fren ve direksiyon kontrolü.\n• <color=#32FFFF>[Boşluk / Space]</color> El freni ile keskin virajları dönebilir veya kaymayı durdurabilirsiniz.\n• <color=#32FFFF>[V]</color> tuşu ile araç içi (FPS) ve araç dışı (TPS) kamera açıları arasında geçiş yapabilirsiniz.\n• <color=#32FFFF>[E]</color> veya <color=#32FFFF>[F]</color> tuşu ile dilediğiniz an araçtan inip binebilirsiniz.\n\n<color=#FFE600><b>2. KARGO GÜVENLİĞİ VE YÜKLEME</b></color>\n• Kargoları aracın arkasındaki kasaya düzenli yerleştirin.\n• Sert virajlarda, çukurlarda ve yüksek hızda kargolar kasadan düşebilir veya hasar alabilir!\n\n<color=#FFE600><b>3. YAKIT VE ARAÇ DURUMU</b></color>\n• Ekrandaki yakıt göstergesine dikkat edin. Yakıtınız azalınca <color=#FFAA22>Benzin İstasyonuna</color> uğrayın.\n• Çarpışmalarda araç kondisyonu düşer. Hasar aldığınızda <color=#32FF64>Tamirhanede</color> aracınızı onarın.\n\n<color=#A0C8FF><i>İpucu: Teslimat adreslerini Tabletinizden [TAB] veya yol kenarındaki tabelalardan takip edebilirsiniz.</i></color>"
+    },
+    {
+      "key": "vehicle_tutorial_btn_start",
+      "value": "ANLADIM, SÜRÜŞE BAŞLA"
     }
   ]
 }

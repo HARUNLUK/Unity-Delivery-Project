@@ -1448,6 +1448,7 @@ public class GameMenuManager : MonoBehaviour
         // 8. Reset tutorial preferences so the tutorial guide opens on the new game
         PlayerPrefs.DeleteKey(DeliveryTutorialUI.PREF_TUTORIAL_DONT_SHOW);
         PlayerPrefs.DeleteKey("Delivery_Tutorial_Seen");
+        PlayerPrefs.DeleteKey(VehicleTutorialUI.PREF_VEHICLE_TUTORIAL_SEEN);
 
         // 9. Set Save Game flag
         PlayerPrefs.SetInt("Delivery_HasSaveGame", 1);

@@ -91,6 +91,9 @@ public class BranchManager : MonoBehaviour
     [Tooltip("Spawn immunity duration (seconds).")]
     public float fragileSpawnImmunityDuration = 3.5f;
 
+    [Tooltip("Delivery reward multiplier for explosive packages (e.g. 5.0 = 500% reward)")]
+    public float explosiveRewardMultiplier = 5.0f;
+
     [Header("--- DEFAULT & CUSTOM CARGO PACKAGE PREFABS ---")]
     [Tooltip("Primary default cargo box prefab (Fallback used if specific lists are empty)")]
     public GameObject cargoPackagePrefab;

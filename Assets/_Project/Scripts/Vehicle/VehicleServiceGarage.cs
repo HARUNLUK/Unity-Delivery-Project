@@ -176,9 +176,7 @@ public class VehicleServiceGarage : MonoBehaviour
 
         if (PlayerEconomyManager.Instance != null && PlayerEconomyManager.Instance.SpendMoney(repairCost))
         {
-            v.currentFuel = v.maxFuel;
             v.currentCondition = v.maxCondition;
-            PlayerPrefs.SetFloat(DrivableVehicle.FUEL_SAVE_PREFIX + v.EffectiveVehicleId, v.maxFuel);
             PlayerPrefs.SetFloat(DrivableVehicle.CONDITION_SAVE_PREFIX + v.EffectiveVehicleId, v.maxCondition);
             PlayerPrefs.Save();
 
@@ -190,7 +188,10 @@ public class VehicleServiceGarage : MonoBehaviour
             OnVehicleRepaired?.Invoke(v);
 
             if (InteractionPromptHUD.Instance != null)
+            {
                 InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_garage_repaired", v.vehicleName), 2.5f);
+                InteractionPromptHUD.Instance.UpdateVehicleHUD(v.currentFuel, v.maxFuel, v.currentFuel < (v.maxFuel * 0.18f), v.currentCondition, v.maxCondition);
+            }
 
             return true;
         }

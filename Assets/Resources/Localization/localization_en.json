@@ -691,11 +691,11 @@
     },
     {
       "key": "garage_btn_repair",
-      "value": "🔧 REPAIR & SERVICE (${0})"
+      "value": "REPAIR & SERVICE (${0})"
     },
     {
       "key": "garage_btn_tune",
-      "value": "⚡ STAGE {0} ENGINE TUNING (${1:N0})"
+      "value": " STAGE {0} ENGINE TUNING (${1:N0})"
     },
     {
       "key": "garage_btn_tune_max",
@@ -707,7 +707,11 @@
     },
     {
       "key": "garage_btn_close",
-      "value": "CLOSE"
+      "value": "Close "
+    },
+    {
+      "key": "btn_close",
+      "value": "Close "
     },
     {
       "key": "insurance_title",
@@ -931,7 +935,7 @@
     },
     {
       "key": "prompt_garage_repaired",
-      "value": "<color=#32FF64>🔧 {0} Repaired & Serviced!</color>"
+      "value": "<color=#32FF64>{0} Repaired & Serviced!</color>"
     },
     {
       "key": "prompt_garage_tune_max",
@@ -939,7 +943,7 @@
     },
     {
       "key": "prompt_garage_tuned_success",
-      "value": "<color=#32FF64>⚡ {0} Engine Upgraded to Stage {1}! (+{2:0}% Torque)</color>"
+      "value": "<color=#32FF64> {0} Engine Upgraded to Stage {1}! (+{2:0}% Torque)</color>"
     },
     {
       "key": "prompt_garage_painted_success",
@@ -1163,7 +1167,7 @@
     },
     {
       "key": "property_service_garage_sign",
-      "value": "🔧 AUTO SERVICE, REPAIR & CUSTOM WORKSHOP 🔧"
+      "value": "AUTO SERVICE, REPAIR & CUSTOM WORKSHOP 🔧"
     },
     {
       "key": "property_service_garage_desc",
@@ -1175,7 +1179,7 @@
     },
     {
       "key": "property_garage_sign",
-      "value": "🔧 AUTO SERVICE, REPAIR & CUSTOM WORKSHOP 🔧"
+      "value": "AUTO SERVICE, REPAIR & CUSTOM WORKSHOP 🔧"
     },
     {
       "key": "property_garage_desc",
@@ -1220,6 +1224,22 @@
     {
       "key": "tutorial_btn_start",
       "value": "GOT IT, START SHIFT"
+    },
+    {
+      "key": "vehicle_tutorial_title",
+      "value": "<b>VEHICLE DRIVING & CARGO GUIDE</b>"
+    },
+    {
+      "key": "vehicle_tutorial_caption",
+      "value": "<b>Delivery Vehicle (Pickup / Van)</b>\n<size=15><color=#A0C8FF>Load cargo onto the bed, drive safely and deliver without damage.</color></size>"
+    },
+    {
+      "key": "vehicle_tutorial_body",
+      "value": "<color=#FFE600><b>1. DRIVING CONTROLS</b></color>\n• <color=#32FFFF>[W / A / S / D]</color> or Arrow Keys for throttle, brake, and steering.\n• <color=#32FFFF>[Spacebar]</color> Handbrake for sharp corners and emergency stops.\n• <color=#32FFFF>[V]</color> key toggles between interior (cockpit) and exterior (third-person) camera views.\n• <color=#32FFFF>[E]</color> or <color=#32FFFF>[F]</color> to enter or exit the vehicle anytime.\n\n<color=#FFE600><b>2. CARGO SAFETY & LOADING</b></color>\n• Stack packages carefully in the rear cargo bed.\n• Beware of high speeds and sharp turns: unsecured cargo can bounce out or break!\n\n<color=#FFE600><b>3. FUEL & VEHICLE CONDITION</b></color>\n• Monitor your fuel gauge. Visit the <color=#FFAA22>Fuel Station</color> before running out.\n• Collisions degrade condition. Visit the <color=#32FF64>Garage Workshop</color> to repair damage.\n\n<color=#A0C8FF><i>Tip: Track destination addresses via your Tablet [TAB] or roadside signs.</i></color>"
+    },
+    {
+      "key": "vehicle_tutorial_btn_start",
+      "value": "GOT IT, START DRIVING"
     }
   ]
 }

@@ -326,7 +326,9 @@ public class DaySummaryManager : MonoBehaviour
             "HeldCargoSideCard",
             "InteractionPromptBox",
             "ThrowSlideBG",
-            "VehicleDashboardPanel"
+            "VehicleDashboardPanel",
+            "DeliveryTutorial_Modal_Root",
+            "VehicleTutorial_Modal_Root"
         };
 
         foreach (var canvas in allCanvases)
@@ -365,46 +367,75 @@ public class DaySummaryManager : MonoBehaviour
             var targetText = FindTMPRecursive(rowObj.transform, "target", "TargetText", "Destination", "TargetAddress");
             var resultText = FindTMPRecursive(rowObj.transform, "result", "ResultText", "Status", "StatusText");
 
-            string deliveredAddr = !string.IsNullOrEmpty(res.actualAddress) ? res.actualAddress : $"( {LocalizationManager.Get("summary_status_undelivered", "UNDELIVERED")} )";
-            string targetAddr = !string.IsNullOrEmpty(res.targetAddress) ? res.targetAddress : "(Unknown)";
+            string deliveredAddr = !string.IsNullOrEmpty(res.actualAddress) ? res.actualAddress : $"( {LocalizationManager.Get("summary_status_undelivered", "TESLİM EDİLMEDİ")} )";
+            string targetAddr = !string.IsNullOrEmpty(res.targetAddress) ? res.targetAddress : "(Bilinmeyen Adres)";
+            string recipient = !string.IsNullOrEmpty(res.recipientName) ? res.recipientName : LocalizationManager.Get("recipient_default", "Alıcı");
+
+            // Format Express Info & Target Delivery Hour
+            string expressInfo = "";
+            if (res.cargoType == CargoType.Express)
+            {
+                string expTime = !string.IsNullOrEmpty(res.formattedDeliveryTime) ? res.formattedDeliveryTime : "13:00";
+                if (res.status == CargoDeliveryStatus.Correct)
+                {
+                    expressInfo = res.isExpressBonus
+                        ? $" <color=#33E0FF>[ Express: {expTime} ✓]</color>"
+                        : $" <color=#FFAA22>[ Express: {expTime} (Gecikti)]</color>";
+                }
+                else
+                {
+                    expressInfo = $" <color=#33E0FF>[ Express: {expTime}]</color>";
+                }
+            }
+
+            string targetLabelPrefix = LocalizationManager.IsTurkish ? "Alıcı & Hedef:" : "Recipient & Target:";
+            string recipientTargetCombined = $"{targetLabelPrefix} <b>{recipient}</b> - {targetAddr}{expressInfo}";
+
+            if (targetText != null)
+            {
+                targetText.text = recipientTargetCombined;
+            }
 
             if (deliveredText != null)
             {
                 deliveredText.text = LocalizationManager.GetFormat("summary_delivered_to", deliveredAddr);
             }
 
-            if (targetText != null)
+            string moneyBadge = res.moneyChange >= 0 ? $"+${res.moneyChange}" : $"-${Mathf.Abs(res.moneyChange)}";
+            string statusStr = "";
+            switch (res.status)
             {
-                targetText.text = LocalizationManager.GetFormat("summary_target", targetAddr);
+                case CargoDeliveryStatus.Correct:
+                    statusStr = res.isExpressBonus
+                        ? $"<color=#33E0FF>[EXPRESS {moneyBadge}]</color>"
+                        : $"<color=#32FF64>[DOĞRU {moneyBadge}]</color>";
+                    break;
+                case CargoDeliveryStatus.WrongAddress:
+                    statusStr = $"<color=#FF4444>[YANLIŞ ADRES {moneyBadge}]</color>";
+                    break;
+                case CargoDeliveryStatus.Broken:
+                    statusStr = res.cargoType == CargoType.Explosive
+                        ? $"<color=#FF2222>[PATLADI {moneyBadge}]</color>"
+                        : $"<color=#FF4444>[HASARLI {moneyBadge}]</color>";
+                    break;
+                default:
+                    statusStr = $"<color=#FFAA22>[TESLİM EDİLMEDİ {moneyBadge}]</color>";
+                    break;
             }
 
             if (resultText != null)
             {
-                switch (res.status)
-                {
-                    case CargoDeliveryStatus.Correct:
-                        resultText.text = res.isExpressBonus ? $"<color=#33E0FF>{LocalizationManager.Get("summary_status_express", "EXPRESS")}</color>" : $"<color=#32FF64>{LocalizationManager.Get("summary_status_correct", "CORRECT")}</color>";
-                        break;
-                    case CargoDeliveryStatus.WrongAddress:
-                        resultText.text = $"<color=#FF4444>{LocalizationManager.Get("summary_status_wrong", "WRONG ADDRESS")}</color>";
-                        break;
-                    case CargoDeliveryStatus.Broken:
-                        resultText.text = res.cargoType == CargoType.Explosive ? $"<color=#FF2222>{LocalizationManager.Get("summary_status_exploded", "EXPLODED")}</color>" : $"<color=#FF4444>{LocalizationManager.Get("summary_status_broken", "BROKEN")}</color>";
-                        break;
-                    default:
-                        resultText.text = $"<color=#FFAA22>{LocalizationManager.Get("summary_status_undelivered", "UNDELIVERED")}</color>";
-                        break;
-                }
+                resultText.text = statusStr;
             }
 
-            // Fallback for single text label template if separate fields not found
+            // Fallback for single text label template (HistoryRowTemplate with single Text child)
             if (deliveredText == null && targetText == null && resultText == null)
             {
                 TextMeshProUGUI rowText = rowObj.GetComponentInChildren<TextMeshProUGUI>();
                 if (rowText != null)
                 {
-                    string statusLabel = res.status == CargoDeliveryStatus.Correct ? $"[{LocalizationManager.Get("summary_status_correct", "CORRECT")}]" : $"[{LocalizationManager.Get("summary_status_broken", "BROKEN")}]";
-                    rowText.text = $"{LocalizationManager.GetFormat("summary_delivered_to", deliveredAddr)}\n{LocalizationManager.GetFormat("summary_target", targetAddr)}   {statusLabel}";
+                    string delivLabel = LocalizationManager.IsTurkish ? "Teslim Edilen:" : "Delivered to:";
+                    rowText.text = $"{recipientTargetCombined}\n<size=85%><color=#A0C8FF>{delivLabel}</color> {deliveredAddr}   {statusStr}</size>";
                 }
             }
         }
