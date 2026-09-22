@@ -242,6 +242,33 @@ public class PhysicalCargoPackage : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Resets the spawn immunity timer to prevent the package from taking collision damage while settling on a platform.
+    /// </summary>
+    public void ResetSpawnImmunity(float duration = -1f)
+    {
+        spawnImmunityUntil = Time.time + (duration > 0f ? duration : spawnImmunityDuration);
+    }
+
+    /// <summary>
+    /// Safely relocates the cargo package to a new world position and rotation, resetting physics velocity and immunity.
+    /// </summary>
+    public void RelocateToPosition(Vector3 newWorldPosition, Quaternion newWorldRotation)
+    {
+        transform.SetParent(null, true);
+        transform.position = newWorldPosition;
+        transform.rotation = newWorldRotation;
+
+        if (rb == null) rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+
+        ResetSpawnImmunity();
+    }
+
     public string GetFormattedTargetDeliveryTime()
     {
         int totalMins = Mathf.RoundToInt(targetDeliveryHour * 60f);

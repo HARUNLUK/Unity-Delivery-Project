@@ -39,6 +39,13 @@ public class BranchManager : MonoBehaviour
     [Tooltip("Kameranın şube binasına bakış yükseklik ofseti")]
     public float lookAtHeightOffset = 2.5f;
 
+    [Header("--- ARAÇ PARK / GARAGE SPAWN NOKTASI (GLOBAL VE FALLBACK) ---")]
+    [Tooltip("Yükseltme sonrası aracın ışınlanacağı genel park noktası (Sahnedeki PickupGaragePoint veya özel park noktası)")]
+    public Transform defaultVehicleParkingPoint;
+
+    [Tooltip("Eğer sahnede veya seviyede özel nokta atanmamışsa, şube merkezinden yerel araç park ofseti")]
+    public Vector3 defaultVehicleParkingOffset = new Vector3(4.5f, 0f, -4.5f);
+
     [Header("--- CARGO TYPE UNLOCK LEVELS & SPAWN CHANCES ---")]
     [Tooltip("Minimum branch level required for Standard cargo")]
     public int standardRequiredLevel = 1;
@@ -636,7 +643,13 @@ public class BranchManager : MonoBehaviour
                         // 1. Swap building visuals under blackout
                         ApplyTierVisuals(false);
 
-                        // 2. Relocate player outside and aim camera at the new branch
+                        // 2. Migrate uncollected packages to new branch generator (No mid-day extra packages; full capacity generates on day start)
+                        MigrateCargoOnBranchUpgrade(oldLevel, currentBranchLevel);
+
+                        // 3. Relocate vehicle to branch parking / garage spawn point
+                        RelocateVehiclesToBranchParking(upgradedTier);
+
+                        // 4. Relocate player outside and aim camera at the new branch
                         (Vector3 spawnPos, Vector3 lookAtPos) = GetExteriorViewpoint(upgradedTier);
                         FPSPlayerController player = FPSPlayerController.Instance != null ? FPSPlayerController.Instance : UnityEngine.Object.FindAnyObjectByType<FPSPlayerController>();
                         if (player != null)
@@ -659,6 +672,8 @@ public class BranchManager : MonoBehaviour
         }
 
         ApplyTierVisuals(false);
+        MigrateCargoOnBranchUpgrade(oldLevel, currentBranchLevel);
+        RelocateVehiclesToBranchParking(upgradedTier);
 
         (Vector3 fallbackSpawn, Vector3 fallbackLook) = GetExteriorViewpoint(upgradedTier);
         FPSPlayerController fallbackPlayer = FPSPlayerController.Instance != null ? FPSPlayerController.Instance : UnityEngine.Object.FindAnyObjectByType<FPSPlayerController>();
@@ -671,6 +686,198 @@ public class BranchManager : MonoBehaviour
         OnBranchUpgraded?.Invoke(currentBranchLevel, upgradedTier);
 
         return true;
+    }
+
+    /// <summary>
+    /// Calculates the vehicle parking position and rotation for the given branch tier.
+    /// Prioritizes tier-specific vehicle parking points, active building child anchors,
+    /// scene PickupGaragePoint, default vehicle parking point, and procedural offset.
+    /// </summary>
+    public (Vector3 parkingPos, Quaternion parkingRot) GetVehicleParkingPoint(BranchTier tier)
+    {
+        Transform searchRoot = activeBuildingInstance != null ? activeBuildingInstance.transform : (tier != null && tier.sceneBuildingRoot != null ? tier.sceneBuildingRoot.transform : (buildingContainer != null ? buildingContainer : transform));
+        Vector3 branchOrigin = searchRoot != null ? searchRoot.position : transform.position;
+        Quaternion branchRot = searchRoot != null ? searchRoot.rotation : transform.rotation;
+
+        // 1. Check if Tier has a direct vehicleParkingPoint assigned
+        if (tier != null && tier.vehicleParkingPoint != null)
+        {
+            return (tier.vehicleParkingPoint.position + Vector3.up * 0.25f, tier.vehicleParkingPoint.rotation);
+        }
+
+        // 2. Check if active building prefab or scene root has an attached Vehicle/Garage parking child anchor
+        if (searchRoot != null)
+        {
+            Transform[] allChildren = searchRoot.GetComponentsInChildren<Transform>(true);
+            foreach (Transform child in allChildren)
+            {
+                if (child == searchRoot) continue;
+                string n = child.name;
+                if (n.IndexOf("PickupGarage", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("VehicleParking", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("GaragePoint", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("ParkingPoint", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("VehicleSpawn", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("CarPark", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return (child.position + Vector3.up * 0.25f, child.rotation);
+                }
+            }
+        }
+
+        // 3. Check if BranchManager has a global defaultVehicleParkingPoint assigned
+        if (defaultVehicleParkingPoint != null)
+        {
+            return (defaultVehicleParkingPoint.position + Vector3.up * 0.25f, defaultVehicleParkingPoint.rotation);
+        }
+
+        // 4. Search in scene for PickupGaragePoint or GarageSpawnPoint
+        GameObject sceneAnchor = GameObject.Find("PickupGaragePoint");
+        if (sceneAnchor == null) sceneAnchor = GameObject.Find("Warehouse_Garage_SpawnPoint");
+        if (sceneAnchor == null) sceneAnchor = GameObject.Find("GarageSpawnPoint");
+        if (sceneAnchor != null)
+        {
+            return (sceneAnchor.transform.position + Vector3.up * 0.25f, sceneAnchor.transform.rotation);
+        }
+
+        // 5. Procedural vehicle parking spot beside/in front of the building
+        Vector3 offset = (tier != null && tier.customVehicleParkingOffset != Vector3.zero) ? tier.customVehicleParkingOffset : defaultVehicleParkingOffset;
+        Vector3 rawPos = branchOrigin + (searchRoot != null ? searchRoot.TransformDirection(offset) : branchRot * offset);
+
+        Vector3 safePos = rawPos;
+        if (Physics.Raycast(rawPos + Vector3.up * 8f, Vector3.down, out RaycastHit hit, 20f, ~0, QueryTriggerInteraction.Ignore))
+        {
+            safePos = hit.point + Vector3.up * 0.25f;
+        }
+
+        return (safePos, branchRot);
+    }
+
+    /// <summary>
+    /// Relocates the player's active or unlocked vehicles to the branch's designated parking / garage spawn point.
+    /// </summary>
+    public void RelocateVehiclesToBranchParking(BranchTier tier)
+    {
+        (Vector3 parkPos, Quaternion parkRot) = GetVehicleParkingPoint(tier);
+
+        DrivableVehicle[] allVehicles = UnityEngine.Object.FindObjectsByType<DrivableVehicle>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        if (allVehicles == null || allVehicles.Length == 0) return;
+
+        // Find active vehicle (the one player is currently driving, or unlocked starter pickup)
+        DrivableVehicle primaryVehicle = null;
+        foreach (var v in allVehicles)
+        {
+            if (v == null) continue;
+            if (v.isPlayerInside)
+            {
+                primaryVehicle = v;
+                break;
+            }
+        }
+
+        if (primaryVehicle == null)
+        {
+            // Pick unlocked starter vehicle or first active vehicle
+            foreach (var v in allVehicles)
+            {
+                if (v != null && (v.IsUnlocked || v.isUnlockedByDefault || v.vehicleId == "pickup_truck"))
+                {
+                    primaryVehicle = v;
+                    break;
+                }
+            }
+        }
+
+        if (primaryVehicle == null && allVehicles.Length > 0)
+        {
+            primaryVehicle = allVehicles[0];
+        }
+
+        if (primaryVehicle != null)
+        {
+            primaryVehicle.TeleportVehicle(parkPos, parkRot, true);
+            Debug.Log($"<color=#32FFFF>[BranchManager] Vehicle '{primaryVehicle.vehicleName}' relocated to branch parking at {parkPos}.</color>");
+        }
+    }
+
+    /// <summary>
+    /// Migrates any cargo packages that are not yet delivered to a delivery zone and not loaded on a vehicle
+    /// to the upgraded branch tier's cargo spawn area (platform).
+    /// Note: Does NOT spawn extra packages mid-day; daily quota will naturally replenish at day start.
+    /// </summary>
+    public void MigrateCargoOnBranchUpgrade(int oldLevel, int newLevel)
+    {
+        CargoWarehouseGenerator activeGen = GetActiveWarehouseGenerator();
+        if (activeGen == null)
+        {
+            Debug.LogWarning("[BranchManager] No active CargoWarehouseGenerator found for migrated branch tier!");
+            return;
+        }
+
+        PhysicalCargoPackage[] allScenePackages = UnityEngine.Object.FindObjectsByType<PhysicalCargoPackage>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        VehicleCargoBed[] vehicleBeds = UnityEngine.Object.FindObjectsByType<VehicleCargoBed>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+
+        List<PhysicalCargoPackage> packagesKeptInPlace = new List<PhysicalCargoPackage>();
+        List<PhysicalCargoPackage> packagesToRelocate = new List<PhysicalCargoPackage>();
+
+        foreach (var pkg in allScenePackages)
+        {
+            if (pkg == null) continue;
+
+            // 1. Check if package is held in player's hands
+            if (pkg.isBeingCarried)
+            {
+                packagesKeptInPlace.Add(pkg);
+                continue;
+            }
+
+            // 2. Check if package is in any vehicle bed/trunk
+            bool inBed = pkg.isInVehicleBed;
+            if (!inBed && vehicleBeds != null)
+            {
+                foreach (var bed in vehicleBeds)
+                {
+                    if (bed != null && bed.IsPackageInBed(pkg))
+                    {
+                        inBed = true;
+                        break;
+                    }
+                }
+            }
+
+            if (inBed)
+            {
+                packagesKeptInPlace.Add(pkg);
+                continue;
+            }
+
+            // 3. Check if package is placed in / near a delivery zone
+            if (pkg.FindNearbyDeliveryPoint() != null)
+            {
+                packagesKeptInPlace.Add(pkg);
+                continue;
+            }
+
+            // 4. Check if package is broken or exploded
+            if (pkg.isBroken || pkg.isExploded)
+            {
+                packagesKeptInPlace.Add(pkg);
+                continue;
+            }
+
+            // 5. Package is uncollected at warehouse/ground -> Relocate to new generator platform
+            packagesToRelocate.Add(pkg);
+        }
+
+        // Relocate uncollected packages to the new tier platform
+        activeGen.MigrateUncollectedPackages(packagesToRelocate, newLevel);
+
+        if (CargoTabletUI.Instance != null && CargoTabletUI.Instance.IsTabletOpen)
+        {
+            CargoTabletUI.Instance.RefreshUI();
+        }
+
+        Debug.Log($"<color=#32FF64>[BranchManager] Upgraded to Tier {newLevel}! Relocated {packagesToRelocate.Count} uncollected packages to new spawn area (No extra mid-day packages spawned; full daily limit will renew at next day start).</color>");
     }
 
     public void ApplyTierVisuals(bool respawnPackages = false)
@@ -761,6 +968,8 @@ public class BranchManager : MonoBehaviour
         currentBranchLevel = 1;
         SaveBranchLevel();
         ApplyTierVisuals(false);
+        MigrateCargoOnBranchUpgrade(0, 1);
+        RelocateVehiclesToBranchParking(CurrentTier);
         OnBranchReset?.Invoke();
         Debug.Log("<color=#FF3333>[DEV] BRANCH PROGRESSION RESET TO LEVEL 1!</color>");
     }

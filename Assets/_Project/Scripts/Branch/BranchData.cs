@@ -49,6 +49,13 @@ public class BranchTier
     [Tooltip("Dış mekan spawn pozisyonu için şube merkezinden yerel ofset (Spawn noktası Transform'u atanmamışsa kullanılır)")]
     public Vector3 customExteriorOffset = Vector3.zero;
 
+    [Header("--- ARAÇ PARK / GARAGE SPAWN NOKTASI (SEVİYE BAZLI - OPSİYONEL) ---")]
+    [Tooltip("Bu seviyeye yükseltildiğinde aracın park edileceği Transform noktası (Boşsa şube binası içindeki park/garage noktası veya BranchManager üzerindeki genel araç spawn noktası kullanılır)")]
+    public Transform vehicleParkingPoint;
+
+    [Tooltip("Eğer Transform atanmamışsa, şube merkezinden yerel araç park ofseti")]
+    public Vector3 customVehicleParkingOffset = Vector3.zero;
+
     /// <summary>
     /// Returns the localized tier name based on current language or falls back to tierName.
     /// </summary>

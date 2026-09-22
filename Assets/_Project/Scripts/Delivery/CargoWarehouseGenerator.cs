@@ -50,15 +50,163 @@ public class CargoWarehouseGenerator : MonoBehaviour
         int branchLevel = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : (PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.WarehouseLevel : 1);
         int toSpawn = BranchManager.Instance != null ? BranchManager.Instance.GetDailyPackageLimit() : (PlayerProgressionManager.Instance != null ? PlayerProgressionManager.Instance.GetDailyPackageLimit() : Mathf.Max(1, packageCount));
 
-        DeliveryPoint[] allPoints = Object.FindObjectsByType<DeliveryPoint>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-        if (allPoints == null || allPoints.Length == 0)
+        SpawnExtraPackages(toSpawn, 0, branchLevel);
+
+        Debug.Log($"<color=#32FF64>[CargoWarehouseGenerator] Spawned {currentPackages.Count} packages safely at {transform.position} for Branch Level {branchLevel}!</color>");
+    }
+
+    /// <summary>
+    /// Spawns extra packages on the warehouse platform starting from a given slot index.
+    /// Used for initial generation as well as filling remaining capacity on branch upgrades.
+    /// </summary>
+    public List<PhysicalCargoPackage> SpawnExtraPackages(int count, int startSlotIndex, int branchLevel)
+    {
+        List<PhysicalCargoPackage> newlySpawned = new List<PhysicalCargoPackage>();
+        if (count <= 0) return newlySpawned;
+
+        List<DeliveryPoint> availablePoints = GetAvailableDeliveryPoints(branchLevel);
+        if (availablePoints.Count == 0)
         {
-            Debug.LogWarning("[CargoWarehouseGenerator] No DeliveryPoint found in the scene! Place some DeliveryPoint objects first.");
-            return;
+            Debug.LogWarning("[CargoWarehouseGenerator] No DeliveryPoint found in the scene! Cannot spawn packages.");
+            return newlySpawned;
         }
 
-        // Filter points by branch level
+        for (int i = 0; i < count; i++)
+        {
+            int slotIdx = startSlotIndex + i;
+            PhysicalCargoPackage pkg = SpawnSinglePackage(branchLevel, slotIdx, availablePoints);
+            if (pkg != null)
+            {
+                newlySpawned.Add(pkg);
+                if (!currentPackages.Contains(pkg))
+                {
+                    currentPackages.Add(pkg);
+                }
+            }
+        }
+
+        return newlySpawned;
+    }
+
+    /// <summary>
+    /// Spawns a single cargo package tailored to the given branch level and positions it safely at the designated slot index.
+    /// </summary>
+    public PhysicalCargoPackage SpawnSinglePackage(int branchLevel, int slotIndex, List<DeliveryPoint> pointsPool = null)
+    {
+        if (pointsPool == null || pointsPool.Count == 0)
+        {
+            pointsPool = GetAvailableDeliveryPoints(branchLevel);
+        }
+
+        if (pointsPool.Count == 0)
+        {
+            Debug.LogWarning("[CargoWarehouseGenerator] No DeliveryPoint found in the scene for package spawn!");
+            return null;
+        }
+
+        DeliveryPoint targetPoint = pointsPool[Random.Range(0, pointsPool.Count)];
+        Vector3 spawnPos = GetSafeSpawnPosition(slotIndex);
+        Quaternion spawnRot = transform.rotation * Quaternion.Euler(0f, Random.Range(-25f, 25f), 0f);
+
+        BranchManager bm = BranchManager.Instance;
+        CargoType chosenType = bm != null ? bm.DetermineRandomCargoType(branchLevel) : CargoType.Standard;
+        GameObject chosenPrefab = bm != null ? bm.GetPrefabForCargoType(chosenType) : null;
+        GameObject boxObj;
+        bool isCustom = false;
+
+        if (chosenPrefab != null)
+        {
+            boxObj = Instantiate(chosenPrefab, spawnPos, spawnRot);
+            isCustom = true;
+
+            if (bm != null)
+            {
+                boxObj.transform.localScale = bm.CalculateCargoScale(chosenType, chosenPrefab.transform.localScale);
+            }
+        }
+        else
+        {
+            boxObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            boxObj.transform.position = spawnPos;
+            boxObj.transform.rotation = spawnRot;
+
+            if (bm != null)
+            {
+                boxObj.transform.localScale = bm.CalculateCargoScale(chosenType, new Vector3(0.55f, 0.42f, 0.45f));
+                isCustom = true;
+            }
+        }
+
+        boxObj.name = $"Cargo_Package_#{targetPoint.pointId}_{slotIndex + 1}";
+        boxObj.transform.SetParent(null); // Standalone in scene root
+
+        PhysicalCargoPackage pkg = boxObj.GetComponent<PhysicalCargoPackage>();
+        if (pkg == null) pkg = boxObj.AddComponent<PhysicalCargoPackage>();
+
+        int reward = Random.Range(minReward / 10, (maxReward / 10) + 1) * 10;
+        int xp = 70 + (targetPoint.requiredLevel * 20);
+
+        if (bm != null)
+        {
+            pkg.minDamageSpeedThreshold = bm.fragileMinDamageSpeedThreshold;
+            pkg.damageMultiplier = bm.fragileDamageMultiplier;
+            pkg.packageCollisionDamageRatio = bm.fragilePackageCollisionRatio;
+            pkg.spawnImmunityDuration = bm.fragileSpawnImmunityDuration;
+            pkg.explosionVfxPrefab = bm.explosionVfxPrefab;
+        }
+
+        Material chosenMaterial = bm != null ? bm.GetMaterialForCargoType(chosenType) : null;
+
+        float expressHour = 13.0f;
+        if (chosenType == CargoType.Express)
+        {
+            expressHour = bm != null ? bm.GenerateRandomExpressDeliveryHour() : 13.0f;
+        }
+
+        pkg.SetupPackage(targetPoint.pointId, targetPoint.EffectiveAddressName, targetPoint.EffectiveRecipient, reward, wrongPenalty, chosenType, xp, targetPoint.EffectiveDescription, chosenMaterial, isCustom, expressHour);
+        return pkg;
+    }
+
+    /// <summary>
+    /// Relocates uncollected/unloaded cargo packages from an old branch generator platform to this upgraded platform.
+    /// </summary>
+    public void MigrateUncollectedPackages(List<PhysicalCargoPackage> packagesToMove, int newBranchLevel)
+    {
+        if (packagesToMove == null || packagesToMove.Count == 0) return;
+
+        currentPackages.RemoveAll(p => p == null);
+
+        int slotIdx = 0;
+        foreach (var pkg in packagesToMove)
+        {
+            if (pkg == null) continue;
+
+            Vector3 safePos = GetSafeSpawnPosition(slotIdx);
+            Quaternion safeRot = transform.rotation * Quaternion.Euler(0f, Random.Range(-25f, 25f), 0f);
+
+            pkg.RelocateToPosition(safePos, safeRot);
+
+            if (!currentPackages.Contains(pkg))
+            {
+                currentPackages.Add(pkg);
+            }
+
+            slotIdx++;
+        }
+
+        Debug.Log($"<color=#32FF64>[CargoWarehouseGenerator] Successfully migrated {packagesToMove.Count} packages to upgraded platform at {transform.position}!</color>");
+    }
+
+    public List<DeliveryPoint> GetAvailableDeliveryPoints(int branchLevel)
+    {
+        DeliveryPoint[] allPoints = Object.FindObjectsByType<DeliveryPoint>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
         List<DeliveryPoint> availablePoints = new List<DeliveryPoint>();
+
+        if (allPoints == null || allPoints.Length == 0)
+        {
+            return availablePoints;
+        }
+
         foreach (var p in allPoints)
         {
             if (p.requiredLevel <= branchLevel)
@@ -67,90 +215,15 @@ public class CargoWarehouseGenerator : MonoBehaviour
             }
         }
 
-        // Fallback to all points if no points match level
         if (availablePoints.Count == 0)
         {
             availablePoints.AddRange(allPoints);
         }
 
-        BranchManager bm = BranchManager.Instance;
-
-        for (int i = 0; i < toSpawn; i++)
-        {
-            // Pick a destination point
-            DeliveryPoint targetPoint = availablePoints[Random.Range(0, availablePoints.Count)];
-
-            // Calculate safe collision-checked spawn position
-            Vector3 spawnPos = GetSafeSpawnPosition(i);
-            Quaternion spawnRot = transform.rotation * Quaternion.Euler(0f, Random.Range(-25f, 25f), 0f);
-
-            // Determine Cargo Type via BranchManager
-            CargoType chosenType = bm != null ? bm.DetermineRandomCargoType(branchLevel) : CargoType.Standard;
-
-            // Check if 3D Prefab model is provided
-            GameObject chosenPrefab = bm != null ? bm.GetPrefabForCargoType(chosenType) : null;
-            GameObject boxObj;
-            bool isCustom = false;
-
-            if (chosenPrefab != null)
-            {
-                boxObj = Instantiate(chosenPrefab, spawnPos, spawnRot);
-                isCustom = true;
-
-                // Scale multiplier applied to original prefab localScale based on cargo type and elongation
-                if (bm != null)
-                {
-                    boxObj.transform.localScale = bm.CalculateCargoScale(chosenType, chosenPrefab.transform.localScale);
-                }
-            }
-            else
-            {
-                // Fallback: Create standard physical cargo cube directly in the scene
-                boxObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                boxObj.transform.position = spawnPos;
-                boxObj.transform.rotation = spawnRot;
-
-                if (bm != null)
-                {
-                    boxObj.transform.localScale = bm.CalculateCargoScale(chosenType, new Vector3(0.55f, 0.42f, 0.45f));
-                    isCustom = true;
-                }
-            }
-
-            boxObj.name = $"Cargo_Package_#{targetPoint.pointId}_{i + 1}";
-            boxObj.transform.SetParent(null); // Standalone in scene root
-
-            PhysicalCargoPackage pkg = boxObj.GetComponent<PhysicalCargoPackage>();
-            if (pkg == null) pkg = boxObj.AddComponent<PhysicalCargoPackage>();
-
-            int reward = Random.Range(minReward / 10, (maxReward / 10) + 1) * 10;
-            int xp = 70 + (targetPoint.requiredLevel * 20);
-
-            if (bm != null)
-            {
-                pkg.minDamageSpeedThreshold = bm.fragileMinDamageSpeedThreshold;
-                pkg.damageMultiplier = bm.fragileDamageMultiplier;
-                pkg.packageCollisionDamageRatio = bm.fragilePackageCollisionRatio;
-                pkg.spawnImmunityDuration = bm.fragileSpawnImmunityDuration;
-                pkg.explosionVfxPrefab = bm.explosionVfxPrefab;
-            }
-
-            Material chosenMaterial = bm != null ? bm.GetMaterialForCargoType(chosenType) : null;
-
-            float expressHour = 13.0f;
-            if (chosenType == CargoType.Express)
-            {
-                expressHour = bm != null ? bm.GenerateRandomExpressDeliveryHour() : 13.0f;
-            }
-
-            pkg.SetupPackage(targetPoint.pointId, targetPoint.EffectiveAddressName, targetPoint.EffectiveRecipient, reward, wrongPenalty, chosenType, xp, targetPoint.EffectiveDescription, chosenMaterial, isCustom, expressHour);
-            currentPackages.Add(pkg);
-        }
-
-        Debug.Log($"<color=#32FF64>[CargoWarehouseGenerator] Spawned {currentPackages.Count} packages safely at {transform.position} for Branch Level {branchLevel}!</color>");
+        return availablePoints;
     }
 
-    private Vector3 GetSafeSpawnPosition(int index)
+    public Vector3 GetSafeSpawnPosition(int index)
     {
         Vector3 boxExtents = new Vector3(0.35f, 0.35f, 0.35f);
 

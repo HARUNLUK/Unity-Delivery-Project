@@ -682,6 +682,79 @@ public class DrivableVehicle : MonoBehaviour
     }
 
     /// <summary>
+    /// Teleports the vehicle smoothly to target position and rotation, zeroing physics velocities,
+    /// resetting wheel colliders, and safely carrying any packages currently loaded in the cargo bed.
+    /// </summary>
+    public void TeleportVehicle(Vector3 targetPos, Quaternion targetRot, bool keepCargoInBed = true)
+    {
+        // 1. Gather packages in bed to carry along with the vehicle
+        VehicleCargoBed bed = GetComponentInChildren<VehicleCargoBed>();
+        var bedPackages = new System.Collections.Generic.List<(PhysicalCargoPackage pkg, Vector3 localPos, Quaternion localRot)>();
+
+        if (keepCargoInBed && bed != null)
+        {
+            foreach (var pkg in bed.PackagesInBed)
+            {
+                if (pkg != null)
+                {
+                    Vector3 lPos = transform.InverseTransformPoint(pkg.transform.position);
+                    Quaternion lRot = Quaternion.Inverse(transform.rotation) * pkg.transform.rotation;
+                    bedPackages.Add((pkg, lPos, lRot));
+                }
+            }
+        }
+
+        // 2. Cut engine torque & clear forces
+        if (carController != null)
+        {
+            carController.ClearAllForces();
+            carController.enabled = false;
+        }
+
+        // 3. Reset physics velocity and move transform
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.position = targetPos;
+            rb.rotation = targetRot;
+        }
+
+        transform.position = targetPos;
+        transform.rotation = targetRot;
+
+        // 4. Reset wheel colliders to avoid spring tension or spinning
+        if (carController != null)
+        {
+            ResetWheelCollider(carController.frontLeftCollider);
+            ResetWheelCollider(carController.frontRightCollider);
+            ResetWheelCollider(carController.rearLeftCollider);
+            ResetWheelCollider(carController.rearRightCollider);
+            carController.enabled = isPlayerInside && HasFuel;
+        }
+
+        Physics.SyncTransforms();
+
+        // 5. Relocate bed packages to exact relative offsets on the new vehicle position
+        foreach (var item in bedPackages)
+        {
+            if (item.pkg != null)
+            {
+                Vector3 newPkgWorldPos = targetPos + (targetRot * item.localPos);
+                Quaternion newPkgWorldRot = targetRot * item.localRot;
+                item.pkg.RelocateToPosition(newPkgWorldPos, newPkgWorldRot);
+            }
+        }
+
+        // 6. Zero velocities again after placement
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+    }
+
+    /// <summary>
     /// Recalls vehicle safely to the designated garage spawn point or parking point.
     /// </summary>
     public void RecallToGarage()
@@ -695,7 +768,8 @@ public class DrivableVehicle : MonoBehaviour
 
         if (targetAnchor == null)
         {
-            GameObject g = GameObject.Find("Warehouse_Garage_SpawnPoint");
+            GameObject g = GameObject.Find("PickupGaragePoint");
+            if (g == null) g = GameObject.Find("Warehouse_Garage_SpawnPoint");
             if (g == null) g = GameObject.Find("GarageSpawnPoint");
             if (g == null) g = GameObject.Find("Warehouse_SpawnPoint");
             if (g == null) g = GameObject.Find("DeliveryPoint_1");
@@ -706,47 +780,13 @@ public class DrivableVehicle : MonoBehaviour
         Vector3 targetPos = targetAnchor != null ? targetAnchor.position + Vector3.up * 0.45f : transform.position + Vector3.up * 0.2f;
         Quaternion targetRot = targetAnchor != null ? targetAnchor.rotation : transform.rotation;
 
-        // 2. Cut engine torque & disable controller temporarily
-        if (carController != null)
-        {
-            carController.ClearAllForces();
-            carController.enabled = false;
-        }
+        // 2. Perform safe vehicle teleport
+        TeleportVehicle(targetPos, targetRot, true);
 
-        // 3. Reset physics velocity
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-            rb.position = targetPos;
-            rb.rotation = targetRot;
-        }
-
-        transform.position = targetPos;
-        transform.rotation = targetRot;
-
-        // 4. Reset wheel colliders to avoid lingering spring tension or spinning
-        if (carController != null)
-        {
-            ResetWheelCollider(carController.frontLeftCollider);
-            ResetWheelCollider(carController.frontRightCollider);
-            ResetWheelCollider(carController.rearLeftCollider);
-            ResetWheelCollider(carController.rearRightCollider);
-        }
-
-        Physics.SyncTransforms();
-
-        // 5. If player was inside the vehicle, safely exit player AT THE NEW GARAGE POSITION
+        // 3. If player was inside the vehicle, safely exit player AT THE NEW GARAGE POSITION
         if (isPlayerInside)
         {
             ExitVehicle();
-        }
-
-        // 6. Zero out velocities again after placement
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
         }
 
         string anchorName = targetAnchor != null ? targetAnchor.name : "Default Position";

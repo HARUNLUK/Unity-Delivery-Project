@@ -245,6 +245,11 @@ public class CarController : MonoBehaviour
             else if (stage == 2) tuningTorqueMultiplier = 1.30f;
             else if (stage >= 3) tuningTorqueMultiplier = 1.50f;
             else tuningTorqueMultiplier = 1.00f;
+
+            if (!dv.isPlayerInside)
+            {
+                enabled = false;
+            }
         }
     }
 
@@ -339,7 +344,13 @@ public class CarController : MonoBehaviour
         verticalInput = 0f;
         isHandbraking = false;
 
-        if (FPSPlayerController.Instance != null && FPSPlayerController.Instance.IsUIBlockingInput())
+        DrivableVehicle dv = GetComponent<DrivableVehicle>();
+        if (dv != null && !dv.isPlayerInside)
+        {
+            return;
+        }
+
+        if (FPSPlayerController.Instance != null && (FPSPlayerController.Instance.IsUIBlockingInput() || FPSPlayerController.Instance.IsOnFoot))
         {
             return;
         }
