@@ -250,7 +250,7 @@ public class CargoTabletUI : MonoBehaviour
             TextMeshProUGUI curBranchHeader = FindTMPRecursive(branchViewRoot.transform, "LeftColumn_CurrentBranch/Header", "CurrentBranchHeader");
             if (curBranchHeader != null) curBranchHeader.text = LocalizationManager.Get("tablet_branch_current_title", "CURRENT BRANCH / WAREHOUSE");
 
-            TextMeshProUGUI nextBranchHeader = FindTMPRecursive(branchViewRoot.transform, "RightColumn_NextBranch/Header", "NextBranchHeader");
+            TextMeshProUGUI nextBranchHeader = FindTMPRecursive(branchViewRoot.transform, "RightColumn_NextTier/Header", "RightColumn_NextBranch/Header", "NextBranchHeader");
             if (nextBranchHeader != null) nextBranchHeader.text = LocalizationManager.Get("tablet_branch_next_title", "BRANCH UPGRADE");
         }
 
