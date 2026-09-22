@@ -251,6 +251,14 @@ public class PhysicalCargoPackage : MonoBehaviour
     }
 
     /// <summary>
+    /// Grants temporary damage immunity (e.g. when gently placing down or releasing from hands).
+    /// </summary>
+    public void GrantDamageImmunity(float duration)
+    {
+        spawnImmunityUntil = Mathf.Max(spawnImmunityUntil, Time.time + duration);
+    }
+
+    /// <summary>
     /// Safely relocates the cargo package to a new world position and rotation, resetting physics velocity and immunity.
     /// </summary>
     public void RelocateToPosition(Vector3 newWorldPosition, Quaternion newWorldRotation)
@@ -351,8 +359,40 @@ public class PhysicalCargoPackage : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (isBeingCarried) return; // Never take damage or make drop sounds while held by player!
-        if (Time.time < spawnImmunityUntil) return; // Do not take damage during initial spawn settling (3.5s)
+        // 1. Never take damage or make drop sounds if this package is being carried by the player
+        if (isBeingCarried) return;
+        if (PhysicsGrabber.Instance != null && PhysicsGrabber.Instance.grabbedRb == rb) return;
+
+        // 2. Do not take damage during initial spawn settling or temporary placement immunity
+        if (Time.time < spawnImmunityUntil) return;
+
+        // 3. If player is carrying ANY object (cargo, prop, box) and bumps into this package, NEVER damage this package!
+        if (PhysicsGrabber.Instance != null && PhysicsGrabber.Instance.IsHoldingObject)
+        {
+            if (collision.rigidbody == PhysicsGrabber.Instance.grabbedRb || 
+                collision.gameObject == PhysicsGrabber.Instance.grabbedRb.gameObject ||
+                collision.transform.IsChildOf(PhysicsGrabber.Instance.grabbedRb.transform))
+            {
+                return;
+            }
+        }
+
+        // 4. If the colliding object is another PhysicalCargoPackage that is being carried, NEVER damage this package!
+        PhysicalCargoPackage otherPkg = collision.gameObject.GetComponent<PhysicalCargoPackage>();
+        if (otherPkg == null) otherPkg = collision.transform.GetComponentInParent<PhysicalCargoPackage>();
+        if (otherPkg == null) otherPkg = collision.transform.GetComponentInChildren<PhysicalCargoPackage>();
+        if (otherPkg != null && otherPkg.isBeingCarried)
+        {
+            return;
+        }
+
+        // 5. If the colliding object is the player character body (walking against or brushing past cargo), NEVER damage this package!
+        if (collision.gameObject.CompareTag("Player") || 
+            collision.gameObject.GetComponentInParent<FPSPlayerController>() != null || 
+            collision.gameObject.GetComponentInParent<CharacterController>() != null)
+        {
+            return;
+        }
 
         float impactSpeed = collision.relativeVelocity.magnitude;
         if (rb != null && collision.impulse.magnitude > 0.01f)
@@ -371,8 +411,7 @@ public class PhysicalCargoPackage : MonoBehaviour
         if (Time.time - lastDamageTime < damageCooldown) return; // Cooldown to prevent multi-hit bounce/rolling frame spam
 
         // Detect package-to-package collisions (cardboard-to-cardboard contact is softer)
-        bool hitOtherCargo = collision.gameObject.GetComponent<PhysicalCargoPackage>() != null || 
-                             collision.transform.GetComponentInParent<PhysicalCargoPackage>() != null;
+        bool hitOtherCargo = otherPkg != null;
 
         float effectiveThreshold = hitOtherCargo ? (minDamageSpeedThreshold + 1.8f) : minDamageSpeedThreshold;
 

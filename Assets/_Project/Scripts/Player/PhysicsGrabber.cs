@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class PhysicsGrabber : MonoBehaviour
 {
+    public static PhysicsGrabber Instance { get; private set; }
+
     [Header("--- GRAB SETTINGS ---")]
     [Tooltip("Base distance in front of camera where grabbed objects float")]
     public float holdDistance = 1.6f;
@@ -33,6 +35,7 @@ public class PhysicsGrabber : MonoBehaviour
 
     private void Awake()
     {
+        Instance = this;
         playerCam = GetComponentInParent<Camera>();
         if (playerCam == null) playerCam = Camera.main;
     }
@@ -121,6 +124,11 @@ public class PhysicsGrabber : MonoBehaviour
             // Reset spring/carry momentum to prevent launching when dropped while walking
             releasedRb.linearVelocity = Vector3.zero;
             releasedRb.angularVelocity = Vector3.zero;
+
+            if (pkg != null)
+            {
+                pkg.GrantDamageImmunity(0.75f);
+            }
         }
 
         // Delay re-enabling collision with player body so overlap doesn't fling the object!
