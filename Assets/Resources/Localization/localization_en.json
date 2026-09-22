@@ -370,6 +370,18 @@
       "value": "DELIVERY DETAILS & HINT"
     },
     {
+      "key": "tablet_delivery_details_header",
+      "value": "DELIVERY DETAILS"
+    },
+    {
+      "key": "tablet_address_hint_title",
+      "value": "Address Hint"
+    },
+    {
+      "key": "tablet_address_hint_note",
+      "value": "Address Hint & Note:"
+    },
+    {
       "key": "tablet_vehicle_dealership_title",
       "value": "VEHICLE FLEET & DEALERSHIP"
     },

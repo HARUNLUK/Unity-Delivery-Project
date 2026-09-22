@@ -26,9 +26,11 @@ public class CargoTabletUI : MonoBehaviour
 
     [Header("--- DETAIL & CLUE PANEL ---")]
     public GameObject detailCardRoot;
+    public TextMeshProUGUI detailHeaderTitleText;
     public TextMeshProUGUI trackingNumberText;
     public TextMeshProUGUI recipientNameText;
     public TextMeshProUGUI targetAddressText;
+    public TextMeshProUGUI addressHintTitleText;
     public TextMeshProUGUI addressDescriptionText;
     public Button dropCargoButton;
 
@@ -80,6 +82,14 @@ public class CargoTabletUI : MonoBehaviour
     public Button tabBranchButton;
     public Button endShiftButton;
     public Button closeTabletButton;
+
+    [Header("--- TAB VISUAL STYLING ---")]
+    public Sprite activeTabSprite;
+    public Sprite inactiveTabSprite;
+    public Color activeTabColor = new Color(0.12f, 0.55f, 0.95f, 1f);
+    public Color inactiveTabColor = new Color(0.09f, 0.13f, 0.19f, 0.85f);
+    public Color activeTabTextColor = Color.white;
+    public Color inactiveTabTextColor = new Color(0.65f, 0.78f, 0.90f, 0.75f);
 
     private PhysicalCargoPackage currentSelectedPackage;
     private CargoItem currentSelectedCargo;
@@ -193,6 +203,58 @@ public class CargoTabletUI : MonoBehaviour
             var tmp = closeTabletButton.GetComponentInChildren<TextMeshProUGUI>();
             if (tmp != null) tmp.text = LocalizationManager.Get("tablet_btn_close", "CLOSE");
         }
+
+        // Localize Cargo View sub-headers & titles
+        if (cargoViewRoot != null)
+        {
+            TextMeshProUGUI listTitle = FindTMPRecursive(cargoViewRoot.transform, "ListTitle", "LeftColumn_List/Title", "LeftColumn_List/Header");
+            if (listTitle != null) listTitle.text = LocalizationManager.Get("tablet_cargo_in_vehicle", "CARGO IN VEHICLE");
+
+            if (detailHeaderTitleText == null)
+            {
+                Transform rDetail = FindTransformRecursive(cargoViewRoot.transform, "RightColumn_Detail");
+                if (rDetail != null) detailHeaderTitleText = FindTMPRecursive(rDetail, "Header", "DetailHeader");
+            }
+            if (detailHeaderTitleText != null)
+            {
+                detailHeaderTitleText.text = LocalizationManager.Get("tablet_delivery_details_header", "TESLİMAT DETAYLARI");
+            }
+
+            if (addressHintTitleText == null)
+            {
+                Transform descBox = FindTransformRecursive(cargoViewRoot.transform, "DescriptionBox");
+                if (descBox != null)
+                {
+                    addressHintTitleText = FindTMPRecursive(descBox, "Title", "Header", "AddressHintTitle", "HintTitle");
+                }
+            }
+            if (addressHintTitleText != null)
+            {
+                addressHintTitleText.text = LocalizationManager.Get("tablet_address_hint_title", "Adres İpucu");
+            }
+
+            TextMeshProUGUI tipText = FindTMPRecursive(cargoViewRoot.transform, "PhysicalDeliveryTipBox/Text", "TipText");
+            if (tipText != null) tipText.text = LocalizationManager.Get("tablet_physical_delivery_tip", "<b>Physical Delivery:</b> Pick up package with <b>[E]</b> and drop in delivery zone.");
+        }
+
+        // Localize Vehicle View sub-headers & titles
+        if (vehicleViewRoot != null)
+        {
+            TextMeshProUGUI vehFleetTitle = FindTMPRecursive(vehicleViewRoot.transform, "LeftColumn_Vehicles/Title", "LeftColumn_Vehicles/Header", "FleetTitle");
+            if (vehFleetTitle != null) vehFleetTitle.text = LocalizationManager.Get("tablet_vehicle_dealership_title", "VEHICLE FLEET");
+        }
+
+        // Localize Branch View sub-headers & titles
+        if (branchViewRoot != null)
+        {
+            TextMeshProUGUI curBranchHeader = FindTMPRecursive(branchViewRoot.transform, "LeftColumn_CurrentBranch/Header", "CurrentBranchHeader");
+            if (curBranchHeader != null) curBranchHeader.text = LocalizationManager.Get("tablet_branch_current_title", "CURRENT BRANCH / WAREHOUSE");
+
+            TextMeshProUGUI nextBranchHeader = FindTMPRecursive(branchViewRoot.transform, "RightColumn_NextBranch/Header", "NextBranchHeader");
+            if (nextBranchHeader != null) nextBranchHeader.text = LocalizationManager.Get("tablet_branch_next_title", "BRANCH UPGRADE");
+        }
+
+        UpdateTabVisuals();
     }
 
     private void HandleBranchUpgraded(int lvl, BranchTier tier)
@@ -439,6 +501,7 @@ public class CargoTabletUI : MonoBehaviour
         if (vehicleViewRoot != null) vehicleViewRoot.SetActive(currentTab == TabletTab.VehicleDealership);
         if (branchViewRoot != null) branchViewRoot.SetActive(currentTab == TabletTab.BranchOffice);
 
+        UpdateTabVisuals();
         RefreshUI();
     }
 
@@ -585,6 +648,16 @@ public class CargoTabletUI : MonoBehaviour
 
         if (detailCardRoot != null) detailCardRoot.SetActive(true);
 
+        if (detailHeaderTitleText == null && cargoViewRoot != null)
+        {
+            Transform rDetail = FindTransformRecursive(cargoViewRoot.transform, "RightColumn_Detail");
+            if (rDetail != null) detailHeaderTitleText = FindTMPRecursive(rDetail, "Header", "DetailHeader");
+        }
+        if (detailHeaderTitleText != null)
+        {
+            detailHeaderTitleText.text = LocalizationManager.Get("tablet_delivery_details_header", "TESLİMAT DETAYLARI");
+        }
+
         if (recipientNameText != null)
         {
             recipientNameText.text = LocalizationManager.GetFormat("tablet_recipient", pkg.EffectiveRecipientName);
@@ -595,6 +668,21 @@ public class CargoTabletUI : MonoBehaviour
             targetAddressText.text = LocalizationManager.GetFormat("tablet_address", pkg.EffectiveAddressName);
         }
 
+        if (addressHintTitleText == null && cargoViewRoot != null)
+        {
+            Transform descBox = FindTransformRecursive(cargoViewRoot.transform, "DescriptionBox");
+            if (descBox != null) addressHintTitleText = FindTMPRecursive(descBox, "Title", "Header", "AddressHintTitle", "HintTitle");
+        }
+        if (addressHintTitleText != null)
+        {
+            addressHintTitleText.text = LocalizationManager.Get("tablet_address_hint_title", "Adres İpucu");
+        }
+
+        if (addressDescriptionText == null && cargoViewRoot != null)
+        {
+            Transform descBox = FindTransformRecursive(cargoViewRoot.transform, "DescriptionBox");
+            if (descBox != null) addressDescriptionText = FindTMPRecursive(descBox, "AddressDescriptionText", "AddressDescription", "DescText", "Description");
+        }
         if (addressDescriptionText != null)
         {
             string desc = pkg.EffectiveAddressDescription;
@@ -607,10 +695,35 @@ public class CargoTabletUI : MonoBehaviour
         currentSelectedCargo = cargo;
         if (detailCardRoot != null) detailCardRoot.SetActive(true);
 
+        if (detailHeaderTitleText == null && cargoViewRoot != null)
+        {
+            Transform rDetail = FindTransformRecursive(cargoViewRoot.transform, "RightColumn_Detail");
+            if (rDetail != null) detailHeaderTitleText = FindTMPRecursive(rDetail, "Header", "DetailHeader");
+        }
+        if (detailHeaderTitleText != null)
+        {
+            detailHeaderTitleText.text = LocalizationManager.Get("tablet_delivery_details_header", "TESLİMAT DETAYLARI");
+        }
+
         if (trackingNumberText != null) trackingNumberText.text = LocalizationManager.GetFormat("tablet_tracking_no", cargo.trackingNumber);
         if (recipientNameText != null) recipientNameText.text = LocalizationManager.GetFormat("tablet_recipient", cargo.recipientName);
         if (targetAddressText != null) targetAddressText.text = LocalizationManager.GetFormat("tablet_address", cargo.targetAddress);
 
+        if (addressHintTitleText == null && cargoViewRoot != null)
+        {
+            Transform descBox = FindTransformRecursive(cargoViewRoot.transform, "DescriptionBox");
+            if (descBox != null) addressHintTitleText = FindTMPRecursive(descBox, "Title", "Header", "AddressHintTitle", "HintTitle");
+        }
+        if (addressHintTitleText != null)
+        {
+            addressHintTitleText.text = LocalizationManager.Get("tablet_address_hint_title", "Adres İpucu");
+        }
+
+        if (addressDescriptionText == null && cargoViewRoot != null)
+        {
+            Transform descBox = FindTransformRecursive(cargoViewRoot.transform, "DescriptionBox");
+            if (descBox != null) addressDescriptionText = FindTMPRecursive(descBox, "AddressDescriptionText", "AddressDescription", "DescText", "Description");
+        }
         if (addressDescriptionText != null)
         {
             string desc = AddressLocalizationManager.GetDescription(cargo.targetPointId, cargo.targetAddressDescription);
@@ -1052,7 +1165,21 @@ public class CargoTabletUI : MonoBehaviour
             closeTabletButton.onClick.AddListener(CloseTablet);
         }
 
-        RefreshLocalizedUI();
+        // Cache tab sprites if present
+        if (activeTabSprite == null && tabCargoButton != null && tabCargoButton.image != null && tabCargoButton.image.sprite != null)
+        {
+            activeTabSprite = tabCargoButton.image.sprite;
+        }
+        if (inactiveTabSprite == null && tabVehicleButton != null && tabVehicleButton.image != null && tabVehicleButton.image.sprite != null)
+        {
+            inactiveTabSprite = tabVehicleButton.image.sprite;
+        }
+        if (inactiveTabSprite == null && tabBranchButton != null && tabBranchButton.image != null && tabBranchButton.image.sprite != null)
+        {
+            inactiveTabSprite = tabBranchButton.image.sprite;
+        }
+
+        UpdateTabVisuals();
 
         // 2. Cargo View Root
         Transform cView = FindTransformRecursive(tabletPanelRoot.transform, "CargoViewRoot");
@@ -1074,9 +1201,21 @@ public class CargoTabletUI : MonoBehaviour
             if (rDetail != null)
             {
                 detailCardRoot = rDetail.gameObject;
+                detailHeaderTitleText = FindTMPRecursive(rDetail, "Header", "DetailHeader");
                 recipientNameText = FindTMPRecursive(rDetail, "RecipientNameText", "RecipientName", "Recipient");
                 targetAddressText = FindTMPRecursive(rDetail, "TargetAddressText", "TargetAddress", "Address");
-                addressDescriptionText = FindTMPRecursive(rDetail, "AddressDescriptionText", "AddressDescription", "DescText", "Description");
+
+                Transform descBox = FindTransformRecursive(rDetail, "DescriptionBox");
+                if (descBox != null)
+                {
+                    addressHintTitleText = FindTMPRecursive(descBox, "Title", "Header", "AddressHintTitle", "HintTitle");
+                    addressDescriptionText = FindTMPRecursive(descBox, "AddressDescriptionText", "AddressDescription", "DescText", "Description");
+                }
+                else
+                {
+                    addressHintTitleText = FindTMPRecursive(rDetail, "AddressHintTitle", "HintTitle");
+                    addressDescriptionText = FindTMPRecursive(rDetail, "AddressDescriptionText", "AddressDescription", "DescText", "Description");
+                }
             }
         }
 
@@ -1152,25 +1291,50 @@ public class CargoTabletUI : MonoBehaviour
             dropCargoButton.onClick.RemoveAllListeners();
             dropCargoButton.gameObject.SetActive(false);
         }
+
+        // Refresh all localized texts now that all components and views are bound
+        RefreshLocalizedUI();
     }
 
     private TextMeshProUGUI FindTMPRecursive(Transform root, params string[] searchNames)
     {
         if (root == null) return null;
-        var allTexts = root.GetComponentsInChildren<TextMeshProUGUI>(true);
+
+        // 1. Direct path lookup if path contains '/'
         foreach (var name in searchNames)
         {
+            if (string.IsNullOrEmpty(name)) continue;
+            if (name.Contains("/"))
+            {
+                Transform foundT = root.Find(name);
+                if (foundT != null)
+                {
+                    var tmp = foundT.GetComponent<TextMeshProUGUI>();
+                    if (tmp != null) return tmp;
+                }
+            }
+        }
+
+        var allTexts = root.GetComponentsInChildren<TextMeshProUGUI>(true);
+        // 2. Exact match
+        foreach (var name in searchNames)
+        {
+            if (string.IsNullOrEmpty(name)) continue;
+            string pureName = name.Contains("/") ? name.Substring(name.LastIndexOf('/') + 1) : name;
             foreach (var t in allTexts)
             {
-                if (t != null && t.gameObject.name.Equals(name, System.StringComparison.OrdinalIgnoreCase))
+                if (t != null && t.gameObject.name.Equals(pureName, System.StringComparison.OrdinalIgnoreCase))
                     return t;
             }
         }
+        // 3. Substring match
         foreach (var name in searchNames)
         {
+            if (string.IsNullOrEmpty(name)) continue;
+            string pureName = name.Contains("/") ? name.Substring(name.LastIndexOf('/') + 1) : name;
             foreach (var t in allTexts)
             {
-                if (t != null && t.gameObject.name.IndexOf(name, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                if (t != null && t.gameObject.name.IndexOf(pureName, System.StringComparison.OrdinalIgnoreCase) >= 0)
                     return t;
             }
         }
@@ -1180,20 +1344,39 @@ public class CargoTabletUI : MonoBehaviour
     private Button FindButtonRecursive(Transform root, params string[] searchNames)
     {
         if (root == null) return null;
+
+        foreach (var name in searchNames)
+        {
+            if (string.IsNullOrEmpty(name)) continue;
+            if (name.Contains("/"))
+            {
+                Transform foundT = root.Find(name);
+                if (foundT != null)
+                {
+                    var b = foundT.GetComponent<Button>();
+                    if (b != null) return b;
+                }
+            }
+        }
+
         var allBtns = root.GetComponentsInChildren<Button>(true);
         foreach (var name in searchNames)
         {
+            if (string.IsNullOrEmpty(name)) continue;
+            string pureName = name.Contains("/") ? name.Substring(name.LastIndexOf('/') + 1) : name;
             foreach (var b in allBtns)
             {
-                if (b != null && b.gameObject.name.Equals(name, System.StringComparison.OrdinalIgnoreCase))
+                if (b != null && b.gameObject.name.Equals(pureName, System.StringComparison.OrdinalIgnoreCase))
                     return b;
             }
         }
         foreach (var name in searchNames)
         {
+            if (string.IsNullOrEmpty(name)) continue;
+            string pureName = name.Contains("/") ? name.Substring(name.LastIndexOf('/') + 1) : name;
             foreach (var b in allBtns)
             {
-                if (b != null && b.gameObject.name.IndexOf(name, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                if (b != null && b.gameObject.name.IndexOf(pureName, System.StringComparison.OrdinalIgnoreCase) >= 0)
                     return b;
             }
         }
@@ -1202,12 +1385,20 @@ public class CargoTabletUI : MonoBehaviour
 
     private Transform FindTransformRecursive(Transform root, string childName)
     {
-        if (root == null) return null;
+        if (root == null || string.IsNullOrEmpty(childName)) return null;
         if (root.gameObject.name.Equals(childName, System.StringComparison.OrdinalIgnoreCase)) return root;
+
+        if (childName.Contains("/"))
+        {
+            Transform direct = root.Find(childName);
+            if (direct != null) return direct;
+        }
+
+        string pureName = childName.Contains("/") ? childName.Substring(childName.LastIndexOf('/') + 1) : childName;
         var allTransforms = root.GetComponentsInChildren<Transform>(true);
         foreach (var t in allTransforms)
         {
-            if (t != null && t.gameObject.name.Equals(childName, System.StringComparison.OrdinalIgnoreCase))
+            if (t != null && t.gameObject.name.Equals(pureName, System.StringComparison.OrdinalIgnoreCase))
                 return t;
         }
         return null;
@@ -1264,6 +1455,61 @@ public class CargoTabletUI : MonoBehaviour
         if (img != null)
         {
             img.color = normalColor;
+        }
+    }
+
+    public void UpdateTabVisuals()
+    {
+        SetTabButtonState(tabCargoButton, currentTab == TabletTab.CargoInventory);
+        SetTabButtonState(tabVehicleButton, currentTab == TabletTab.VehicleDealership);
+        SetTabButtonState(tabBranchButton, currentTab == TabletTab.BranchOffice);
+    }
+
+    private void SetTabButtonState(Button btn, bool isActive)
+    {
+        if (btn == null) return;
+
+        Image img = btn.GetComponent<Image>();
+        if (img != null)
+        {
+            if (activeTabSprite != null && inactiveTabSprite != null && activeTabSprite != inactiveTabSprite)
+            {
+                img.sprite = isActive ? activeTabSprite : inactiveTabSprite;
+                img.color = Color.white;
+            }
+            else
+            {
+                img.color = isActive ? activeTabColor : inactiveTabColor;
+            }
+        }
+
+        // Configure ColorBlock so Unity UI pointer hover, selection, and unhover retain accurate tab states
+        ColorBlock cb = btn.colors;
+        if (activeTabSprite != null && inactiveTabSprite != null && activeTabSprite != inactiveTabSprite)
+        {
+            cb.normalColor = Color.white;
+            cb.highlightedColor = new Color(1.15f, 1.15f, 1.15f, 1f);
+            cb.selectedColor = Color.white;
+            cb.pressedColor = new Color(0.85f, 0.85f, 0.85f, 1f);
+            cb.disabledColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+        }
+        else
+        {
+            Color baseCol = isActive ? activeTabColor : inactiveTabColor;
+            cb.normalColor = baseCol;
+            cb.highlightedColor = new Color(Mathf.Min(1f, baseCol.r + 0.15f), Mathf.Min(1f, baseCol.g + 0.15f), Mathf.Min(1f, baseCol.b + 0.15f), 1f);
+            cb.selectedColor = baseCol;
+            cb.pressedColor = baseCol * 0.8f;
+            cb.disabledColor = new Color(0.3f, 0.3f, 0.3f, 0.6f);
+        }
+        btn.colors = cb;
+
+        // Text styling (Active: Bold White, Inactive: Regular Muted Slate)
+        TextMeshProUGUI tmp = btn.GetComponentInChildren<TextMeshProUGUI>();
+        if (tmp != null)
+        {
+            tmp.color = isActive ? activeTabTextColor : inactiveTabTextColor;
+            tmp.fontStyle = isActive ? FontStyles.Bold : FontStyles.Normal;
         }
     }
 }

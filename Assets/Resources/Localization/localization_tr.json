@@ -370,6 +370,18 @@
       "value": "TESLİMAT DETAYLARI & İPUCU"
     },
     {
+      "key": "tablet_delivery_details_header",
+      "value": "TESLİMAT DETAYLARI"
+    },
+    {
+      "key": "tablet_address_hint_title",
+      "value": "Adres İpucu"
+    },
+    {
+      "key": "tablet_address_hint_note",
+      "value": "Adres İpucu & Notu:"
+    },
+    {
       "key": "tablet_vehicle_dealership_title",
       "value": "ARAÇ FİLOSU & GALERİ"
     },
