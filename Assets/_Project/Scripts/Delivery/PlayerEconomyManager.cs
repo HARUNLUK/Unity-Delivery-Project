@@ -43,7 +43,14 @@ public class PlayerEconomyManager : MonoBehaviour
 
     public void LoadSavedBalance()
     {
-        totalSavedBalance = PlayerPrefs.GetInt(BALANCE_KEY, 0);
+        if (PlayerPrefs.HasKey(BALANCE_KEY))
+        {
+            totalSavedBalance = PlayerPrefs.GetInt(BALANCE_KEY, 0);
+        }
+        else
+        {
+            totalSavedBalance = PlayerPrefs.GetInt("Delivery_PlayerCash", 0);
+        }
         todayEarned = 0;
         todayPenalties = 0;
     }
@@ -132,21 +139,17 @@ public class PlayerEconomyManager : MonoBehaviour
 
     public bool SpendMoney(int amount)
     {
+        if (amount <= 0) return true;
+
         if (CurrentLiveBalance >= amount)
         {
-            if (amount <= totalSavedBalance)
-            {
-                totalSavedBalance -= amount;
-            }
-            else
-            {
-                int rem = amount - totalSavedBalance;
-                totalSavedBalance = 0;
-                todayPenalties += rem;
-            }
+            int newBalance = CurrentLiveBalance - amount;
+            totalSavedBalance = Mathf.Max(0, newBalance);
+            todayEarned = 0;
+            todayPenalties = 0;
 
             PlayerPrefs.SetInt(BALANCE_KEY, totalSavedBalance);
-            PlayerPrefs.SetInt("Delivery_PlayerCash", CurrentLiveBalance);
+            PlayerPrefs.SetInt("Delivery_PlayerCash", totalSavedBalance);
             PlayerPrefs.Save();
 
             if (AudioManager.Instance != null)

@@ -108,6 +108,8 @@ public class FuelStationPump : MonoBehaviour
             {
                 StopPumpingAudio();
                 SetPumpLightActive(false);
+                isActivelyRefueling = false;
+                if (PlayerEconomyManager.Instance != null) PlayerEconomyManager.Instance.SaveLiveBalance();
             }
 
             if (accumulatedCost >= 0.05f)
@@ -117,6 +119,7 @@ public class FuelStationPump : MonoBehaviour
                 {
                     // Deduct silently (no coin sound spam)
                     PlayerEconomyManager.Instance.DeductCash(remainingCost, false);
+                    PlayerEconomyManager.Instance.SaveLiveBalance();
                 }
                 accumulatedCost = 0f;
             }
@@ -155,6 +158,8 @@ public class FuelStationPump : MonoBehaviour
             if (isActivelyRefueling)
             {
                 StopPumpingAudio();
+                isActivelyRefueling = false;
+                if (PlayerEconomyManager.Instance != null) PlayerEconomyManager.Instance.SaveLiveBalance();
                 if (AudioManager.Instance != null)
                 {
                     AudioManager.Instance.PlayFuelPumpFinish(transform.position);
@@ -179,6 +184,8 @@ public class FuelStationPump : MonoBehaviour
             if (isActivelyRefueling)
             {
                 StopPumpingAudio();
+                isActivelyRefueling = false;
+                if (PlayerEconomyManager.Instance != null) PlayerEconomyManager.Instance.SaveLiveBalance();
             }
 
             if (isHoldingRefuelKey && Time.time - lastErrorSoundTime > 0.8f)
@@ -214,7 +221,12 @@ public class FuelStationPump : MonoBehaviour
 
             if (maxCanAdd <= 0.01f && playerBalance <= 0)
             {
-                if (isActivelyRefueling) StopPumpingAudio();
+                if (isActivelyRefueling)
+                {
+                    StopPumpingAudio();
+                    isActivelyRefueling = false;
+                    if (PlayerEconomyManager.Instance != null) PlayerEconomyManager.Instance.SaveLiveBalance();
+                }
                 if (Time.time - lastErrorSoundTime > 0.8f)
                 {
                     lastErrorSoundTime = Time.time;
@@ -261,6 +273,8 @@ public class FuelStationPump : MonoBehaviour
             if (isActivelyRefueling)
             {
                 StopPumpingAudio();
+                isActivelyRefueling = false;
+                if (PlayerEconomyManager.Instance != null) PlayerEconomyManager.Instance.SaveLiveBalance();
             }
             SetPumpLightActive(false);
 
