@@ -44,10 +44,24 @@ public class VehicleTailgate : MonoBehaviour
 
     private AudioSource audioSource;
 
+    private Rigidbody doorRb;
+
     private void Awake()
     {
         if (doorTransform == null) doorTransform = transform;
         if (doorAnimator == null) doorAnimator = GetComponentInParent<Animator>();
+
+        if (doorMode == DoorMode.ProceduralRotation && autoRotateTransform && doorTransform != null)
+        {
+            doorRb = doorTransform.GetComponent<Rigidbody>();
+            if (doorRb == null)
+            {
+                doorRb = doorTransform.gameObject.AddComponent<Rigidbody>();
+            }
+            doorRb.isKinematic = true;
+            doorRb.useGravity = false;
+            doorRb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+        }
 
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
@@ -59,6 +73,29 @@ public class VehicleTailgate : MonoBehaviour
         {
             BoxCollider bc = gameObject.AddComponent<BoxCollider>();
             bc.size = new Vector3(1.6f, 0.6f, 0.4f);
+        }
+    }
+
+    private void Start()
+    {
+        // Ignore collisions between the moving tailgate and the player to prevent physics glitches/lifting the car
+        FPSPlayerController player = FPSPlayerController.Instance != null ? FPSPlayerController.Instance : Object.FindAnyObjectByType<FPSPlayerController>();
+        if (player != null && doorTransform != null)
+        {
+            Collider[] doorColliders = doorTransform.GetComponentsInChildren<Collider>(true);
+            Collider[] playerColliders = player.GetComponentsInChildren<Collider>(true);
+
+            foreach (var dc in doorColliders)
+            {
+                if (dc.isTrigger) continue; // Don't ignore interaction triggers unnecessarily, just solid colliders
+                foreach (var pc in playerColliders)
+                {
+                    if (pc != null && dc != null)
+                    {
+                        Physics.IgnoreCollision(dc, pc, true);
+                    }
+                }
+            }
         }
     }
 
@@ -98,8 +135,28 @@ public class VehicleTailgate : MonoBehaviour
     {
         if (doorMode == DoorMode.ProceduralRotation && autoRotateTransform && doorTransform != null)
         {
-            Quaternion targetRot = Quaternion.Euler(isOpen ? openRotation : closedRotation);
-            doorTransform.localRotation = Quaternion.Slerp(doorTransform.localRotation, targetRot, Time.deltaTime * transitionSpeed);
+            Quaternion targetLocalRot = Quaternion.Euler(isOpen ? openRotation : closedRotation);
+            doorTransform.localRotation = Quaternion.Slerp(doorTransform.localRotation, targetLocalRot, Time.deltaTime * transitionSpeed);
+
+            // Wake up any cargos in the vehicle bed while the door is actively moving so they get pushed smoothly!
+            if (Quaternion.Angle(doorTransform.localRotation, targetLocalRot) > 0.5f)
+            {
+                VehicleCargoBed bed = GetComponentInParent<VehicleCargoBed>();
+                if (bed != null)
+                {
+                    foreach (var pkg in bed.PackagesInBed)
+                    {
+                        if (pkg != null)
+                        {
+                            Rigidbody prb = pkg.GetComponent<Rigidbody>();
+                            if (prb != null && prb.IsSleeping())
+                            {
+                                prb.WakeUp();
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

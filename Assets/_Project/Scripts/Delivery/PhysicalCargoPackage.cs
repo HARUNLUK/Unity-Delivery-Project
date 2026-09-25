@@ -81,7 +81,7 @@ public class PhysicalCargoPackage : MonoBehaviour
             currentCargoBed.RemovePackage(this);
             currentCargoBed = null;
         }
-        GrantDamageImmunity(0.6f);
+        GrantDamageImmunity(0.05f); // Reduced from 0.6f so thrown packages can break on impact!
     }
     
     [Tooltip("Minimum collision impact velocity (m/s) required to begin taking damage. Gentle placement < 2.5 m/s, 1.5m drop ~5.0 m/s, high drop > 7.0 m/s.")]
@@ -136,6 +136,9 @@ public class PhysicalCargoPackage : MonoBehaviour
 
     private int sleepCheckFrameOffset = -1;
 
+    public float? exactDeliveryTimeDecHour = null;
+    private float nextZoneCheckTime = 0f;
+
     private void Update()
     {
         if (isCurrentlyFocused || focusVisualScale > 0.001f)
@@ -149,6 +152,24 @@ public class PhysicalCargoPackage : MonoBehaviour
             if (Time.time >= throwExemptionUntil || (Time.time > (throwExemptionUntil - 1.1f) && rb != null && rb.linearVelocity.sqrMagnitude < 0.08f))
             {
                 throwExemptionUntil = 0f;
+            }
+        }
+
+        // Snapshot delivery time when placed in the correct zone
+        if (!isBeingCarried && !isInVehicleBed && Time.time > nextZoneCheckTime)
+        {
+            nextZoneCheckTime = Time.time + 1.2f;
+            DeliveryPoint dp = FindNearbyDeliveryPoint();
+            if (dp != null && string.Equals(dp.pointId.Trim(), targetPointId.Trim(), System.StringComparison.OrdinalIgnoreCase))
+            {
+                if (exactDeliveryTimeDecHour == null && DayTimeManager.Instance != null)
+                {
+                    exactDeliveryTimeDecHour = DayTimeManager.Instance.CurrentHour + (DayTimeManager.Instance.CurrentMinute / 60f);
+                }
+            }
+            else
+            {
+                exactDeliveryTimeDecHour = null;
             }
         }
 
@@ -205,6 +226,24 @@ public class PhysicalCargoPackage : MonoBehaviour
     public void SetFocused(bool focused)
     {
         isCurrentlyFocused = focused;
+        
+        if (InteractionPromptHUD.Instance != null)
+        {
+            bool isHoldingAnything = PhysicsGrabber.Instance != null && PhysicsGrabber.Instance.IsHoldingObject;
+            bool isHoldingThis = PhysicsGrabber.Instance != null && PhysicsGrabber.Instance.grabbedRb != null && PhysicsGrabber.Instance.grabbedRb.gameObject == this.gameObject;
+
+            // Do not override UI if holding a different package
+            if (isHoldingAnything && !isHoldingThis) return;
+
+            if (focused)
+            {
+                InteractionPromptHUD.Instance.ShowHeldCargoInfo(this);
+            }
+            else if (!isHoldingThis)
+            {
+                InteractionPromptHUD.Instance.HideHeldCargoInfo();
+            }
+        }
     }
 
     private void CreateFocusIndicator()
@@ -1042,12 +1081,37 @@ public class PhysicalCargoPackage : MonoBehaviour
         if (isInVehicleBed || isBeingCarried) return null;
 
         Collider[] hits = Physics.OverlapSphere(transform.position, 4.5f);
+        DeliveryPoint closestCorrect = null;
+        DeliveryPoint closestAny = null;
+        float minDistCorrect = float.MaxValue;
+        float minDistAny = float.MaxValue;
+
         foreach (var hit in hits)
         {
             DeliveryPoint dp = hit.GetComponentInParent<DeliveryPoint>();
-            if (dp != null) return dp;
+            if (dp != null)
+            {
+                float dist = Vector3.Distance(transform.position, dp.transform.position);
+                if (string.Equals(dp.pointId.Trim(), targetPointId.Trim(), System.StringComparison.OrdinalIgnoreCase))
+                {
+                    if (dist < minDistCorrect)
+                    {
+                        minDistCorrect = dist;
+                        closestCorrect = dp;
+                    }
+                }
+                else
+                {
+                    if (dist < minDistAny)
+                    {
+                        minDistAny = dist;
+                        closestAny = dp;
+                    }
+                }
+            }
         }
-        return null;
+        
+        return closestCorrect != null ? closestCorrect : closestAny;
     }
 
     /// <summary>
@@ -1096,13 +1160,19 @@ public class PhysicalCargoPackage : MonoBehaviour
                     {
                         if (DayTimeManager.Instance != null)
                         {
-                            float currentDecHour = DayTimeManager.Instance.CurrentHour + (DayTimeManager.Instance.CurrentMinute / 60f);
-                            if (currentDecHour <= targetDeliveryHour)
+                            float deliveryTime = exactDeliveryTimeDecHour.HasValue ? exactDeliveryTimeDecHour.Value : (DayTimeManager.Instance.CurrentHour + (DayTimeManager.Instance.CurrentMinute / 60f));
+                            if (deliveryTime <= targetDeliveryHour)
                             {
                                 int bonus = Mathf.RoundToInt(deliveryReward * 0.4f);
                                 result.moneyChange += bonus;
                                 result.xpAwarded += 50;
                                 result.isExpressBonus = true;
+                            }
+                            else
+                            {
+                                // LATE DELIVERY PENALTY (Express cargo delivered late pays 50% less and no XP)
+                                result.moneyChange = Mathf.RoundToInt(deliveryReward * 0.5f);
+                                result.xpAwarded = 0;
                             }
                         }
                     }

@@ -254,10 +254,21 @@ public class PhysicsGrabber : MonoBehaviour
             return;
         }
 
-        // Smooth spring velocity capped to prevent sudden high velocity slingshots
+        // Smooth spring velocity calculated
         Vector3 targetVelocity = forceDir * grabFollowSpeed;
-        grabbedRb.linearVelocity = Vector3.ClampMagnitude(targetVelocity, 18f);
-        grabbedRb.angularVelocity = Vector3.zero;
+        Vector3 velocityError = targetVelocity - grabbedRb.linearVelocity;
+        
+        // Calculate the force needed to reach the target velocity
+        Vector3 force = velocityError * (grabbedRb.mass / Time.fixedDeltaTime);
+        
+        // Clamp the force so the player cannot push heavy objects (like vehicles) 
+        // A maximum force of mass * 150 is enough to lift and swing the cargo, but not push a 1500kg car!
+        float maxForce = grabbedRb.mass * 180f; 
+        force = Vector3.ClampMagnitude(force, maxForce);
+        
+        grabbedRb.AddForce(force, ForceMode.Force);
+
+        // Smooth rotation
         grabbedRb.rotation = Quaternion.Slerp(grabbedRb.rotation, targetRot, Time.fixedDeltaTime * grabRotateSpeed);
     }
 }

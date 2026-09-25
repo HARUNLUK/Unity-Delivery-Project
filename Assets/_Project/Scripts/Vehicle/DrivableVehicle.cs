@@ -543,6 +543,9 @@ public class DrivableVehicle : MonoBehaviour
 
         // Ignore collisions with player or child objects
         if (currentPlayer != null && collision.transform.IsChildOf(currentPlayer.transform)) return;
+        
+        // Ignore collisions with cargo packages to prevent damage when the player is handling cargo
+        if (collision.transform.GetComponentInParent<PhysicalCargoPackage>() != null) return;
 
         float impactSpeed = collision.relativeVelocity.magnitude;
         if (rb != null && collision.impulse.magnitude > 0.01f)
