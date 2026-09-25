@@ -187,6 +187,9 @@ public class VehicleTutorialUI : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
+        if (DayTimeManager.Instance != null) DayTimeManager.Instance.IsTimePaused = true;
+        Time.timeScale = 0f;
+
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlayMenuOpen();
@@ -205,6 +208,9 @@ public class VehicleTutorialUI : MonoBehaviour
 
         PlayerPrefs.SetInt(PREF_VEHICLE_TUTORIAL_SEEN, 1);
         PlayerPrefs.Save();
+
+        if (DayTimeManager.Instance != null) DayTimeManager.Instance.IsTimePaused = false;
+        Time.timeScale = 1f;
 
         if (AudioManager.Instance != null)
         {

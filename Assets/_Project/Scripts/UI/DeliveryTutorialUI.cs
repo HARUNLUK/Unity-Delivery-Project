@@ -229,6 +229,9 @@ public class DeliveryTutorialUI : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
+        if (DayTimeManager.Instance != null) DayTimeManager.Instance.IsTimePaused = true;
+        Time.timeScale = 0f;
+
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlayMenuOpen();
@@ -249,6 +252,9 @@ public class DeliveryTutorialUI : MonoBehaviour
         PlayerPrefs.SetInt(PREF_TUTORIAL_DONT_SHOW, 1);
         PlayerPrefs.SetInt("Delivery_Tutorial_Seen", 1);
         PlayerPrefs.Save();
+
+        if (DayTimeManager.Instance != null) DayTimeManager.Instance.IsTimePaused = false;
+        Time.timeScale = 1f;
 
         if (AudioManager.Instance != null)
         {
