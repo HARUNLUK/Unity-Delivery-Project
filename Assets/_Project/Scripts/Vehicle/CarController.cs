@@ -129,6 +129,9 @@ public class CarController : MonoBehaviour
 
     private void Awake()
     {
+        // Enforce a much lower engine brake so the car coasts when letting off gas, overriding old prefab values
+        if (engineBrakeTorque > 400f) engineBrakeTorque = 150f;
+
         EnsureBaseSteeringEuler();
 
         // Ensure all child MeshColliders are convex to prevent physics engine conflicts

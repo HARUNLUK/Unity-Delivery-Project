@@ -310,7 +310,7 @@ public class BranchManager : MonoBehaviour
                 case 1:
                     if (string.IsNullOrEmpty(t.tierName)) t.tierName = "Starter Garage";
                     if (string.IsNullOrEmpty(t.description) || t.description.StartsWith("Starter branch.")) t.description = "Temel koli depolama alanı ve başlangıç dağıtım ofisi.";
-                    if (t.dailyPackageCapacity <= 0 || t.dailyPackageCapacity == 5) t.dailyPackageCapacity = 8;
+                    t.dailyPackageCapacity = 4;
                     if (t.dailyRent <= 0) t.dailyRent = 50;
                     t.unlockedPerks = new string[]
                     {
@@ -322,7 +322,7 @@ public class BranchManager : MonoBehaviour
                 case 2:
                     if (string.IsNullOrEmpty(t.tierName)) t.tierName = "Regional Hub";
                     t.description = "Genişletilmiş koli kapasitesi ve oto tamir/servis garajı erişimi.";
-                    if (t.dailyPackageCapacity <= 0 || t.dailyPackageCapacity == 10) t.dailyPackageCapacity = 14;
+                    t.dailyPackageCapacity = 8;
                     if (t.dailyRent <= 0) t.dailyRent = 120;
                     if (t.upgradeCost <= 0) t.upgradeCost = 1200;
                     if (t.requiredPlayerLevel <= 0) t.requiredPlayerLevel = 2;
@@ -335,7 +335,7 @@ public class BranchManager : MonoBehaviour
                 case 3:
                     if (string.IsNullOrEmpty(t.tierName) || t.tierName == "Regional Hub") t.tierName = "District Distribution Center";
                     t.description = "Maksimum koli kapasitesi ve yüksek kazançlı patlayıcı kargo sevkiyatı.";
-                    if (t.dailyPackageCapacity <= 0) t.dailyPackageCapacity = 20;
+                    t.dailyPackageCapacity = 14;
                     if (t.dailyRent <= 0) t.dailyRent = 280;
                     if (t.upgradeCost <= 0) t.upgradeCost = 3500;
                     if (t.requiredPlayerLevel <= 0) t.requiredPlayerLevel = 3;
@@ -366,7 +366,7 @@ public class BranchManager : MonoBehaviour
                 },
                 upgradeCost = 0,
                 requiredPlayerLevel = 1,
-                dailyPackageCapacity = 8,
+                dailyPackageCapacity = 4,
                 dailyRent = 50
             },
             new BranchTier
@@ -381,7 +381,7 @@ public class BranchManager : MonoBehaviour
                 },
                 upgradeCost = 1200,
                 requiredPlayerLevel = 2,
-                dailyPackageCapacity = 14,
+                dailyPackageCapacity = 8,
                 dailyRent = 120
             },
             new BranchTier
@@ -396,7 +396,7 @@ public class BranchManager : MonoBehaviour
                 },
                 upgradeCost = 3500,
                 requiredPlayerLevel = 3,
-                dailyPackageCapacity = 20,
+                dailyPackageCapacity = 14,
                 dailyRent = 280
             }
         };
@@ -410,6 +410,11 @@ public class BranchManager : MonoBehaviour
 
     public int GetDailyPackageLimit()
     {
+        if (DayTimeManager.Instance != null && DayTimeManager.Instance.CurrentDay <= 1)
+        {
+            return 1;
+        }
+
         BranchTier tier = CurrentTier;
         return tier != null ? tier.dailyPackageCapacity : 4;
     }

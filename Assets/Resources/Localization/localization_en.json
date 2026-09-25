@@ -591,11 +591,11 @@
     },
     {
       "key": "branch_tier1_desc",
-      "value": "Entry-level parcel warehouse and garage. Basic package volume and low operating rent."
+      "value": "Entry-level parcel warehouse and garage. Basic package volume and low operating rent. (Shift Duration: 10 Minutes)"
     },
     {
       "key": "branch_tier1_perk1",
-      "value": "8 Packages / Day Limit"
+      "value": "4 Packages / Day Limit"
     },
     {
       "key": "branch_tier1_perk2",
@@ -615,11 +615,11 @@
     },
     {
       "key": "branch_tier2_desc",
-      "value": "Expanded parcel capacity and auto service garage access."
+      "value": "Expanded parcel capacity and auto service garage access. Unlocks Express and Fragile cargos. (Shift Duration: 15 Minutes)"
     },
     {
       "key": "branch_tier2_perk1",
-      "value": "14 Packages / Day Limit (+6 Packages)"
+      "value": "8 Packages / Day Limit (+4 Packages)"
     },
     {
       "key": "branch_tier2_perk2",
@@ -631,11 +631,11 @@
     },
     {
       "key": "branch_tier3_desc",
-      "value": "Maximum parcel capacity and high-yield explosive cargo deliveries."
+      "value": "Maximum parcel capacity and high-yield explosive cargo deliveries. (Shift Duration: 20 Minutes)"
     },
     {
       "key": "branch_tier3_perk1",
-      "value": "20 Packages / Day Limit (+6 Packages)"
+      "value": "14 Packages / Day Limit (+6 Packages)"
     },
     {
       "key": "branch_tier3_perk2",

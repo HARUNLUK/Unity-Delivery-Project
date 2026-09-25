@@ -155,6 +155,12 @@ public class DayTimeManager : MonoBehaviour
 
     private void Start()
     {
+        int branchLevel = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : PlayerPrefs.GetInt("Delivery_BranchLevel", 1);
+        
+        // Level 1: 10m, Level 2: 15m, Level 3: 20m
+        realTimeDurationInMinutes = 10f + ((branchLevel - 1) * 5f);
+        Debug.Log($"<color=#FFCC00>[DayTimeManager] Branch Level {branchLevel} -> Shift duration set to {realTimeDurationInMinutes} real minutes.</color>");
+
         totalShiftInGameMinutes = ((endHour * 60) + endMinute) - ((startHour * 60) + startMinute);
         totalRealTimeSeconds = realTimeDurationInMinutes * 60f;
 

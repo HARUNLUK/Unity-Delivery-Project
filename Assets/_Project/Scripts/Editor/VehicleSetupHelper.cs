@@ -60,7 +60,7 @@ public static class VehicleSetupHelper
         car.handBrakeForce = 200000f;
         car.brakeDeceleration = 16.0f;
         car.handbrakeDeceleration = 22.0f;
-        car.engineBrakeTorque = 1500f;
+        car.engineBrakeTorque = 150f; // Lowered for coasting
         car.maxSteerAngle = 42f;
         car.highSpeedSteerAngle = 26f;
         car.steerAgility = 2.5f;

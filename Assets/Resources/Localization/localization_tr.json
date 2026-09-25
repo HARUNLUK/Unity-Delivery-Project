@@ -591,11 +591,11 @@
     },
     {
       "key": "branch_tier1_desc",
-      "value": "Temel koli depolama alanı ve başlangıç dağıtım ofisi."
+      "value": "Temel koli depolama alanı ve başlangıç dağıtım ofisi. (Mesai Süresi: 10 Dakika)"
     },
     {
       "key": "branch_tier1_perk1",
-      "value": "8 Koli / Gün Kapasitesi"
+      "value": "4 Koli / Gün Kapasitesi"
     },
     {
       "key": "branch_tier1_perk2",
@@ -615,11 +615,11 @@
     },
     {
       "key": "branch_tier2_desc",
-      "value": "Genişletilmiş koli kapasitesi ve oto tamir/servis garajı erişimi."
+      "value": "Genişletilmiş koli kapasitesi ve oto tamir/servis garajı erişimi. Süreli ve Kırılgan kargolar açılır. (Mesai Süresi: 15 Dakika)"
     },
     {
       "key": "branch_tier2_perk1",
-      "value": "14 Koli / Gün Kapasitesi (+6 Koli)"
+      "value": "8 Koli / Gün Kapasitesi (+4 Koli)"
     },
     {
       "key": "branch_tier2_perk2",
@@ -631,11 +631,11 @@
     },
     {
       "key": "branch_tier3_desc",
-      "value": "Maksimum koli kapasitesi ve yüksek kazançlı patlayıcı kargo sevkiyatı."
+      "value": "Maksimum koli kapasitesi ve yüksek kazançlı patlayıcı kargo sevkiyatı. (Mesai Süresi: 20 Dakika)"
     },
     {
       "key": "branch_tier3_perk1",
-      "value": "20 Koli / Gün Kapasitesi (+6 Koli)"
+      "value": "14 Koli / Gün Kapasitesi (+6 Koli)"
     },
     {
       "key": "branch_tier3_perk2",
