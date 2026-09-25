@@ -20,6 +20,18 @@ public class DaySummaryManager : MonoBehaviour
     public GameObject historyItemTemplate;
     public Button restartDayButton;
 
+    [Header("--- KURYE DEFTERI RECEIPT ---")]
+    [Tooltip("Set by the Kurye Defteri UI builder: the summary is drawn as an itemised receipt.")]
+    public bool useKuryeDefteriLayout = false;
+    public Transform receiptLinesContent;
+    public GameObject receiptLineTemplate;
+    public TextMeshProUGUI netProfitText;
+    public TextMeshProUGUI vaultText;
+    public TextMeshProUGUI xpText;
+    public TextMeshProUGUI stampText;
+    public TextMeshProUGUI receiptNoteText;
+    public TextMeshProUGUI historyCountText;
+
     [Header("--- EMERGENCY / HOSPITAL STATUS ---")]
     public string emergencyHospitalReason = "";
 
@@ -204,19 +216,19 @@ public class DaySummaryManager : MonoBehaviour
                 totalDeliveredText.text = LocalizationManager.GetFormat("summary_total_packages", dayNum, totalCount);
             }
         }
-        
+
         string correctText = LocalizationManager.GetFormat("summary_correct_deliveries", correctCount, totalReward - passiveIncome);
         if (passiveIncome > 0)
         {
             correctText += LocalizationManager.GetFormat("summary_passive_income", passiveIncome);
         }
         if (correctDeliveriesText != null) correctDeliveriesText.text = correctText;
-        
+
         string wrongBreakdown = LocalizationManager.GetFormat("summary_penalties", totalPenalty - dailyRent);
         if (brokenCount > 0) wrongBreakdown += LocalizationManager.GetFormat("summary_broken_count", brokenCount);
         wrongBreakdown += LocalizationManager.GetFormat("summary_rent_deduct", dailyRent);
         if (wrongDeliveriesText != null) wrongDeliveriesText.text = wrongBreakdown;
-        
+
         if (netEarningsText != null)
         {
             string profitLabel = netProfit >= 0 ? $"+${netProfit:N0}" : $"-${Mathf.Abs(netProfit):N0}";
@@ -245,6 +257,13 @@ public class DaySummaryManager : MonoBehaviour
             {
                 btnText.text = LocalizationManager.GetFormat("summary_btn_restart_day", dayNum + 1);
             }
+        }
+
+        if (useKuryeDefteriLayout)
+        {
+            PopulateReceiptKurye(results, dayNum, passiveIncome, dailyRent, netProfit, totalVault, totalXP);
+            PopulateResultsListKurye(results);
+            return;
         }
 
         // 5. Detaylı Liste Satırlarını Oluştur
@@ -460,6 +479,143 @@ public class DaySummaryManager : MonoBehaviour
         }
     }
 
+    // ==========================================
+    // KURYE DEFTERI RECEIPT
+    // ==========================================
+
+    private void PopulateReceiptKurye(List<CargoDeliveryResult> results, int dayNum, int passiveIncome, int dailyRent, int netProfit, int totalVault, int totalXP)
+    {
+        int correct = 0, correctSum = 0, wrong = 0, wrongSum = 0, broken = 0, brokenSum = 0, missed = 0, missedSum = 0;
+        foreach (CargoDeliveryResult r in results)
+        {
+            switch (r.status)
+            {
+                case CargoDeliveryStatus.Correct: correct++; correctSum += r.moneyChange; break;
+                case CargoDeliveryStatus.WrongAddress: wrong++; wrongSum += Mathf.Abs(r.moneyChange); break;
+                case CargoDeliveryStatus.Broken: broken++; brokenSum += Mathf.Abs(r.moneyChange); break;
+                default: missed++; missedSum += Mathf.Abs(r.moneyChange); break;
+            }
+        }
+
+        if (receiptLinesContent != null && receiptLineTemplate != null)
+        {
+            foreach (Transform child in receiptLinesContent)
+            {
+                if (child.gameObject != receiptLineTemplate) Destroy(child.gameObject);
+            }
+
+            AddReceiptLine(string.Format(LocalizationManager.Get("cozy_receipt_correct", "Doğru teslimat ×{0}"), correct), correctSum);
+            if (passiveIncome > 0) AddReceiptLine(LocalizationManager.Get("cozy_receipt_passive", "Dağıtım şubesi geliri"), passiveIncome);
+            if (broken > 0) AddReceiptLine(string.Format(LocalizationManager.Get("cozy_receipt_broken", "Kırık koli ×{0}"), broken), -brokenSum);
+            if (wrong > 0) AddReceiptLine(string.Format(LocalizationManager.Get("cozy_receipt_wrong", "Yanlış adres ×{0}"), wrong), -wrongSum);
+            if (missed > 0) AddReceiptLine(string.Format(LocalizationManager.Get("cozy_receipt_missed", "Teslim edilmeyen ×{0}"), missed), -missedSum);
+            AddReceiptLine(LocalizationManager.Get("cozy_receipt_rent", "Şube kirası"), -dailyRent);
+        }
+
+        if (netProfitText != null)
+        {
+            netProfitText.text = (netProfit >= 0 ? "+" : "") + CozyText.Money(netProfit);
+            netProfitText.color = netProfit >= 0 ? CozyTheme.MintInk : CozyTheme.RedInk;
+        }
+        if (vaultText != null) vaultText.text = CozyText.Money(totalVault);
+        if (xpText != null) xpText.text = $"+{totalXP} XP";
+        if (stampText != null) stampText.text = string.Format(LocalizationManager.Get("cozy_receipt_stamp", "GÜN {0}\nKAPANDI"), dayNum);
+        if (historyCountText != null) historyCountText.text = string.Format(LocalizationManager.Get("cozy_history_count", "{0} / {1} doğru"), correct, results.Count);
+
+        if (receiptNoteText != null)
+        {
+            bool hasNote = !string.IsNullOrEmpty(emergencyHospitalReason);
+            receiptNoteText.gameObject.SetActive(hasNote);
+            if (hasNote) receiptNoteText.text = LocalizationManager.GetFormat("summary_emergency_hospital", emergencyHospitalReason, dayNum, results.Count);
+        }
+    }
+
+    private void AddReceiptLine(string label, int amount)
+    {
+        GameObject line = Instantiate(receiptLineTemplate, receiptLinesContent);
+        line.SetActive(true);
+        Transform l = line.transform.Find("Label");
+        if (l != null && l.TryGetComponent(out TextMeshProUGUI lt)) lt.text = label;
+        Transform a = line.transform.Find("Amount");
+        if (a != null && a.TryGetComponent(out TextMeshProUGUI at))
+        {
+            at.text = (amount >= 0 ? "+" : "") + CozyText.Money(amount);
+            at.color = amount >= 0 ? CozyTheme.MintInk : CozyTheme.RedInk;
+        }
+    }
+
+    private void PopulateResultsListKurye(List<CargoDeliveryResult> results)
+    {
+        if (historyListContent == null || historyItemTemplate == null) return;
+
+        foreach (Transform child in historyListContent)
+        {
+            if (child.gameObject != historyItemTemplate) Destroy(child.gameObject);
+        }
+
+        foreach (CargoDeliveryResult res in results)
+        {
+            GameObject row = Instantiate(historyItemTemplate, historyListContent);
+            row.SetActive(true);
+
+            string recipient = !string.IsNullOrEmpty(res.recipientName) ? res.recipientName : LocalizationManager.Get("recipient_default");
+            string target = !string.IsNullOrEmpty(res.targetAddress) ? res.targetAddress : LocalizationManager.Get("summary_unknown_address");
+
+            string icon;
+            Color badge, badgeInk;
+            string detail;
+            switch (res.status)
+            {
+                case CargoDeliveryStatus.Correct:
+                    icon = "check"; badge = CozyTheme.Mint; badgeInk = Color.white;
+                    detail = target;
+                    if (res.cargoType == CargoType.Express)
+                    {
+                        detail += res.isExpressBonus
+                            ? "  ·  " + LocalizationManager.Get("cozy_history_early", "erken teslim")
+                            : "  ·  " + LocalizationManager.Get("cozy_history_late", "geç kaldı");
+                    }
+                    break;
+                case CargoDeliveryStatus.WrongAddress:
+                    icon = "x"; badge = CozyTheme.Red; badgeInk = Color.white;
+                    detail = string.Format(LocalizationManager.Get("cozy_history_dropped", "Bırakılan: {0}  ·  hedef: {1}"), res.actualAddress, target);
+                    break;
+                case CargoDeliveryStatus.Broken:
+                    bool exploded = res.cargoType == CargoType.Explosive;
+                    icon = exploded ? "flame" : "fragile"; badge = exploded ? CozyTheme.Red : CozyTheme.OrangeTint; badgeInk = exploded ? Color.white : CozyTheme.OrangeInk;
+                    detail = target + "  ·  " + (exploded ? LocalizationManager.Get("summary_status_exploded", "patladı") : LocalizationManager.Get("cozy_history_broken", "kırık"));
+                    break;
+                default:
+                    icon = "clock"; badge = CozyTheme.HoneyTint; badgeInk = CozyTheme.HoneyInk;
+                    detail = target + "  ·  " + LocalizationManager.Get("cozy_history_missed", "teslim edilmedi");
+                    break;
+            }
+
+            Transform b = row.transform.Find("StatusBadge");
+            if (b != null)
+            {
+                if (b.TryGetComponent(out Image bi)) bi.color = badge;
+                Transform ic = b.Find("Icon");
+                if (ic != null && ic.TryGetComponent(out Image ici))
+                {
+                    ici.color = badgeInk;
+                    if (CozyAssets.Instance != null) ici.sprite = CozyAssets.Instance.Icon(icon);
+                }
+            }
+
+            Transform rt = row.transform.Find("Texts/Recipient");
+            if (rt != null && rt.TryGetComponent(out TextMeshProUGUI rtt)) rtt.text = recipient;
+            Transform dt = row.transform.Find("Texts/Detail");
+            if (dt != null && dt.TryGetComponent(out TextMeshProUGUI dtt)) dtt.text = detail;
+            Transform am = row.transform.Find("Amount");
+            if (am != null && am.TryGetComponent(out TextMeshProUGUI amt))
+            {
+                amt.text = (res.moneyChange >= 0 ? "+" : "") + CozyText.Money(res.moneyChange);
+                amt.color = res.moneyChange >= 0 ? CozyTheme.MintInk : CozyTheme.RedInk;
+            }
+        }
+    }
+
     public void EnsureSummaryReferences()
     {
         if (summaryPanelRoot == null)
@@ -478,7 +634,7 @@ public class DaySummaryManager : MonoBehaviour
             }
         }
 
-        if (summaryPanelRoot != null)
+        if (summaryPanelRoot != null && !useKuryeDefteriLayout)
         {
             if (headerTitleText == null) headerTitleText = FindTMPRecursive(summaryPanelRoot.transform, "HeaderTitleText", "TitleText", "HeaderTitle", "PanelTitle", "Title");
             if (totalDeliveredText == null) totalDeliveredText = FindTMPRecursive(summaryPanelRoot.transform, "TotalDeliveredText", "TotalText", "TotalDelivered");

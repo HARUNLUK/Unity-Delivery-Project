@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class MainHUDController : MonoBehaviour
@@ -10,6 +11,12 @@ public class MainHUDController : MonoBehaviour
     public TextMeshProUGUI clockText;
     public TextMeshProUGUI remainingCargoText;
     public TextMeshProUGUI balanceEarningsText;
+
+    [Header("--- KURYE DEFTERI HUD (optional) ---")]
+    [Tooltip("When set, the day is shown here and clockText shows only the time.")]
+    public TextMeshProUGUI dayText;
+    [Tooltip("Fill of the shift progress bar (09:00 -> 18:00), driven by anchorMax.x.")]
+    public Image dayProgressFill;
 
     private void Awake()
     {
@@ -92,7 +99,16 @@ public class MainHUDController : MonoBehaviour
                 lastCachedDay = currentDay;
                 lastCachedTimeString = currentTime;
                 string dayLabel = LocalizationManager.GetFormat("hud_day", currentDay);
-                clockText.text = $"<size=75%>{dayLabel}</size>  <mspace=0.6em>{currentTime}</mspace>";
+                if (dayText != null)
+                {
+                    dayText.text = dayLabel;
+                    clockText.text = currentTime;
+                }
+                else
+                {
+                    clockText.text = $"<size=75%>{dayLabel}</size>  <mspace=0.6em>{currentTime}</mspace>";
+                }
+                UpdateDayProgress();
             }
         }
 
@@ -100,6 +116,21 @@ public class MainHUDController : MonoBehaviour
         {
             RefreshCargoCount();
         }
+    }
+
+    private void UpdateDayProgress()
+    {
+        if (dayProgressFill == null || DayTimeManager.Instance == null) return;
+        DayTimeManager dtm = DayTimeManager.Instance;
+        float start = dtm.startHour * 60f + dtm.startMinute;
+        float end = dtm.endHour * 60f + dtm.endMinute;
+        float now = dtm.CurrentHour * 60f + dtm.CurrentMinute;
+        float pct = end > start ? Mathf.Clamp01((now - start) / (end - start)) : 0f;
+        RectTransform rt = dayProgressFill.rectTransform;
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = new Vector2(Mathf.Max(0.04f, pct), 1f);
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
     }
 
     private void HandleEconomyUpdated(int liveBalance, int todayNet)
@@ -158,12 +189,12 @@ public class MainHUDController : MonoBehaviour
             if (liveBalance >= 0)
             {
                 balanceEarningsText.text = $"${liveBalance:N0}";
-                balanceEarningsText.color = new Color(0.2f, 1f, 0.4f); // Green
+                balanceEarningsText.color = CozyTheme.Ink;
             }
             else
             {
                 balanceEarningsText.text = $"-${Mathf.Abs(liveBalance):N0}";
-                balanceEarningsText.color = new Color(1f, 0.25f, 0.25f); // Red
+                balanceEarningsText.color = CozyTheme.RedInk;
             }
         }
     }

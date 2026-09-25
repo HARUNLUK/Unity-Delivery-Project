@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 830e435cb8febb1458b9112051526875, type: 3}
+  m_Name: CozyAssets
+  m_EditorClassIdentifier: Assembly-CSharp::CozyAssets
+  display: {fileID: 11400000, guid: d77d68cef8ebdff4f877e50b513d3def, type: 2}
+  displayBold: {fileID: 11400000, guid: 62eb118dc9850ea4c85cd1096abfd745, type: 2}
+  body: {fileID: 11400000, guid: a7d692b6a5df95d47b9983c361c8ef87, type: 2}
+  bodyBold: {fileID: 11400000, guid: 4794749fadfe4a245ad4d9dd7b4b1f7f, type: 2}
+  mono: {fileID: 11400000, guid: 6155f11367299d34b8b90cb8f9c619cb, type: 2}
+  round16: {fileID: 21300000, guid: d105a2fd3e842be43b1c2fc3b2d3f50a, type: 3}
+  round32: {fileID: 21300000, guid: f7c9565ee4e64f848b567a4f501d97e4, type: 3}
+  round64: {fileID: 21300000, guid: 27fd55e6feae3524e8cf7861ec6628c5, type: 3}
+  circle: {fileID: 21300000, guid: 30fe1f48ebd962a4e9c26536d8109db3, type: 3}
+  softShadow: {fileID: 21300000, guid: ca020b71c300baf4cb6199c4878f9f71, type: 3}
+  dash: {fileID: 21300000, guid: 803e0a01ce0cc2546852af4f403b1d8f, type: 3}
+  lined: {fileID: 21300000, guid: f501eba79fe024440bcb4ad49534ec03, type: 3}
+  zigzag: {fileID: 21300000, guid: ee696286a9829b747b4e535f0621a64d, type: 3}
+  icons:
+  - name: clock
+    sprite: {fileID: 21300000, guid: 58dee6b3102e85a48b68e53fb1401334, type: 3}
+  - name: sun
+    sprite: {fileID: 21300000, guid: de1c05edc7aaab94db14bcd4682d12b6, type: 3}
+  - name: box
+    sprite: {fileID: 21300000, guid: 28773ac012e92bf478f7a64a0b471938, type: 3}
+  - name: coin
+    sprite: {fileID: 21300000, guid: df5efade17b97954dab127b16d1a82b9, type: 3}
+  - name: fuel
+    sprite: {fileID: 21300000, guid: 324cc4c363946ff41974946122d4adc3, type: 3}
+  - name: wrench
+    sprite: {fileID: 21300000, guid: 7a0ec595a53a5da4d8489f40944b8912, type: 3}
+  - name: pin
+    sprite: {fileID: 21300000, guid: 21d3e8124f6f221498276eae5ba15f24, type: 3}
+  - name: check
+    sprite: {fileID: 21300000, guid: ee020a9babfa573469d12ac9d87e5a31, type: 3}
+  - name: x
+    sprite: {fileID: 21300000, guid: 4ecfdd2704c6cc44f9d7cffa3c34da32, type: 3}
+  - name: truck
+    sprite: {fileID: 21300000, guid: 949d9828c16891249ab4c110c8dc6c44, type: 3}
+  - name: home
+    sprite: {fileID: 21300000, guid: a460f9ecdf0b38b4580f7b7abc3be975, type: 3}
+  - name: search
+    sprite: {fileID: 21300000, guid: 8584f60166ca24d41869bfdefd32cf58, type: 3}
+  - name: fragile
+    sprite: {fileID: 21300000, guid: b41bceb2185d1594289ef2ab40634961, type: 3}
+  - name: bolt
+    sprite: {fileID: 21300000, guid: b3496b72ecc906c48ac72816bea54d9a, type: 3}
+  - name: flame
+    sprite: {fileID: 21300000, guid: 299b4bf49d49c8643afcf2aeca231944, type: 3}
+  - name: volume
+    sprite: {fileID: 21300000, guid: 817c8727d2e4169458d80252d6b60b65, type: 3}
+  - name: monitor
+    sprite: {fileID: 21300000, guid: 428a85a26a04f8b45b4f56aabcac3099, type: 3}
+  - name: keys
+    sprite: {fileID: 21300000, guid: 2da10285b5367f744a76ac16bcad42df, type: 3}
+  - name: globe
+    sprite: {fileID: 21300000, guid: 164d789ff4582824eb60ac5c2a5aab25, type: 3}
+  - name: shield
+    sprite: {fileID: 21300000, guid: f01d0b4097854c749af6d294440e3aed, type: 3}
+  - name: lock
+    sprite: {fileID: 21300000, guid: c7a88e7cb18ee2f46bf10ef04ecb1f66, type: 3}
+  - name: play
+    sprite: {fileID: 21300000, guid: 4b29a1993882d914b904d1195db9913a, type: 3}
+  - name: plus
+    sprite: {fileID: 21300000, guid: be4008fe5e5922d4582eb021debf68f2, type: 3}
+  - name: gear
+    sprite: {fileID: 21300000, guid: 5c9b93d926938b34485474c1214c68b5, type: 3}
+  - name: door
+    sprite: {fileID: 21300000, guid: f3a10e49b1a29844ea1c04a672a4ba30, type: 3}
+  - name: hand
+    sprite: {fileID: 21300000, guid: d2d3cedab55f3584fac842e2e6decbde, type: 3}
+  - name: back
+    sprite: {fileID: 21300000, guid: 53fdde2ddf9f35f49a33d3c619eddc67, type: 3}
+  - name: paint
+    sprite: {fileID: 21300000, guid: 2300ea2db9826844aadbc985286384fc, type: 3}
+  - name: star
+    sprite: {fileID: 21300000, guid: b1971c1f18d5d3344a2d12dad6e05a54, type: 3}
+  - name: info
+    sprite: {fileID: 21300000, guid: f9aa61ef2d0cab84aae616b5ee7b4a0b, type: 3}
+  - name: alert
+    sprite: {fileID: 21300000, guid: 3318bc17f3932564181650e1906cc690, type: 3}
+  - name: arrow
+    sprite: {fileID: 21300000, guid: fb974fc7914abf948aa75d87dd63fa91, type: 3}
+  - name: user
+    sprite: {fileID: 21300000, guid: 5f88e302d8e7e974aa3050242708a8ab, type: 3}
+  - name: building
+    sprite: {fileID: 21300000, guid: d447fe292f38fb5469dd8fc96cb5fc4d, type: 3}
+  - name: receipt
+    sprite: {fileID: 21300000, guid: f982aff4213401b4280374948ee787c5, type: 3}
+  - name: pause
+    sprite: {fileID: 21300000, guid: 238372154f68de8448a3ff2d507438d8, type: 3}
+  - name: chevron
+    sprite: {fileID: 21300000, guid: fefa113a7f3699d46bf1dd27275b57d1, type: 3}

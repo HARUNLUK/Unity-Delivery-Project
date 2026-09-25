@@ -3,7 +3,7 @@
   "entries": [
     {
       "key": "game_title",
-      "value": "<b>Where's</b>\n<size=40><b>My Package</b></size>"
+      "value": "Where's My\n<color=#D9534A>Package?</color>"
     },
     {
       "key": "game_subtitle",
@@ -23,27 +23,27 @@
     },
     {
       "key": "btn_continue",
-      "value": "DEVAM ET"
+      "value": "Devam et"
     },
     {
       "key": "btn_new_game",
-      "value": "YENİ OYUN"
+      "value": "Yeni oyun"
     },
     {
       "key": "btn_play",
-      "value": "OYUNA BAŞLA"
+      "value": "Oyuna başla"
     },
     {
       "key": "btn_settings",
-      "value": "AYARLAR"
+      "value": "Ayarlar"
     },
     {
       "key": "btn_quit",
-      "value": "ÇIKIŞ"
+      "value": "Çıkış"
     },
     {
       "key": "modal_new_game_title",
-      "value": "<b>YENİ OYUN BAŞLAT</b>"
+      "value": "Yeni oyun başlat"
     },
     {
       "key": "modal_new_game_body",
@@ -51,11 +51,11 @@
     },
     {
       "key": "btn_confirm_reset",
-      "value": "EVET, SIFIRLA VE BAŞLA"
+      "value": "Evet, sıfırla"
     },
     {
       "key": "btn_cancel",
-      "value": "İPTAL"
+      "value": "İptal"
     },
     {
       "key": "pause_title",
@@ -63,15 +63,15 @@
     },
     {
       "key": "btn_resume",
-      "value": "DEVAM ET"
+      "value": "Devam et"
     },
     {
       "key": "btn_return_main_menu",
-      "value": "ANA MENÜYE DÖN"
+      "value": "Ana menüye dön"
     },
     {
       "key": "btn_quit_desktop",
-      "value": "MASAÜSTÜNE ÇIK"
+      "value": "Masaüstüne çık"
     },
     {
       "key": "settings_title",
@@ -79,15 +79,15 @@
     },
     {
       "key": "tab_audio",
-      "value": "SES"
+      "value": "Ses"
     },
     {
       "key": "tab_graphics",
-      "value": "GRAFİK"
+      "value": "Görüntü ve dil"
     },
     {
       "key": "tab_controls",
-      "value": "KONTROLLER"
+      "value": "Kontroller"
     },
     {
       "key": "tab_language",
@@ -151,11 +151,11 @@
     },
     {
       "key": "btn_reset_defaults",
-      "value": "Varsayılana Sıfırla"
+      "value": "Varsayılana dön"
     },
     {
       "key": "btn_save_return",
-      "value": "KAYDET VE GERİ DÖN"
+      "value": "Kaydet ve dön"
     },
     {
       "key": "btn_unassigned",
@@ -379,15 +379,15 @@
     },
     {
       "key": "tablet_tab_cargo",
-      "value": "TESLİMATLAR"
+      "value": "Teslimatlar"
     },
     {
       "key": "tablet_tab_vehicles",
-      "value": "ARAÇLAR"
+      "value": "Araçlar"
     },
     {
       "key": "tablet_tab_branch",
-      "value": "ŞUBE"
+      "value": "Şube"
     },
     {
       "key": "tablet_cargo_in_vehicle",
@@ -447,7 +447,7 @@
     },
     {
       "key": "tablet_btn_end_shift",
-      "value": "VARDIYAYI BİTİR"
+      "value": "Vardiyayı bitir"
     },
     {
       "key": "tablet_btn_close",
@@ -1404,6 +1404,258 @@
     {
       "key": "vehicle_tutorial_f2_hint",
       "value": "<color=#64A0FF>[F2]</color> <color=#A0B0C0>Tuşu ile sürüş rehberini istediğiniz zaman tekrar açabilirsiniz.</color>"
+    },
+    {
+      "key": "cozy_status_damaged",
+      "value": "Hasarlı"
+    },
+    {
+      "key": "cozy_status_at_zone",
+      "value": "Bölgede"
+    },
+    {
+      "key": "cozy_status_carried",
+      "value": "Elinde"
+    },
+    {
+      "key": "cozy_status_in_vehicle",
+      "value": "Araçta"
+    },
+    {
+      "key": "cozy_status_waiting",
+      "value": "Bekliyor"
+    },
+    {
+      "key": "cozy_type_standard",
+      "value": "Standart"
+    },
+    {
+      "key": "cozy_type_express",
+      "value": "Ekspres"
+    },
+    {
+      "key": "cozy_type_fragile",
+      "value": "Kırılacak"
+    },
+    {
+      "key": "cozy_type_explosive",
+      "value": "Patlayıcı"
+    },
+    {
+      "key": "cozy_filter_all",
+      "value": "Tümü"
+    },
+    {
+      "key": "cozy_filter_in_vehicle",
+      "value": "Araçta"
+    },
+    {
+      "key": "cozy_filter_express",
+      "value": "Ekspres"
+    },
+    {
+      "key": "cozy_filter_fragile",
+      "value": "Kırılacak"
+    },
+    {
+      "key": "cozy_tablet_no_match",
+      "value": "Bu aramaya uyan koli yok."
+    },
+    {
+      "key": "cozy_tip_express",
+      "value": "{0}'dan önce teslim edersen <b>+%40 hız bonusu</b> kazanırsın."
+    },
+    {
+      "key": "cozy_tip_fragile",
+      "value": "Kırılacak koli: sert çarpmalar hasar verir, kasaya yavaşça bırak."
+    },
+    {
+      "key": "cozy_tip_explosive",
+      "value": "Patlayıcı koli: fırlatma ve sert frenden kaçın."
+    },
+    {
+      "key": "cozy_vehicle_fuel_sub",
+      "value": "Yakıt %{0:F0}  ·  Durum %{1:F0}"
+    },
+    {
+      "key": "cozy_vehicle_owned",
+      "value": "Sende"
+    },
+    {
+      "key": "cozy_vehicle_fuel",
+      "value": "Yakıt"
+    },
+    {
+      "key": "cozy_vehicle_condition",
+      "value": "Araç durumu"
+    },
+    {
+      "key": "cozy_receipt_correct",
+      "value": "Doğru teslimat ×{0}"
+    },
+    {
+      "key": "cozy_receipt_passive",
+      "value": "Dağıtım şubesi geliri"
+    },
+    {
+      "key": "cozy_receipt_broken",
+      "value": "Kırık koli ×{0}"
+    },
+    {
+      "key": "cozy_receipt_wrong",
+      "value": "Yanlış adres ×{0}"
+    },
+    {
+      "key": "cozy_receipt_missed",
+      "value": "Teslim edilmeyen ×{0}"
+    },
+    {
+      "key": "cozy_receipt_rent",
+      "value": "Şube kirası"
+    },
+    {
+      "key": "cozy_receipt_stamp",
+      "value": "GÜN {0}\nKAPANDI"
+    },
+    {
+      "key": "cozy_receipt_profit",
+      "value": "Günün kârı"
+    },
+    {
+      "key": "cozy_receipt_vault",
+      "value": "Kasa"
+    },
+    {
+      "key": "cozy_receipt_xp",
+      "value": "Tecrübe"
+    },
+    {
+      "key": "cozy_history_title",
+      "value": "Teslimat geçmişi"
+    },
+    {
+      "key": "cozy_history_count",
+      "value": "{0} / {1} doğru"
+    },
+    {
+      "key": "cozy_history_early",
+      "value": "erken teslim"
+    },
+    {
+      "key": "cozy_history_late",
+      "value": "geç kaldı"
+    },
+    {
+      "key": "cozy_history_dropped",
+      "value": "Bırakılan: {0}  ·  hedef: {1}"
+    },
+    {
+      "key": "cozy_history_broken",
+      "value": "kırık"
+    },
+    {
+      "key": "cozy_history_missed",
+      "value": "teslim edilmedi"
+    },
+    {
+      "key": "cozy_hud_parcels_left",
+      "value": "Koli kaldı"
+    },
+    {
+      "key": "cozy_hud_cash",
+      "value": "Kasa"
+    },
+    {
+      "key": "cozy_hint_tablet",
+      "value": "Defter"
+    },
+    {
+      "key": "cozy_hint_vehicle",
+      "value": "Araca bin"
+    },
+    {
+      "key": "cozy_hint_guide",
+      "value": "Rehber"
+    },
+    {
+      "key": "cozy_throw_power",
+      "value": "Fırlatma gücü"
+    },
+    {
+      "key": "cozy_tablet_search",
+      "value": "Alıcı veya sokak ara"
+    },
+    {
+      "key": "cozy_tablet_today",
+      "value": "Bugünkü koliler"
+    },
+    {
+      "key": "cozy_tablet_sort",
+      "value": "Sıra: teslim saati"
+    },
+    {
+      "key": "cozy_tablet_detail",
+      "value": "Teslimat detayı"
+    },
+    {
+      "key": "cozy_tablet_hint",
+      "value": "Adres tarifi"
+    },
+    {
+      "key": "cozy_tablet_fleet",
+      "value": "Araç filosu"
+    },
+    {
+      "key": "cozy_fact_type",
+      "value": "Tür"
+    },
+    {
+      "key": "cozy_fact_deadline",
+      "value": "Son saat"
+    },
+    {
+      "key": "cozy_fact_reward",
+      "value": "Ücret"
+    },
+    {
+      "key": "cozy_fact_status",
+      "value": "Durum"
+    },
+    {
+      "key": "cozy_branch_current",
+      "value": "Mevcut şube"
+    },
+    {
+      "key": "cozy_branch_next",
+      "value": "Sonraki kademe"
+    },
+    {
+      "key": "cozy_menu_tagline",
+      "value": "Kurye simülasyonu"
+    },
+    {
+      "key": "cozy_menu_footer",
+      "value": "F1 rehber  ·  ESC duraklat"
+    },
+    {
+      "key": "cozy_menu_last_save",
+      "value": "Son kayıt"
+    },
+    {
+      "key": "cozy_pause_title",
+      "value": "Mola"
+    },
+    {
+      "key": "cozy_settings_title",
+      "value": "Ayarlar"
+    },
+    {
+      "key": "cozy_keybindings_title",
+      "value": "Tuş atamaları"
+    },
+    {
+      "key": "cozy_guide_label",
+      "value": "Kurye rehberi"
     }
   ]
 }

@@ -127,6 +127,10 @@ public class GameMenuManager : MonoBehaviour
 
     [Header("Keybindings UI")]
     public Button resetKeybindingsBtn;
+
+    [Header("--- KURYE DEFTERI LAYOUT ---")]
+    [Tooltip("Set by the Kurye Defteri UI builder: references are wired explicitly, so path-based lookups are skipped.")]
+    public bool useKuryeDefteriLayout = false;
     public Transform keybindingsContent;
 
     private readonly Dictionary<GameAction, (Button button, TextMeshProUGUI text)> keybindingRowMap = new Dictionary<GameAction, (Button button, TextMeshProUGUI text)>();
@@ -288,9 +292,28 @@ public class GameMenuManager : MonoBehaviour
         {
             BuildRuntimeUI(canvas);
         }
+        else if (useKuryeDefteriLayout)
+        {
+            FetchKeybindingRows();
+        }
         else
         {
             FetchChildReferences();
+        }
+    }
+
+    /// <summary>Kurye Defteri layout: every field is wired by the builder; only the key-binding row map is rebuilt.</summary>
+    private void FetchKeybindingRows()
+    {
+        keybindingRowMap.Clear();
+        if (keybindingsContent == null) return;
+        foreach (GameAction action in Enum.GetValues(typeof(GameAction)))
+        {
+            Transform row = keybindingsContent.Find("KeyRow_" + action.ToString());
+            if (row == null) continue;
+            Button btn = row.Find("KeyButton")?.GetComponent<Button>();
+            TextMeshProUGUI txt = btn != null ? btn.GetComponentInChildren<TextMeshProUGUI>(true) : null;
+            if (btn != null && txt != null) keybindingRowMap[action] = (btn, txt);
         }
     }
 
@@ -1818,6 +1841,11 @@ public class GameMenuManager : MonoBehaviour
         if (graphicsSection != null) graphicsSection.SetActive(tabIndex == 1);
         if (controlsSection != null) controlsSection.SetActive(tabIndex == 2);
 
+        // Highlight the active settings tab so the player always sees where they are.
+        StyleSettingsTab(tabAudioBtn, tabIndex == 0);
+        StyleSettingsTab(tabGraphicsBtn, tabIndex == 1);
+        StyleSettingsTab(tabControlsBtn, tabIndex == 2);
+
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlayTabSwitch();
@@ -1827,6 +1855,17 @@ public class GameMenuManager : MonoBehaviour
         {
             RefreshAllKeybindingUI();
         }
+    }
+
+    private static void StyleSettingsTab(Button btn, bool isActive)
+    {
+        if (btn == null) return;
+        Image img = btn.GetComponent<Image>();
+        if (img != null) img.color = isActive ? CozyTheme.Ink : new Color(1f, 1f, 1f, 0f);
+        Color ink = isActive ? CozyTheme.Paper : CozyTheme.InkSoft;
+        foreach (TextMeshProUGUI t in btn.GetComponentsInChildren<TextMeshProUGUI>(true)) t.color = ink;
+        Transform icon = btn.transform.Find("Inner/Icon");
+        if (icon != null && icon.TryGetComponent(out Image iconImg)) iconImg.color = ink;
     }
 
     public void EnsureAllDropdownTemplates()
@@ -2263,7 +2302,13 @@ public class GameMenuManager : MonoBehaviour
             if (kvp.Value.text != null)
             {
                 InputBindingData binding = KeyBindingManager.GetBinding(kvp.Key);
-                if (binding.IsAssigned)
+                if (useKuryeDefteriLayout)
+                {
+                    // Key cap buttons: plain key name in ink, unassigned in red.
+                    kvp.Value.text.text = binding.IsAssigned ? binding.GetDisplayName() : unassignedStr;
+                    kvp.Value.text.color = binding.IsAssigned ? CozyTheme.Ink : CozyTheme.RedInk;
+                }
+                else if (binding.IsAssigned)
                 {
                     kvp.Value.text.text = $"[ {binding.GetDisplayName()} ]";
                     kvp.Value.text.color = new Color(0.25f, 0.95f, 1.0f);

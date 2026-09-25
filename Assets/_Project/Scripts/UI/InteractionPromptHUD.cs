@@ -71,6 +71,10 @@ public class InteractionPromptHUD : MonoBehaviour
     public TextMeshProUGUI heldCargoPenaltyLabelText;
     public TextMeshProUGUI heldCargoPenaltyText;
     public TextMeshProUGUI heldCargoActionHintText;
+    [Tooltip("Optional Kurye Defteri extras: type chip background + icon, condition chip root.")]
+    public Image heldCargoTypeChip;
+    public Image heldCargoTypeIcon;
+    public GameObject heldCargoConditionChip;
 
     [Header("--- VEHICLE DASHBOARD GAUGE (FUEL & CONDITION) ---")]
     public GameObject vehicleDashboardRoot;
@@ -590,6 +594,7 @@ public class InteractionPromptHUD : MonoBehaviour
             {
                 promptPanel.SetActive(true);
             }
+            FitPromptWidth();
             currentPromptTimer = duration > 0f ? duration : defaultPromptDuration;
 
             if (promptCanvasGroup == null)
@@ -603,6 +608,21 @@ public class InteractionPromptHUD : MonoBehaviour
                 promptCanvasGroup.alpha = 1f;
             }
         }
+    }
+
+    /// <summary>Kurye Defteri prompt pill grows with its text (bounded), instead of a fixed wide box.</summary>
+    private void FitPromptWidth()
+    {
+        if (promptPanel == null || promptText == null) return;
+        CozyInkText ink = promptText.GetComponent<CozyInkText>();
+        if (ink == null) return; // legacy prompt box keeps its own size
+        ink.Process();
+
+        RectTransform box = promptPanel.transform as RectTransform;
+        if (box == null) return;
+        float horizontalPadding = promptText.rectTransform.offsetMin.x - promptText.rectTransform.offsetMax.x;
+        Vector2 pref = promptText.GetPreferredValues(promptText.text, 1400f, box.sizeDelta.y);
+        box.sizeDelta = new Vector2(Mathf.Clamp(pref.x + horizontalPadding + 8f, 280f, 1100f), box.sizeDelta.y);
     }
 
     public void HidePrompt()
@@ -1095,7 +1115,7 @@ public class InteractionPromptHUD : MonoBehaviour
         {
             heldCargoAddressText.text = address;
         }
-        
+
         if (heldCargoAddressDescText != null)
         {
             heldCargoAddressDescText.text = !string.IsNullOrEmpty(desc) ? desc : LocalizationManager.Get("cargo_no_clue", "Bu adres için özel bir ipucu bulunmuyor.");
@@ -1145,6 +1165,33 @@ public class InteractionPromptHUD : MonoBehaviour
                     if (heldCargoPercentageText != null) heldCargoPercentageText.text = "";
                     break;
             }
+        }
+
+        ApplyHeldCargoChipStyle(pkg);
+    }
+
+    private void ApplyHeldCargoChipStyle(PhysicalCargoPackage pkg)
+    {
+        CozyTheme.GetTone(CozyTheme.ToneFor(pkg.cargoType), out Color bg, out Color fg);
+        if (pkg.isBroken) CozyTheme.GetTone(CozyTheme.Tone.Red, out bg, out fg);
+
+        if (heldCargoTypeChip != null) heldCargoTypeChip.color = bg;
+        if (heldCargoTypeText != null && heldCargoTypeChip != null) heldCargoTypeText.color = fg;
+        if (heldCargoTypeIcon != null)
+        {
+            heldCargoTypeIcon.color = fg;
+            if (CozyAssets.Instance != null)
+            {
+                Sprite icon = CozyAssets.Instance.Icon(CozyTheme.IconFor(pkg.cargoType));
+                if (icon != null) heldCargoTypeIcon.sprite = icon;
+            }
+        }
+
+        if (heldCargoConditionChip != null)
+        {
+            bool hasStatus = (heldCargoStatusText != null && !string.IsNullOrEmpty(heldCargoStatusText.text)) ||
+                             (heldCargoPercentageText != null && !string.IsNullOrEmpty(heldCargoPercentageText.text));
+            heldCargoConditionChip.SetActive(hasStatus);
         }
     }
 

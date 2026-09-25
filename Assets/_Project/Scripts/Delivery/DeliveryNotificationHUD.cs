@@ -10,6 +10,9 @@ public class DeliveryNotificationHUD : MonoBehaviour
     public GameObject notificationRoot;
     public TextMeshProUGUI notificationText;
     public Image notificationBackground;
+    [Tooltip("Optional: check / cross icon and the darker lip edge of the toast card.")]
+    public Image notificationIcon;
+    public Shadow notificationLip;
 
     [Header("--- LIVE COUNTER ---")]
     public TextMeshProUGUI remainingCargoCounterText;
@@ -66,9 +69,16 @@ public class DeliveryNotificationHUD : MonoBehaviour
 
         if (notificationBackground != null)
         {
-            notificationBackground.color = isCorrect 
-                ? new Color(0.1f, 0.6f, 0.2f, 0.9f)  // Green
-                : new Color(0.75f, 0.15f, 0.15f, 0.95f); // Red
+            notificationBackground.color = isCorrect ? CozyTheme.Mint : CozyTheme.Red;
+        }
+        if (notificationLip != null)
+        {
+            notificationLip.effectColor = isCorrect ? CozyTheme.MintLip : CozyTheme.RedLip;
+        }
+        if (notificationIcon != null && CozyAssets.Instance != null)
+        {
+            Sprite icon = CozyAssets.Instance.Icon(isCorrect ? "check" : "x");
+            if (icon != null) notificationIcon.sprite = icon;
         }
     }
 

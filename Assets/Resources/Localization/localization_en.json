@@ -3,7 +3,7 @@
   "entries": [
     {
       "key": "game_title",
-      "value": "<b>Where's</b>\n<size=40><b>My Package</b></size>"
+      "value": "Where's My\n<color=#D9534A>Package?</color>"
     },
     {
       "key": "game_subtitle",
@@ -23,27 +23,27 @@
     },
     {
       "key": "btn_continue",
-      "value": "CONTINUE"
+      "value": "Continue"
     },
     {
       "key": "btn_new_game",
-      "value": "NEW GAME"
+      "value": "New game"
     },
     {
       "key": "btn_play",
-      "value": "PLAY GAME"
+      "value": "Play"
     },
     {
       "key": "btn_settings",
-      "value": "SETTINGS"
+      "value": "Settings"
     },
     {
       "key": "btn_quit",
-      "value": "QUIT"
+      "value": "Quit"
     },
     {
       "key": "modal_new_game_title",
-      "value": "<b>START NEW GAME</b>"
+      "value": "Start a new game"
     },
     {
       "key": "modal_new_game_body",
@@ -51,11 +51,11 @@
     },
     {
       "key": "btn_confirm_reset",
-      "value": "YES, RESET & START"
+      "value": "Yes, reset"
     },
     {
       "key": "btn_cancel",
-      "value": "CANCEL"
+      "value": "Cancel"
     },
     {
       "key": "pause_title",
@@ -63,15 +63,15 @@
     },
     {
       "key": "btn_resume",
-      "value": "RESUME"
+      "value": "Resume"
     },
     {
       "key": "btn_return_main_menu",
-      "value": "RETURN TO MAIN MENU"
+      "value": "Main menu"
     },
     {
       "key": "btn_quit_desktop",
-      "value": "QUIT TO DESKTOP"
+      "value": "Quit to desktop"
     },
     {
       "key": "settings_title",
@@ -79,15 +79,15 @@
     },
     {
       "key": "tab_audio",
-      "value": "AUDIO"
+      "value": "Audio"
     },
     {
       "key": "tab_graphics",
-      "value": "GRAPHICS"
+      "value": "Display & language"
     },
     {
       "key": "tab_controls",
-      "value": "CONTROLS"
+      "value": "Controls"
     },
     {
       "key": "tab_language",
@@ -151,11 +151,11 @@
     },
     {
       "key": "btn_reset_defaults",
-      "value": "Reset to Defaults"
+      "value": "Reset to defaults"
     },
     {
       "key": "btn_save_return",
-      "value": "SAVE & RETURN"
+      "value": "Save and return"
     },
     {
       "key": "btn_unassigned",
@@ -379,15 +379,15 @@
     },
     {
       "key": "tablet_tab_cargo",
-      "value": "DELIVERIES"
+      "value": "Deliveries"
     },
     {
       "key": "tablet_tab_vehicles",
-      "value": "VEHICLES"
+      "value": "Vehicles"
     },
     {
       "key": "tablet_tab_branch",
-      "value": "BRANCH"
+      "value": "Branch"
     },
     {
       "key": "tablet_cargo_in_vehicle",
@@ -447,7 +447,7 @@
     },
     {
       "key": "tablet_btn_end_shift",
-      "value": "END SHIFT"
+      "value": "End shift"
     },
     {
       "key": "tablet_btn_close",
@@ -1404,6 +1404,258 @@
     {
       "key": "vehicle_tutorial_f2_hint",
       "value": "<color=#64A0FF>[F2]</color> <color=#A0B0C0>Key to reopen the driving guide at any time.</color>"
+    },
+    {
+      "key": "cozy_status_damaged",
+      "value": "Damaged"
+    },
+    {
+      "key": "cozy_status_at_zone",
+      "value": "At the door"
+    },
+    {
+      "key": "cozy_status_carried",
+      "value": "In hand"
+    },
+    {
+      "key": "cozy_status_in_vehicle",
+      "value": "In the van"
+    },
+    {
+      "key": "cozy_status_waiting",
+      "value": "Waiting"
+    },
+    {
+      "key": "cozy_type_standard",
+      "value": "Standard"
+    },
+    {
+      "key": "cozy_type_express",
+      "value": "Express"
+    },
+    {
+      "key": "cozy_type_fragile",
+      "value": "Fragile"
+    },
+    {
+      "key": "cozy_type_explosive",
+      "value": "Explosive"
+    },
+    {
+      "key": "cozy_filter_all",
+      "value": "All"
+    },
+    {
+      "key": "cozy_filter_in_vehicle",
+      "value": "In van"
+    },
+    {
+      "key": "cozy_filter_express",
+      "value": "Express"
+    },
+    {
+      "key": "cozy_filter_fragile",
+      "value": "Fragile"
+    },
+    {
+      "key": "cozy_tablet_no_match",
+      "value": "No parcels match this search."
+    },
+    {
+      "key": "cozy_tip_express",
+      "value": "Deliver before {0} for a <b>+40% speed bonus</b>."
+    },
+    {
+      "key": "cozy_tip_fragile",
+      "value": "Fragile parcel: hard knocks damage it, place it gently."
+    },
+    {
+      "key": "cozy_tip_explosive",
+      "value": "Explosive parcel: no throwing, no hard braking."
+    },
+    {
+      "key": "cozy_vehicle_fuel_sub",
+      "value": "Fuel {0:F0}%  ·  Condition {1:F0}%"
+    },
+    {
+      "key": "cozy_vehicle_owned",
+      "value": "Owned"
+    },
+    {
+      "key": "cozy_vehicle_fuel",
+      "value": "Fuel"
+    },
+    {
+      "key": "cozy_vehicle_condition",
+      "value": "Condition"
+    },
+    {
+      "key": "cozy_receipt_correct",
+      "value": "Correct deliveries ×{0}"
+    },
+    {
+      "key": "cozy_receipt_passive",
+      "value": "Dispatch hub income"
+    },
+    {
+      "key": "cozy_receipt_broken",
+      "value": "Broken parcels ×{0}"
+    },
+    {
+      "key": "cozy_receipt_wrong",
+      "value": "Wrong address ×{0}"
+    },
+    {
+      "key": "cozy_receipt_missed",
+      "value": "Not delivered ×{0}"
+    },
+    {
+      "key": "cozy_receipt_rent",
+      "value": "Branch rent"
+    },
+    {
+      "key": "cozy_receipt_stamp",
+      "value": "DAY {0}\nCLOSED"
+    },
+    {
+      "key": "cozy_receipt_profit",
+      "value": "Today's profit"
+    },
+    {
+      "key": "cozy_receipt_vault",
+      "value": "Cash"
+    },
+    {
+      "key": "cozy_receipt_xp",
+      "value": "Experience"
+    },
+    {
+      "key": "cozy_history_title",
+      "value": "Delivery history"
+    },
+    {
+      "key": "cozy_history_count",
+      "value": "{0} / {1} correct"
+    },
+    {
+      "key": "cozy_history_early",
+      "value": "early"
+    },
+    {
+      "key": "cozy_history_late",
+      "value": "late"
+    },
+    {
+      "key": "cozy_history_dropped",
+      "value": "Left at: {0}  ·  target: {1}"
+    },
+    {
+      "key": "cozy_history_broken",
+      "value": "broken"
+    },
+    {
+      "key": "cozy_history_missed",
+      "value": "not delivered"
+    },
+    {
+      "key": "cozy_hud_parcels_left",
+      "value": "Parcels left"
+    },
+    {
+      "key": "cozy_hud_cash",
+      "value": "Cash"
+    },
+    {
+      "key": "cozy_hint_tablet",
+      "value": "Notebook"
+    },
+    {
+      "key": "cozy_hint_vehicle",
+      "value": "Get in"
+    },
+    {
+      "key": "cozy_hint_guide",
+      "value": "Guide"
+    },
+    {
+      "key": "cozy_throw_power",
+      "value": "Throw power"
+    },
+    {
+      "key": "cozy_tablet_search",
+      "value": "Search recipient or street"
+    },
+    {
+      "key": "cozy_tablet_today",
+      "value": "Today's parcels"
+    },
+    {
+      "key": "cozy_tablet_sort",
+      "value": "Sorted by deadline"
+    },
+    {
+      "key": "cozy_tablet_detail",
+      "value": "Delivery details"
+    },
+    {
+      "key": "cozy_tablet_hint",
+      "value": "Directions"
+    },
+    {
+      "key": "cozy_tablet_fleet",
+      "value": "Vehicle fleet"
+    },
+    {
+      "key": "cozy_fact_type",
+      "value": "Type"
+    },
+    {
+      "key": "cozy_fact_deadline",
+      "value": "Deadline"
+    },
+    {
+      "key": "cozy_fact_reward",
+      "value": "Pay"
+    },
+    {
+      "key": "cozy_fact_status",
+      "value": "Status"
+    },
+    {
+      "key": "cozy_branch_current",
+      "value": "Current branch"
+    },
+    {
+      "key": "cozy_branch_next",
+      "value": "Next tier"
+    },
+    {
+      "key": "cozy_menu_tagline",
+      "value": "Courier simulator"
+    },
+    {
+      "key": "cozy_menu_footer",
+      "value": "F1 guide  ·  ESC pause"
+    },
+    {
+      "key": "cozy_menu_last_save",
+      "value": "Last save"
+    },
+    {
+      "key": "cozy_pause_title",
+      "value": "Paused"
+    },
+    {
+      "key": "cozy_settings_title",
+      "value": "Settings"
+    },
+    {
+      "key": "cozy_keybindings_title",
+      "value": "Key bindings"
+    },
+    {
+      "key": "cozy_guide_label",
+      "value": "Courier guide"
     }
   ]
 }

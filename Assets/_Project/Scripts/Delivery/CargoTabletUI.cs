@@ -83,6 +83,35 @@ public class CargoTabletUI : MonoBehaviour
     public Button endShiftButton;
     public Button closeTabletButton;
 
+    [Header("--- KURYE DEFTERI LAYOUT ---")]
+    [Tooltip("Set by the Kurye Defteri UI builder. References are wired explicitly, so name-based lookups are skipped.")]
+    public bool useKuryeDefteriLayout = false;
+    public TMP_InputField cargoSearchInput;
+    public Button filterAllButton;
+    public Button filterInVehicleButton;
+    public Button filterExpressButton;
+    public Button filterFragileButton;
+    public TextMeshProUGUI detailTypeText;
+    public TextMeshProUGUI detailDeadlineText;
+    public TextMeshProUGUI detailRewardText;
+    public TextMeshProUGUI detailStatusText;
+    public GameObject detailTipRoot;
+    public Image detailTipIcon;
+    public TextMeshProUGUI detailTipText;
+    public Image vehicleFuelBarFill;
+    public Image vehicleConditionBarFill;
+    public TextMeshProUGUI vehicleFuelValueText;
+    public TextMeshProUGUI vehicleConditionValueText;
+    public TextMeshProUGUI tabletClockText;
+    public TextMeshProUGUI tabletCashText;
+    public TextMeshProUGUI cargoTabCountText;
+
+    private enum CargoFilter { All, InVehicle, Express, Fragile }
+    private CargoFilter currentFilter = CargoFilter.All;
+    private string searchQuery = "";
+    private readonly List<KeyValuePair<GameObject, PhysicalCargoPackage>> cargoRows = new List<KeyValuePair<GameObject, PhysicalCargoPackage>>();
+    private readonly List<KeyValuePair<GameObject, DrivableVehicle>> vehicleRows = new List<KeyValuePair<GameObject, DrivableVehicle>>();
+
     [Header("--- TAB VISUAL STYLING ---")]
     public Sprite activeTabSprite;
     public Sprite inactiveTabSprite;
@@ -204,8 +233,8 @@ public class CargoTabletUI : MonoBehaviour
             if (tmp != null) tmp.text = LocalizationManager.Get("tablet_btn_close", "CLOSE");
         }
 
-        // Localize Cargo View sub-headers & titles
-        if (cargoViewRoot != null)
+        // Localize Cargo View sub-headers & titles (legacy layout only; Kurye Defteri labels use LocalizedText)
+        if (cargoViewRoot != null && !useKuryeDefteriLayout)
         {
             TextMeshProUGUI listTitle = FindTMPRecursive(cargoViewRoot.transform, "ListTitle", "LeftColumn_List/Title", "LeftColumn_List/Header");
             if (listTitle != null) listTitle.text = LocalizationManager.Get("tablet_cargo_in_vehicle", "CARGO IN VEHICLE");
@@ -238,14 +267,14 @@ public class CargoTabletUI : MonoBehaviour
         }
 
         // Localize Vehicle View sub-headers & titles
-        if (vehicleViewRoot != null)
+        if (vehicleViewRoot != null && !useKuryeDefteriLayout)
         {
             TextMeshProUGUI vehFleetTitle = FindTMPRecursive(vehicleViewRoot.transform, "LeftColumn_Vehicles/Title", "LeftColumn_Vehicles/Header", "FleetTitle");
             if (vehFleetTitle != null) vehFleetTitle.text = LocalizationManager.Get("tablet_vehicle_dealership_title", "VEHICLE FLEET");
         }
 
         // Localize Branch View sub-headers & titles
-        if (branchViewRoot != null)
+        if (branchViewRoot != null && !useKuryeDefteriLayout)
         {
             TextMeshProUGUI curBranchHeader = FindTMPRecursive(branchViewRoot.transform, "LeftColumn_CurrentBranch/Header", "CurrentBranchHeader");
             if (curBranchHeader != null) curBranchHeader.text = LocalizationManager.Get("tablet_branch_current_title", "CURRENT BRANCH / WAREHOUSE");
@@ -325,6 +354,15 @@ public class CargoTabletUI : MonoBehaviour
 
     private bool CheckToggleInput()
     {
+        if (cargoSearchInput != null && cargoSearchInput.isFocused)
+        {
+            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            {
+                cargoSearchInput.DeactivateInputField();
+            }
+            return false;
+        }
+
         if (Keyboard.current != null)
         {
             if (KeyBindingManager.WasPressedThisFrame(GameAction.Tablet) ||
@@ -519,6 +557,9 @@ public class CargoTabletUI : MonoBehaviour
     {
         if (!isTabletOpen) return;
 
+        if (tabletClockText != null && DayTimeManager.Instance != null) tabletClockText.text = DayTimeManager.Instance.GetFormattedTime();
+        if (tabletCashText != null && PlayerEconomyManager.Instance != null) tabletCashText.text = CozyText.Money(PlayerEconomyManager.Instance.CurrentLiveBalance);
+
         if (currentTab == TabletTab.CargoInventory)
         {
             PopulateCargoList();
@@ -538,6 +579,12 @@ public class CargoTabletUI : MonoBehaviour
     // ==========================================
     private void PopulateCargoList()
     {
+        if (useKuryeDefteriLayout)
+        {
+            PopulateCargoListKurye();
+            return;
+        }
+
         if (cargoListContent == null || cargoCardTemplate == null) EnsureTabletStructure();
         if (cargoListContent == null || cargoCardTemplate == null) return;
 
@@ -657,6 +704,12 @@ public class CargoTabletUI : MonoBehaviour
             return;
         }
 
+        if (useKuryeDefteriLayout)
+        {
+            DisplayCargoDetailKurye(pkg);
+            return;
+        }
+
         if (detailCardRoot != null) detailCardRoot.SetActive(true);
 
         if (detailHeaderTitleText == null && cargoViewRoot != null)
@@ -756,6 +809,12 @@ public class CargoTabletUI : MonoBehaviour
     // ==========================================
     public void PopulateVehicleList()
     {
+        if (useKuryeDefteriLayout)
+        {
+            PopulateVehicleListKurye();
+            return;
+        }
+
         if (vehicleListContent == null || vehicleCardTemplate == null) EnsureTabletStructure();
         if (vehicleListContent == null || vehicleCardTemplate == null) return;
 
@@ -854,6 +913,9 @@ public class CargoTabletUI : MonoBehaviour
             string fuelTag = v.currentFuel <= 0.05f ? $"<color=#FF4444>[{LocalizationManager.Get("vehicle_status_empty", "EMPTY")}]</color>" : (fuelPct < 25f ? $"<color=#FFAA33>[{LocalizationManager.Get("vehicle_status_low", "LOW")}]</color>" : $"<color=#32FF64>[{LocalizationManager.Get("vehicle_status_ok", "OK")}]</color>");
             vehicleFuelStatusText.text = $"<b>{LocalizationManager.Get("vehicle_fuel_tank", "Fuel Tank:")}</b> <color={fuelColor}>{v.currentFuel:F1} / {v.maxFuel:F1} L ({fuelPct:F0}%)</color> {fuelTag}  |  <b>{LocalizationManager.Get("vehicle_condition", "Condition:")}</b> <color={condColor}>%{condPct:F0}</color>";
         }
+
+        UpdateVehicleBarsKurye(v, fuelPct, condPct);
+        HighlightVehicleRows();
 
         // Buy Button
         if (vehicleBuyButton != null)
@@ -1133,6 +1195,13 @@ public class CargoTabletUI : MonoBehaviour
         }
 
         if (tabletPanelRoot == null) return;
+
+        if (useKuryeDefteriLayout)
+        {
+            BindKuryeDefteriListeners();
+            RefreshLocalizedUI();
+            return;
+        }
 
         // 1. TabletTopBar & Buttons
         Transform topBarTransform = tabletPanelRoot.transform.Find("TabletTopBar");
@@ -1456,17 +1525,24 @@ public class CargoTabletUI : MonoBehaviour
         StartCoroutine(FlashButtonRoutine(btn, normalColor));
     }
 
+    private readonly System.Collections.Generic.Dictionary<Image, Color> flashOriginalColors = new System.Collections.Generic.Dictionary<Image, Color>();
+
     private System.Collections.IEnumerator FlashButtonRoutine(Button btn, Color normalColor)
     {
         Image img = btn.GetComponent<Image>();
         if (img == null) yield break;
 
+        // Restore the button's own (themed) color, not a hard-coded legacy color.
+        bool ownsFlash = !flashOriginalColors.ContainsKey(img);
+        if (ownsFlash) flashOriginalColors[img] = img.color;
+
         Color errorColor = new Color(0.85f, 0.2f, 0.2f, 1f);
         img.color = errorColor;
         yield return new WaitForSecondsRealtime(0.45f);
-        if (img != null)
+        if (ownsFlash && flashOriginalColors.TryGetValue(img, out Color original))
         {
-            img.color = normalColor;
+            flashOriginalColors.Remove(img);
+            if (img != null) img.color = original;
         }
     }
 
@@ -1480,6 +1556,12 @@ public class CargoTabletUI : MonoBehaviour
     private void SetTabButtonState(Button btn, bool isActive)
     {
         if (btn == null) return;
+
+        if (useKuryeDefteriLayout)
+        {
+            SetFolderTabState(btn, isActive);
+            return;
+        }
 
         Image img = btn.GetComponent<Image>();
         if (img != null)
@@ -1523,5 +1605,425 @@ public class CargoTabletUI : MonoBehaviour
             tmp.color = isActive ? activeTabTextColor : inactiveTabTextColor;
             tmp.fontStyle = isActive ? FontStyles.Bold : FontStyles.Normal;
         }
+    }
+
+    // ==========================================
+    // KURYE DEFTERI LAYOUT
+    // ==========================================
+
+    private void BindKuryeDefteriListeners()
+    {
+        if (endShiftButton != null) { endShiftButton.onClick.RemoveAllListeners(); endShiftButton.onClick.AddListener(OnEndShiftButtonClicked); }
+        if (tabCargoButton != null) { tabCargoButton.onClick.RemoveAllListeners(); tabCargoButton.onClick.AddListener(() => SwitchTab(TabletTab.CargoInventory)); }
+        if (tabVehicleButton != null) { tabVehicleButton.onClick.RemoveAllListeners(); tabVehicleButton.onClick.AddListener(() => SwitchTab(TabletTab.VehicleDealership)); }
+        if (tabBranchButton != null) { tabBranchButton.onClick.RemoveAllListeners(); tabBranchButton.gameObject.SetActive(false); }
+        if (closeTabletButton != null) { closeTabletButton.onClick.RemoveAllListeners(); closeTabletButton.onClick.AddListener(CloseTablet); }
+        if (branchUpgradeButton != null) { branchUpgradeButton.onClick.RemoveAllListeners(); branchUpgradeButton.onClick.AddListener(OnUpgradeBranchClicked); }
+
+        BindFilter(filterAllButton, CargoFilter.All);
+        BindFilter(filterInVehicleButton, CargoFilter.InVehicle);
+        BindFilter(filterExpressButton, CargoFilter.Express);
+        BindFilter(filterFragileButton, CargoFilter.Fragile);
+
+        if (cargoSearchInput != null)
+        {
+            cargoSearchInput.onValueChanged.RemoveAllListeners();
+            cargoSearchInput.onValueChanged.AddListener(value =>
+            {
+                searchQuery = value ?? "";
+                if (isTabletOpen && currentTab == TabletTab.CargoInventory) PopulateCargoListKurye();
+            });
+        }
+
+        UpdateTabVisuals();
+    }
+
+    private void BindFilter(Button btn, CargoFilter filter)
+    {
+        if (btn == null) return;
+        btn.onClick.RemoveAllListeners();
+        btn.onClick.AddListener(() =>
+        {
+            if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+            currentFilter = filter;
+            PopulateCargoListKurye();
+        });
+    }
+
+    private void SetFolderTabState(Button btn, bool isActive)
+    {
+        Image img = btn.GetComponent<Image>();
+        if (img != null) img.color = isActive ? CozyTheme.Paper : CozyTheme.TabIdle;
+
+        ColorBlock cb = btn.colors;
+        cb.normalColor = Color.white;
+        cb.highlightedColor = new Color(1.04f, 1.04f, 1.04f, 1f);
+        cb.selectedColor = Color.white;
+        cb.pressedColor = new Color(0.95f, 0.95f, 0.95f, 1f);
+        btn.colors = cb;
+
+        Color ink = isActive ? CozyTheme.Ink : CozyTheme.InkSoft;
+        foreach (TextMeshProUGUI t in btn.GetComponentsInChildren<TextMeshProUGUI>(true))
+        {
+            if (t.name == "Label") t.color = ink;
+        }
+        Transform icon = btn.transform.Find("Inner/Icon");
+        if (icon != null && icon.TryGetComponent(out Image iconImg)) iconImg.color = ink;
+
+        LayoutElement le = btn.GetComponent<LayoutElement>();
+        if (le != null)
+        {
+            le.minHeight = isActive ? 92f : 82f; // bottom 12px tucks under the notebook page
+            le.preferredHeight = le.minHeight;
+        }
+    }
+
+    private static string FoldForSearch(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return "";
+        return s.ToLowerInvariant().Replace("\u0131", "i").Replace("\u0307", "").Replace("ş", "s").Replace("ğ", "g").Replace("ü", "u").Replace("ö", "o").Replace("ç", "c");
+    }
+
+    private bool PassesFilter(PhysicalCargoPackage p, CargoFilter filter)
+    {
+        switch (filter)
+        {
+            case CargoFilter.InVehicle: return p.isInVehicleBed;
+            case CargoFilter.Express: return p.cargoType == CargoType.Express;
+            case CargoFilter.Fragile: return p.cargoType == CargoType.Fragile || p.cargoType == CargoType.Explosive;
+            default: return true;
+        }
+    }
+
+    private string ShiftEndTime()
+    {
+        if (DayTimeManager.Instance == null) return "18:00";
+        return $"{DayTimeManager.Instance.endHour:D2}:{DayTimeManager.Instance.endMinute:D2}";
+    }
+
+    private void GetCargoStatus(PhysicalCargoPackage pkg, out string label, out CozyTheme.Tone tone)
+    {
+        if (pkg.isBroken) { label = LocalizationManager.Get("cozy_status_damaged", "Hasarlı"); tone = CozyTheme.Tone.Red; }
+        else if (pkg.FindNearbyDeliveryPoint() != null) { label = LocalizationManager.Get("cozy_status_at_zone", "Bölgede"); tone = CozyTheme.Tone.Honey; }
+        else if (pkg.isBeingCarried) { label = LocalizationManager.Get("cozy_status_carried", "Elinde"); tone = CozyTheme.Tone.Sky; }
+        else if (pkg.isInVehicleBed) { label = LocalizationManager.Get("cozy_status_in_vehicle", "Araçta"); tone = CozyTheme.Tone.Mint; }
+        else { label = LocalizationManager.Get("cozy_status_waiting", "Bekliyor"); tone = CozyTheme.Tone.Kraft; }
+    }
+
+    private string CargoTypeName(CargoType type)
+    {
+        switch (type)
+        {
+            case CargoType.Express: return LocalizationManager.Get("cozy_type_express", "Ekspres");
+            case CargoType.Fragile: return LocalizationManager.Get("cozy_type_fragile", "Kırılacak");
+            case CargoType.Explosive: return LocalizationManager.Get("cozy_type_explosive", "Patlayıcı");
+            default: return LocalizationManager.Get("cozy_type_standard", "Standart");
+        }
+    }
+
+    private void SetFilterChip(Button btn, string key, string fallback, int count, bool active)
+    {
+        if (btn == null) return;
+        Image bg = btn.GetComponent<Image>();
+        if (bg != null) bg.color = active ? CozyTheme.Ink : new Color(1f, 1f, 1f, 0f);
+        Outline border = btn.GetComponent<Outline>();
+        if (border != null) border.enabled = !active;
+        TextMeshProUGUI t = btn.GetComponentInChildren<TextMeshProUGUI>(true);
+        if (t != null)
+        {
+            t.text = $"{LocalizationManager.Get(key, fallback)}  {count}";
+            t.color = active ? CozyTheme.Paper : CozyTheme.InkSoft;
+        }
+    }
+
+    private void PopulateCargoListKurye()
+    {
+        if (cargoListContent == null || cargoCardTemplate == null) return;
+
+        foreach (Transform child in cargoListContent)
+        {
+            if (child.gameObject != cargoCardTemplate) Destroy(child.gameObject);
+        }
+        cargoRows.Clear();
+
+        List<PhysicalCargoPackage> packages = new List<PhysicalCargoPackage>();
+        foreach (PhysicalCargoPackage p in UnityEngine.Object.FindObjectsByType<PhysicalCargoPackage>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+        {
+            if (p != null) packages.Add(p);
+        }
+
+        int inVehicle = 0, express = 0, fragile = 0;
+        foreach (PhysicalCargoPackage p in packages)
+        {
+            if (PassesFilter(p, CargoFilter.InVehicle)) inVehicle++;
+            if (PassesFilter(p, CargoFilter.Express)) express++;
+            if (PassesFilter(p, CargoFilter.Fragile)) fragile++;
+        }
+        SetFilterChip(filterAllButton, "cozy_filter_all", "Tümü", packages.Count, currentFilter == CargoFilter.All);
+        SetFilterChip(filterInVehicleButton, "cozy_filter_in_vehicle", "Araçta", inVehicle, currentFilter == CargoFilter.InVehicle);
+        SetFilterChip(filterExpressButton, "cozy_filter_express", "Ekspres", express, currentFilter == CargoFilter.Express);
+        SetFilterChip(filterFragileButton, "cozy_filter_fragile", "Kırılacak", fragile, currentFilter == CargoFilter.Fragile);
+        if (cargoTabCountText != null)
+        {
+            int pending = 0;
+            foreach (PhysicalCargoPackage p in packages) if (!p.isBroken && p.FindNearbyDeliveryPoint() == null) pending++;
+            cargoTabCountText.text = pending.ToString();
+            cargoTabCountText.transform.parent.gameObject.SetActive(pending > 0);
+        }
+
+        string q = FoldForSearch(searchQuery.Trim());
+        List<PhysicalCargoPackage> visible = new List<PhysicalCargoPackage>();
+        foreach (PhysicalCargoPackage p in packages)
+        {
+            if (!PassesFilter(p, currentFilter)) continue;
+            if (q.Length > 0 && !FoldForSearch(p.EffectiveRecipientName).Contains(q) && !FoldForSearch(p.EffectiveAddressName).Contains(q)) continue;
+            visible.Add(p);
+        }
+
+        // Most urgent first: express by deadline, then regular parcels, damaged ones last.
+        visible.Sort((a, b) =>
+        {
+            int brokenCmp = a.isBroken.CompareTo(b.isBroken);
+            if (brokenCmp != 0) return brokenCmp;
+            float da = a.cargoType == CargoType.Express ? a.targetDeliveryHour : 99f;
+            float db = b.cargoType == CargoType.Express ? b.targetDeliveryHour : 99f;
+            int deadlineCmp = da.CompareTo(db);
+            if (deadlineCmp != 0) return deadlineCmp;
+            return string.Compare(a.EffectiveRecipientName, b.EffectiveRecipientName, System.StringComparison.CurrentCultureIgnoreCase);
+        });
+
+        if (visible.Count == 0)
+        {
+            if (emptyListText != null)
+            {
+                emptyListText.gameObject.SetActive(true);
+                emptyListText.text = packages.Count == 0
+                    ? LocalizationManager.Get("tablet_empty_cargo", "No packages in vehicle to deliver.\nLoad new packages from the warehouse.")
+                    : LocalizationManager.Get("cozy_tablet_no_match", "Bu aramaya uyan koli yok.");
+            }
+            if (detailCardRoot != null) detailCardRoot.SetActive(false);
+            return;
+        }
+
+        if (emptyListText != null) emptyListText.gameObject.SetActive(false);
+
+        foreach (PhysicalCargoPackage pkg in visible)
+        {
+            GameObject row = Instantiate(cargoCardTemplate, cargoListContent);
+            row.SetActive(true);
+            FillCargoRow(row, pkg);
+
+            Button btn = row.GetComponent<Button>();
+            if (btn != null)
+            {
+                btn.onClick.RemoveAllListeners();
+                PhysicalCargoPackage pkgRef = pkg;
+                btn.onClick.AddListener(() =>
+                {
+                    if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+                    DisplayCargoDetail(pkgRef);
+                });
+            }
+            cargoRows.Add(new KeyValuePair<GameObject, PhysicalCargoPackage>(row, pkg));
+        }
+
+        PhysicalCargoPackage select = currentSelectedPackage != null && visible.Contains(currentSelectedPackage) ? currentSelectedPackage : visible[0];
+        DisplayCargoDetail(select);
+    }
+
+    private void FillCargoRow(GameObject row, PhysicalCargoPackage pkg)
+    {
+        Transform t = row.transform;
+
+        Transform badge = t.Find("TypeBadge");
+        if (badge != null)
+        {
+            CozyTheme.BadgeFor(pkg.cargoType, out Color bg, out Color fg);
+            if (badge.TryGetComponent(out Image bgImg)) bgImg.color = bg;
+            Transform icon = badge.Find("Icon");
+            if (icon != null && icon.TryGetComponent(out Image iconImg))
+            {
+                iconImg.color = fg;
+                if (CozyAssets.Instance != null) iconImg.sprite = CozyAssets.Instance.Icon(CozyTheme.IconFor(pkg.cargoType));
+            }
+        }
+
+        SetRowText(t, "Texts/RecipientName", pkg.EffectiveRecipientName);
+        SetRowText(t, "Texts/Address", pkg.EffectiveAddressName);
+
+        GetCargoStatus(pkg, out string status, out CozyTheme.Tone tone);
+        Transform chip = t.Find("Right/StatusChip");
+        if (chip != null)
+        {
+            CozyTheme.GetTone(tone, out Color bg, out Color fg);
+            if (chip.TryGetComponent(out Image chipImg)) chipImg.color = bg;
+            Transform chipText = chip.Find("Text");
+            if (chipText != null && chipText.TryGetComponent(out TextMeshProUGUI ct)) { ct.text = status; ct.color = fg; }
+        }
+
+        Transform deadline = t.Find("Right/Deadline");
+        if (deadline != null && deadline.TryGetComponent(out TextMeshProUGUI dl))
+        {
+            bool isExpress = pkg.cargoType == CargoType.Express;
+            dl.text = isExpress ? pkg.GetFormattedTargetDeliveryTime() : ShiftEndTime();
+            dl.color = isExpress ? CozyTheme.SkyInk : CozyTheme.InkSoft;
+        }
+    }
+
+    private static void SetRowText(Transform root, string path, string value)
+    {
+        Transform t = root.Find(path);
+        if (t != null && t.TryGetComponent(out TextMeshProUGUI tmp)) tmp.text = value;
+    }
+
+    private static void SetRowSelected(GameObject row, bool selected)
+    {
+        if (row == null) return;
+        if (row.TryGetComponent(out Image img)) img.color = selected ? CozyTheme.Kraft : CozyTheme.RowFace;
+        Outline border = row.GetComponent<Outline>();
+        if (border != null) border.enabled = selected;
+    }
+
+    private void HighlightCargoRows()
+    {
+        foreach (KeyValuePair<GameObject, PhysicalCargoPackage> kv in cargoRows) SetRowSelected(kv.Key, kv.Value == currentSelectedPackage);
+    }
+
+    private void HighlightVehicleRows()
+    {
+        foreach (KeyValuePair<GameObject, DrivableVehicle> kv in vehicleRows) SetRowSelected(kv.Key, kv.Value == currentSelectedVehicle);
+    }
+
+    private void DisplayCargoDetailKurye(PhysicalCargoPackage pkg)
+    {
+        if (detailCardRoot != null) detailCardRoot.SetActive(true);
+
+        if (trackingNumberText != null) trackingNumberText.text = "TR-" + (pkg.targetPointId ?? "0").PadLeft(4, '0');
+        if (recipientNameText != null) recipientNameText.text = pkg.EffectiveRecipientName;
+        if (targetAddressText != null) targetAddressText.text = pkg.EffectiveAddressName;
+
+        CozyTheme.GetTone(CozyTheme.ToneFor(pkg.cargoType), out Color tint, out Color typeInk);
+        if (detailTypeText != null) { detailTypeText.text = CargoTypeName(pkg.cargoType); detailTypeText.color = pkg.cargoType == CargoType.Standard ? CozyTheme.Ink : typeInk; }
+
+        bool isExpress = pkg.cargoType == CargoType.Express;
+        if (detailDeadlineText != null) detailDeadlineText.text = isExpress ? pkg.GetFormattedTargetDeliveryTime() : ShiftEndTime();
+        if (detailRewardText != null) { detailRewardText.text = CozyText.Money(pkg.deliveryReward); detailRewardText.color = CozyTheme.MintInk; }
+
+        GetCargoStatus(pkg, out string status, out CozyTheme.Tone tone);
+        CozyTheme.GetTone(tone, out Color _, out Color statusInk);
+        if (detailStatusText != null) { detailStatusText.text = status; detailStatusText.color = tone == CozyTheme.Tone.Kraft ? CozyTheme.Ink : statusInk; }
+
+        if (addressDescriptionText != null)
+        {
+            string desc = pkg.EffectiveAddressDescription;
+            addressDescriptionText.text = !string.IsNullOrEmpty(desc) ? desc : LocalizationManager.Get("cargo_no_clue", "No specific visual clue available for this address.");
+        }
+
+        if (detailTipRoot != null)
+        {
+            string tip = null;
+            string icon = CozyTheme.IconFor(pkg.cargoType);
+            if (isExpress) tip = string.Format(LocalizationManager.Get("cozy_tip_express", "{0}'dan önce teslim edersen <b>+%40 hız bonusu</b> kazanırsın."), pkg.GetFormattedTargetDeliveryTime());
+            else if (pkg.cargoType == CargoType.Fragile) tip = LocalizationManager.Get("cozy_tip_fragile", "Kırılacak koli: sert çarpmalar hasar verir, kasaya yavaşça bırak.");
+            else if (pkg.cargoType == CargoType.Explosive) tip = LocalizationManager.Get("cozy_tip_explosive", "Patlayıcı koli: fırlatma ve sert frenden kaçın.");
+
+            detailTipRoot.SetActive(!string.IsNullOrEmpty(tip));
+            if (!string.IsNullOrEmpty(tip))
+            {
+                if (detailTipRoot.TryGetComponent(out Image tipBg)) tipBg.color = tint;
+                if (detailTipText != null) { detailTipText.text = tip; detailTipText.color = typeInk; }
+                if (detailTipIcon != null)
+                {
+                    detailTipIcon.color = typeInk;
+                    if (CozyAssets.Instance != null) detailTipIcon.sprite = CozyAssets.Instance.Icon(icon);
+                }
+            }
+        }
+
+        HighlightCargoRows();
+    }
+
+    private void PopulateVehicleListKurye()
+    {
+        if (vehicleListContent == null || vehicleCardTemplate == null) return;
+
+        foreach (Transform child in vehicleListContent)
+        {
+            if (child.gameObject != vehicleCardTemplate) Destroy(child.gameObject);
+        }
+        vehicleRows.Clear();
+
+        List<DrivableVehicle> vehicles = VehicleShowroomManager.Instance != null
+            ? VehicleShowroomManager.Instance.GetAllVehicles()
+            : new List<DrivableVehicle>(UnityEngine.Object.FindObjectsByType<DrivableVehicle>(FindObjectsInactive.Include, FindObjectsSortMode.None));
+
+        if (vehicles.Count == 0)
+        {
+            if (vehicleDetailRoot != null) vehicleDetailRoot.SetActive(false);
+            return;
+        }
+
+        foreach (DrivableVehicle v in vehicles)
+        {
+            if (v == null) continue;
+            GameObject row = Instantiate(vehicleCardTemplate, vehicleListContent);
+            row.SetActive(true);
+
+            SetRowText(row.transform, "Texts/VehicleName", v.GetLocalizedName());
+            string sub = v.IsUnlocked
+                ? string.Format(LocalizationManager.Get("cozy_vehicle_fuel_sub", "Yakıt %{0:F0}  ·  Durum %{1:F0}"), v.maxFuel > 0 ? v.currentFuel / v.maxFuel * 100f : 0f, v.ConditionPercentage * 100f)
+                : LocalizationManager.GetFormat("vehicle_lvl_req", v.requiredPlayerLevel);
+            SetRowText(row.transform, "Texts/VehicleSub", sub);
+
+            Transform chip = row.transform.Find("StatusChip");
+            if (chip != null)
+            {
+                CozyTheme.GetTone(v.IsUnlocked ? CozyTheme.Tone.Mint : CozyTheme.Tone.Honey, out Color bg, out Color fg);
+                if (chip.TryGetComponent(out Image chipImg)) chipImg.color = bg;
+                Transform ct = chip.Find("Text");
+                if (ct != null && ct.TryGetComponent(out TextMeshProUGUI chipText))
+                {
+                    chipText.text = v.IsUnlocked ? LocalizationManager.Get("cozy_vehicle_owned", "Sende") : CozyText.Money(v.purchasePrice);
+                    chipText.color = fg;
+                }
+            }
+
+            Button btn = row.GetComponent<Button>();
+            if (btn != null)
+            {
+                btn.onClick.RemoveAllListeners();
+                DrivableVehicle vRef = v;
+                btn.onClick.AddListener(() =>
+                {
+                    if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+                    DisplayVehicleDetail(vRef);
+                });
+            }
+            vehicleRows.Add(new KeyValuePair<GameObject, DrivableVehicle>(row, v));
+        }
+
+        DrivableVehicle inside = vehicles.Find(x => x != null && x.isPlayerInside);
+        DrivableVehicle select = inside != null ? inside : (currentSelectedVehicle != null && vehicles.Contains(currentSelectedVehicle) ? currentSelectedVehicle : vehicles[0]);
+        DisplayVehicleDetail(select);
+    }
+
+    private void UpdateVehicleBarsKurye(DrivableVehicle v, float fuelPct, float condPct)
+    {
+        SetFill(vehicleFuelBarFill, fuelPct / 100f, fuelPct < 25f ? CozyTheme.Red : CozyTheme.Honey);
+        SetFill(vehicleConditionBarFill, condPct / 100f, condPct < 25f ? CozyTheme.Red : (condPct < 70f ? CozyTheme.Honey : CozyTheme.Mint));
+        if (vehicleFuelValueText != null) vehicleFuelValueText.text = $"{v.currentFuel:F1} / {v.maxFuel:F0} L";
+        if (vehicleConditionValueText != null) vehicleConditionValueText.text = $"%{condPct:F0}";
+    }
+
+    private static void SetFill(Image fill, float pct, Color color)
+    {
+        if (fill == null) return;
+        pct = Mathf.Clamp01(pct);
+        RectTransform rt = fill.rectTransform;
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = new Vector2(Mathf.Max(0.02f, pct), 1f);
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+        fill.color = color;
     }
 }

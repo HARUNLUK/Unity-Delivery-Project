@@ -990,7 +990,8 @@ public class CommercialHubUIManager : MonoBehaviour
     {
         GameObject root = CreateDarkPanel(parent, "InsuranceAgencyPanel", new Vector2(850, 580));
 
-        CreateTMPText(root, "Title", "KARGO SİGORTA & GÜVENLİK ACENTESİ", 28, FontStyles.Bold, new Color(1f, 0.82f, 0.2f), TextAlignmentOptions.Center);
+        TextMeshProUGUI insuranceTitle = CreateTMPText(root, "Title", "KARGO SİGORTA & GÜVENLİK ACENTESİ", 28, FontStyles.Bold, new Color(1f, 0.82f, 0.2f), TextAlignmentOptions.Center);
+        SetRectAnchors(insuranceTitle.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -40), new Vector2(800, 50));
 
         insuranceStatusText = CreateTMPText(root, "Status", "Mevcut Poliçeniz: Temel Kasko (%30 Hasar İndirimi)", 22, FontStyles.Bold, new Color(0.3f, 1f, 0.4f), TextAlignmentOptions.Center);
         SetRectAnchors(insuranceStatusText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -85), new Vector2(800, 35));
@@ -1017,7 +1018,8 @@ public class CommercialHubUIManager : MonoBehaviour
     {
         GameObject root = CreateDarkPanel(parent, "PassiveDispatchPanel", new Vector2(850, 580));
 
-        CreateTMPText(root, "Title", "BÖLGE DAĞITIM ŞUBESİ & PASİF GELİR MERKEZİ", 28, FontStyles.Bold, new Color(0.3f, 0.9f, 0.5f), TextAlignmentOptions.Center);
+        TextMeshProUGUI dispatchTitle = CreateTMPText(root, "Title", "BÖLGE DAĞITIM ŞUBESİ & PASİF GELİR MERKEZİ", 28, FontStyles.Bold, new Color(0.3f, 0.9f, 0.5f), TextAlignmentOptions.Center);
+        SetRectAnchors(dispatchTitle.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -40), new Vector2(800, 50));
 
         dispatchStatusText = CreateTMPText(root, "Status", "Şube Seviyesi: Seviye 1  |  Kurye Sayısı: 2 Kurye", 22, FontStyles.Bold, Color.white, TextAlignmentOptions.Center);
         SetRectAnchors(dispatchStatusText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -85), new Vector2(800, 35));
@@ -1142,17 +1144,24 @@ public class CommercialHubUIManager : MonoBehaviour
         StartCoroutine(FlashButtonRoutine(btn, normalColor));
     }
 
+    private readonly System.Collections.Generic.Dictionary<Image, Color> flashOriginalColors = new System.Collections.Generic.Dictionary<Image, Color>();
+
     private System.Collections.IEnumerator FlashButtonRoutine(Button btn, Color normalColor)
     {
         Image img = btn.GetComponent<Image>();
         if (img == null) yield break;
 
+        // Restore the button's own (themed) color, not a hard-coded legacy color.
+        bool ownsFlash = !flashOriginalColors.ContainsKey(img);
+        if (ownsFlash) flashOriginalColors[img] = img.color;
+
         Color errorColor = new Color(0.85f, 0.2f, 0.2f, 1f);
         img.color = errorColor;
         yield return new WaitForSecondsRealtime(0.45f);
-        if (img != null)
+        if (ownsFlash && flashOriginalColors.TryGetValue(img, out Color original))
         {
-            img.color = normalColor;
+            flashOriginalColors.Remove(img);
+            if (img != null) img.color = original;
         }
     }
 
