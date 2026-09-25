@@ -201,6 +201,11 @@ public class VanInventory : MonoBehaviour
         rb.linearVelocity = carVelocity;
         rb.AddTorque(UnityEngine.Random.insideUnitSphere * 4f, ForceMode.Impulse);
 
+        PhysicalCargoPackage physPkg = boxObj.GetComponent<PhysicalCargoPackage>();
+        if (physPkg == null) physPkg = boxObj.AddComponent<PhysicalCargoPackage>();
+        physPkg.SetupPackage(item.targetPointId, item.targetAddress, item.recipientName, item.deliveryReward, item.wrongDeliveryPenalty, item.cargoType);
+        physPkg.cargoData = item;
+
         OnCargoDelivered?.Invoke(item, isCorrect);
         OnCargoDeliveredWithFeedback?.Invoke(item, isCorrect, feedbackMessage);
         OnInventoryUpdated?.Invoke();

@@ -2019,20 +2019,24 @@ public class GameMenuManager : MonoBehaviour
         SettingsManager sm = SettingsManager.Instance;
 
         // 1. Audio
-        if (masterVolumeSlider != null) masterVolumeSlider.value = sm.masterVolume;
+        if (masterVolumeSlider != null) masterVolumeSlider.SetValueWithoutNotify(sm.masterVolume);
         if (masterVolumeValText != null) masterVolumeValText.text = $"%{(int)(sm.masterVolume * 100)}";
 
-        if (musicVolumeSlider != null) musicVolumeSlider.value = sm.musicVolume;
+        if (musicVolumeSlider != null) musicVolumeSlider.SetValueWithoutNotify(sm.musicVolume);
         if (musicVolumeValText != null) musicVolumeValText.text = $"%{(int)(sm.musicVolume * 100)}";
 
-        if (sfxVolumeSlider != null) sfxVolumeSlider.value = sm.sfxVolume;
+        if (sfxVolumeSlider != null) sfxVolumeSlider.SetValueWithoutNotify(sm.sfxVolume);
         if (sfxVolumeValText != null) sfxVolumeValText.text = $"%{(int)(sm.sfxVolume * 100)}";
 
-        if (ambienceVolumeSlider != null) ambienceVolumeSlider.value = sm.ambienceVolume;
+        if (ambienceVolumeSlider != null) ambienceVolumeSlider.SetValueWithoutNotify(sm.ambienceVolume);
         if (ambienceVolumeValText != null) ambienceVolumeValText.text = $"%{(int)(sm.ambienceVolume * 100)}";
 
-        if (uiVolumeSlider != null) uiVolumeSlider.value = sm.uiVolume;
+        if (uiVolumeSlider != null) uiVolumeSlider.SetValueWithoutNotify(sm.uiVolume);
         if (uiVolumeValText != null) uiVolumeValText.text = $"%{(int)(sm.uiVolume * 100)}";
+
+        // 3. Controls
+        if (mouseSensSlider != null) mouseSensSlider.SetValueWithoutNotify(sm.mouseSensitivity);
+        if (mouseSensValText != null) mouseSensValText.text = $"{sm.mouseSensitivity:F1}x";
 
         // 2. Graphics & Language
         if (languageDropdown != null) { languageDropdown.value = LocalizationManager.IsTurkish ? 0 : 1; languageDropdown.RefreshShownValue(); }
@@ -2059,8 +2063,6 @@ public class GameMenuManager : MonoBehaviour
         if (vsyncToggle != null) vsyncToggle.isOn = sm.vsyncEnabled;
 
         // 3. Controls
-        if (mouseSensSlider != null) mouseSensSlider.value = sm.mouseSensitivity;
-        if (mouseSensValText != null) mouseSensValText.text = $"{sm.mouseSensitivity:F1}x";
         if (invertYToggle != null) invertYToggle.isOn = sm.invertMouseY;
     }
 

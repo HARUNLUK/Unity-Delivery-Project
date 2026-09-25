@@ -73,6 +73,10 @@ public class PhysicsGrabber : MonoBehaviour
         {
             pkg.hasBeenHandledByPlayer = true;
             pkg.isBeingCarried = true;
+            if (pkg.currentCargoBed != null)
+            {
+                pkg.currentCargoBed.RemovePackage(pkg);
+            }
             if (InteractionPromptHUD.Instance != null)
             {
                 InteractionPromptHUD.Instance.ShowHeldCargoInfo(pkg);
@@ -114,6 +118,10 @@ public class PhysicsGrabber : MonoBehaviour
         if (throwForce != Vector3.zero)
         {
             releasedRb.linearVelocity = throwForce;
+            if (pkg != null)
+            {
+                pkg.MarkAsThrown(1.5f);
+            }
             if (AudioManager.Instance != null)
             {
                 AudioManager.Instance.PlayCargoThrow(releasedRb.position);

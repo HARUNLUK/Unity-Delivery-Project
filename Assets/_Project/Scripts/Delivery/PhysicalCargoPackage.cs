@@ -58,8 +58,31 @@ public class PhysicalCargoPackage : MonoBehaviour
     [Tooltip("True when package is placed inside a vehicle cargo bed trigger area")]
     public bool isInVehicleBed = false;
 
+    [Tooltip("Vehicle cargo bed this package is currently located in, if any")]
+    public VehicleCargoBed currentCargoBed;
+
     [Tooltip("True when package is currently being held/carried in hands by player")]
     public bool isBeingCarried = false; // Prevents wall/door friction damage while held!
+
+    [Tooltip("Time until which this package is exempt from vehicle cargo bed forces (e.g. after being thrown)")]
+    public float throwExemptionUntil = 0f;
+
+    public bool IsRecentlyThrown => Time.time < throwExemptionUntil;
+
+    /// <summary>
+    /// Marks the package as thrown, detaching it from any vehicle bed stabilizer forces so it can fly freely.
+    /// </summary>
+    public void MarkAsThrown(float duration = 1.5f)
+    {
+        throwExemptionUntil = Time.time + duration;
+        isInVehicleBed = false;
+        if (currentCargoBed != null)
+        {
+            currentCargoBed.RemovePackage(this);
+            currentCargoBed = null;
+        }
+        GrantDamageImmunity(0.6f);
+    }
     
     [Tooltip("Minimum collision impact velocity (m/s) required to begin taking damage. Gentle placement < 2.5 m/s, 1.5m drop ~5.0 m/s, high drop > 7.0 m/s.")]
     public float minDamageSpeedThreshold = 3.5f;
@@ -118,6 +141,15 @@ public class PhysicalCargoPackage : MonoBehaviour
         if (isCurrentlyFocused || focusVisualScale > 0.001f)
         {
             UpdateFocusIndicator();
+        }
+
+        // Throw exemption timer update
+        if (throwExemptionUntil > 0f)
+        {
+            if (Time.time >= throwExemptionUntil || (Time.time > (throwExemptionUntil - 1.1f) && rb != null && rb.linearVelocity.sqrMagnitude < 0.08f))
+            {
+                throwExemptionUntil = 0f;
+            }
         }
 
         // Rigidbody Sleeping Optimization for stationary packages in cargo bed or warehouse
@@ -943,57 +975,14 @@ public class PhysicalCargoPackage : MonoBehaviour
         UpdateLabelText();
     }
 
-    private void UpdateLabelText()
+    public void UpdateLabelText()
     {
         if (labelText == null) return;
 
         string shortRecipient = TruncateWithEllipsis(recipientName, 15);
         string shortAddress = TruncateWithEllipsis(targetAddressName, 18);
 
-        string badge = "";
-        if (isExploded)
-        {
-            string txt = LocalizationManager.Get("badge_exploded", "EXPLODED / DESTROYED");
-            badge = $"<color=#FF0000>[{txt}]</color>\n";
-        }
-        else if (isBroken)
-        {
-            string txt = LocalizationManager.Get("badge_broken", "BROKEN / DAMAGED");
-            badge = $"<color=#FF2222>[{txt}]</color>\n";
-        }
-        else if (cargoType == CargoType.Fragile)
-        {
-            if (health < 100f)
-            {
-                string txt = LocalizationManager.GetFormat("badge_fragile_health", Mathf.CeilToInt(health));
-                badge = $"<color=#FF5500>[{txt}]</color>\n";
-            }
-            else
-            {
-                string txt = LocalizationManager.Get("badge_fragile", "FRAGILE");
-                badge = $"<color=#FF5500>[{txt}]</color>\n";
-            }
-        }
-        else if (cargoType == CargoType.Express)
-        {
-            string txt = LocalizationManager.GetFormat("badge_express", GetFormattedTargetDeliveryTime());
-            badge = $"<color=#0088FF>[{txt}]</color>\n";
-        }
-        else if (cargoType == CargoType.Explosive)
-        {
-            if (health < 100f)
-            {
-                string txt = LocalizationManager.GetFormat("badge_explosive_stability", Mathf.CeilToInt(health));
-                badge = $"<color=#FF3300>[{txt}]</color>\n";
-            }
-            else
-            {
-                string txt = LocalizationManager.Get("badge_explosive_danger", "EXPLOSIVE - DANGER");
-                badge = $"<color=#FF3300>[{txt}]</color>\n";
-            }
-        }
-
-        labelText.text = $"{badge}{shortRecipient}\n<size=85%>{shortAddress}</size>";
+        labelText.text = $"{shortRecipient}\n<size=85%>{shortAddress}</size>";
     }
 
     private string TruncateWithEllipsis(string text, int maxLength)

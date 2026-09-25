@@ -37,6 +37,42 @@ public class DeliveryPoint : MonoBehaviour
         set => isFulfilled = value;
     }
 
+    private void Update()
+    {
+        // Dynamically check fulfillment every 30 frames to catch packages dropped by player
+        if ((Time.frameCount + gameObject.GetHashCode()) % 30 == 0)
+        {
+            CheckFulfillmentStatus();
+        }
+    }
+
+    private void CheckFulfillmentStatus()
+    {
+        bool hasCorrectPackage = false;
+        Collider[] hits = Physics.OverlapSphere(transform.position, 4.5f);
+        foreach (var hit in hits)
+        {
+            PhysicalCargoPackage pkg = hit.GetComponentInParent<PhysicalCargoPackage>();
+            if (pkg != null && !pkg.isBeingCarried && !pkg.isInVehicleBed)
+            {
+                if (string.Equals(pkg.targetPointId.Trim(), pointId.Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    hasCorrectPackage = true;
+                    break;
+                }
+            }
+        }
+
+        if (isFulfilled != hasCorrectPackage)
+        {
+            isFulfilled = hasCorrectPackage;
+            if (visualMarker != null)
+            {
+                visualMarker.SetActive(!isFulfilled);
+            }
+        }
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         CarController car = other.GetComponentInParent<CarController>();
@@ -60,6 +96,6 @@ public class DeliveryPoint : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = isFulfilled ? Color.gray : (isPlayerInside ? Color.green : Color.yellow);
-        Gizmos.DrawWireSphere(transform.position, 3.5f);
+        Gizmos.DrawWireSphere(transform.position, 4.5f);
     }
 }

@@ -16,6 +16,20 @@ public class AudioManager : MonoBehaviour
             if (_instance == null)
             {
                 _instance = Object.FindAnyObjectByType<AudioManager>();
+                if (_instance == null)
+                {
+                    GameObject prefab = Resources.Load<GameObject>("AudioManager");
+                    if (prefab != null)
+                    {
+                        GameObject obj = Object.Instantiate(prefab);
+                        obj.name = "AudioManager";
+                        _instance = obj.GetComponent<AudioManager>();
+                        if (_instance != null)
+                        {
+                            DontDestroyOnLoad(obj);
+                        }
+                    }
+                }
             }
             return _instance;
         }

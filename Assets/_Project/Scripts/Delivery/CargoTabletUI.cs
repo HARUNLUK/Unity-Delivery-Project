@@ -600,6 +600,7 @@ public class CargoTabletUI : MonoBehaviour
                 else if (pkg.cargoType == CargoType.Express) hintText.text = $"<color=#33E0FF>{LocalizationManager.Get("cargo_type_express", "EXP")} {pkg.GetFormattedTargetDeliveryTime()}</color>";
                 else if (pkg.cargoType == CargoType.Fragile) hintText.text = $"<color=#FFAA44>{LocalizationManager.Get("cargo_type_fragile", "FRAGILE")}</color>";
                 else if (pkg.cargoType == CargoType.Explosive) hintText.text = $"<color=#FF3300>{LocalizationManager.Get("cargo_type_explosive", "EXPLOSIVE")}</color>";
+                else if (pkg.isInVehicleBed) hintText.text = $"<color=#32FF64>{LocalizationManager.Get("cargo_status_in_vehicle", "IN VEHICLE")}</color>";
                 else hintText.text = LocalizationManager.Get("cargo_status_in_transit", "IN TRANSIT");
             }
 
@@ -609,7 +610,7 @@ public class CargoTabletUI : MonoBehaviour
                 TextMeshProUGUI label = cardObj.GetComponentInChildren<TextMeshProUGUI>();
                 if (label != null)
                 {
-                    string statusBadge = isBroken ? $"[{LocalizationManager.Get("cargo_status_broken", "DAMAGED")}]" : (isAtDeliveryZone ? $"[{LocalizationManager.Get("cargo_status_at_zone", "AT ZONE")}]" : $"[{LocalizationManager.Get("cargo_status_in_transit", "IN TRANSIT")}]");
+                    string statusBadge = isBroken ? $"[{LocalizationManager.Get("cargo_status_broken", "DAMAGED")}]" : (isAtDeliveryZone ? $"[{LocalizationManager.Get("cargo_status_at_zone", "AT ZONE")}]" : (pkg.isInVehicleBed ? $"[{LocalizationManager.Get("cargo_status_in_vehicle", "IN VEHICLE")}]" : $"[{LocalizationManager.Get("cargo_status_in_transit", "IN TRANSIT")}]"));
                     label.text = $"<b>{pkg.EffectiveRecipientName}</b>\n<size=85%>{pkg.EffectiveAddressName}</size>\n<size=80%>{statusBadge}</size>";
                 }
             }

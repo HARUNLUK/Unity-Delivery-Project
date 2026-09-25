@@ -86,6 +86,18 @@ public class VehicleCargoBed : MonoBehaviour
         return packagesInBed.Contains(pkg);
     }
 
+    public void RemovePackage(PhysicalCargoPackage pkg)
+    {
+        if (pkg == null) return;
+        packagesInBed.Remove(pkg);
+        pkg.isInVehicleBed = false;
+        pkg.UpdateLabelText();
+        if (pkg.currentCargoBed == this)
+        {
+            pkg.currentCargoBed = null;
+        }
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         PhysicalCargoPackage pkg = other.GetComponent<PhysicalCargoPackage>();
@@ -94,14 +106,37 @@ public class VehicleCargoBed : MonoBehaviour
 
         if (pkg != null)
         {
+            // Do not capture packages that are currently held or were just thrown
+            if (pkg.isBeingCarried || pkg.IsRecentlyThrown) return;
+
             packagesInBed.Add(pkg);
             pkg.isInVehicleBed = true;
+            pkg.UpdateLabelText();
+            pkg.currentCargoBed = this;
 
             Rigidbody prb = pkg.GetComponent<Rigidbody>();
             if (prb != null)
             {
                 prb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
                 prb.interpolation = RigidbodyInterpolation.Interpolate;
+            }
+        }
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        PhysicalCargoPackage pkg = other.GetComponent<PhysicalCargoPackage>();
+        if (pkg == null) pkg = other.GetComponentInParent<PhysicalCargoPackage>();
+        if (pkg == null) pkg = other.GetComponentInChildren<PhysicalCargoPackage>();
+
+        if (pkg != null && !pkg.isBeingCarried && !pkg.IsRecentlyThrown)
+        {
+            if (!packagesInBed.Contains(pkg))
+            {
+                packagesInBed.Add(pkg);
+                pkg.isInVehicleBed = true;
+                pkg.UpdateLabelText();
+                pkg.currentCargoBed = this;
             }
         }
     }
@@ -116,6 +151,11 @@ public class VehicleCargoBed : MonoBehaviour
         {
             packagesInBed.Remove(pkg);
             pkg.isInVehicleBed = false;
+            pkg.UpdateLabelText();
+            if (pkg.currentCargoBed == this)
+            {
+                pkg.currentCargoBed = null;
+            }
         }
     }
 
@@ -126,6 +166,11 @@ public class VehicleCargoBed : MonoBehaviour
             if (pkg != null)
             {
                 pkg.isInVehicleBed = false;
+                pkg.UpdateLabelText();
+                if (pkg.currentCargoBed == this)
+                {
+                    pkg.currentCargoBed = null;
+                }
             }
         }
         packagesInBed.Clear();
@@ -140,12 +185,22 @@ public class VehicleCargoBed : MonoBehaviour
 
         packagesInBed.RemoveWhere(p => p == null || !p.gameObject.activeInHierarchy);
 
+        // When the vehicle is stopped / parked, let PhysX naturally hold cargo in place.
+        // DO NOT artificially zero or drag horizontal velocities when the vehicle is stationary!
+        bool isVehicleMoving = vehicleVel.sqrMagnitude > 0.15f || vehicleAngVel.sqrMagnitude > 0.05f;
+
         foreach (var pkg in packagesInBed)
         {
             if (pkg == null || pkg.isBeingCarried) continue;
 
+            // If the package was thrown, ignore bed stabilizer and let it fly freely!
+            if (pkg.IsRecentlyThrown) continue;
+
             Rigidbody prb = pkg.GetComponent<Rigidbody>();
             if (prb == null || prb.isKinematic) continue;
+
+            // If vehicle is stationary, let normal physics take over (free throw, pushing, sliding, settling)
+            if (!isVehicleMoving) continue;
 
             // Calculate precise linear velocity of this point on the vehicle body
             Vector3 r = prb.position - vehicleRb.position;
