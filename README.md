@@ -22,7 +22,7 @@
 
 ## 📸 Screenshots & Highlights
 
-| 🚗 Vehicle Cockpit & Free-Look | 📦 Warehouse & Package Physics |
+| 🚗 Vehicle Cockpit & Free-Look | Warehouse & Package Physics |
 | :---: | :---: |
 | ![Vehicle Cockpit](Docs/Screenshots/cockpit_view.jpg) | ![Warehouse Cargo](Docs/Screenshots/warehouse_loading.jpg) |
 | *First-person dashboard camera with smooth free-look & mirror visibility* | *Dynamic package spawning with physical charge-throw mechanics* |
@@ -38,7 +38,7 @@
 
 ```mermaid
 graph TD
-    A[🌅 Morning 09:00: Cargo Spawns in Warehouse] --> B[📦 Grab, Inspect & Load Parcels into Vehicle]
+    A[🌅 Morning 09:00: Cargo Spawns in Warehouse] --> B[Grab, Inspect & Load Parcels into Vehicle]
     B --> C[🚚 Drive through City & Navigate Delivery Points]
     C --> D[📍 Unload & Deliver to Recipient Drop Zones]
     D --> E[🌆 Evening 18:00: Day Summary Calculation]
@@ -73,7 +73,7 @@ graph TD
 - **Charged Throwing Mechanic:** Instant tap gently drops the package; holding the throw button charges a physics impulse trajectory for launching boxes into the truck bed.
 - **Dynamic 3D Package Rendering (`PhysicalCargoPackage.cs`):** Real-time TextMeshPro label generation with word-wrapping, automatic sizing, and ellipsis truncation for long recipient names.
 
-### 3. 📦 Parcel Classification & Risk-Reward
+### 3. Parcel Classification & Risk-Reward
 | Cargo Category | Label Indicator | Payout Multiplier | Gameplay Modifier |
 | :--- | :--- | :--- | :--- |
 | **Standard** | Clean White Label | `1.0x $` / `1.0x XP` | Baseline delivery requirements |

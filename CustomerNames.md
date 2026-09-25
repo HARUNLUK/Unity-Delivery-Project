@@ -1,4 +1,4 @@
-# 📦 Map Delivery Points & Customer Database (135+ Points)
+# Map Delivery Points & Customer Database (135+ Points)
 
 Visual landmark and architectural feature-based address system (does not require street door numbers).
 

@@ -66,7 +66,7 @@ public class ProjectOptimizationTool : EditorWindow
         EditorGUILayout.LabelField("1. GPU Instancing on Materials", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("Enables GPU Instancing on all materials to dramatically reduce draw calls (SetPass calls).", EditorStyles.wordWrappedMiniLabel);
         EditorGUILayout.Space(4);
-        if (GUILayout.Button("✨ Enable GPU Instancing on All Materials", GUILayout.Height(30)))
+        if (GUILayout.Button("Enable GPU Instancing on All Materials", GUILayout.Height(30)))
         {
             BatchEnableGPUInstancing();
         }
@@ -157,7 +157,7 @@ public class ProjectOptimizationTool : EditorWindow
             EditorUtility.ClearProgressBar();
 
             EditorUtility.DisplayDialog("Optimization Complete!",
-                $"✅ Project Optimization Successfully Applied:\n\n" +
+                $"Project Optimization Successfully Applied:\n\n" +
                 $"• Materials updated with GPU Instancing: {matCount}\n" +
                 $"• Scene objects configured for Occlusion/Batching: {staticObjCount}\n" +
                 $"• Local light shadows optimized: {lightCount}\n" +

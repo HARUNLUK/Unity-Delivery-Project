@@ -55,7 +55,7 @@ public class AudioManager : MonoBehaviour
     [Range(0f, 2f), Tooltip("Yere iniş/düşme sesi şiddeti (Base Land Volume)")]
     public float playerLandVolume = 0.85f;
 
-    [Header("--- 📦 CARGO & PHYSICS SFX (3D Spatial) ---")]
+    [Header("--- CARGO & PHYSICS SFX (3D Spatial) ---")]
     public AudioClip cargoGrab;
     public AudioClip cargoDropLight;
     public AudioClip cargoDropMedium;
@@ -458,7 +458,7 @@ public class AudioManager : MonoBehaviour
 
     #endregion
 
-    #region --- 📦 CARGO METHODS (3D Spatial at Package Position) ---
+    #region --- CARGO METHODS (3D Spatial at Package Position) ---
 
     public void PlayCargoGrab(Vector3 position)
     {

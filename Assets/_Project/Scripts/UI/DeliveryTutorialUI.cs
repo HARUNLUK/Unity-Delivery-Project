@@ -359,22 +359,18 @@ public class DeliveryTutorialUI : MonoBehaviour
             string fallbackBody = isTr
                 ? "<b>OYUNUN AMACI VE ÇALIŞMA KURALLARI</b>\n\n" +
                   "<color=#FFD232><b>1. Kargoları Al ve Araca Yükle:</b></color>\n" +
-                  "Depodaki veya şubendeki günlük kargoları <b>[E]</b> tuşuyla tutup aracının kasasına yerleştir.\n\n" +
+                  "Depodaki kargoları <b>[E]</b> tuşuyla tut. <b>[Sol Tık]</b> ile uzağa fırlatabilir, <b>[Sağ Tık]</b> ile aracının kasasına yavaşça bırakabilirsin.\n\n" +
                   "<color=#32FF64><b>2. Hedef Teslimat Noktasına Bırak:</b></color>\n" +
                   "Koli etiketindeki adresi ve alıcıyı bul. Şehirdeki ilgili binanın önünde yer alan <b>Posta Kutusu / Teslimat Alanına</b> kargoyu güvenle bırak.\n\n" +
                   "<color=#FFAA33><b>3. Gün Sonu Değerlendirmesi (18:00):</b></color>\n" +
-                  "Saat 18:00'de vardiya biter. Doğru adresteki kargolardan <b>Teslimat Ücreti ($)</b> kazanırsın. Yanlış adrese bırakılan veya kırılan kargolardan ise <b>Ceza Kesilir!</b>\n\n" +
-                  "<color=#00E5FF><b>4. Kırılabilir & Özel Kargolar:</b></color>\n" +
-                  "Kırılabilir (Fragile) kargoları fırlatmayın! <b>[TAB]</b> tuşuyla tabletinizi açıp siparişleri, araç durumunu ve şube yükseltmelerini yönetin."
+                  "Saat 18:00'de vardiya biter. Doğru adresteki kargolardan <b>Teslimat Ücreti ($)</b> kazanırsın. Yanlış adrese bırakılan veya kırılan kargolardan ise <b>Ceza Kesilir!</b>"
                 : "<b>GAME OBJECTIVE & WORK RULES</b>\n\n" +
                   "<color=#FFD232><b>1. Collect & Load Cargo:</b></color>\n" +
-                  "Pick up daily packages from your warehouse/branch using <b>[E]</b> and load them onto your vehicle bed.\n\n" +
+                  "Pick up daily packages using <b>[E]</b>. Use <b>[Left Click]</b> to throw them, or <b>[Right Click]</b> to gently drop them onto your vehicle bed.\n\n" +
                   "<color=#32FF64><b>2. Drop at Target Delivery Point:</b></color>\n" +
                   "Check the label address and recipient name. Safely place the package at the <b>Mailbox / Delivery Zone</b> in front of the target building.\n\n" +
                   "<color=#FFAA33><b>3. End of Day Evaluation (18:00):</b></color>\n" +
-                  "Your shift ends at 18:00. Correctly delivered packages grant <b>Delivery Earnings ($)</b>. Wrong addresses or broken packages incur <b>Penalties!</b>\n\n" +
-                  "<color=#00E5FF><b>4. Fragile & Special Cargo:</b></color>\n" +
-                  "Do not throw fragile packages! Press <b>[TAB]</b> to open your tablet to manage orders, vehicle condition, and branch upgrades.";
+                  "Your shift ends at 18:00. Correctly delivered packages grant <b>Delivery Earnings ($)</b>. Wrong addresses or broken packages incur <b>Penalties!</b>";
 
             objectiveBodyText.text = LocalizationManager.Get("tutorial_objective_body", fallbackBody);
         }

@@ -13,8 +13,11 @@ public class RoadSignLevelLock : MonoBehaviour
     public int requiredLevel = 2;
 
     [Header("--- TEXT DISPLAY & FORMATTING ---")]
-    [Tooltip("Text format to display when locked. {0} will be replaced with the required level number.")]
+    [Tooltip("Text format to display when locked (fallback/editor). {0} will be replaced with the required level number.")]
     public string lockTextFormat = "LEVEL {0} REQUIRED";
+
+    [Tooltip("Localization key to override the text format at runtime.")]
+    public string lockTextLocalizationKey = "sign_level_required";
 
     [Tooltip("Color of the required level lock text.")]
     public Color lockTextColor = new Color(1f, 0.25f, 0.25f, 1f); // Warning red
@@ -67,6 +70,22 @@ public class RoadSignLevelLock : MonoBehaviour
     {
         EnsureReferences();
         UpdateVisuals();
+        
+        // Auto-localize main sign text if it contains Maple Town
+        TextMeshPro[] tmps = GetComponentsInChildren<TextMeshPro>(true);
+        foreach (var tmp in tmps)
+        {
+            if (tmp != lockTextMesh && tmp.text.Contains("Maple Town"))
+            {
+                var loc = tmp.GetComponent<LocalizedText>();
+                if (loc == null)
+                {
+                    loc = tmp.gameObject.AddComponent<LocalizedText>();
+                    loc.localizationKey = "sign_maple_town";
+                    loc.fallbackText = "Maple Town";
+                }
+            }
+        }
     }
 
     private void OnEnable()
@@ -159,7 +178,7 @@ public class RoadSignLevelLock : MonoBehaviour
             if (lockTextMesh != null)
             {
                 lockTextMesh.gameObject.SetActive(true);
-                string formatStr = LocalizationManager.Get("sign_level_required", "SEVİYE {0} GEREKLİ");
+                string formatStr = LocalizationManager.Get(lockTextLocalizationKey, lockTextFormat);
                 lockTextMesh.text = string.Format(formatStr, requiredLevel);
                 lockTextMesh.color = lockTextColor;
             }

@@ -409,6 +409,8 @@ public class CargoTabletUI : MonoBehaviour
             AudioManager.Instance.PlayTabletOpen();
         }
 
+        Time.timeScale = 0f;
+
         SwitchTab(currentTab);
     }
 
@@ -460,6 +462,7 @@ public class CargoTabletUI : MonoBehaviour
         }
 
         PopulateBranchInfo();
+        Time.timeScale = 0f;
     }
 
     public void CloseTablet()
@@ -485,6 +488,7 @@ public class CargoTabletUI : MonoBehaviour
         if (endShiftButton != null) endShiftButton.gameObject.SetActive(true);
 
         FPSPlayerController.LockCursor(true);
+        Time.timeScale = 1f;
     }
 
     public void SwitchTab(TabletTab tab)

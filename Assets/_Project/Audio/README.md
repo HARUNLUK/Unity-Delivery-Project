@@ -13,7 +13,7 @@ Desteklenen Formatlar: **.wav** (En kaliteli & gecikmesiz - önerilen), **.ogg**
 - `Player_Jump` : Zıplama sesi
 - `Player_Land` : Yere iniş sesi
 
-### 2. 📦 `Assets/_Project/Audio/Cargo/`
+### 2. `Assets/_Project/Audio/Cargo/`
 - `Cargo_Grab` : Koli tutma karton hışırtısı
 - `Cargo_Drop_Light` : Koliyi hafifçe yere koyma
 - `Cargo_Drop_Medium` : Koli orta şiddette çarpma/düşme

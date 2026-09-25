@@ -139,7 +139,7 @@ public class GameOverUIBuilder : EditorWindow
         badgeTextObj.transform.SetParent(headerBadge.transform, false);
         TextMeshProUGUI bText = badgeTextObj.AddComponent<TextMeshProUGUI>();
         if (cachedFont != null) bText.font = cachedFont;
-        bText.text = "🚨 ŞİRKET TASFİYESİ & İFLAS 🚨";
+        bText.text = "ŞİRKET TASFİYESİ & İFLAS";
         bText.fontSize = 19;
         bText.fontStyle = FontStyles.Bold;
         bText.alignment = TextAlignmentOptions.Center;
@@ -289,7 +289,7 @@ public class GameOverUIBuilder : EditorWindow
 
         EditorGUILayout.Space(15);
         GUI.backgroundColor = new Color(0.2f, 0.8f, 0.4f);
-        if (GUILayout.Button("✨ Game Over Ekranını Sahneye Kur / Yenile", GUILayout.Height(38)))
+        if (GUILayout.Button("Game Over Ekranını Sahneye Kur / Yenile", GUILayout.Height(38)))
         {
             GameObject created = BuildGameOverScreenInActiveScene();
             GameOverManager mgr = UnityEngine.Object.FindAnyObjectByType<GameOverManager>();
@@ -322,7 +322,7 @@ public class GameOverUIBuilder : EditorWindow
         EditorGUILayout.LabelField("4. Test & Kayıt Sıfırlama Kısayolları", EditorStyles.boldLabel);
         EditorGUILayout.BeginHorizontal();
         GUI.backgroundColor = new Color(1f, 0.3f, 0.3f);
-        if (GUILayout.Button("🚨 İflas Simüle Et (-$1,000)", GUILayout.Height(32)))
+        if (GUILayout.Button("İflas Simüle Et (-$1,000)", GUILayout.Height(32)))
         {
             SimulateBankruptcyMenuItem();
         }

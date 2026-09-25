@@ -161,7 +161,7 @@ public class SplineRoadBuilderEditor : Editor
         EditorGUILayout.Space(8);
         if (builder.autoDeformTerrain)
         {
-            EditorGUILayout.HelpBox("⚠️ DİKKAT: 'Auto Deform Terrain' AÇIK. Point güncelledikçe arazi otomatik düzeltilir. Yolun altını kazmak (köprü/tünel/çukur) istiyorsanız bu tiki KAPATIN.", MessageType.Warning);
+            EditorGUILayout.HelpBox(" DİKKAT: 'Auto Deform Terrain' AÇIK. Point güncelledikçe arazi otomatik düzeltilir. Yolun altını kazmak (köprü/tünel/çukur) istiyorsanız bu tiki KAPATIN.", MessageType.Warning);
         }
         else
         {

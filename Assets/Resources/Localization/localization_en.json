@@ -606,6 +606,10 @@
       "value": "Maple Town District Deliveries"
     },
     {
+      "key": "sign_maple_town",
+      "value": "Maple Town"
+    },
+    {
       "key": "branch_tier2_name",
       "value": "Regional Hub"
     },
@@ -639,11 +643,11 @@
     },
     {
       "key": "prompt_barrier_locked",
-      "value": "🚫 [LOCKED] Branch Level {0} required for this district!"
+      "value": "[LOCKED] Branch Level {0} required for this district!"
     },
     {
       "key": "prompt_debt_warning",
-      "value": "⚠️ WARNING: If your debt reaches -${0:N0}, your company will go bankrupt!"
+      "value": " WARNING: If your debt reaches -${0:N0}, your company will go bankrupt!"
     },
     {
       "key": "delivery_selection_title",
@@ -667,7 +671,7 @@
     },
     {
       "key": "summary_emergency_hospital",
-      "value": "<color=#FF3333>🚨 EMERGENCY:</color> {0}\nDay {1} | Total Packages: {2}"
+      "value": "<color=#FF3333>EMERGENCY:</color> {0}\nDay {1} | Total Packages: {2}"
     },
     {
       "key": "summary_total_packages",
@@ -879,19 +883,19 @@
     },
     {
       "key": "insurance_btn_tier2_active",
-      "value": "✅ Silver Insurance Active"
+      "value": "Silver Insurance Active"
     },
     {
       "key": "insurance_btn_tier2_buy",
-      "value": "🛡️ Purchase Silver Insurance (${0:N0})"
+      "value": "Purchase Silver Insurance (${0:N0})"
     },
     {
       "key": "insurance_btn_tier3_active",
-      "value": "⭐ Gold Full Insurance Active"
+      "value": "Gold Full Insurance Active"
     },
     {
       "key": "insurance_btn_tier3_buy",
-      "value": "🛡️ Purchase Gold Full Insurance (${0:N0})"
+      "value": "Purchase Gold Full Insurance (${0:N0})"
     },
     {
       "key": "insurance_tier1_name",
@@ -919,19 +923,19 @@
     },
     {
       "key": "dispatch_btn_tier2_active",
-      "value": "✅ Level 2 Active ({0} Couriers)"
+      "value": "Level 2 Active ({0} Couriers)"
     },
     {
       "key": "dispatch_btn_tier2_buy",
-      "value": "📦 Upgrade to Level 2 ({0} Couriers - +${1:N0}/Day) [${2:N0}]"
+      "value": "Upgrade to Level 2 ({0} Couriers - +${1:N0}/Day) [${2:N0}]"
     },
     {
       "key": "dispatch_btn_tier3_active",
-      "value": "⭐ Level 3 Max Fleet ({0} Couriers)"
+      "value": "Level 3 Max Fleet ({0} Couriers)"
     },
     {
       "key": "dispatch_btn_tier3_buy",
-      "value": "📦 Upgrade to Level 3 ({0} Couriers - +${1:N0}/Day) [${2:N0}]"
+      "value": "Upgrade to Level 3 ({0} Couriers - +${1:N0}/Day) [${2:N0}]"
     },
     {
       "key": "property_modal_default_title",
@@ -1187,7 +1191,7 @@
     },
     {
       "key": "game_over_badge",
-      "value": "🚨 COMPANY LIQUIDATION & BANKRUPTCY 🚨"
+      "value": "COMPANY LIQUIDATION & BANKRUPTCY"
     },
     {
       "key": "key_action_forward",
@@ -1271,7 +1275,7 @@
     },
     {
       "key": "property_showroom_sign",
-      "value": "✨ VIP VEHICLE DEALERSHIP & SHOWROOM ✨"
+      "value": "VIP VEHICLE DEALERSHIP & SHOWROOM"
     },
     {
       "key": "property_showroom_desc",
@@ -1283,7 +1287,7 @@
     },
     {
       "key": "property_vehicle_showroom_sign",
-      "value": "✨ VIP VEHICLE DEALERSHIP & SHOWROOM ✨"
+      "value": "VIP VEHICLE DEALERSHIP & SHOWROOM"
     },
     {
       "key": "property_vehicle_showroom_desc",
@@ -1295,7 +1299,7 @@
     },
     {
       "key": "property_insurance_sign",
-      "value": "🛡️ SECURE CARGO INSURANCE & GUARANTEE AGENCY"
+      "value": "SECURE CARGO INSURANCE & GUARANTEE AGENCY"
     },
     {
       "key": "property_insurance_desc",
@@ -1307,7 +1311,7 @@
     },
     {
       "key": "property_insurance_agency_sign",
-      "value": "🛡️ SECURE CARGO INSURANCE & GUARANTEE AGENCY"
+      "value": "SECURE CARGO INSURANCE & GUARANTEE AGENCY"
     },
     {
       "key": "property_insurance_agency_desc",
@@ -1343,7 +1347,7 @@
     },
     {
       "key": "property_logistics_sign",
-      "value": "📦 REGIONAL CARGO DISPATCH & LOGISTICS HUB 📦"
+      "value": "REGIONAL CARGO DISPATCH & LOGISTICS HUB"
     },
     {
       "key": "property_logistics_desc",
@@ -1355,7 +1359,7 @@
     },
     {
       "key": "property_logistics_hub_sign",
-      "value": "📦 REGIONAL CARGO DISPATCH & LOGISTICS HUB 📦"
+      "value": "REGIONAL CARGO DISPATCH & LOGISTICS HUB"
     },
     {
       "key": "property_logistics_hub_desc",
@@ -1371,7 +1375,7 @@
     },
     {
       "key": "tutorial_objective_body",
-      "value": "<b>GAME OBJECTIVE & WORK RULES</b>\n\n<color=#FFD232><b>1. Collect & Load Cargo:</b></color>\nPick up daily packages from your warehouse/branch using <b>[E]</b> and load them onto your vehicle bed.\n\n<color=#32FF64><b>2. Drop at Target Delivery Point:</b></color>\nCheck the label address and recipient name. Safely place the package at the <b>Mailbox / Delivery Zone</b> in front of the target building.\n\n<color=#FFAA33><b>3. End of Day Evaluation (18:00):</b></color>\nYour shift ends at 18:00. Correctly delivered packages grant <b>Delivery Earnings ($)</b>. Wrong addresses or broken packages incur <b>Penalties!</b>\n\n<color=#00E5FF><b>4. Fragile & Special Cargo:</b></color>\nDo not throw fragile packages! Press <b>[TAB]</b> to open your tablet to check active orders and vehicle status."
+      "value": "<b>GAME OBJECTIVE & WORK RULES</b>\n\n<color=#FFD232><b>1. Collect & Load Cargo:</b></color>\nPick up daily packages using <b>[E]</b>. Use <b>[Left Click]</b> to throw them, or <b>[Right Click]</b> to gently drop them onto your vehicle bed.\n\n<color=#32FF64><b>2. Drop at Target Delivery Point:</b></color>\nCheck the label address and recipient name. Safely place the package at the <b>Mailbox / Delivery Zone</b> in front of the target building.\n\n<color=#FFAA33><b>3. End of Day Evaluation (18:00):</b></color>\nYour shift ends at 18:00. Correctly delivered packages grant <b>Delivery Earnings ($)</b>. Wrong addresses or broken packages incur <b>Penalties!</b>"
     },
     {
       "key": "tutorial_btn_start",

@@ -307,7 +307,7 @@
     },
     {
       "key": "cargo_type_fragile",
-      "value": "KIRILABİLİR"
+      "value": "KIRILGAN"
     },
     {
       "key": "cargo_type_express",
@@ -603,7 +603,11 @@
     },
     {
       "key": "branch_tier1_perk3",
-      "value": "Maple Town Bölgesi Teslimatları"
+      "value": "Akçaağaç Kasabası Bölgesi Teslimatları"
+    },
+    {
+      "key": "sign_maple_town",
+      "value": "Akçaağaç Kasabası"
     },
     {
       "key": "branch_tier2_name",
@@ -639,11 +643,11 @@
     },
     {
       "key": "prompt_barrier_locked",
-      "value": "🚫 [KİLİTLİ] Bu bölgeye geçiş için Şube Seviyesi {0} gereklidir!"
+      "value": "[KİLİTLİ] Bu bölgeye geçiş için Şube Seviyesi {0} gereklidir!"
     },
     {
       "key": "prompt_debt_warning",
-      "value": "⚠️ DİKKAT: Borcunuz -${0:N0} sınırına ulaşırsa şirketiniz iflas edecektir!"
+      "value": " DİKKAT: Borcunuz -${0:N0} sınırına ulaşırsa şirketiniz iflas edecektir!"
     },
     {
       "key": "delivery_selection_title",
@@ -667,7 +671,7 @@
     },
     {
       "key": "summary_emergency_hospital",
-      "value": "<color=#FF3333>🚨 ACİL DURUM:</color> {0}\nGün {1} | Toplam Koli: {2}"
+      "value": "<color=#FF3333>ACİL DURUM:</color> {0}\nGün {1} | Toplam Koli: {2}"
     },
     {
       "key": "summary_total_packages",
@@ -879,19 +883,19 @@
     },
     {
       "key": "insurance_btn_tier2_active",
-      "value": "✅ Gümüş Kasko Aktif"
+      "value": "Gümüş Kasko Aktif"
     },
     {
       "key": "insurance_btn_tier2_buy",
-      "value": "🛡️ Gümüş Kasko Satın Al (${0:N0})"
+      "value": "Gümüş Kasko Satın Al (${0:N0})"
     },
     {
       "key": "insurance_btn_tier3_active",
-      "value": "⭐ Altın Tam Kasko Aktif"
+      "value": "Altın Tam Kasko Aktif"
     },
     {
       "key": "insurance_btn_tier3_buy",
-      "value": "🛡️ Altın Tam Kasko Satın Al (${0:N0})"
+      "value": "Altın Tam Kasko Satın Al (${0:N0})"
     },
     {
       "key": "insurance_tier1_name",
@@ -919,19 +923,19 @@
     },
     {
       "key": "dispatch_btn_tier2_active",
-      "value": "✅ Seviye 2 Aktif ({0} Kurye)"
+      "value": "Seviye 2 Aktif ({0} Kurye)"
     },
     {
       "key": "dispatch_btn_tier2_buy",
-      "value": "📦 Seviye 2'ye Yükselt ({0} Kurye - +${1:N0}/Gün) [${2:N0}]"
+      "value": "Seviye 2'ye Yükselt ({0} Kurye - +${1:N0}/Gün) [${2:N0}]"
     },
     {
       "key": "dispatch_btn_tier3_active",
-      "value": "⭐ Seviye 3 Maksimum Filo ({0} Kurye)"
+      "value": "Seviye 3 Maksimum Filo ({0} Kurye)"
     },
     {
       "key": "dispatch_btn_tier3_buy",
-      "value": "📦 Seviye 3'e Yükselt ({0} Kurye - +${1:N0}/Gün) [${2:N0}]"
+      "value": "Seviye 3'e Yükselt ({0} Kurye - +${1:N0}/Gün) [${2:N0}]"
     },
     {
       "key": "property_modal_default_title",
@@ -1187,7 +1191,7 @@
     },
     {
       "key": "game_over_badge",
-      "value": "🚨 ŞİRKET TASFİYESİ & İFLAS 🚨"
+      "value": "ŞİRKET TASFİYESİ & İFLAS"
     },
     {
       "key": "key_action_forward",
@@ -1271,7 +1275,7 @@
     },
     {
       "key": "property_showroom_sign",
-      "value": "✨ VIP ARAÇ GALERİSİ & SHOWROOM ✨"
+      "value": "VIP ARAÇ GALERİSİ & SHOWROOM"
     },
     {
       "key": "property_showroom_desc",
@@ -1283,7 +1287,7 @@
     },
     {
       "key": "property_vehicle_showroom_sign",
-      "value": "✨ VIP ARAÇ GALERİSİ & SHOWROOM ✨"
+      "value": "VIP ARAÇ GALERİSİ & SHOWROOM"
     },
     {
       "key": "property_vehicle_showroom_desc",
@@ -1295,7 +1299,7 @@
     },
     {
       "key": "property_insurance_sign",
-      "value": "🛡️ GÜVEN KARGO SİGORTA & TEMİNAT ACENTESİ"
+      "value": "GÜVEN KARGO SİGORTA & TEMİNAT ACENTESİ"
     },
     {
       "key": "property_insurance_desc",
@@ -1307,7 +1311,7 @@
     },
     {
       "key": "property_insurance_agency_sign",
-      "value": "🛡️ GÜVEN KARGO SİGORTA & TEMİNAT ACENTESİ"
+      "value": "GÜVEN KARGO SİGORTA & TEMİNAT ACENTESİ"
     },
     {
       "key": "property_insurance_agency_desc",
@@ -1343,7 +1347,7 @@
     },
     {
       "key": "property_logistics_sign",
-      "value": "📦 BÖLGE KARGO DAĞITIM ŞUBESİ & LOJİSTİK 📦"
+      "value": "BÖLGE KARGO DAĞITIM ŞUBESİ & LOJİSTİK"
     },
     {
       "key": "property_logistics_desc",
@@ -1355,7 +1359,7 @@
     },
     {
       "key": "property_logistics_hub_sign",
-      "value": "📦 BÖLGE KARGO DAĞITIM ŞUBESİ & LOJİSTİK 📦"
+      "value": "BÖLGE KARGO DAĞITIM ŞUBESİ & LOJİSTİK"
     },
     {
       "key": "property_logistics_hub_desc",
@@ -1371,7 +1375,7 @@
     },
     {
       "key": "tutorial_objective_body",
-      "value": "<b>OYUNUN AMACI VE ÇALIŞMA KURALLARI</b>\n\n<color=#FFD232><b>1. Kargoları Al ve Araca Yükle:</b></color>\nDepodaki veya şubendeki günlük kargoları <b>[E]</b> tuşuyla tutup aracının kasasına yerleştir.\n\n<color=#32FF64><b>2. Hedef Teslimat Noktasına Bırak:</b></color>\nKoli etiketindeki adresi ve alıcıyı bul. Şehirdeki ilgili binanın önünde yer alan <b>Posta Kutusu / Teslimat Alanına</b> kargoyu güvenle bırak.\n\n<color=#FFAA33><b>3. Gün Sonu Değerlendirmesi (18:00):</b></color>\nSaat 18:00'de vardiya biter. Doğru adresteki kargolardan <b>Teslimat Ücreti ($)</b> kazanırsın. Yanlış adrese bırakılan veya kırılan kargolardan ise <b>Ceza Kesilir!</b>\n\n<color=#00E5FF><b>4. Kırılabilir & Özel Kargolar:</b></color>\nKırılabilir (Fragile) kargoları fırlatmayın! <b>[TAB]</b> tuşuyla tabletinizi açıp siparişleri ve araç durumunu kontrol edin."
+      "value": "<b>OYUNUN AMACI VE ÇALIŞMA KURALLARI</b>\n\n<color=#FFD232><b>1. Kargoları Al ve Araca Yükle:</b></color>\nDepodaki kargoları <b>[E]</b> tuşuyla tut. <b>[Sol Tık]</b> ile uzağa fırlatabilir, <b>[Sağ Tık]</b> ile aracının kasasına yavaşça bırakabilirsin.\n\n<color=#32FF64><b>2. Hedef Teslimat Noktasına Bırak:</b></color>\nKoli etiketindeki adresi ve alıcıyı bul. Şehirdeki ilgili binanın önünde yer alan <b>Posta Kutusu / Teslimat Alanına</b> kargoyu güvenle bırak.\n\n<color=#FFAA33><b>3. Gün Sonu Değerlendirmesi (18:00):</b></color>\nSaat 18:00'de vardiya biter. Doğru adresteki kargolardan <b>Teslimat Ücreti ($)</b> kazanırsın. Yanlış adrese bırakılan veya kırılan kargolardan ise <b>Ceza Kesilir!</b>"
     },
     {
       "key": "tutorial_btn_start",

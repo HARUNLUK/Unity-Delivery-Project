@@ -481,7 +481,7 @@ public class CommercialHubUIManager : MonoBehaviour
             TextMeshProUGUI txt = insuranceTier2UpgradeBtn.GetComponentInChildren<TextMeshProUGUI>();
             if (tier >= 2)
             {
-                if (txt != null) txt.text = LocalizationManager.Get("insurance_btn_tier2_active", "✅ Silver Insurance Active");
+                if (txt != null) txt.text = LocalizationManager.Get("insurance_btn_tier2_active", "Silver Insurance Active");
                 insuranceTier2UpgradeBtn.interactable = false;
             }
             else
@@ -496,7 +496,7 @@ public class CommercialHubUIManager : MonoBehaviour
             TextMeshProUGUI txt = insuranceTier3UpgradeBtn.GetComponentInChildren<TextMeshProUGUI>();
             if (tier >= 3)
             {
-                if (txt != null) txt.text = LocalizationManager.Get("insurance_btn_tier3_active", "⭐ Gold Full Insurance Active");
+                if (txt != null) txt.text = LocalizationManager.Get("insurance_btn_tier3_active", "Gold Full Insurance Active");
                 insuranceTier3UpgradeBtn.interactable = false;
             }
             else

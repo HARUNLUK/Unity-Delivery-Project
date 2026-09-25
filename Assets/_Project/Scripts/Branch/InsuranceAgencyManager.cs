@@ -181,7 +181,7 @@ public class InsuranceAgencyManager : MonoBehaviour
 
         if (insuranceTier >= 3)
         {
-            return $"<color=#32FF64>🛡️ {GetTierName()}</color>";
+            return $"<color=#32FF64>{GetTierName()}</color>";
         }
 
         int nextCost = GetNextTierCost();
@@ -191,7 +191,7 @@ public class InsuranceAgencyManager : MonoBehaviour
 
         if (balance < nextCost)
         {
-            return $"<color=#FFAA33>🛡️ {nextTierName} - ${nextCost:N0} (Balance: ${balance:N0})</color>";
+            return $"<color=#FFAA33>{nextTierName} - ${nextCost:N0} (Balance: ${balance:N0})</color>";
         }
 
         return $"<color=#32FF64>[E] {nextTierName} (${nextCost:N0})</color>";
@@ -211,7 +211,7 @@ public class InsuranceAgencyManager : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>🛡️ {GetTierName()}</color>");
+                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>{GetTierName()}</color>");
             }
             return true;
         }

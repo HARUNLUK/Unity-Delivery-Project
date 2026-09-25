@@ -164,7 +164,7 @@ public class PassiveDispatchManager : MonoBehaviour
 
         if (dispatchHubLevel >= 3)
         {
-            return $"<color=#32FF64>📦 {LocalizationManager.GetFormat("dispatch_status", "Level {0} - {1} Couriers", dispatchHubLevel, GetCourierCount())} (+${GetDailyPassiveRevenue():N0}/{LocalizationManager.Get("unit_day", "Day")})</color>";
+            return $"<color=#32FF64>{LocalizationManager.GetFormat("dispatch_status", "Level {0} - {1} Couriers", dispatchHubLevel, GetCourierCount())} (+${GetDailyPassiveRevenue():N0}/{LocalizationManager.Get("unit_day", "Day")})</color>";
         }
 
         int nextLevel = dispatchHubLevel + 1;
@@ -175,7 +175,7 @@ public class PassiveDispatchManager : MonoBehaviour
 
         if (balance < nextCost)
         {
-            return $"<color=#FFAA33>📦 {LocalizationManager.GetFormat("prompt_open_dispatch_menu", "Level {0} - {1} Couriers", nextLevel, nextCouriers)} - ${nextCost:N0} (Balance: ${balance:N0})</color>";
+            return $"<color=#FFAA33>{LocalizationManager.GetFormat("prompt_open_dispatch_menu", "Level {0} - {1} Couriers", nextLevel, nextCouriers)} - ${nextCost:N0} (Balance: ${balance:N0})</color>";
         }
 
         return $"<color=#32FF64>{LocalizationManager.GetFormat("prompt_open_dispatch_menu", "Level {0} - {1} Couriers", nextLevel, nextCouriers)} (${nextCost:N0})</color>";
@@ -195,7 +195,7 @@ public class PassiveDispatchManager : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>📦 {LocalizationManager.GetFormat("dispatch_status", "Level {0} - {1} Couriers", dispatchHubLevel, GetCourierCount())} (+${GetDailyPassiveRevenue():N0}/{LocalizationManager.Get("unit_day", "Day")})</color>");
+                InteractionPromptHUD.Instance.ShowPrompt($"<color=#32FF64>{LocalizationManager.GetFormat("dispatch_status", "Level {0} - {1} Couriers", dispatchHubLevel, GetCourierCount())} (+${GetDailyPassiveRevenue():N0}/{LocalizationManager.Get("unit_day", "Day")})</color>");
             }
             return true;
         }

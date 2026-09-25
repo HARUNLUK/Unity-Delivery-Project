@@ -79,6 +79,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RoadSignLevelLock
   requiredLevel: 1
   lockTextFormat: LEVEL {0} REQUIRED
+  lockTextLocalizationKey: sign_level_required
   lockTextColor: {r: 1, g: 0.8399564, b: 0.25098038, a: 1}
   lockTextMesh: {fileID: 886981187331585343}
   lockVisualContainer: {fileID: 1095464723081433506}
@@ -278,6 +279,7 @@ GameObject:
   - component: {fileID: 3611321932885301066}
   - component: {fileID: 2395262084287484422}
   - component: {fileID: 1178686631824249529}
+  - component: {fileID: 742404453829043248}
   m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -373,7 +375,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Maple Town
+  m_text: "Ak\xE7aa\u011Fa\xE7 Kasabas\u0131"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 5302535af1044152a457ed104f1f4b91, type: 2}
   m_sharedMaterial: {fileID: 2164040, guid: 5302535af1044152a457ed104f1f4b91, type: 2}
@@ -400,11 +402,11 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24.05
+  m_fontSize: 15
   m_fontSizeBase: 22
   m_fontWeight: 400
   m_enableAutoSizing: 1
-  m_fontSizeMin: 18
+  m_fontSizeMin: 8
   m_fontSizeMax: 72
   m_fontStyle: 1
   m_HorizontalAlignment: 2
@@ -448,6 +450,23 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_renderer: {fileID: 2395262084287484422}
   m_maskType: 0
+--- !u!114 &742404453829043248
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7654711995498836814}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a7a879824d059c418bb997763511fd8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  localizationKey: sign_maple_town
+  fallbackText: Maple Town
+  prefix: 
+  suffix: 
+  toUpperCase: 0
 --- !u!1001 &6725622448076792258
 PrefabInstance:
   m_ObjectHideFlags: 0

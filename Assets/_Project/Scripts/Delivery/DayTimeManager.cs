@@ -50,6 +50,7 @@ public class DayTimeManager : MonoBehaviour
     public int CurrentHour { get; private set; }
     public int CurrentMinute { get; private set; }
     public bool IsShiftEnded { get; private set; }
+    public bool IsTimePaused { get; set; } = false;
 
     [Header("--- DAY PROGRESSION ---")]
     [Tooltip("Current calendar/shift day number (Starts at Day 1)")]
@@ -167,7 +168,7 @@ public class DayTimeManager : MonoBehaviour
 
     private void Update()
     {
-        if (IsShiftEnded) return;
+        if (IsShiftEnded || IsTimePaused) return;
 
         CurrentTimeInSeconds += Time.deltaTime;
         float progress = Mathf.Clamp01(CurrentTimeInSeconds / totalRealTimeSeconds);

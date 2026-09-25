@@ -7,6 +7,7 @@ public class RoadSignLevelLockEditor : Editor
 {
     private SerializedProperty requiredLevelProp;
     private SerializedProperty lockTextFormatProp;
+    private SerializedProperty lockTextLocalizationKeyProp;
     private SerializedProperty lockTextColorProp;
     private SerializedProperty lockTextMeshProp;
     private SerializedProperty lockVisualContainerProp;
@@ -18,6 +19,7 @@ public class RoadSignLevelLockEditor : Editor
     {
         requiredLevelProp = serializedObject.FindProperty("requiredLevel");
         lockTextFormatProp = serializedObject.FindProperty("lockTextFormat");
+        lockTextLocalizationKeyProp = serializedObject.FindProperty("lockTextLocalizationKey");
         lockTextColorProp = serializedObject.FindProperty("lockTextColor");
         lockTextMeshProp = serializedObject.FindProperty("lockTextMesh");
         lockVisualContainerProp = serializedObject.FindProperty("lockVisualContainer");
@@ -65,7 +67,8 @@ public class RoadSignLevelLockEditor : Editor
         // --- LEVEL REQUIREMENT ---
         EditorGUILayout.LabelField("Seviye Ayarları", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(requiredLevelProp, new GUIContent("Gereken Seviye (Level)"));
-        EditorGUILayout.PropertyField(lockTextFormatProp, new GUIContent("Kilit Yazı Formatı"));
+        EditorGUILayout.PropertyField(lockTextLocalizationKeyProp, new GUIContent("Çeviri Anahtarı (Key)"));
+        EditorGUILayout.PropertyField(lockTextFormatProp, new GUIContent("Kilit Yazı Formatı (Fallback)"));
         EditorGUILayout.PropertyField(lockTextColorProp, new GUIContent("Kilit Yazı Rengi"));
 
         EditorGUILayout.Space(8);

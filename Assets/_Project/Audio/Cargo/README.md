@@ -1,4 +1,4 @@
-# 📦 Cargo Audio Files (Kargo & Fizik Sesleri)
+# Cargo Audio Files (Kargo & Fizik Sesleri)
 
 Bu klasöre aşağıdaki isimlerle ses dosyalarınızı (`.wav`, `.mp3` veya `.ogg`) ekleyebilirsiniz:
 

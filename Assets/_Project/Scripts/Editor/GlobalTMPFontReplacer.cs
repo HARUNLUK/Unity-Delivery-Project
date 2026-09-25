@@ -90,7 +90,7 @@ public class GlobalTMPFontReplacer : EditorWindow
         GUILayout.Space(15);
 
         GUI.backgroundColor = new Color(0.2f, 0.85f, 0.4f);
-        if (GUILayout.Button("✨ TÜM YAZILARI BU FONTA DÖNÜŞTÜR", GUILayout.Height(42)))
+        if (GUILayout.Button("TÜM YAZILARI BU FONTA DÖNÜŞTÜR", GUILayout.Height(42)))
         {
             if (targetFontAsset == null)
             {

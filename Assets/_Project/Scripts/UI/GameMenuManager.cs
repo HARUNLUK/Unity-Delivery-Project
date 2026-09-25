@@ -1016,6 +1016,7 @@ public class GameMenuManager : MonoBehaviour
     {
         currentState = GameFlowState.MainMenu;
         Time.timeScale = 1.0f;
+        if (DayTimeManager.Instance != null) DayTimeManager.Instance.IsTimePaused = true;
 
         // 1. Activate Menu Camera overlooking shop on the player camera
         if (MainMenuCameraController.Instance != null)
@@ -1075,6 +1076,7 @@ public class GameMenuManager : MonoBehaviour
     {
         currentState = GameFlowState.Playing;
         Time.timeScale = 1.0f;
+        if (DayTimeManager.Instance != null) DayTimeManager.Instance.IsTimePaused = false;
 
         if (menuCameraController != null)
         {
@@ -1487,6 +1489,7 @@ public class GameMenuManager : MonoBehaviour
                 // 1. Switch to Playing state
                 currentState = GameFlowState.Playing;
                 Time.timeScale = 1.0f;
+                if (DayTimeManager.Instance != null) DayTimeManager.Instance.IsTimePaused = false;
 
                 // 2. Restore Camera directly to player
                 if (MainMenuCameraController.Instance != null)

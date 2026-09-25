@@ -1128,7 +1128,7 @@ public class InteractionPromptHUD : MonoBehaviour
                     break;
 
                 case CargoType.Fragile:
-                    heldCargoTypeText.text = LocalizationManager.Get("cargo_type_fragile", "KIRILABİLİR");
+                    heldCargoTypeText.text = LocalizationManager.Get("cargo_type_fragile", "KIRILGAN");
                     if (heldCargoStatusText != null) heldCargoStatusText.text = pkg.isBroken ? LocalizationManager.Get("cargo_status_broken", "Kırıldı / Hasarlı") : LocalizationManager.Get("cargo_status_condition", "Kondisyon");
                     if (heldCargoPercentageText != null) heldCargoPercentageText.text = pkg.isBroken ? "0%" : $"{pkg.health:F0}%";
                     break;
