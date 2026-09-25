@@ -97,6 +97,26 @@ public class VehicleTailgate : MonoBehaviour
                 }
             }
         }
+
+        // Also ignore collisions between the moving tailgate and the vehicle itself to prevent bouncing/phantom forces
+        DrivableVehicle vehicle = GetComponentInParent<DrivableVehicle>();
+        if (vehicle != null && doorTransform != null)
+        {
+            Collider[] doorColliders = doorTransform.GetComponentsInChildren<Collider>(true);
+            Collider[] vehicleColliders = vehicle.GetComponentsInChildren<Collider>(true);
+
+            foreach (var dc in doorColliders)
+            {
+                if (dc.isTrigger) continue;
+                foreach (var vc in vehicleColliders)
+                {
+                    if (vc != null && dc != null && !vc.transform.IsChildOf(doorTransform))
+                    {
+                        Physics.IgnoreCollision(dc, vc, true);
+                    }
+                }
+            }
+        }
     }
 
     public void ToggleDoor()

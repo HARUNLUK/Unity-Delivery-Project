@@ -48,7 +48,7 @@ public class FPSPlayerController : MonoBehaviour
     private Quaternion originalCameraLocalRot;
 
     [Header("--- IN-VEHICLE LOOK SETTINGS ---")]
-    public VehicleCameraMode vehicleCameraMode = VehicleCameraMode.FirstPerson;
+    public VehicleCameraMode vehicleCameraMode = VehicleCameraMode.ThirdPerson;
     public float inVehicleMouseSensitivity = 2.0f;
     public float inVehicleMaxYaw = 110f;    // Sağa ve sola bakış limiti (aynalar/camlar)
     public float inVehicleMinPitch = -50f;  // Yukarı bakış limiti (dikiz aynası/tavan)
@@ -376,11 +376,11 @@ public class FPSPlayerController : MonoBehaviour
 
         if (!isOnFoot)
         {
-            // Kamera modu (FPS/TPS) geçişi
-            if (!isUIOpen && KeyBindingManager.WasPressedThisFrame(GameAction.Camera))
-            {
-                ToggleVehicleCameraMode();
-            }
+            // Kamera modu (FPS/TPS) geçişi devre dışı bırakıldı (sadece TPS)
+            // if (!isUIOpen && KeyBindingManager.WasPressedThisFrame(GameAction.Camera))
+            // {
+            //     ToggleVehicleCameraMode();
+            // }
 
             if (!isUIOpen)
             {
@@ -1382,16 +1382,14 @@ public class FPSPlayerController : MonoBehaviour
         currentVehicle = seatPoint.GetComponentInParent<DrivableVehicle>();
         currentVehicleTransform = currentVehicle != null ? currentVehicle.transform : seatPoint.root;
 
-        vehicleCameraMode = VehicleCameraMode.FirstPerson;
+        vehicleCameraMode = VehicleCameraMode.ThirdPerson;
         vehicleYaw = 0f;
         vehiclePitch = 0f;
         tpsYawOffset = 0f;
         tpsPitchOffset = 0f;
 
-        playerCamera.transform.SetParent(seatPoint);
-        Vector3 offset = currentVehicle != null ? currentVehicle.fpsCameraOffset : Vector3.zero;
-        playerCamera.transform.localPosition = offset;
-        playerCamera.transform.localRotation = Quaternion.identity;
+        // TPS requires unparented camera to orbit freely
+        playerCamera.transform.SetParent(null);
 
         if (currentVehicle != null)
         {

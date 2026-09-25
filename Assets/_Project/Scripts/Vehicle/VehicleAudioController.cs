@@ -299,12 +299,20 @@ public class VehicleAudioController : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision == null || collision.relativeVelocity.magnitude < 3.5f) return;
+        if (collision == null || collision.contactCount == 0) return;
 
-        float impact = collision.relativeVelocity.magnitude;
+        // Ignore collisions with own child objects (e.g. PickupBackDoor swinging around)
+        if (collision.transform.IsChildOf(transform) || transform.IsChildOf(collision.transform)) return;
+
+        // Calculate velocity along the contact normal to ignore scraping/drifting tangential velocity
+        float normalVelocity = Mathf.Abs(Vector3.Dot(collision.relativeVelocity, collision.contacts[0].normal));
+
+        if (normalVelocity < 3.5f) return;
+
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.PlayVehicleCrash(collision.contacts[0].point, impact);
+            Debug.Log($"<color=#FF5555>[VehicleAudio] Crash sound played! Collided with: {collision.gameObject.name} (Normal Velocity: {normalVelocity:F1})</color>");
+            AudioManager.Instance.PlayVehicleCrash(collision.contacts[0].point, normalVelocity);
         }
     }
 }

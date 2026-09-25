@@ -538,19 +538,23 @@ public class DrivableVehicle : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision == null) return;
+        if (collision == null || collision.contactCount == 0) return;
         if (Time.time - lastCollisionDamageTime < collisionDamageCooldown) return;
 
-        // Ignore collisions with player or child objects
+        // Ignore collisions with player or the vehicle's own child objects (e.g., doors, tailgates)
         if (currentPlayer != null && collision.transform.IsChildOf(currentPlayer.transform)) return;
+        if (collision.transform.IsChildOf(transform) || transform.IsChildOf(collision.transform)) return;
         
         // Ignore collisions with cargo packages to prevent damage when the player is handling cargo
         if (collision.transform.GetComponentInParent<PhysicalCargoPackage>() != null) return;
 
-        float impactSpeed = collision.relativeVelocity.magnitude;
+        // Calculate impact speed along the collision normal (ignores scraping/drifting tangential velocity)
+        float impactSpeed = Mathf.Abs(Vector3.Dot(collision.relativeVelocity, collision.contacts[0].normal));
+        
         if (rb != null && collision.impulse.magnitude > 0.01f)
         {
-            float impulseSpeed = collision.impulse.magnitude / rb.mass;
+            float normalImpulse = Mathf.Abs(Vector3.Dot(collision.impulse, collision.contacts[0].normal));
+            float impulseSpeed = normalImpulse / rb.mass;
             if (impulseSpeed > impactSpeed) impactSpeed = impulseSpeed;
         }
 

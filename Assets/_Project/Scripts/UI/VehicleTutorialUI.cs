@@ -290,7 +290,6 @@ public class VehicleTutorialUI : MonoBehaviour
                 ? "<color=#FFE600><b>1. SÜRÜŞ KONTROLLERİ</b></color>\n" +
                   "• <color=#32FFFF>[W / A / S / D]</color> veya Yön Tuşları ile gaz, fren ve direksiyon kontrolü.\n" +
                   "• <color=#32FFFF>[Boşluk / Space]</color> El freni ile keskin virajları dönebilir veya kaymayı durdurabilirsiniz.\n" +
-                  "• <color=#32FFFF>[V]</color> tuşu ile araç içi (FPS) ve araç dışı (TPS) kamera açıları arasında geçiş yapabilirsiniz.\n" +
                   "• <color=#32FFFF>[E]</color> veya <color=#32FFFF>[F]</color> tuşu ile dilediğiniz an araçtan inip binebilirsiniz.\n\n" +
 
                   "<color=#FFE600><b>2. KARGO GÜVENLİĞİ VE YÜKLEME</b></color>\n" +
@@ -305,7 +304,6 @@ public class VehicleTutorialUI : MonoBehaviour
                 : "<color=#FFE600><b>1. DRIVING CONTROLS</b></color>\n" +
                   "• <color=#32FFFF>[W / A / S / D]</color> or Arrow Keys for throttle, brake, and steering.\n" +
                   "• <color=#32FFFF>[Spacebar]</color> Handbrake for sharp corners and emergency stops.\n" +
-                  "• <color=#32FFFF>[V]</color> key toggles between interior (cockpit) and exterior (third-person) camera views.\n" +
                   "• <color=#32FFFF>[E]</color> or <color=#32FFFF>[F]</color> to enter or exit the vehicle anytime.\n\n" +
 
                   "<color=#FFE600><b>2. CARGO SAFETY & LOADING</b></color>\n" +
