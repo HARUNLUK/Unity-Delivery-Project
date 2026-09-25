@@ -77,7 +77,9 @@ public static class CozyText
         {
             string inner = m.Groups[1].Value.Trim();
             if (!LooksLikeKey(inner)) return m.Value;
-            return "<mark=#3B2C24><color=#" + KeyCapTextHex + "><b> " + inner.ToUpperInvariant() + " </b></color></mark>";
+            // TMP draws <mark> as a translucent layer over the glyphs, so an opaque dark cap would hide the letter.
+            // Keep the letter in ink and use a soft kraft highlight: readable whichever way TMP layers it.
+            return "<b><mark=#C9A26E73> " + inner.ToUpperInvariant() + " </mark></b>";
         });
     }
 

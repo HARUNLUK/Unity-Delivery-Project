@@ -92,8 +92,13 @@ public static partial class CozyUIBuilder
         paperImg.color = receiptPaper;
         VStack(paper, 16f, Pad(48, 48, 36, 36));
 
+        // Flipped around its own centre so it stays glued to the paper's bottom edge.
         RectTransform bottom = Node("BottomTeeth", receipt);
-        BottomStrip(bottom, 14f);
+        bottom.anchorMin = new Vector2(0f, 0f);
+        bottom.anchorMax = new Vector2(1f, 0f);
+        bottom.pivot = new Vector2(0.5f, 0.5f);
+        bottom.offsetMin = new Vector2(0f, 0f);
+        bottom.offsetMax = new Vector2(0f, 14f);
         bottom.localEulerAngles = new Vector3(0f, 0f, 180f);
         Image botImg = bottom.gameObject.AddComponent<Image>();
         botImg.sprite = A.zigzag;
