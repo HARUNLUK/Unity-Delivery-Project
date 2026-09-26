@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 93e0333ecff44104eb394611117021c4
+labels:
+- Can
+- Explosive
+- Gas
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 8093
+  packageName: Explosives Package
+  packageVersion: 1.0
+  assetPath: Assets/ExplosivesPackage/Prefabs/Gas_Can.prefab
+  uploadId: 12514

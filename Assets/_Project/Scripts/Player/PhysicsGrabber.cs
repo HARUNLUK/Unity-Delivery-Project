@@ -46,6 +46,13 @@ public class PhysicsGrabber : MonoBehaviour
     {
         if (targetRb == null || targetRb.mass > maxGrabMass) return;
 
+        FuelCanisterItem fCan = targetRb.GetComponent<FuelCanisterItem>() ?? targetRb.GetComponentInParent<FuelCanisterItem>();
+        if (fCan != null && fCan.isForSaleOnShelf && fCan.shelfOwner != null)
+        {
+            fCan.shelfOwner.TryBuyCanister(fCan);
+            return;
+        }
+
         grabbedRb = targetRb;
         originalLinearDamping = grabbedRb.linearDamping;
         originalAngularDamping = grabbedRb.angularDamping;
@@ -88,6 +95,11 @@ public class PhysicsGrabber : MonoBehaviour
         {
             item.isBeingCarried = true;
             if (item.currentCargoBed != null) item.currentCargoBed.RemoveItem(item);
+        }
+
+        if (targetRb.transform.parent != null)
+        {
+            targetRb.transform.SetParent(null, true);
         }
 
         if (AudioManager.Instance != null)
@@ -258,8 +270,26 @@ public class PhysicsGrabber : MonoBehaviour
         // Target hold position in front of camera using dynamic safe hold distance
         Vector3 targetPos = cam.transform.position + (cam.transform.forward * effectiveHoldDistance) + (cam.transform.up * -0.22f);
 
-        // Auto-orient package so the top shipping label tilts directly towards player's eyes
-        Quaternion targetRot = cam.transform.rotation * Quaternion.Euler(holdRotationOffset);
+        // Check if held object defines custom hold orientation (e.g. gas canister upright at 90 degrees)
+        Vector3 rotOffset = holdRotationOffset;
+        FuelCanisterItem canister = grabbedRb.GetComponent<FuelCanisterItem>();
+        if (canister == null) canister = grabbedRb.GetComponentInParent<FuelCanisterItem>();
+        if (canister != null)
+        {
+            rotOffset = canister.holdRotationOffset;
+        }
+        else
+        {
+            CarriableItem carriable = grabbedRb.GetComponent<CarriableItem>();
+            if (carriable == null) carriable = grabbedRb.GetComponentInParent<CarriableItem>();
+            if (carriable != null && carriable.useCustomHoldRotation)
+            {
+                rotOffset = carriable.customHoldRotation;
+            }
+        }
+
+        // Auto-orient package or canister
+        Quaternion targetRot = cam.transform.rotation * Quaternion.Euler(rotOffset);
 
         Vector3 forceDir = targetPos - grabbedRb.position;
         float distance = forceDir.magnitude;

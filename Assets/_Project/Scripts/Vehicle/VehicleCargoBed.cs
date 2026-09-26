@@ -22,6 +22,7 @@ public class VehicleCargoBed : MonoBehaviour
     private readonly HashSet<CarriableItem> itemsInBed = new HashSet<CarriableItem>();
 
     public int LoadedItemCount => itemsInBed.Count;
+    public IReadOnlyCollection<CarriableItem> ItemsInBed => itemsInBed;
 
     public IReadOnlyCollection<PhysicalCargoPackage> PackagesInBed => packagesInBed;
     public int LoadedPackageCount => packagesInBed.Count;
@@ -33,6 +34,11 @@ public class VehicleCargoBed : MonoBehaviour
         if (vehicle != null) vehicleRb = vehicle.GetComponent<Rigidbody>();
 
         EnsureBedTrigger();
+    }
+
+    private void Start()
+    {
+        // Benzin bidonu kayıt yükleme kaldırıldı.
     }
 
     [ContextMenu("Create / Find Cargo Bed Trigger")]
@@ -219,6 +225,32 @@ public class VehicleCargoBed : MonoBehaviour
         itemsInBed.Clear();
     }
 
+    private void OnApplicationPause(bool pauseStatus) { }
+
+    private void OnApplicationQuit() { }
+
+    /// <summary>Benzin bidonu kayıt sistemi devre dışı bırakıldı.</summary>
+    public void SaveBedCanisters() { }
+
+    /// <summary>Benzin bidonu yükleme sistemi devre dışı bırakıldı.</summary>
+    public void LoadBedCanisters() { }
+
+    private GameObject GetGasCanisterPrefab()
+    {
+        GameObject prefab = Resources.Load<GameObject>("Prefabs/Gas_Can");
+#if UNITY_EDITOR
+        if (prefab == null)
+        {
+            prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_AssetPacks/ExplosivesPackage/Prefabs/Gas_Can.prefab");
+        }
+#endif
+        if (prefab == null)
+        {
+            prefab = Resources.Load<GameObject>("Prefabs/Gas_Canister");
+        }
+        return prefab;
+    }
+
     /// <summary>Same bed stabilizer as parcels: items ride along with the vehicle instead of sliding around.</summary>
     private void StabilizeItems(Vector3 vehicleVel, Vector3 vehicleAngVel)
     {
@@ -312,4 +344,23 @@ public class VehicleCargoBed : MonoBehaviour
 
         Gizmos.matrix = oldMat;
     }
+}
+
+[System.Serializable]
+public class SavedBedCanisterData
+{
+    public float localPosX;
+    public float localPosY;
+    public float localPosZ;
+    public float localRotX;
+    public float localRotY;
+    public float localRotZ;
+    public float localRotW;
+    public float fuelAmount;
+}
+
+[System.Serializable]
+public class SavedBedCanistersList
+{
+    public List<SavedBedCanisterData> canisters = new List<SavedBedCanisterData>();
 }

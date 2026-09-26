@@ -189,6 +189,7 @@ public class DrivableVehicle : MonoBehaviour
         if (string.IsNullOrEmpty(EffectiveVehicleId)) return;
         PlayerPrefs.SetFloat(FUEL_SAVE_PREFIX + EffectiveVehicleId, currentFuel);
         PlayerPrefs.SetFloat(CONDITION_SAVE_PREFIX + EffectiveVehicleId, currentCondition);
+        if (cargoBed != null) cargoBed.SaveBedCanisters();
         PlayerPrefs.Save();
     }
 
@@ -770,9 +771,10 @@ public class DrivableVehicle : MonoBehaviour
     /// </summary>
     public void TeleportVehicle(Vector3 targetPos, Quaternion targetRot, bool keepCargoInBed = true)
     {
-        // 1. Gather packages in bed to carry along with the vehicle
+        // 1. Gather packages and items in bed to carry along with the vehicle
         VehicleCargoBed bed = GetComponentInChildren<VehicleCargoBed>();
         var bedPackages = new System.Collections.Generic.List<(PhysicalCargoPackage pkg, Vector3 localPos, Quaternion localRot)>();
+        var bedItems = new System.Collections.Generic.List<(CarriableItem itm, Vector3 localPos, Quaternion localRot)>();
 
         if (keepCargoInBed && bed != null)
         {
@@ -783,6 +785,16 @@ public class DrivableVehicle : MonoBehaviour
                     Vector3 lPos = transform.InverseTransformPoint(pkg.transform.position);
                     Quaternion lRot = Quaternion.Inverse(transform.rotation) * pkg.transform.rotation;
                     bedPackages.Add((pkg, lPos, lRot));
+                }
+            }
+
+            foreach (var itm in bed.ItemsInBed)
+            {
+                if (itm != null)
+                {
+                    Vector3 lPos = transform.InverseTransformPoint(itm.transform.position);
+                    Quaternion lRot = Quaternion.Inverse(transform.rotation) * itm.transform.rotation;
+                    bedItems.Add((itm, lPos, lRot));
                 }
             }
         }
@@ -818,7 +830,7 @@ public class DrivableVehicle : MonoBehaviour
 
         Physics.SyncTransforms();
 
-        // 5. Relocate bed packages to exact relative offsets on the new vehicle position
+        // 5. Relocate bed packages and items to exact relative offsets on the new vehicle position
         foreach (var item in bedPackages)
         {
             if (item.pkg != null)
@@ -827,6 +839,28 @@ public class DrivableVehicle : MonoBehaviour
                 Quaternion newPkgWorldRot = targetRot * item.localRot;
                 item.pkg.RelocateToPosition(newPkgWorldPos, newPkgWorldRot);
             }
+        }
+
+        foreach (var item in bedItems)
+        {
+            if (item.itm != null)
+            {
+                Vector3 newItemWorldPos = targetPos + (targetRot * item.localPos);
+                Quaternion newItemWorldRot = targetRot * item.localRot;
+                item.itm.transform.position = newItemWorldPos;
+                item.itm.transform.rotation = newItemWorldRot;
+                var itmRb = item.itm.GetComponent<Rigidbody>();
+                if (itmRb != null)
+                {
+                    itmRb.linearVelocity = Vector3.zero;
+                    itmRb.angularVelocity = Vector3.zero;
+                }
+            }
+        }
+
+        if (bed != null)
+        {
+            bed.SaveBedCanisters();
         }
 
         // 6. Zero velocities again after placement

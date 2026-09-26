@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: bfd0012b9252a3c458437d522c1e65f2
+labels:
+- Dynamite
+- Explosive
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 8093
+  packageName: Explosives Package
+  packageVersion: 1.0
+  assetPath: Assets/ExplosivesPackage/Prefabs/Dynamite_1.prefab
+  uploadId: 12514

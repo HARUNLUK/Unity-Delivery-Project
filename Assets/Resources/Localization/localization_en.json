@@ -1134,6 +1134,66 @@
       "value": "<b>{0}</b>: Hold <color=#32FF64>[F]</color> -> <b>Refuel</b> (${1:F0}/L) | <color=#FFCC00>[E]</color> Exit"
     },
     {
+      "key": "prompt_gas_station_buy_canister_only",
+      "value": "<b>{0}</b>: Press <color=#FFCC00>[{1}]</color> -> <b>Buy Gas Canister</b> (${2} - {3:F0}L)"
+    },
+    {
+      "key": "prompt_gas_canister_shelf",
+      "value": "<b>{0}</b>: Press <color=#FFCC00>[{1}]</color> -> <b>Buy Gas Canister</b> (${2} - {3:F0}L)"
+    },
+    {
+      "key": "prompt_gas_canister_shelf_empty",
+      "value": "<b>{0}</b>: <color=#FF5555>[OUT OF STOCK]</color> (Restocks when you leave)"
+    },
+    {
+      "key": "prompt_refuel_vehicle_with_canister",
+      "value": "<color=#32FF64>[E]</color> <b>Refuel</b>"
+    },
+    {
+      "key": "prompt_held_canister_instructions",
+      "value": "<b>{0}</b>: <color=#FFCC00>[Right Click / E]</color> <b>Drop</b> | <color=#FFCC00>[Left Click]</color> <b>Throw</b>"
+    },
+    {
+      "key": "shelf_gas_canister_name",
+      "value": "Gas Canister Stand"
+    },
+    {
+      "key": "prompt_gas_station_align_with_canister",
+      "value": "<b>{0}</b>: Align vehicle to refuel | <color=#FFCC00>[{1}]</color> <b>Buy Gas Canister</b> (${2} - {3:F0}L)"
+    },
+    {
+      "key": "prompt_gas_station_full_with_canister",
+      "value": "<color=#32FF64>[TANK FULL]</color> ({0:F1} / {1:F1} L) | <color=#FFCC00>[{2}]</color> <b>Buy Gas Canister</b> (${3} - {4:F0}L)"
+    },
+    {
+      "key": "prompt_gas_station_hold_refuel_with_canister",
+      "value": "<b>{0}</b>: <color=#32FF64>[F/Space/E]</color> <b>Refuel Vehicle</b> (${1:F0}/L) | <color=#FFCC00>[{2}]</color> <b>Buy Gas Canister</b> (${3} - {4:F0}L)"
+    },
+    {
+      "key": "prompt_gas_station_no_money_canister",
+      "value": "<color=#FF5555>[INSUFFICIENT FUNDS]</color> Not enough money for Gas Canister (${0})! (Balance: ${1})"
+    },
+    {
+      "key": "prompt_gas_station_canister_bought",
+      "value": "<color=#32FF64>[PURCHASED]</color> 🛢️ {0:F0}L Gas Canister bought (${1})! Store in vehicle bed."
+    },
+    {
+      "key": "prompt_fuel_canister_used",
+      "value": "<color=#32FFFF>⛽ [FUEL REFILL]</color> +{0:F1}L added to vehicle! (Tank: {1:F1}/{2:F1}L - {3:F0}%)"
+    },
+    {
+      "key": "notif_gas_canister_bought",
+      "value": "🛢️ {0:F0}L Gas Canister Purchased"
+    },
+    {
+      "key": "notif_fuel_canister_added",
+      "value": "⛽ +{0:F1}L Fuel Added to Vehicle"
+    },
+    {
+      "key": "item_fuel_canister_name",
+      "value": "Gas Canister"
+    },
+    {
       "key": "prompt_explosion_emergency",
       "value": "<color=#FF2222>💥 EXPLOSION! You were severely injured and rushed to the hospital...</color>"
     },

@@ -15,6 +15,22 @@ public class FuelStationPump : MonoBehaviour
     [Tooltip("How many litres are filled per second while holding key")]
     public float refuelRateLitersPerSecond = 6.0f;
 
+    [Header("--- 🛢️ GAS CANISTER (BIDON) SETTINGS ---")]
+    [Tooltip("Price in USD to purchase one gas canister ($)")]
+    public int canisterPrice = 100;
+
+    [Tooltip("How many liters of fuel each canister restores (L)")]
+    public float canisterFuelAmount = 10f;
+
+    [Tooltip("Prefab of the Gas Canister (Gas_Can with FuelCanisterItem)")]
+    public GameObject canisterPrefab;
+
+    [Tooltip("Optional spawn point where purchased canister appears")]
+    public Transform canisterSpawnTransform;
+
+    [Tooltip("Key to buy canister when on foot near pump (Default: E)")]
+    public Key canisterBuyKey = Key.E;
+
     [Header("--- VISUALS & EFFECTS ---")]
     [Tooltip("Optional light that turns green while pumping fuel")]
     public Light pumpStatusLight;
@@ -192,7 +208,34 @@ public class FuelStationPump : MonoBehaviour
             return;
         }
 
-        // 3. If player is present on foot but no vehicle is close enough
+        bool isOnFoot = FPSPlayerController.Instance == null || FPSPlayerController.Instance.IsOnFoot;
+
+        // ========================================================
+        // 1. ARACA BİNMİYORKEN (YAYA / ON FOOT):
+        // Pompa doğrudan araç doldurmaya yarar; bidonlar özel raftan (FuelCanisterShelf) alınır.
+        // ========================================================
+        if (isOnFoot)
+        {
+            if (isActivelyRefueling)
+            {
+                StopPumpingAudio();
+                SetPumpLightActive(false);
+                isActivelyRefueling = false;
+                if (PlayerEconomyManager.Instance != null) PlayerEconomyManager.Instance.SaveLiveBalance();
+            }
+
+            if (wasShowingPrompt)
+            {
+                if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.HidePrompt();
+                wasShowingPrompt = false;
+            }
+            return;
+        }
+
+        // ========================================================
+        // 2. ARAÇTAYKEN (SÜRÜCÜ KOLTUĞUNDA / IN VEHICLE):
+        // Pompadan araca doğrudan yakıt doldurma seçeneği çıkar.
+        // ========================================================
         if (targetVehicle == null)
         {
             if (isActivelyRefueling)
@@ -200,6 +243,7 @@ public class FuelStationPump : MonoBehaviour
                 StopPumpingAudio();
                 SetPumpLightActive(false);
                 isActivelyRefueling = false;
+                if (PlayerEconomyManager.Instance != null) PlayerEconomyManager.Instance.SaveLiveBalance();
             }
 
             if (InteractionPromptHUD.Instance != null)
@@ -210,7 +254,7 @@ public class FuelStationPump : MonoBehaviour
             return;
         }
 
-        // 4. Check if vehicle fuel tank is already full
+        // Depo tamamen dolu mu?
         if (targetVehicle.currentFuel >= targetVehicle.maxFuel - 0.05f)
         {
             if (isActivelyRefueling)
@@ -233,7 +277,7 @@ public class FuelStationPump : MonoBehaviour
             return;
         }
 
-        // 5. Check economy balance
+        // Bakiye kontrolü
         int playerBalance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 99999;
         bool isHoldingRefuelKey = CheckRefuelInput();
 
@@ -264,13 +308,12 @@ public class FuelStationPump : MonoBehaviour
             return;
         }
 
-        // 6. Check hold-to-refuel inputs
+        // Araçtayken tuşa basılı tutarak aracı doldurma
         if (isHoldingRefuelKey)
         {
             float deltaLiters = refuelRateLitersPerSecond * Time.deltaTime;
             float maxCanAdd = targetVehicle.maxFuel - targetVehicle.currentFuel;
 
-            // Restrict by balance if needed
             if (pricePerLiter > 0)
             {
                 float affordableLiters = playerBalance / pricePerLiter;
@@ -310,7 +353,6 @@ public class FuelStationPump : MonoBehaviour
                     int intDeduction = Mathf.FloorToInt(accumulatedCost);
                     if (PlayerEconomyManager.Instance != null)
                     {
-                        // CRITICAL: Deduct silently without spamming coin sound during pumping!
                         PlayerEconomyManager.Instance.DeductCash(intDeduction, false);
                     }
                     accumulatedCost -= intDeduction;
@@ -338,9 +380,7 @@ public class FuelStationPump : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                bool isOnFoot = FPSPlayerController.Instance != null && FPSPlayerController.Instance.IsOnFoot;
-                string promptKey = isOnFoot ? "prompt_gas_station_hold_refuel" : "prompt_gas_station_hold_refuel_in_car";
-                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat(promptKey, GetStationDisplayName(), pricePerLiter));
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_gas_station_hold_refuel_in_car", GetStationDisplayName(), pricePerLiter));
                 wasShowingPrompt = true;
             }
         }
@@ -515,6 +555,180 @@ public class FuelStationPump : MonoBehaviour
         {
             pumpStatusLight.color = active ? Color.green : Color.yellow;
             pumpStatusLight.intensity = active ? 2.5f : 1.0f;
+        }
+    }
+
+    public string GetCanisterKeyDisplayName()
+    {
+        if (canisterBuyKey == Key.E) return "E";
+        return canisterBuyKey != Key.None ? canisterBuyKey.ToString() : "E";
+    }
+
+    private bool CheckCanisterBuyInput()
+    {
+        bool pressed = false;
+
+#if ENABLE_INPUT_SYSTEM
+        if (Keyboard.current != null)
+        {
+            if (canisterBuyKey != Key.None)
+            {
+                var keyCtrl = Keyboard.current[canisterBuyKey];
+                if (keyCtrl != null && keyCtrl.wasPressedThisFrame) pressed = true;
+            }
+            if (Keyboard.current.eKey.wasPressedThisFrame) pressed = true;
+            if (Keyboard.current.bKey.wasPressedThisFrame) pressed = true;
+        }
+
+        if (Gamepad.current != null && (Gamepad.current.buttonNorth.wasPressedThisFrame || Gamepad.current.buttonWest.wasPressedThisFrame))
+        {
+            pressed = true;
+        }
+#endif
+
+#if ENABLE_LEGACY_INPUT_MANAGER
+        try
+        {
+            if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.B) || Input.GetKeyDown(KeyCode.G))
+            {
+                pressed = true;
+            }
+        }
+        catch { }
+#endif
+
+        return pressed;
+    }
+
+    public bool TryBuyGasCanister()
+    {
+        int playerBalance = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : 99999;
+        if (playerBalance < canisterPrice && canisterPrice > 0)
+        {
+            if (Time.time - lastErrorSoundTime > 0.8f)
+            {
+                lastErrorSoundTime = Time.time;
+                if (AudioManager.Instance != null) AudioManager.Instance.PlayError();
+            }
+
+            if (InteractionPromptHUD.Instance != null)
+            {
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_gas_station_no_money_canister", canisterPrice, playerBalance));
+                wasShowingPrompt = true;
+            }
+            return false;
+        }
+
+        // Deduct canister price
+        if (PlayerEconomyManager.Instance != null && canisterPrice > 0)
+        {
+            PlayerEconomyManager.Instance.SpendMoney(canisterPrice);
+            PlayerEconomyManager.Instance.SaveLiveBalance();
+        }
+
+        // Determine spawn location
+        Vector3 spawnPos;
+        Quaternion spawnRot = Quaternion.identity;
+
+        if (canisterSpawnTransform != null)
+        {
+            spawnPos = canisterSpawnTransform.position;
+            spawnRot = canisterSpawnTransform.rotation;
+        }
+        else
+        {
+            if (FPSPlayerController.Instance != null)
+            {
+                Vector3 pFwd = FPSPlayerController.Instance.transform.forward;
+                pFwd.y = 0f;
+                spawnPos = FPSPlayerController.Instance.transform.position + pFwd.normalized * 1.2f + Vector3.up * 0.6f;
+            }
+            else
+            {
+                spawnPos = transform.position + transform.forward * 1.5f + Vector3.up * 0.5f;
+            }
+        }
+
+        GameObject prefabToSpawn = canisterPrefab;
+        if (prefabToSpawn == null)
+        {
+            prefabToSpawn = Resources.Load<GameObject>("Prefabs/Gas_Can");
+        }
+#if UNITY_EDITOR
+        if (prefabToSpawn == null)
+        {
+            prefabToSpawn = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_AssetPacks/ExplosivesPackage/Prefabs/Gas_Can.prefab");
+        }
+#endif
+        if (prefabToSpawn == null)
+        {
+            prefabToSpawn = Resources.Load<GameObject>("Prefabs/Gas_Canister");
+        }
+
+        if (prefabToSpawn != null)
+        {
+            GameObject canObj = Instantiate(prefabToSpawn, spawnPos, spawnRot);
+            canObj.name = "Gas_Can";
+
+            // Ensure Rigidbody
+            Rigidbody canRb = canObj.GetComponent<Rigidbody>();
+            if (canRb == null)
+            {
+                canRb = canObj.AddComponent<Rigidbody>();
+                canRb.mass = 4.5f;
+                canRb.linearDamping = 0.2f;
+                canRb.angularDamping = 0.5f;
+                canRb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                canRb.interpolation = RigidbodyInterpolation.Interpolate;
+            }
+
+            // Ensure CarriableItem
+            CarriableItem carriable = canObj.GetComponent<CarriableItem>();
+            if (carriable == null)
+            {
+                carriable = canObj.AddComponent<CarriableItem>();
+                carriable.itemId = "fuel_canister";
+                carriable.nameKey = "item_fuel_canister_name";
+                carriable.fallbackName = "Benzin Bidonu";
+                carriable.useCustomHoldRotation = true;
+                carriable.customHoldRotation = new Vector3(-90f, 90f, 0f);
+            }
+
+            // Ensure FuelCanisterItem
+            FuelCanisterItem canisterComp = canObj.GetComponent<FuelCanisterItem>();
+            if (canisterComp == null) canisterComp = canObj.AddComponent<FuelCanisterItem>();
+            canisterComp.fuelAmount = canisterFuelAmount;
+            canisterComp.refuelDistance = 5.0f;
+            canisterComp.holdRotationOffset = new Vector3(-90f, 90f, 0f);
+
+            // Direct spawn into player's hands!
+            if (PhysicsGrabber.Instance != null && canRb != null)
+            {
+                if (PhysicsGrabber.Instance.IsHoldingObject)
+                {
+                    PhysicsGrabber.Instance.ReleaseObject();
+                }
+                PhysicsGrabber.Instance.GrabObject(canRb);
+            }
+
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayMoneySubtract();
+            }
+
+            if (InteractionPromptHUD.Instance != null)
+            {
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_gas_station_canister_bought", canisterFuelAmount, canisterPrice));
+                wasShowingPrompt = true;
+            }
+
+
+            return true;
+        }
+        else
+        {
+            Debug.LogError("[FuelStationPump] Gas Canister prefab is not assigned and could not be loaded!");
+            return false;
         }
     }
 }

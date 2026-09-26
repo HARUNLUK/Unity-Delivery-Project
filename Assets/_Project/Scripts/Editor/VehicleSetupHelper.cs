@@ -443,6 +443,9 @@ public static class VehicleSetupHelper
         pumpScript.pricePerLiter = 3.5f;
         pumpScript.refuelRateLitersPerSecond = 6.0f;
         pumpScript.pumpStatusLight = pLight;
+        pumpScript.canisterPrice = 100;
+        pumpScript.canisterFuelAmount = 10f;
+        pumpScript.canisterPrefab = CarriableItemTools.EnsureGasCanisterPrefab(false);
 
         // 4. Save as Prefab
         string prefabPath = Path.Combine(PREFAB_DIR, "Fuel_Station_Pump.prefab").Replace("\\", "/");

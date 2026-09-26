@@ -14,6 +14,8 @@ public static class CarriableItemTools
     private const string PrefabDir = "Assets/_Project/Prefabs/Items";
     private const string MaterialDir = "Assets/_Project/Materials/Items";
     public const string WeaponPrefabPath = PrefabDir + "/Item_Weapon.prefab";
+    public const string GasCanisterPrefabPath = "Assets/_AssetPacks/ExplosivesPackage/Prefabs/Gas_Can.prefab";
+    private const string SourceGasCanPrefabPath = "Assets/_AssetPacks/ExplosivesPackage/Prefabs/Gas_Can.prefab";
 
     [MenuItem("Tools/Delivery Game/Items/1. Create Weapon Item Prefab", false, 200)]
     public static void CreateWeaponPrefabMenu()
@@ -22,6 +24,153 @@ public static class CarriableItemTools
         Selection.activeObject = prefab;
         EditorGUIUtility.PingObject(prefab);
         Debug.Log("<color=#2F9B6F>[Items]</color> Silah eşyası hazır: " + WeaponPrefabPath);
+    }
+
+    [MenuItem("Tools/Delivery Game/Items/4. Configure Gas Can Prefab", false, 203)]
+    public static void CreateGasCanisterMenu()
+    {
+        GameObject prefab = EnsureGasCanisterPrefab(true);
+        if (prefab != null)
+        {
+            Selection.activeObject = prefab;
+            EditorGUIUtility.PingObject(prefab);
+            Debug.Log("<color=#2F9B6F>[Items]</color> Gas_Can prefabı hazırlandı: " + GasCanisterPrefabPath);
+        }
+    }
+
+    [MenuItem("Tools/Delivery Game/Items/5. Setup Fuel Station Pump With Canister", false, 204)]
+    public static void SetupFuelStationPumpWithCanister()
+    {
+        GameObject canPrefab = EnsureGasCanisterPrefab(false);
+        string pumpPrefabPath = "Assets/_Project/Prefabs/Plots/Fuel_Station_Pump.prefab";
+
+        GameObject pumpPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(pumpPrefabPath);
+        if (pumpPrefab == null)
+        {
+            return;
+        }
+
+        try
+        {
+            GameObject pumpRoot = PrefabUtility.LoadPrefabContents(pumpPrefabPath);
+            FuelStationPump pumpScript = pumpRoot.GetComponent<FuelStationPump>();
+            if (pumpScript == null) pumpScript = pumpRoot.AddComponent<FuelStationPump>();
+
+            pumpScript.canisterPrice = 100;
+            pumpScript.canisterFuelAmount = 10f;
+            if (canPrefab != null) pumpScript.canisterPrefab = canPrefab;
+
+            Transform stand = pumpRoot.transform.Find("Pump_Dispenser_Stand");
+            Transform spawnPoint = pumpRoot.transform.Find("CanisterSpawnPoint");
+            if (spawnPoint == null)
+            {
+                GameObject spObj = new GameObject("CanisterSpawnPoint");
+                spObj.transform.SetParent(pumpRoot.transform, false);
+                if (stand != null)
+                {
+                    spObj.transform.localPosition = stand.localPosition + new Vector3(0f, 0.4f, 1.0f);
+                }
+                else
+                {
+                    spObj.transform.localPosition = new Vector3(2.5f, 0.5f, 0f);
+                }
+                spawnPoint = spObj.transform;
+            }
+            pumpScript.canisterSpawnTransform = spawnPoint;
+
+            PrefabUtility.SaveAsPrefabAsset(pumpRoot, pumpPrefabPath);
+            PrefabUtility.UnloadPrefabContents(pumpRoot);
+
+            Debug.Log("<color=#2F9B6F>[Items]</color> Fuel_Station_Pump.prefab Gas_Can ile başarıyla yapılandırıldı!");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning("[Items] SetupFuelStationPumpWithCanister notice: " + ex.Message);
+        }
+    }
+
+    public static GameObject EnsureGasCanisterPrefab(bool rebuild)
+    {
+        GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(GasCanisterPrefabPath);
+        if (existing == null)
+        {
+            Debug.LogWarning("[Items] Gas_Can prefab not found at: " + GasCanisterPrefabPath);
+            return null;
+        }
+
+        // Ensure Rigidbody, CarriableItem, and FuelCanisterItem directly on Gas_Can.prefab
+        // without touching user's scale, box collider, material, or adding children!
+        try
+        {
+            GameObject root = PrefabUtility.LoadPrefabContents(GasCanisterPrefabPath);
+            bool modified = false;
+
+            Rigidbody rb = root.GetComponent<Rigidbody>();
+            if (rb == null)
+            {
+                rb = root.AddComponent<Rigidbody>();
+                rb.mass = 4.5f;
+                rb.linearDamping = 0.2f;
+                rb.angularDamping = 0.5f;
+                rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                rb.interpolation = RigidbodyInterpolation.Interpolate;
+                modified = true;
+            }
+
+            CarriableItem carriable = root.GetComponent<CarriableItem>();
+            if (carriable == null)
+            {
+                carriable = root.AddComponent<CarriableItem>();
+                carriable.itemId = "fuel_canister";
+                carriable.nameKey = "item_fuel_canister_name";
+                carriable.fallbackName = "Benzin Bidonu";
+                carriable.useCustomHoldRotation = true;
+                carriable.customHoldRotation = new Vector3(-90f, 90f, 0f);
+                modified = true;
+            }
+            else
+            {
+                carriable.itemId = "fuel_canister";
+                carriable.useCustomHoldRotation = true;
+                carriable.customHoldRotation = new Vector3(-90f, 90f, 0f);
+                modified = true;
+            }
+
+            FuelCanisterItem canister = root.GetComponent<FuelCanisterItem>();
+            if (canister == null)
+            {
+                canister = root.AddComponent<FuelCanisterItem>();
+                canister.fuelAmount = 10f;
+                canister.refuelDistance = 5.0f;
+                canister.holdRotationOffset = new Vector3(-90f, 90f, 0f);
+                modified = true;
+            }
+            else
+            {
+                canister.holdRotationOffset = new Vector3(-90f, 90f, 0f);
+                modified = true;
+            }
+
+            if (modified)
+            {
+                PrefabUtility.SaveAsPrefabAsset(root, GasCanisterPrefabPath);
+            }
+            PrefabUtility.UnloadPrefabContents(root);
+
+            // Also keep Resources copy updated with the exact user prefab
+            EnsureFolder("Assets/Resources/Prefabs");
+            AssetDatabase.CopyAsset(GasCanisterPrefabPath, "Assets/Resources/Prefabs/Gas_Can.prefab");
+            AssetDatabase.CopyAsset(GasCanisterPrefabPath, "Assets/Resources/Prefabs/Gas_Canister.prefab");
+            AssetDatabase.Refresh();
+
+            Debug.Log("<color=#2F9B6F>[Items]</color> Gas_Can prefabı doğrulandı ve güncellendi: " + GasCanisterPrefabPath);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning("[Items] EnsureGasCanisterPrefab error: " + ex.Message);
+        }
+
+        return AssetDatabase.LoadAssetAtPath<GameObject>(GasCanisterPrefabPath);
     }
 
     [MenuItem("Tools/Delivery Game/Items/2. Place Weapon At Scene View", false, 201)]

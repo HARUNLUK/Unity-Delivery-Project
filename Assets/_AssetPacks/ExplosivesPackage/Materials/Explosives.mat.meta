@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a7e7f4253f6ef7f4792d6ccf1120f847
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 8093
+  packageName: Explosives Package
+  packageVersion: 1.0
+  assetPath: Assets/ExplosivesPackage/Materials/Explosives.mat
+  uploadId: 12514

@@ -768,6 +768,59 @@ public class FPSPlayerController : MonoBehaviour
         {
             UpdateCargoFocus(null);
 
+            FuelCanisterItem heldCanister = grabber.grabbedRb != null ? grabber.grabbedRb.GetComponentInParent<FuelCanisterItem>() : null;
+            if (heldCanister == null && grabber.grabbedRb != null) heldCanister = grabber.grabbedRb.GetComponent<FuelCanisterItem>();
+
+            DrivableVehicle nearbyVehicle = heldCanister != null ? heldCanister.FindNearbyVehicle() : null;
+
+            if (heldCanister != null && nearbyVehicle != null)
+            {
+                bool isTankFull = nearbyVehicle.currentFuel >= nearbyVehicle.maxFuel - 0.05f;
+                if (isTankFull)
+                {
+                    if (InteractionPromptHUD.Instance != null)
+                    {
+                        InteractionPromptHUD.Instance.ShowPrompt("<color=#32FF64>Depo Dolu</color>");
+                    }
+                }
+                else
+                {
+                    if (InteractionPromptHUD.Instance != null)
+                    {
+                        InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_refuel_vehicle_with_canister", nearbyVehicle.vehicleName, heldCanister.fuelAmount));
+                    }
+
+                    if (interactPressed || (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame))
+                    {
+                        if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+                        heldCanister.PerformRefuel(nearbyVehicle);
+                        return;
+                    }
+                }
+            }
+            else if (heldCanister != null)
+            {
+                // Not aiming at a vehicle: show carry instructions (Drop with Right Click / E, Throw with Left Click)
+                if (InteractionPromptHUD.Instance != null)
+                {
+                    InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_held_canister_instructions", heldCanister.GetDisplayName()));
+                }
+
+                // If player presses [E] when not aiming at a vehicle, drop the canister safely right here (into trunk bed or ground)
+                if (interactPressed || (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame))
+                {
+                    grabber.ReleaseObject(Vector3.zero);
+                    currentDropHoldTime = 0f;
+                    afterGrabSafetyTimer = 0.35f;
+                    if (InteractionPromptHUD.Instance != null)
+                    {
+                        InteractionPromptHUD.Instance.HideThrowCharge();
+                        InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+                    }
+                    return;
+                }
+            }
+
             // Picked up with the same button that throws: ignore it until it has been released once.
             if (waitForPickupButtonRelease)
             {
@@ -776,7 +829,10 @@ public class FPSPlayerController : MonoBehaviour
                 if (InteractionPromptHUD.Instance != null)
                 {
                     InteractionPromptHUD.Instance.HideThrowCharge();
-                    InteractionPromptHUD.Instance.HidePrompt();
+                    if (heldCanister == null)
+                    {
+                        InteractionPromptHUD.Instance.HidePrompt();
+                    }
                 }
                 return;
             }
@@ -787,7 +843,10 @@ public class FPSPlayerController : MonoBehaviour
                 if (InteractionPromptHUD.Instance != null)
                 {
                     InteractionPromptHUD.Instance.HideThrowCharge();
-                    InteractionPromptHUD.Instance.HidePrompt();
+                    if (heldCanister == null)
+                    {
+                        InteractionPromptHUD.Instance.HidePrompt();
+                    }
                 }
                 return;
             }
@@ -814,7 +873,10 @@ public class FPSPlayerController : MonoBehaviour
                 if (InteractionPromptHUD.Instance != null)
                 {
                     InteractionPromptHUD.Instance.HideThrowCharge();
-                    InteractionPromptHUD.Instance.HidePrompt();
+                    if (heldCanister == null)
+                    {
+                        InteractionPromptHUD.Instance.HidePrompt();
+                    }
                 }
             }
 
@@ -878,7 +940,7 @@ public class FPSPlayerController : MonoBehaviour
             var h = interactionHitsBuffer[i];
             if (h.collider == null || h.collider.transform.IsChildOf(transform)) continue;
 
-            // If collider is a trigger, only keep if it has an interactive terminal, property, or cargo component
+            // If collider is a trigger, only keep if it has an interactive terminal, property, shelf, or cargo component
             if (h.collider.isTrigger)
             {
                 bool isInteractiveTrigger =
@@ -891,7 +953,9 @@ public class FPSPlayerController : MonoBehaviour
                     h.collider.GetComponentInParent<PassiveDispatchManager>() != null ||
                     h.collider.GetComponent<PassiveDispatchManager>() != null ||
                     h.collider.GetComponentInParent<PhysicalCargoPackage>() != null ||
-                    h.collider.GetComponent<PhysicalCargoPackage>() != null;
+                    h.collider.GetComponent<PhysicalCargoPackage>() != null ||
+                    h.collider.GetComponentInParent<FuelCanisterShelf>() != null ||
+                    h.collider.GetComponent<FuelCanisterShelf>() != null;
 
                 if (!isInteractiveTrigger) continue;
             }
@@ -906,14 +970,29 @@ public class FPSPlayerController : MonoBehaviour
 
         List<RaycastHit> validHits = validHitsCache;
 
-        // STEP 1: Check if there is a directly targeted cargo package along the ray
+        // STEP 1: Check if there is a directly targeted cargo package or shelf canister along the ray
         PhysicalCargoPackage targetedPackage = null;
         Rigidbody targetedRb = null;
+        FuelCanisterItem targetedShelfCanister = null;
         RaycastHit packageHit = default;
         bool hasPackageHit = false;
 
         foreach (var h in validHits)
         {
+            FuelCanisterItem fCan = h.collider.GetComponentInParent<FuelCanisterItem>();
+            if (fCan == null) fCan = h.collider.GetComponent<FuelCanisterItem>();
+            if (fCan != null && fCan.isForSaleOnShelf && fCan.shelfOwner != null)
+            {
+                float d = Vector3.Distance(transform.position, fCan.transform.position);
+                if (d <= fCan.shelfOwner.interactionDistance || h.distance <= fCan.shelfOwner.interactionDistance)
+                {
+                    targetedShelfCanister = fCan;
+                    packageHit = h;
+                    hasPackageHit = true;
+                    break;
+                }
+            }
+
             PhysicalCargoPackage pkg = h.collider.GetComponentInParent<PhysicalCargoPackage>();
             if (pkg == null) pkg = h.collider.GetComponent<PhysicalCargoPackage>();
             Rigidbody rb = null;
@@ -927,7 +1006,10 @@ public class FPSPlayerController : MonoBehaviour
                 Rigidbody attached = h.collider.attachedRigidbody;
                 if (attached != null && !attached.isKinematic && h.collider.GetComponentInParent<DrivableVehicle>() == null)
                 {
-                    rb = attached;
+                    if (fCan == null || !fCan.isForSaleOnShelf)
+                    {
+                        rb = attached;
+                    }
                 }
             }
 
@@ -982,11 +1064,31 @@ public class FPSPlayerController : MonoBehaviour
             }
         }
 
-        // Direct cargo package priority (inside open trunk, on ground, on tables, in warehouse)
+        // Direct shelf canister hit or cargo package priority
         if (hasPackageHit && !isTerminalInFront && closedTailgateInFront == null)
         {
+            if (targetedShelfCanister != null && targetedShelfCanister.shelfOwner != null)
+            {
+                UpdateCargoFocus(null);
+                FuelCanisterShelf shelf = targetedShelfCanister.shelfOwner;
+                string prompt = LocalizationManager.GetFormat("prompt_gas_canister_shelf", shelf.GetDisplayName(), "E / " + PickupKeyName(), shelf.canisterPrice, targetedShelfCanister.fuelAmount);
+                if (InteractionPromptHUD.Instance != null)
+                {
+                    InteractionPromptHUD.Instance.ShowPrompt(prompt);
+                }
+
+                if (pickupPressed || interactPressed)
+                {
+                    if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+                    shelf.TryBuyCanister(targetedShelfCanister);
+                    afterGrabSafetyTimer = 0.25f;
+                    waitForPickupButtonRelease = true;
+                }
+                return;
+            }
+
             UpdateCargoFocus(targetedPackage);
-            if (pickupPressed && grabber != null)
+            if ((pickupPressed || interactPressed) && grabber != null)
             {
                 UpdateCargoFocus(null);
                 Rigidbody rbToGrab = targetedPackage != null ? targetedPackage.GetComponent<Rigidbody>() : targetedRb;
@@ -1004,7 +1106,7 @@ public class FPSPlayerController : MonoBehaviour
             if (InteractionPromptHUD.Instance != null)
             {
                 string targetName = PickupTargetName(targetedPackage != null, targetedRb);
-                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_pickup_cargo", targetName, PickupKeyName()));
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_pickup_cargo", targetName, "E / " + PickupKeyName()));
             }
             return;
         }
@@ -1113,7 +1215,48 @@ public class FPSPlayerController : MonoBehaviour
                     }
                 }
 
-                // 4. Vehicle Tailgate (Direct Collider Hit)
+                // 4. Fuel Canister Shelf / Stand (Direct Raycast Hit or Canister on Shelf Hit)
+                FuelCanisterShelf canisterShelf = h.collider.GetComponentInParent<FuelCanisterShelf>();
+                if (canisterShelf == null) canisterShelf = h.collider.GetComponent<FuelCanisterShelf>();
+                FuelCanisterItem targetShelfCanister = null;
+
+                if (canisterShelf == null)
+                {
+                    targetShelfCanister = h.collider.GetComponentInParent<FuelCanisterItem>();
+                    if (targetShelfCanister == null) targetShelfCanister = h.collider.GetComponent<FuelCanisterItem>();
+                    if (targetShelfCanister != null && targetShelfCanister.isForSaleOnShelf && targetShelfCanister.shelfOwner != null)
+                    {
+                        canisterShelf = targetShelfCanister.shelfOwner;
+                    }
+                }
+                else
+                {
+                    targetShelfCanister = h.collider.GetComponentInParent<FuelCanisterItem>();
+                    if (targetShelfCanister == null) targetShelfCanister = h.collider.GetComponent<FuelCanisterItem>();
+                }
+
+                if (canisterShelf != null)
+                {
+                    float d = Vector3.Distance(transform.position, canisterShelf.transform.position);
+                    if (d <= canisterShelf.interactionDistance || h.distance <= canisterShelf.interactionDistance)
+                    {
+                        UpdateCargoFocus(null);
+                        if (interactPressed || pickupPressed)
+                        {
+                            if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+                            canisterShelf.TryBuyCanister(targetShelfCanister);
+                            return;
+                        }
+
+                        if (InteractionPromptHUD.Instance != null)
+                        {
+                            InteractionPromptHUD.Instance.ShowPrompt(canisterShelf.GetPromptText());
+                        }
+                        return;
+                    }
+                }
+
+                // 5. Vehicle Tailgate (Direct Collider Hit)
                 VehicleTailgate directTailgate = h.collider.GetComponent<VehicleTailgate>();
                 if (directTailgate == null) directTailgate = h.collider.GetComponentInParent<VehicleTailgate>();
                 if (directTailgate != null)
@@ -1372,6 +1515,36 @@ public class FPSPlayerController : MonoBehaviour
             }
         }
 
+        // 2.3 Fuel Canister Shelf Proximity Scan (Standing near shelf even if looking slightly away)
+        for (int i = 0; i < FuelCanisterShelf.AllShelves.Count; i++)
+        {
+            var shelf = FuelCanisterShelf.AllShelves[i];
+            if (shelf == null || !shelf.gameObject.activeInHierarchy) continue;
+
+            float d = Vector3.Distance(transform.position, shelf.transform.position);
+            if (d <= shelf.interactionDistance)
+            {
+                Vector3 dirToShelf = (shelf.transform.position - playerCamera.transform.position).normalized;
+                bool isFacingShelf = Vector3.Dot(playerCamera.transform.forward, dirToShelf) > 0.05f;
+                if (isFacingShelf)
+                {
+                    UpdateCargoFocus(null);
+                    if (interactPressed)
+                    {
+                        if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
+                        shelf.TryBuyCanister();
+                        return;
+                    }
+
+                    if (InteractionPromptHUD.Instance != null)
+                    {
+                        InteractionPromptHUD.Instance.ShowPrompt(shelf.GetPromptText());
+                    }
+                    return;
+                }
+            }
+        }
+
         // 2.3 Proximity scan fallback for cargo packages directly under or near player's feet
         Collider[] closeHits = Physics.OverlapSphere(playerCamera.transform.position + (playerCamera.transform.forward * 1.0f), 0.85f, interactionLayers, QueryTriggerInteraction.Ignore);
         float closestDist = float.MaxValue;
@@ -1399,7 +1572,7 @@ public class FPSPlayerController : MonoBehaviour
         {
             UpdateCargoFocus(proxPkg);
 
-            if (pickupPressed && grabber != null)
+            if ((pickupPressed || interactPressed) && grabber != null)
             {
                 UpdateCargoFocus(null);
                 Rigidbody rbToGrab = proxPkg != null ? proxPkg.GetComponent<Rigidbody>() : proxRb;
@@ -1417,7 +1590,7 @@ public class FPSPlayerController : MonoBehaviour
             if (InteractionPromptHUD.Instance != null)
             {
                 string targetName = (proxPkg != null) ? LocalizationManager.Get("prompt_target_cargo") : LocalizationManager.Get("prompt_target_object");
-                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_pickup_cargo", targetName, PickupKeyName()));
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_pickup_cargo", targetName, "E / " + PickupKeyName()));
             }
             return;
         }

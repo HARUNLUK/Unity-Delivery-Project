@@ -1134,6 +1134,66 @@
       "value": "<b>{0}</b>: <color=#32FF64>[F]</color> Basılı Tut -> <b>Yakıt Doldur</b> (${1:F0}/L) | <color=#FFCC00>[E]</color> İn"
     },
     {
+      "key": "prompt_gas_station_buy_canister_only",
+      "value": "<b>{0}</b>: <color=#FFCC00>[{1}]</color> <b>Benzin Bidonu Satın Al</b> (${2} - {3:F0}L)"
+    },
+    {
+      "key": "prompt_gas_canister_shelf",
+      "value": "<b>{0}</b>: <color=#FFCC00>[{1}]</color> <b>Benzin Bidonu Satın Al</b> (${2} - {3:F0}L)"
+    },
+    {
+      "key": "prompt_gas_canister_shelf_empty",
+      "value": "<b>{0}</b>: <color=#FF5555>[STOK TÜKENDİ]</color> (Uzaklaşınca Yenilenir)"
+    },
+    {
+      "key": "prompt_refuel_vehicle_with_canister",
+      "value": "<color=#32FF64>[E]</color> <b>Doldur</b>"
+    },
+    {
+      "key": "prompt_held_canister_instructions",
+      "value": "<b>{0}</b>: <color=#FFCC00>[Sağ Tık / E]</color> <b>Bırak</b> | <color=#FFCC00>[Sol Tık]</color> <b>Fırlat</b>"
+    },
+    {
+      "key": "shelf_gas_canister_name",
+      "value": "Benzin Bidonu Standı"
+    },
+    {
+      "key": "prompt_gas_station_align_with_canister",
+      "value": "<b>{0}</b>: Yakıt için aracı yanaştırın | <color=#FFCC00>[{1}]</color> <b>Benzin Bidonu Al</b> (${2} - {3:F0}L)"
+    },
+    {
+      "key": "prompt_gas_station_full_with_canister",
+      "value": "<color=#32FF64>[DEPO DOLU]</color> ({0:F1} / {1:F1} L) | <color=#FFCC00>[{2}]</color> <b>Benzin Bidonu Al</b> (${3} - {4:F0}L)"
+    },
+    {
+      "key": "prompt_gas_station_hold_refuel_with_canister",
+      "value": "<b>{0}</b>: <color=#32FF64>[F/Space/E]</color> <b>Yakıt Doldur</b> (${1:F0}/L) | <color=#FFCC00>[{2}]</color> <b>Benzin Bidonu Al</b> (${3} - {4:F0}L)"
+    },
+    {
+      "key": "prompt_gas_station_no_money_canister",
+      "value": "<color=#FF5555>[YETERSİZ BAKİYE]</color> Benzin bidonu (${0}) için yeterli paranız yok! (Mevcut: ${1})"
+    },
+    {
+      "key": "prompt_gas_station_canister_bought",
+      "value": "<color=#32FF64>[SATIN ALINDI]</color> 🛢️ {0:F0}L Benzin Bidonu satın alındı (${1})! Kasada taşıyabilirsiniz."
+    },
+    {
+      "key": "prompt_fuel_canister_used",
+      "value": "<color=#32FFFF>⛽ [BENZİN TAKVİYESİ]</color> +{0:F1}L benzin dolduruldu! (Depo: {1:F1}/{2:F1}L - %{3:F0})"
+    },
+    {
+      "key": "notif_gas_canister_bought",
+      "value": "🛢️ {0:F0}L Benzin Bidonu Satın Alındı"
+    },
+    {
+      "key": "notif_fuel_canister_added",
+      "value": "⛽ +{0:F1}L Benzin Araca Eklendi"
+    },
+    {
+      "key": "item_fuel_canister_name",
+      "value": "Benzin Bidonu"
+    },
+    {
       "key": "prompt_explosion_emergency",
       "value": "<color=#FF2222>💥 PATLAMA! Ağır yaralandınız ve acilen hastaneye kaldırıldınız...</color>"
     },

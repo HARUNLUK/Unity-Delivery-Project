@@ -350,8 +350,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "OTO SERV\u0130S & MOD\u0130F\u0130YE GARAJI\n\n<color=green>Fiyat: $1000</color>
-    \n\n<color=yellow>Seviye: 2 Gerekli</color>"
+  m_text: "OTO SERV\u0130S & MOD\u0130F\u0130YE GARAJI\n\n<color=green>Fiyat: $1.000</color>\n<color=yellow>Gereken:
+    Seviye 2</color>"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 120f6b4e1706a23419ba0c206d703b5f, type: 2}
   m_sharedMaterial: {fileID: 8964942783168824448, guid: 120f6b4e1706a23419ba0c206d703b5f, type: 2}
@@ -378,7 +378,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 1
+  m_fontSize: 1.1
   m_fontSizeBase: 3.5
   m_fontWeight: 400
   m_enableAutoSizing: 1

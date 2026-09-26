@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: d996aaa550a687c4c84b8dc1e7a4eb9a
+labels:
+- Drum
+- Explosive
+- Oil
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 8093
+  packageName: Explosives Package
+  packageVersion: 1.0
+  assetPath: Assets/ExplosivesPackage/Prefabs/Oil_Drum.prefab
+  uploadId: 12514

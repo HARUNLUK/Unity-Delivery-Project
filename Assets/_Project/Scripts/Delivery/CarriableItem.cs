@@ -24,6 +24,13 @@ public class CarriableItem : MonoBehaviour
     public VehicleCargoBed currentCargoBed;
     public float throwExemptionUntil;
 
+    [Header("--- HOLD ORIENTATION ---")]
+    [Tooltip("If true, overrides PhysicsGrabber default hold rotation with customHoldRotation")]
+    public bool useCustomHoldRotation = false;
+
+    [Tooltip("Custom rotation Euler offset relative to camera when held in player's hands")]
+    public Vector3 customHoldRotation = Vector3.zero;
+
     public bool IsRecentlyThrown => Time.time < throwExemptionUntil;
 
     private void OnEnable()
