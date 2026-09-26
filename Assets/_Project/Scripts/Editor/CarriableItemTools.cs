@@ -141,7 +141,6 @@ public static class CarriableItemTools
             {
                 canister = root.AddComponent<FuelCanisterItem>();
                 canister.fuelAmount = 10f;
-                canister.refuelDistance = 5.0f;
                 canister.holdRotationOffset = new Vector3(-90f, 90f, 0f);
                 modified = true;
             }

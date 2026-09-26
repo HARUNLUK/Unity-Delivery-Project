@@ -45,6 +45,7 @@ public static class TutorialCatalog
     public const string DayEnd = "day_end";
     public const string BranchUpgrade = "branch_upgrade";
     public const string LowFuel = "low_fuel";
+    public const string OutOfFuel = "out_of_fuel";
     public const string LowCondition = "low_condition";
 
     public static readonly TutorialDef[] All =
@@ -98,6 +99,15 @@ public static class TutorialCatalog
         {
             id = LowFuel, icon = "fuel", badge = TutorialBadge.Red, titleKey = "tut_low_fuel_title", subKey = "tut_low_fuel_sub",
             pages = { new TutorialPage { textKey = "tut_low_fuel_p1", seconds = 15f } }
+        },
+        new TutorialDef
+        {
+            id = OutOfFuel, icon = "fuel", badge = TutorialBadge.Red, titleKey = "tut_out_of_fuel_title", subKey = "tut_out_of_fuel_sub",
+            pages =
+            {
+                new TutorialPage { textKey = "tut_out_of_fuel_p1", seconds = 14f },
+                new TutorialPage { titleKey = "tut_out_of_fuel_p2_title", textKey = "tut_out_of_fuel_p2", seconds = 14f },
+            }
         },
         new TutorialDef
         {

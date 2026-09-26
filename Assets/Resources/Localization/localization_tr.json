@@ -1055,7 +1055,7 @@
     },
     {
       "key": "prompt_out_of_fuel",
-      "value": "<color=#FF3333>[YAKIT TÜKENDİ] Motor durdu! Yakıt almak için Tableti [TAB] -> ARAÇLAR açın veya benzinliğe gidin.</color>"
+      "value": "<color=#FF3333>[YAKIT BİTTİ]</color> Motor durdu. Benzinlikteki standdan <b>bidon</b> al ya da Tablet [TAB] → Araçlar → <b>Benzin Takviye</b>'yi kullan."
     },
     {
       "key": "prompt_garage_recall_success",
@@ -1070,12 +1070,16 @@
       "value": "<color=#FF5555>[YETERSİZ BAKİYE] Benzin takviye servisi için ${0:N0} gerekli!</color>"
     },
     {
+      "key": "prompt_insufficient_funds_repaint",
+      "value": "<color=#FF5555>[YETERSİZ BAKİYE]</color> Boya için ${0:N0} gerekli!"
+    },
+    {
       "key": "prompt_insufficient_funds_recall",
       "value": "<color=#FF4444>[YETERSİZ BAKİYE] {1} aracını garaja çekmek için ${0} gerekli! (Bakiye: ${2})</color>"
     },
     {
       "key": "prompt_emergency_fuel_delivered",
-      "value": "<color=#32FF64>⛽ [BENZİN TAKVİYE] {1} Aracının Yakıt Deposu Fullendi! (-${2:N0})</color>"
+      "value": "<color=#32FF64>⛽ [BENZİN TAKVİYE]</color> {1} deposu dolduruldu (+{0:F0}L, -${2:N0})"
     },
     {
       "key": "prompt_insufficient_branch_level",
@@ -1147,7 +1151,7 @@
     },
     {
       "key": "prompt_refuel_vehicle_with_canister",
-      "value": "<color=#32FF64>[E]</color> <b>Doldur</b>"
+      "value": "<b>{0}</b>: <color=#32FF64>[E]</color> <b>Benzin Doldur</b> (+{1:F0}L)"
     },
     {
       "key": "prompt_held_canister_instructions",
@@ -1895,11 +1899,31 @@
     },
     {
       "key": "tut_low_fuel_p1",
-      "value": "Yakıtın %20'nin altına düştü. Benzin bitince araç çalışmaz; düzenli doldurmayı unutma. En yakın benzin istasyonuna git."
+      "value": "Yakıtın %20'nin altına düştü. Benzin bitince araç çalışmaz. Benzinliğe uğra; yanında yedek bir <b>bidon</b> taşımak da işini görür."
     },
     {
       "key": "tut_low_fuel_sub",
       "value": "Yakıt %20'nin altına inince"
+    },
+    {
+      "key": "tut_out_of_fuel_title",
+      "value": "Benzin bitti!"
+    },
+    {
+      "key": "tut_out_of_fuel_p1",
+      "value": "Motor durdu ama çaresiz değilsin. Benzinlikteki <b>Benzin Bidonu Standı</b>'ndan bir bidon satın al. Bidonu araca değdirmen yeter: elindeyken dokundur ya da fırlat, benzin anında dolar (+10 L)."
+    },
+    {
+      "key": "tut_out_of_fuel_p2_title",
+      "value": "Ya da acil servisi çağır"
+    },
+    {
+      "key": "tut_out_of_fuel_p2",
+      "value": "Bidon uzaktaysa {Tablet} ile Kurye Defteri'ni aç, <b>Araçlar</b> sekmesinde aracını seç ve <b>Benzin Takviye Servisi</b>'ne bas. Depo bir kerede dolar; ama bidondan daha pahalıdır."
+    },
+    {
+      "key": "tut_out_of_fuel_sub",
+      "value": "Benzin tamamen bitince"
     },
     {
       "key": "tut_low_condition_title",

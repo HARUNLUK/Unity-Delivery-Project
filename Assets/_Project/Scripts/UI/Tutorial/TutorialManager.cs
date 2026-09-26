@@ -251,6 +251,7 @@ public class TutorialManager : MonoBehaviour
         {
             DrivableVehicle v = player.currentVehicle;
             if (!IsSeen(TutorialCatalog.LowFuel) && v.maxFuel > 0f && v.currentFuel / v.maxFuel < LowFuelRatio) Trigger(TutorialCatalog.LowFuel);
+            if (!IsSeen(TutorialCatalog.OutOfFuel) && !v.HasFuel) Trigger(TutorialCatalog.OutOfFuel);
             if (!IsSeen(TutorialCatalog.LowCondition) && v.ConditionPercentage < LowConditionRatio) Trigger(TutorialCatalog.LowCondition);
         }
 

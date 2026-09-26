@@ -186,10 +186,17 @@ public class FuelCanisterShelf : MonoBehaviour
         }
     }
 
+    private float GetCanisterFuelAmount()
+    {
+        GameObject prefab = GetCanisterPrefab();
+        FuelCanisterItem item = prefab != null ? prefab.GetComponent<FuelCanisterItem>() : null;
+        return item != null ? item.fuelAmount : 10f;
+    }
+
     public string GetPromptText()
     {
         string keyName = interactionKey != Key.None ? interactionKey.ToString() : "E";
-        return LocalizationManager.GetFormat("prompt_gas_canister_shelf", GetDisplayName(), keyName, canisterPrice, 10f);
+        return LocalizationManager.GetFormat("prompt_gas_canister_shelf", GetDisplayName(), keyName, canisterPrice, GetCanisterFuelAmount());
     }
 
     /// <summary>

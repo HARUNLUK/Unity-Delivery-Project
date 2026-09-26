@@ -270,7 +270,7 @@ public class FuelStationPump : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_gas_station_full", targetVehicle.maxFuel, targetVehicle.maxFuel));
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_gas_station_full", targetVehicle.currentFuel, targetVehicle.maxFuel));
                 wasShowingPrompt = true;
             }
             SetPumpLightActive(false);
@@ -698,7 +698,6 @@ public class FuelStationPump : MonoBehaviour
             FuelCanisterItem canisterComp = canObj.GetComponent<FuelCanisterItem>();
             if (canisterComp == null) canisterComp = canObj.AddComponent<FuelCanisterItem>();
             canisterComp.fuelAmount = canisterFuelAmount;
-            canisterComp.refuelDistance = 5.0f;
             canisterComp.holdRotationOffset = new Vector3(-90f, 90f, 0f);
 
             // Direct spawn into player's hands!

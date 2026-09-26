@@ -320,7 +320,7 @@ public class VehicleServiceGarage : MonoBehaviour
             if (!PlayerEconomyManager.Instance.SpendMoney(repaintCost))
             {
                 if (InteractionPromptHUD.Instance != null)
-                    InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_insufficient_funds_fuel", repaintCost), 2.5f);
+                    InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_insufficient_funds_repaint", repaintCost), 2.5f);
                 return false;
             }
         }

@@ -1055,7 +1055,7 @@
     },
     {
       "key": "prompt_out_of_fuel",
-      "value": "<color=#FF3333>[OUT OF FUEL] Engine stopped! Open Tablet [TAB] -> VEHICLES to refuel or visit a gas pump.</color>"
+      "value": "<color=#FF3333>[OUT OF FUEL]</color> The engine has stopped. Grab a <b>gas can</b> from the station stand, or open the Tablet [TAB] → Vehicles → <b>Fuel Top-Up</b>."
     },
     {
       "key": "prompt_garage_recall_success",
@@ -1070,12 +1070,16 @@
       "value": "<color=#FF5555>[INSUFFICIENT FUNDS] Emergency fuel service requires ${0:N0}!</color>"
     },
     {
+      "key": "prompt_insufficient_funds_repaint",
+      "value": "<color=#FF5555>[INSUFFICIENT FUNDS]</color> Repainting requires ${0:N0}!"
+    },
+    {
       "key": "prompt_insufficient_funds_recall",
       "value": "<color=#FF4444>[INSUFFICIENT FUNDS] Need ${0} to recall {1}! (Balance: ${2})</color>"
     },
     {
       "key": "prompt_emergency_fuel_delivered",
-      "value": "<color=#32FF64>⛽ [FUEL SERVICE] {1}'s Fuel Tank Refilled to Full! (-${2:N0})</color>"
+      "value": "<color=#32FF64>⛽ [FUEL SERVICE]</color> {1} refueled (+{0:F0}L, -${2:N0})"
     },
     {
       "key": "prompt_insufficient_branch_level",
@@ -1147,7 +1151,7 @@
     },
     {
       "key": "prompt_refuel_vehicle_with_canister",
-      "value": "<color=#32FF64>[E]</color> <b>Refuel</b>"
+      "value": "<b>{0}</b>: <color=#32FF64>[E]</color> <b>Pour Fuel</b> (+{1:F0}L)"
     },
     {
       "key": "prompt_held_canister_instructions",
@@ -1895,11 +1899,31 @@
     },
     {
       "key": "tut_low_fuel_p1",
-      "value": "Fuel dropped below 20%. Without fuel the van will not run, so refill regularly. Head to the nearest gas station."
+      "value": "Fuel dropped below 20%. Without fuel the van will not run. Head to a gas station; carrying a spare <b>gas can</b> helps too."
     },
     {
       "key": "tut_low_fuel_sub",
       "value": "When fuel drops below 20%"
+    },
+    {
+      "key": "tut_out_of_fuel_title",
+      "value": "Out of fuel!"
+    },
+    {
+      "key": "tut_out_of_fuel_p1",
+      "value": "The engine stopped, but you have options. Buy a gas can from the <b>Gas Can Stand</b> at the station. Just touch the van with it, held or thrown, and it pours in instantly (+10 L)."
+    },
+    {
+      "key": "tut_out_of_fuel_p2_title",
+      "value": "Or call the emergency service"
+    },
+    {
+      "key": "tut_out_of_fuel_p2",
+      "value": "If no can is nearby, open the Notebook with {Tablet}, pick your van in the <b>Vehicles</b> tab and press <b>Fuel Top-Up Service</b>. The tank fills in one go, but it costs more than a can."
+    },
+    {
+      "key": "tut_out_of_fuel_sub",
+      "value": "When the tank runs completely dry"
     },
     {
       "key": "tut_low_condition_title",

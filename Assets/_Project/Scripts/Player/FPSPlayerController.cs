@@ -771,42 +771,9 @@ public class FPSPlayerController : MonoBehaviour
             FuelCanisterItem heldCanister = grabber.grabbedRb != null ? grabber.grabbedRb.GetComponentInParent<FuelCanisterItem>() : null;
             if (heldCanister == null && grabber.grabbedRb != null) heldCanister = grabber.grabbedRb.GetComponent<FuelCanisterItem>();
 
-            DrivableVehicle nearbyVehicle = heldCanister != null ? heldCanister.FindNearbyVehicle() : null;
-
-            if (heldCanister != null && nearbyVehicle != null)
+            if (heldCanister != null)
             {
-                bool isTankFull = nearbyVehicle.currentFuel >= nearbyVehicle.maxFuel - 0.05f;
-                if (isTankFull)
-                {
-                    if (InteractionPromptHUD.Instance != null)
-                    {
-                        InteractionPromptHUD.Instance.ShowPrompt("<color=#32FF64>Depo Dolu</color>");
-                    }
-                }
-                else
-                {
-                    if (InteractionPromptHUD.Instance != null)
-                    {
-                        InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_refuel_vehicle_with_canister", nearbyVehicle.vehicleName, heldCanister.fuelAmount));
-                    }
-
-                    if (interactPressed || (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame))
-                    {
-                        if (InteractionPromptHUD.Instance != null) InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
-                        heldCanister.PerformRefuel(nearbyVehicle);
-                        return;
-                    }
-                }
-            }
-            else if (heldCanister != null)
-            {
-                // Not aiming at a vehicle: show carry instructions (Drop with Right Click / E, Throw with Left Click)
-                if (InteractionPromptHUD.Instance != null)
-                {
-                    InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_held_canister_instructions", heldCanister.GetDisplayName()));
-                }
-
-                // If player presses [E] when not aiming at a vehicle, drop the canister safely right here (into trunk bed or ground)
+                // Refueling happens on contact with the vehicle; [E] just drops the canister the canister safely right here (into trunk bed or ground)
                 if (interactPressed || (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame))
                 {
                     grabber.ReleaseObject(Vector3.zero);

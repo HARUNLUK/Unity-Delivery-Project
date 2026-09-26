@@ -986,7 +986,7 @@ public class CargoTabletUI : MonoBehaviour
                         if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
                         if (InteractionPromptHUD.Instance != null)
                         {
-                            InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.Get("prompt_gas_station_full", "<color=#32FF64>[DEPO DOLU] Yakıt deponuz zaten tamamen dolu.</color>"));
+                            InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_gas_station_full", v.currentFuel, v.maxFuel));
                         }
                     });
                 }
