@@ -63,6 +63,7 @@ public class GameOverManager : MonoBehaviour
 
         Instance = this;
         EnsureGameOverUI();
+        BindRestartButton();
 
         if (gameOverPanelRoot != null)
         {
@@ -101,6 +102,22 @@ public class GameOverManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// The restart click used to be wired only by the procedural fallback UI; a panel assigned in the scene
+    /// (Kurye Defteri) never got a listener. Bind it for any assigned button.
+    /// </summary>
+    private void BindRestartButton()
+    {
+        if (restartButton == null && gameOverPanelRoot != null)
+        {
+            restartButton = gameOverPanelRoot.GetComponentInChildren<Button>(true);
+        }
+        if (restartButton == null) return;
+
+        restartButton.onClick.RemoveListener(RestartGameFromBeginning);
+        restartButton.onClick.AddListener(RestartGameFromBeginning);
+    }
+
     private void HandleEconomyUpdated(int liveBalance, int todayNetProfit)
     {
         CheckGameOverCondition(liveBalance);
@@ -129,6 +146,7 @@ public class GameOverManager : MonoBehaviour
         isGameOverActive = true;
 
         EnsureGameOverUI();
+        BindRestartButton();
 
         if (gameOverPanelRoot != null)
         {
@@ -201,6 +219,7 @@ public class GameOverManager : MonoBehaviour
     public void RestartGameFromBeginning()
     {
         isGameOverActive = false;
+        Time.timeScale = 1f;
 
         Debug.Log("<color=#32FF64>[GAME OVER RESTART] Re-initializing fresh Day 1 state and reloading scene...</color>");
 

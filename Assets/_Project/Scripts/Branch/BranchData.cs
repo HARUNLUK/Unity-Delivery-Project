@@ -83,6 +83,9 @@ public class BranchTier
     {
         if (unlockedPerks != null && unlockedPerks.Length > 0)
         {
+            // Perks written in the scene / defaults come first; extra perks that only exist as localization keys
+            // (branch_tier{n}_perk{k} beyond that list) are appended, so new perks can be added without touching scene data.
+            var withExtras = new System.Collections.Generic.List<string>();
             string[] result = new string[unlockedPerks.Length];
             for (int i = 0; i < unlockedPerks.Length; i++)
             {
@@ -101,7 +104,14 @@ public class BranchTier
                     result[i] = p;
                 }
             }
-            return result;
+
+            withExtras.AddRange(result);
+            for (int k = unlockedPerks.Length + 1; k <= 8; k++)
+            {
+                string extraKey = $"branch_tier{tierLevel}_perk{k}";
+                if (LocalizationManager.HasKey(extraKey)) withExtras.Add(LocalizationManager.Get(extraKey));
+            }
+            return withExtras.ToArray();
         }
 
         var list = new System.Collections.Generic.List<string>();

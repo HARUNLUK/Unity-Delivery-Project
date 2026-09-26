@@ -47,15 +47,8 @@ public class DeliveryTutorialUI : MonoBehaviour
     private bool isTutorialOpen = false;
     public bool IsOpen => isTutorialOpen;
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void AutoEnsureTutorialUI()
-    {
-        if (Instance == null && UnityEngine.Object.FindAnyObjectByType<DeliveryTutorialUI>() == null)
-        {
-            GameObject goObj = new GameObject("[DELIVERY_TUTORIAL_UI]");
-            goObj.AddComponent<DeliveryTutorialUI>();
-        }
-    }
+    // The old full-screen guide is replaced by TutorialManager. It used to re-create itself after every scene load
+    // (FindAnyObjectByType skips inactive objects), which brought this screen back; that auto-spawn is removed.
 
     private void Awake()
     {
@@ -350,14 +343,14 @@ public class DeliveryTutorialUI : MonoBehaviour
 
         if (titleText != null)
         {
-            titleText.text = LocalizationManager.Get("tutorial_title", 
+            titleText.text = LocalizationManager.Get("tutorial_title",
                 isTr ? "<b>LOJİSTİK VE KARGO TESLİMAT REHBERİ</b>" : "<b>LOGISTICS & DELIVERY GUIDE</b>");
         }
 
         if (leftCaptionText != null)
         {
-            leftCaptionText.text = LocalizationManager.Get("tutorial_image_caption", 
-                isTr ? "<b>Teslimat Noktası (Posta Kutusu)</b>\n<size=15><color=#A0C8FF>Kargoları binaların önündeki bu sarı/yeşil teslimat alanına veya posta kutusunun yanına bırakın.</color></size>" 
+            leftCaptionText.text = LocalizationManager.Get("tutorial_image_caption",
+                isTr ? "<b>Teslimat Noktası (Posta Kutusu)</b>\n<size=15><color=#A0C8FF>Kargoları binaların önündeki bu sarı/yeşil teslimat alanına veya posta kutusunun yanına bırakın.</color></size>"
                      : "<b>Delivery Point (Mailbox / Drop Zone)</b>\n<size=15><color=#A0C8FF>Leave packages at these yellow/green delivery zones or near the mailbox in front of target buildings.</color></size>");
         }
 
@@ -387,7 +380,7 @@ public class DeliveryTutorialUI : MonoBehaviour
             var btnText = startButton.GetComponentInChildren<TextMeshProUGUI>();
             if (btnText != null)
             {
-                btnText.text = LocalizationManager.Get("tutorial_btn_start", 
+                btnText.text = LocalizationManager.Get("tutorial_btn_start",
                     isTr ? "<b>ANLADIM, VARDİYAYA BAŞLA</b>" : "<b>GOT IT, START SHIFT</b>");
             }
         }
@@ -400,8 +393,8 @@ public class DeliveryTutorialUI : MonoBehaviour
             {
                 if (t != null && (t.gameObject.name.Contains("F1_Hint") || t.gameObject.name.Contains("Hint")))
                 {
-                    t.text = LocalizationManager.Get("tutorial_f1_hint", 
-                        isTr ? "<color=#64A0FF>[F1]</color> <color=#A0B0C0>Tuşu ile rehberi istediğiniz zaman tekrar açabilirsiniz.</color>" 
+                    t.text = LocalizationManager.Get("tutorial_f1_hint",
+                        isTr ? "<color=#64A0FF>[F1]</color> <color=#A0B0C0>Tuşu ile rehberi istediğiniz zaman tekrar açabilirsiniz.</color>"
                              : "<color=#64A0FF>[F1]</color> <color=#A0B0C0>Key to reopen the guide at any time.</color>");
                     break;
                 }
@@ -441,7 +434,7 @@ public class DeliveryTutorialUI : MonoBehaviour
             {
                 tutorialPanelRoot = foundRoot.gameObject;
                 panelCanvasGroup = tutorialPanelRoot.GetComponent<CanvasGroup>();
-                
+
                 if (titleText == null) titleText = FindTMPRecursive(tutorialPanelRoot.transform, "Header_Title_Text", "TitleText", "HeaderTitle", "Title");
                 if (leftCaptionText == null) leftCaptionText = FindTMPRecursive(tutorialPanelRoot.transform, "Left_Caption_Text", "CaptionText", "LeftCaption");
                 if (objectiveBodyText == null) objectiveBodyText = FindTMPRecursive(tutorialPanelRoot.transform, "Objective_Body_Text", "BodyText", "ObjectiveText");

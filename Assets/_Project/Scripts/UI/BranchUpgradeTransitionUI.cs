@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 using TMPro;
 
 /// <summary>
@@ -38,6 +39,22 @@ public class BranchUpgradeTransitionUI : MonoBehaviour
 
     [Tooltip("Duration of fade in back to game (seconds)")]
     public float fadeInDuration = 0.75f;
+
+    [Header("--- CONFIRMATION ---")]
+    [Tooltip("The level-up card stays until the player presses Enter (after Hold Black Duration).")]
+    public bool requireEnterToContinue = true;
+
+    [Tooltip("Optional hint label under the card text. Created automatically from the badge label when empty.")]
+    public TextMeshProUGUI continueHintText;
+
+    [Header("--- KURYE DEFTERI CARD (optional) ---")]
+    [Tooltip("When set, the card shows structured stat tiles and perk rows instead of one details paragraph.")]
+    public TextMeshProUGUI capValueText;
+    public TextMeshProUGUI rentValueText;
+    [Tooltip("Container whose children are perk rows; each row has a child named Text.")]
+    public Transform perkRows;
+    [Tooltip("CanvasGroup of the card itself (the backdrop is the panel root's Image).")]
+    public CanvasGroup cardGroup;
 
     private static bool _isTransitioning = false;
     public static bool IsTransitioning => _isTransitioning;
@@ -156,36 +173,62 @@ public class BranchUpgradeTransitionUI : MonoBehaviour
             desc += perks;
         }
 
+        bool cardMode = capValueText != null;
+
         if (badgeText != null)
         {
-            badgeText.text = LocalizationManager.Get("branch_trans_badge");
+            badgeText.text = cardMode
+                ? LocalizationManager.Get("cozy_branch_trans_badge", "Şube yükseltildi")
+                : LocalizationManager.Get("branch_trans_badge");
         }
 
         if (titleText != null)
         {
-            titleText.text = LocalizationManager.GetFormat("branch_trans_title", newLevel, tierNameStr.ToUpper());
+            titleText.text = cardMode
+                ? LocalizationManager.GetFormat("cozy_branch_trans_title", newLevel)
+                : LocalizationManager.GetFormat("branch_trans_title", newLevel, tierNameStr.ToUpper());
         }
 
-        if (detailsText != null)
+        if (cardMode)
+        {
+            capValueText.text = LocalizationManager.GetFormat("cozy_trans_cap_value", cap);
+            if (rentValueText != null) rentValueText.text = LocalizationManager.GetFormat("cozy_trans_rent_value", rent);
+            FillPerkRows(newTier);
+        }
+        else if (detailsText != null)
         {
             detailsText.text = LocalizationManager.GetFormat("branch_trans_details", cap, rent, desc);
         }
 
-        // 4. Activate Panel and Fade Out (Screen turns black)
+        // 4. Activate Panel. With a separate backdrop the black screen and the card fade independently:
+        //    the backdrop goes black and later fades away, while the card stays until the player confirms.
+        Image backdrop = panelRoot != null ? panelRoot.GetComponent<Image>() : null;
+        CanvasGroup cardGroup = ResolveCardGroup();
+        bool split = backdrop != null && cardGroup != null && canvasGroup != null;
+
         if (panelRoot != null) panelRoot.SetActive(true);
         if (canvasGroup != null)
         {
             canvasGroup.blocksRaycasts = true;
             canvasGroup.interactable = true;
 
-            float elapsed = 0f;
-            while (elapsed < fadeOutDuration)
+            if (split)
             {
-                elapsed += Time.unscaledDeltaTime;
-                canvasGroup.alpha = Mathf.Clamp01(elapsed / fadeOutDuration);
-                yield return null;
+                canvasGroup.alpha = 1f;
+                cardGroup.alpha = 0f;
+                yield return FadeBackdrop(backdrop, 0f, 1f, fadeOutDuration);
             }
-            canvasGroup.alpha = 1f;
+            else
+            {
+                float elapsed = 0f;
+                while (elapsed < fadeOutDuration)
+                {
+                    elapsed += Time.unscaledDeltaTime;
+                    canvasGroup.alpha = Mathf.Clamp01(elapsed / fadeOutDuration);
+                    yield return null;
+                }
+                canvasGroup.alpha = 1f;
+            }
         }
 
         // 5. Blackout Execution: Swap visuals, relocate player outside, aim camera
@@ -197,6 +240,19 @@ public class BranchUpgradeTransitionUI : MonoBehaviour
             AudioManager.Instance.PlayLevelUp();
         }
 
+        // The card appears on the black screen
+        if (split)
+        {
+            float cardElapsed = 0f;
+            while (cardElapsed < 0.35f)
+            {
+                cardElapsed += Time.unscaledDeltaTime;
+                cardGroup.alpha = Mathf.Clamp01(cardElapsed / 0.35f);
+                yield return null;
+            }
+            cardGroup.alpha = 1f;
+        }
+
         float holdElapsed = 0f;
         while (holdElapsed < holdBlackDuration)
         {
@@ -204,14 +260,46 @@ public class BranchUpgradeTransitionUI : MonoBehaviour
             yield return null;
         }
 
-        // 6. Fade In (Screen returns to clear game view)
+        // 6. The black screen fades away (transparent backdrop) while the card stays in front.
+        if (split)
+        {
+            yield return FadeBackdrop(backdrop, 1f, 0f, fadeInDuration);
+        }
+
+        // The card stays up until the player confirms with Enter (no automatic dismissal).
+        if (requireEnterToContinue)
+        {
+            TextMeshProUGUI hint = EnsureContinueHint();
+            if (hint != null)
+            {
+                hint.text = LocalizationManager.Get("branch_trans_continue", "Devam etmek için [Enter]");
+                hint.gameObject.SetActive(true);
+            }
+
+            float pulse = 0f;
+            while (!WasConfirmPressed())
+            {
+                if (hint != null)
+                {
+                    pulse += Time.unscaledDeltaTime;
+                    hint.alpha = 0.55f + 0.45f * (0.5f + 0.5f * Mathf.Sin(pulse * 4f));
+                }
+                yield return null;
+            }
+
+            if (hint != null) hint.gameObject.SetActive(false);
+            if (AudioManager.Instance != null) AudioManager.Instance.PlayButtonClick();
+        }
+
+        // The card fades out
         if (canvasGroup != null)
         {
             float elapsed = 0f;
-            while (elapsed < fadeInDuration)
+            float duration = split ? 0.3f : fadeInDuration;
+            while (elapsed < duration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                canvasGroup.alpha = Mathf.Clamp01(1f - (elapsed / fadeInDuration));
+                canvasGroup.alpha = Mathf.Clamp01(1f - (elapsed / duration));
                 yield return null;
             }
             canvasGroup.alpha = 0f;
@@ -219,6 +307,7 @@ public class BranchUpgradeTransitionUI : MonoBehaviour
             canvasGroup.interactable = false;
         }
 
+        if (backdrop != null) SetBackdropAlpha(backdrop, 1f); // ready for the next upgrade
         if (panelRoot != null)
         {
             panelRoot.SetActive(false);
@@ -240,6 +329,72 @@ public class BranchUpgradeTransitionUI : MonoBehaviour
 
         onCompleteAction?.Invoke();
         activeTransitionCoroutine = null;
+    }
+
+    private CanvasGroup ResolveCardGroup()
+    {
+        if (cardGroup != null) return cardGroup;
+        if (panelRoot == null) return null;
+        Transform card = panelRoot.transform.Find("Card");
+        if (card == null) return null;
+        cardGroup = card.GetComponent<CanvasGroup>();
+        if (cardGroup == null) cardGroup = card.gameObject.AddComponent<CanvasGroup>();
+        return cardGroup;
+    }
+
+    private static void SetBackdropAlpha(Image image, float alpha)
+    {
+        Color c = image.color;
+        c.a = alpha;
+        image.color = c;
+    }
+
+    private static IEnumerator FadeBackdrop(Image image, float from, float to, float duration)
+    {
+        float elapsed = 0f;
+        SetBackdropAlpha(image, from);
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            SetBackdropAlpha(image, Mathf.Lerp(from, to, Mathf.Clamp01(elapsed / Mathf.Max(0.01f, duration))));
+            yield return null;
+        }
+        SetBackdropAlpha(image, to);
+    }
+
+    private void FillPerkRows(BranchTier tier)
+    {
+        if (perkRows == null) return;
+        string[] perks = tier != null ? tier.GetLocalizedPerks() : new string[0];
+        for (int i = 0; i < perkRows.childCount; i++)
+        {
+            Transform row = perkRows.GetChild(i);
+            bool used = perks != null && i < perks.Length && !string.IsNullOrWhiteSpace(perks[i]);
+            row.gameObject.SetActive(used);
+            if (!used) continue;
+            Transform text = row.Find("Text");
+            if (text != null && text.TryGetComponent(out TextMeshProUGUI tmp)) tmp.text = perks[i].Trim();
+        }
+    }
+
+    private static bool WasConfirmPressed()
+    {
+        Keyboard kb = Keyboard.current;
+        return kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame);
+    }
+
+    /// <summary>Uses the assigned hint label, or clones the badge label at the bottom of the card.</summary>
+    private TextMeshProUGUI EnsureContinueHint()
+    {
+        if (continueHintText != null) return continueHintText;
+        if (badgeText == null) return null;
+
+        GameObject clone = Instantiate(badgeText.gameObject, badgeText.transform.parent);
+        clone.name = "ContinueHint";
+        continueHintText = clone.GetComponent<TextMeshProUGUI>();
+        continueHintText.color = CozyTheme.InkSoft;
+        clone.transform.SetAsLastSibling();
+        return continueHintText;
     }
 
     public void EnsureUIComponents()

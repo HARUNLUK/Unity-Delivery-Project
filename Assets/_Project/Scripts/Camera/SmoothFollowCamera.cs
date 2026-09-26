@@ -87,6 +87,11 @@ public class SmoothFollowCamera : MonoBehaviour
         if (Cursor.lockState != CursorLockMode.Locked || Cursor.visible) return;
         if (FPSPlayerController.IsAnyUIOpen()) return;
 
+        if (SettingsManager.Instance != null)
+        {
+            mouseSensitivity = SettingsManager.Instance.mouseSensitivity;
+        }
+
         float mouseX = 0f;
         float mouseY = 0f;
 
@@ -105,7 +110,8 @@ public class SmoothFollowCamera : MonoBehaviour
                 currentYawOffset %= 360f;
             }
 
-            currentPitchOffset -= mouseY;
+            float ySign = (SettingsManager.Instance != null && SettingsManager.Instance.invertMouseY) ? -1f : 1f;
+            currentPitchOffset -= mouseY * ySign;
             currentPitchOffset = Mathf.Clamp(currentPitchOffset, -maxVerticalAngle, maxVerticalAngle);
 
             lastMouseActivityTime = Time.time;

@@ -19,6 +19,9 @@ public class VehicleCargoBed : MonoBehaviour
     private DrivableVehicle vehicle;
     private Rigidbody vehicleRb;
     private readonly HashSet<PhysicalCargoPackage> packagesInBed = new HashSet<PhysicalCargoPackage>();
+    private readonly HashSet<CarriableItem> itemsInBed = new HashSet<CarriableItem>();
+
+    public int LoadedItemCount => itemsInBed.Count;
 
     public IReadOnlyCollection<PhysicalCargoPackage> PackagesInBed => packagesInBed;
     public int LoadedPackageCount => packagesInBed.Count;
@@ -98,8 +101,35 @@ public class VehicleCargoBed : MonoBehaviour
         }
     }
 
+    public void RemoveItem(CarriableItem item)
+    {
+        if (item == null) return;
+        itemsInBed.Remove(item);
+        item.isInVehicleBed = false;
+        if (item.currentCargoBed == this) item.currentCargoBed = null;
+    }
+
+    private void CaptureItem(CarriableItem item)
+    {
+        // Held or just-thrown items are not captured
+        if (item == null || item.isBeingCarried || item.IsRecentlyThrown) return;
+        if (itemsInBed.Add(item))
+        {
+            item.isInVehicleBed = true;
+            item.currentCargoBed = this;
+            Rigidbody irb = item.GetComponent<Rigidbody>();
+            if (irb != null)
+            {
+                irb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                irb.interpolation = RigidbodyInterpolation.Interpolate;
+            }
+        }
+    }
+
     private void OnTriggerEnter(Collider other)
     {
+        CaptureItem(other.GetComponentInParent<CarriableItem>());
+
         PhysicalCargoPackage pkg = other.GetComponent<PhysicalCargoPackage>();
         if (pkg == null) pkg = other.GetComponentInParent<PhysicalCargoPackage>();
         if (pkg == null) pkg = other.GetComponentInChildren<PhysicalCargoPackage>();
@@ -125,6 +155,8 @@ public class VehicleCargoBed : MonoBehaviour
 
     private void OnTriggerStay(Collider other)
     {
+        CaptureItem(other.GetComponentInParent<CarriableItem>());
+
         PhysicalCargoPackage pkg = other.GetComponent<PhysicalCargoPackage>();
         if (pkg == null) pkg = other.GetComponentInParent<PhysicalCargoPackage>();
         if (pkg == null) pkg = other.GetComponentInChildren<PhysicalCargoPackage>();
@@ -143,6 +175,9 @@ public class VehicleCargoBed : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
+        CarriableItem leavingItem = other.GetComponentInParent<CarriableItem>();
+        if (leavingItem != null) RemoveItem(leavingItem);
+
         PhysicalCargoPackage pkg = other.GetComponent<PhysicalCargoPackage>();
         if (pkg == null) pkg = other.GetComponentInParent<PhysicalCargoPackage>();
         if (pkg == null) pkg = other.GetComponentInChildren<PhysicalCargoPackage>();
@@ -174,10 +209,45 @@ public class VehicleCargoBed : MonoBehaviour
             }
         }
         packagesInBed.Clear();
+
+        foreach (var item in itemsInBed)
+        {
+            if (item == null) continue;
+            item.isInVehicleBed = false;
+            if (item.currentCargoBed == this) item.currentCargoBed = null;
+        }
+        itemsInBed.Clear();
+    }
+
+    /// <summary>Same bed stabilizer as parcels: items ride along with the vehicle instead of sliding around.</summary>
+    private void StabilizeItems(Vector3 vehicleVel, Vector3 vehicleAngVel)
+    {
+        itemsInBed.RemoveWhere(i => i == null || !i.gameObject.activeInHierarchy);
+        bool isVehicleMoving = vehicleVel.sqrMagnitude > 0.15f || vehicleAngVel.sqrMagnitude > 0.05f;
+        if (!isVehicleMoving) return;
+
+        foreach (var item in itemsInBed)
+        {
+            if (item.isBeingCarried || item.IsRecentlyThrown) continue;
+            Rigidbody irb = item.GetComponent<Rigidbody>();
+            if (irb == null || irb.isKinematic) continue;
+
+            Vector3 r = irb.position - vehicleRb.position;
+            Vector3 pointVelocity = vehicleVel + Vector3.Cross(vehicleAngVel, r);
+            Vector3 currentVel = irb.linearVelocity;
+            Vector3 targetVel = new Vector3(pointVelocity.x, currentVel.y, pointVelocity.z);
+
+            if (vehicleVel.sqrMagnitude > 0.5f)
+            {
+                irb.AddForce(-transform.up * (bedDownforce * irb.mass), ForceMode.Force);
+            }
+            irb.linearVelocity = Vector3.Lerp(currentVel, targetVel, Time.fixedDeltaTime * 18f);
+        }
     }
 
     private void FixedUpdate()
     {
+        if (vehicleRb != null && itemsInBed.Count > 0) StabilizeItems(vehicleRb.linearVelocity, vehicleRb.angularVelocity);
         if (vehicleRb == null || packagesInBed.Count == 0) return;
 
         Vector3 vehicleVel = vehicleRb.linearVelocity;

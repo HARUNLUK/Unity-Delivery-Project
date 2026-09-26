@@ -1267,7 +1267,27 @@
     },
     {
       "key": "vehicle_health_status",
-      "value": "<b>Araç Sağlığı:</b> <color=#32FF64>%{0} (İyi Durumda)</color>"
+      "value": "<b>Araç Sağlığı:</b> <color={1}>%{0} ({2})</color>"
+    },
+    {
+      "key": "vehicle_status_good",
+      "value": "İyi Durumda"
+    },
+    {
+      "key": "vehicle_status_moderate",
+      "value": "Orta Hasarlı"
+    },
+    {
+      "key": "vehicle_status_critical",
+      "value": "Ağır Hasarlı"
+    },
+    {
+      "key": "garage_btn_fully_repaired",
+      "value": "ARAÇ KUSURSUZ DURUMDA (ONARIM GEREKMEZ)"
+    },
+    {
+      "key": "prompt_garage_already_repaired",
+      "value": "<color=#32FF64>Araç zaten kusursuz durumda!</color>"
     },
     {
       "key": "property_showroom_name",
@@ -1832,6 +1852,46 @@
     {
       "key": "tut_low_condition_sub",
       "value": "Araç durumu %30'un altına inince"
+    },
+    {
+      "key": "branch_trans_continue",
+      "value": "Devam etmek için [Enter]"
+    },
+    {
+      "key": "cozy_branch_trans_badge",
+      "value": "Şube yükseltildi"
+    },
+    {
+      "key": "cozy_branch_trans_title",
+      "value": "Seviye {0}"
+    },
+    {
+      "key": "cozy_trans_cap_label",
+      "value": "Günlük kargo"
+    },
+    {
+      "key": "cozy_trans_cap_value",
+      "value": "{0} koli"
+    },
+    {
+      "key": "cozy_trans_rent_label",
+      "value": "Günlük kira"
+    },
+    {
+      "key": "cozy_trans_rent_value",
+      "value": "${0}"
+    },
+    {
+      "key": "cozy_trans_perks",
+      "value": "Yeni özellikler"
+    },
+    {
+      "key": "branch_tier2_perk3",
+      "value": "Süreli ve Kırılgan kargo tipleri açıldı"
+    },
+    {
+      "key": "item_weapon_name",
+      "value": "Silah"
     }
   ]
 }

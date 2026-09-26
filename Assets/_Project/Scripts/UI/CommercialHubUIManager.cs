@@ -230,7 +230,31 @@ public class CommercialHubUIManager : MonoBehaviour
         if (garageVehicleStatusText != null)
         {
             int hp = Mathf.RoundToInt(activeGarageVehicle.ConditionPercentage * 100f);
-            garageVehicleStatusText.text = LocalizationManager.GetFormat("vehicle_health_status", hp);
+            string colorHex;
+            string statusKey;
+            string defaultStatus;
+
+            if (hp >= 80)
+            {
+                colorHex = "#32FF64"; // Yeşil
+                statusKey = "vehicle_status_good";
+                defaultStatus = "İyi Durumda";
+            }
+            else if (hp >= 40)
+            {
+                colorHex = "#FFD232"; // Sarı
+                statusKey = "vehicle_status_moderate";
+                defaultStatus = "Orta Hasarlı";
+            }
+            else
+            {
+                colorHex = "#FF3333"; // Kırmızı
+                statusKey = "vehicle_status_critical";
+                defaultStatus = "Ağır Hasarlı";
+            }
+
+            string statusDesc = LocalizationManager.Get(statusKey, defaultStatus);
+            garageVehicleStatusText.text = LocalizationManager.GetFormat("vehicle_health_status", hp, colorHex, statusDesc);
         }
 
         if (garageInfoHead != null)
@@ -253,10 +277,20 @@ public class CommercialHubUIManager : MonoBehaviour
         if (garageRepairBtn != null && VehicleServiceGarage.Instance != null)
         {
             var txt = garageRepairBtn.GetComponentInChildren<TextMeshProUGUI>();
-            if (txt != null)
+            bool isFull = activeGarageVehicle.ConditionPercentage >= 0.999f;
+            if (isFull)
             {
-                int cost = VehicleServiceGarage.Instance.repairCost;
-                txt.text = LocalizationManager.GetFormat("garage_btn_repair", cost);
+                if (txt != null) txt.text = LocalizationManager.Get("garage_btn_fully_repaired", "ARAÇ KUSURSUZ DURUMDA (ONARIM GEREKMEZ)");
+                garageRepairBtn.interactable = false;
+            }
+            else
+            {
+                if (txt != null)
+                {
+                    int cost = VehicleServiceGarage.Instance.repairCost;
+                    txt.text = LocalizationManager.GetFormat("garage_btn_repair", cost);
+                }
+                garageRepairBtn.interactable = true;
             }
         }
 
@@ -363,6 +397,7 @@ public class CommercialHubUIManager : MonoBehaviour
     private void OnGarageRepairClicked()
     {
         if (activeGarageVehicle == null || VehicleServiceGarage.Instance == null) return;
+        if (activeGarageVehicle.ConditionPercentage >= 0.999f) return;
         if (VehicleServiceGarage.Instance.TryRepairVehicle(activeGarageVehicle))
         {
             RefreshGarageUI();

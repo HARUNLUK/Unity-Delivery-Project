@@ -1881,6 +1881,11 @@ public class GameMenuManager : MonoBehaviour
             settingsPanel.transform.SetAsLastSibling();
         }
 
+        if (SettingsManager.Instance != null)
+        {
+            SettingsManager.Instance.LoadAllSettings();
+        }
+
         ShowSettingsTab(0); // Default to Audio tab
         SyncSettingsValuesToUI();
         RefreshAllKeybindingUI();
@@ -1889,14 +1894,55 @@ public class GameMenuManager : MonoBehaviour
         Cursor.visible = true;
     }
 
+    public void SaveSettingsFromUI()
+    {
+        if (SettingsManager.Instance == null) return;
+        SettingsManager sm = SettingsManager.Instance;
+
+        // 1. Audio
+        if (masterVolumeSlider != null) sm.masterVolume = Mathf.Clamp01(masterVolumeSlider.value);
+        if (musicVolumeSlider != null) sm.musicVolume = Mathf.Clamp01(musicVolumeSlider.value);
+        if (sfxVolumeSlider != null) sm.sfxVolume = Mathf.Clamp01(sfxVolumeSlider.value);
+        if (ambienceVolumeSlider != null) sm.ambienceVolume = Mathf.Clamp01(ambienceVolumeSlider.value);
+        if (uiVolumeSlider != null) sm.uiVolume = Mathf.Clamp01(uiVolumeSlider.value);
+
+        // 2. Controls
+        if (mouseSensSlider != null) sm.mouseSensitivity = mouseSensSlider.value;
+        if (invertYToggle != null) sm.invertMouseY = invertYToggle.isOn;
+
+        // 3. Graphics
+        if (qualityDropdown != null) sm.qualityLevel = qualityDropdown.value;
+        if (fullscreenDropdown != null) sm.fullscreenMode = fullscreenDropdown.value;
+        if (resolutionDropdown != null) sm.resolutionIndex = resolutionDropdown.value;
+        if (vsyncToggle != null) sm.vsyncEnabled = vsyncToggle.isOn;
+        if (fpsLimitDropdown != null)
+        {
+            int idx = fpsLimitDropdown.value;
+            int fps = 60;
+            if (idx == 0) fps = 30;
+            else if (idx == 1) fps = 60;
+            else if (idx == 2) fps = 120;
+            else if (idx == 3) fps = 144;
+            else fps = -1;
+            sm.targetFps = fps;
+        }
+
+        // 4. Language
+        if (languageDropdown != null)
+        {
+            sm.language = languageDropdown.value == 0 ? "tr" : "en";
+        }
+
+        sm.ApplyAllSettings();
+        sm.SaveAllSettings();
+        PlayerPrefs.Save();
+    }
+
     public void CloseSettings()
     {
         CancelKeyRebind();
 
-        if (SettingsManager.Instance != null)
-        {
-            SettingsManager.Instance.SaveAllSettings();
-        }
+        SaveSettingsFromUI();
 
         if (AudioManager.Instance != null)
         {

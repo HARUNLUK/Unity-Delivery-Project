@@ -174,6 +174,13 @@ public class VehicleServiceGarage : MonoBehaviour
     {
         if (v == null || !IsGarageUnlocked()) return false;
 
+        if (v.ConditionPercentage >= 0.999f)
+        {
+            if (InteractionPromptHUD.Instance != null)
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.Get("prompt_garage_already_repaired", "<color=#32FF64>Vehicle is already in perfect condition!</color>"), 2.0f);
+            return false;
+        }
+
         if (PlayerEconomyManager.Instance != null && PlayerEconomyManager.Instance.SpendMoney(repairCost))
         {
             v.currentCondition = v.maxCondition;

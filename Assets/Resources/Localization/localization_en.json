@@ -1267,7 +1267,27 @@
     },
     {
       "key": "vehicle_health_status",
-      "value": "<b>Vehicle Health:</b> <color=#32FF64>{0}% (Good Condition)</color>"
+      "value": "<b>Vehicle Health:</b> <color={1}>{0}% ({2})</color>"
+    },
+    {
+      "key": "vehicle_status_good",
+      "value": "Good Condition"
+    },
+    {
+      "key": "vehicle_status_moderate",
+      "value": "Moderate Damage"
+    },
+    {
+      "key": "vehicle_status_critical",
+      "value": "Critical Damage"
+    },
+    {
+      "key": "garage_btn_fully_repaired",
+      "value": "VEHICLE IN PERFECT CONDITION (NO REPAIR NEEDED)"
+    },
+    {
+      "key": "prompt_garage_already_repaired",
+      "value": "<color=#32FF64>Vehicle is already in perfect condition!</color>"
     },
     {
       "key": "property_showroom_name",
@@ -1832,6 +1852,46 @@
     {
       "key": "tut_low_condition_sub",
       "value": "When condition drops below 30%"
+    },
+    {
+      "key": "branch_trans_continue",
+      "value": "Press [Enter] to continue"
+    },
+    {
+      "key": "cozy_branch_trans_badge",
+      "value": "Branch upgraded"
+    },
+    {
+      "key": "cozy_branch_trans_title",
+      "value": "Level {0}"
+    },
+    {
+      "key": "cozy_trans_cap_label",
+      "value": "Daily parcels"
+    },
+    {
+      "key": "cozy_trans_cap_value",
+      "value": "{0} parcels"
+    },
+    {
+      "key": "cozy_trans_rent_label",
+      "value": "Daily rent"
+    },
+    {
+      "key": "cozy_trans_rent_value",
+      "value": "${0}"
+    },
+    {
+      "key": "cozy_trans_perks",
+      "value": "New perks"
+    },
+    {
+      "key": "branch_tier2_perk3",
+      "value": "Timed and Fragile parcel types unlocked"
+    },
+    {
+      "key": "item_weapon_name",
+      "value": "Weapon"
     }
   ]
 }

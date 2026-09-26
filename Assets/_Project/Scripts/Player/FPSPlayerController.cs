@@ -507,6 +507,11 @@ public class FPSPlayerController : MonoBehaviour
         float mouseX = 0f;
         float mouseY = 0f;
 
+        if (SettingsManager.Instance != null)
+        {
+            inVehicleMouseSensitivity = SettingsManager.Instance.mouseSensitivity;
+        }
+
         if (Mouse.current != null)
         {
             Vector2 delta = Mouse.current.delta.ReadValue() * (inVehicleMouseSensitivity * 0.08f);
@@ -521,8 +526,9 @@ public class FPSPlayerController : MonoBehaviour
             vehicleYaw %= 360f;
         }
 
-        // Sadece Düşey (Yukarı / Aşağı) Bakışta Açı Sınırı
-        vehiclePitch -= mouseY;
+        // Sadece Düşey (Yukarı / Aşağı) Bakışta Açı Sınırı (Invert Y desteği)
+        float ySign = (SettingsManager.Instance != null && SettingsManager.Instance.invertMouseY) ? -1f : 1f;
+        vehiclePitch -= mouseY * ySign;
         vehiclePitch = Mathf.Clamp(vehiclePitch, inVehicleMinPitch, inVehicleMaxPitch);
 
         // Rotation is applied in LateUpdate (UpdateFPSCamera)
@@ -535,6 +541,11 @@ public class FPSPlayerController : MonoBehaviour
 
         float mouseX = 0f;
         float mouseY = 0f;
+
+        if (SettingsManager.Instance != null)
+        {
+            inVehicleMouseSensitivity = SettingsManager.Instance.mouseSensitivity;
+        }
 
         if (Mouse.current != null)
         {
@@ -550,8 +561,9 @@ public class FPSPlayerController : MonoBehaviour
             tpsYawOffset %= 360f;
         }
 
-        // Düşey Bakış Açı Değişimi (TPS Orbit Pitch - Küresel Pivot)
-        tpsPitchOffset -= mouseY;
+        // Düşey Bakış Açı Değişimi (TPS Orbit Pitch - Küresel Pivot - Invert Y desteği)
+        float ySign = (SettingsManager.Instance != null && SettingsManager.Instance.invertMouseY) ? -1f : 1f;
+        tpsPitchOffset -= mouseY * ySign;
         tpsPitchOffset = Mathf.Clamp(tpsPitchOffset, -40f, 60f);
     }
 
@@ -611,6 +623,11 @@ public class FPSPlayerController : MonoBehaviour
         float mouseX = 0f;
         float mouseY = 0f;
 
+        if (SettingsManager.Instance != null)
+        {
+            mouseSensitivity = SettingsManager.Instance.mouseSensitivity;
+        }
+
         if (Mouse.current != null)
         {
             Vector2 delta = Mouse.current.delta.ReadValue() * (mouseSensitivity * 0.08f);
@@ -620,7 +637,8 @@ public class FPSPlayerController : MonoBehaviour
 
         transform.Rotate(Vector3.up * mouseX);
 
-        pitch -= mouseY;
+        float ySign = (SettingsManager.Instance != null && SettingsManager.Instance.invertMouseY) ? -1f : 1f;
+        pitch -= mouseY * ySign;
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
         if (cameraHolder != null)
         {
@@ -726,6 +744,18 @@ public class FPSPlayerController : MonoBehaviour
         string name = b.IsAssigned ? b.GetDisplayName() : "?";
         int paren = name.IndexOf('(');
         return paren > 0 ? name.Substring(0, paren).Trim() : name;
+    }
+
+    /// <summary>Name shown in the pickup prompt: parcel, a named item (e.g. weapon), or a generic object.</summary>
+    private static string PickupTargetName(bool isParcel, Rigidbody rb)
+    {
+        if (isParcel) return LocalizationManager.Get("prompt_target_cargo");
+        if (rb != null)
+        {
+            CarriableItem item = rb.GetComponentInParent<CarriableItem>();
+            if (item != null) return item.GetLocalizedName();
+        }
+        return LocalizationManager.Get("prompt_target_object");
     }
 
     private void HandleInteraction()
@@ -973,7 +1003,7 @@ public class FPSPlayerController : MonoBehaviour
 
             if (InteractionPromptHUD.Instance != null)
             {
-                string targetName = (targetedPackage != null) ? LocalizationManager.Get("prompt_target_cargo") : LocalizationManager.Get("prompt_target_object");
+                string targetName = PickupTargetName(targetedPackage != null, targetedRb);
                 InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_pickup_cargo", targetName, PickupKeyName()));
             }
             return;
@@ -1141,7 +1171,7 @@ public class FPSPlayerController : MonoBehaviour
 
                     if (InteractionPromptHUD.Instance != null)
                     {
-                        string targetName = (pkg != null) ? LocalizationManager.Get("prompt_target_cargo") : LocalizationManager.Get("prompt_target_object");
+                        string targetName = PickupTargetName(pkg != null, targetRb);
                         InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_pickup_cargo", targetName, PickupKeyName()));
                     }
                     return;

@@ -83,6 +83,13 @@ public class PhysicsGrabber : MonoBehaviour
             }
         }
 
+        CarriableItem item = targetRb.GetComponentInParent<CarriableItem>();
+        if (item != null)
+        {
+            item.isBeingCarried = true;
+            if (item.currentCargoBed != null) item.currentCargoBed.RemoveItem(item);
+        }
+
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlayCargoGrab(targetRb.position);
@@ -104,6 +111,12 @@ public class PhysicsGrabber : MonoBehaviour
             pkg.isBeingCarried = false;
         }
 
+        CarriableItem releasedItem = releasedRb.GetComponentInParent<CarriableItem>();
+        if (releasedItem != null)
+        {
+            releasedItem.isBeingCarried = false;
+        }
+
         // Hide side UI card
         if (InteractionPromptHUD.Instance != null)
         {
@@ -121,6 +134,10 @@ public class PhysicsGrabber : MonoBehaviour
             if (pkg != null)
             {
                 pkg.MarkAsThrown(1.5f);
+            }
+            if (releasedItem != null)
+            {
+                releasedItem.MarkAsThrown(1.5f);
             }
             if (AudioManager.Instance != null)
             {
@@ -240,7 +257,7 @@ public class PhysicsGrabber : MonoBehaviour
 
         // Target hold position in front of camera using dynamic safe hold distance
         Vector3 targetPos = cam.transform.position + (cam.transform.forward * effectiveHoldDistance) + (cam.transform.up * -0.22f);
-        
+
         // Auto-orient package so the top shipping label tilts directly towards player's eyes
         Quaternion targetRot = cam.transform.rotation * Quaternion.Euler(holdRotationOffset);
 
@@ -257,15 +274,15 @@ public class PhysicsGrabber : MonoBehaviour
         // Smooth spring velocity calculated
         Vector3 targetVelocity = forceDir * grabFollowSpeed;
         Vector3 velocityError = targetVelocity - grabbedRb.linearVelocity;
-        
+
         // Calculate the force needed to reach the target velocity
         Vector3 force = velocityError * (grabbedRb.mass / Time.fixedDeltaTime);
-        
-        // Clamp the force so the player cannot push heavy objects (like vehicles) 
+
+        // Clamp the force so the player cannot push heavy objects (like vehicles)
         // A maximum force of mass * 150 is enough to lift and swing the cargo, but not push a 1500kg car!
-        float maxForce = grabbedRb.mass * 180f; 
+        float maxForce = grabbedRb.mass * 180f;
         force = Vector3.ClampMagnitude(force, maxForce);
-        
+
         grabbedRb.AddForce(force, ForceMode.Force);
 
         // Smooth rotation

@@ -861,6 +861,7 @@ public static partial class CozyUIBuilder
         Remove(canvas, "BranchUpgradeTransitionPanel");
         RectTransform root = Node("BranchUpgradeTransitionPanel", canvas);
         Stretch(root);
+        // The root Image is the black backdrop: the script fades it away while the card stays in front.
         Image bg = root.gameObject.AddComponent<Image>();
         bg.color = CozyTheme.Hex("1E1928");
         bg.raycastTarget = true;
@@ -868,23 +869,56 @@ public static partial class CozyUIBuilder
         cg.alpha = 0f;
 
         Card card = PaperCard(root, "Card", CozyTheme.Paper);
-        Place(card.root, Anchor.MC, 0f, 0f, 980f, 440f);
-        VStack(card.face, 14f, Pad(56, 56, 44, 44), TextAnchor.UpperCenter);
+        Place(card.root, Anchor.MC, 0f, 0f, 880f, 640f);
+        AutoHeight(card);
+        CanvasGroup cardGroup = card.root.gameObject.AddComponent<CanvasGroup>();
+        VStack(card.face, 16f, Pad(52, 52, 40, 34), TextAnchor.UpperCenter);
 
         RectTransform badgeRow = Node("BadgeRow", card.face);
-        HStack(badgeRow, 12f, null, TextAnchor.MiddleCenter);
-        Size(badgeRow, -1f, 80f);
-        Badge(badgeRow, "StarBadge", "star", 80f, CozyTheme.Honey, CozyTheme.Ink);
-        TextMeshProUGUI badgeText = Line(card.face, "BadgeText", "Şube yükseltildi", TextStyle.Label, CozyTheme.MintInk, 26f, TextAlignmentOptions.Center, 18f);
-        TextMeshProUGUI titleText = Line(card.face, "TitleText", "", TextStyle.Display, CozyTheme.Ink, 70f, TextAlignmentOptions.Center, 52f);
+        HStack(badgeRow, 0f, null, TextAnchor.MiddleCenter);
+        Size(badgeRow, -1f, 96f);
+        Badge(badgeRow, "StarBadge", "star", 96f, CozyTheme.Honey, CozyTheme.Ink);
+
+        TextMeshProUGUI badgeText = Line(card.face, "BadgeText", "Şube yükseltildi", TextStyle.Label, CozyTheme.MintInk, 28f, TextAlignmentOptions.Center, 20f);
+        TextMeshProUGUI titleText = Line(card.face, "TitleText", "Seviye 2", TextStyle.Display, CozyTheme.Ink, 76f, TextAlignmentOptions.Center, 64f);
         DashedLine(card.face, "Divider", CozyTheme.Line, 3f);
-        TextMeshProUGUI details = Txt(card.face, "DetailsText", "", TextStyle.Body, CozyTheme.Ink, TextAlignmentOptions.Top, 22f, true);
-        Size(details, -1f, -1f, 1f, 1f);
+
+        RectTransform stats = Node("Stats", card.face);
+        HorizontalLayoutGroup statsLayout = HStack(stats, 16f);
+        statsLayout.childForceExpandWidth = true;
+        statsLayout.childForceExpandHeight = true;
+        Size(stats, -1f, 96f);
+        TextMeshProUGUI capValue = StatTile(stats, "CapTile", "box", CozyTheme.Kraft, CozyTheme.Ink, "cozy_trans_cap_label", "Günlük kargo", "8 koli", CozyTheme.Ink, -1f, 1f);
+        TextMeshProUGUI rentValue = StatTile(stats, "RentTile", "coin", CozyTheme.HoneyTint, CozyTheme.HoneyInk, "cozy_trans_rent_label", "Günlük kira", "$120", CozyTheme.HoneyInk, -1f, 1f);
+
+        TextMeshProUGUI perksLabel = Line(card.face, "PerksLabel", "Yeni özellikler", TextStyle.Label, CozyTheme.InkSoft, 26f, TextAlignmentOptions.MidlineLeft, 17f);
+        Loc(perksLabel, "cozy_trans_perks", "Yeni özellikler");
+
+        RectTransform perks = Node("Perks", card.face);
+        VStack(perks, 8f);
+        for (int i = 0; i < 4; i++)
+        {
+            RectTransform row = Node("Perk_" + i, perks);
+            Surface(row, CozyTheme.Well, 16f, CozyTheme.Line, 2f);
+            HStack(row, 14f, Pad(16, 18, 10, 10));
+            LayoutElement rl = Size(row, -1f, 52f);
+            rl.preferredHeight = -1f;
+            Badge(row, "Badge", "check", 32f, CozyTheme.Mint, Color.white);
+            TextMeshProUGUI t = Txt(row, "Text", "", TextStyle.Body, CozyTheme.Ink, TextAlignmentOptions.MidlineLeft, 21f, true);
+            t.enableAutoSizing = false;
+            t.overflowMode = TextOverflowModes.Overflow;
+            Size(t, -1f, -1f, 1f);
+        }
+
+        TextMeshProUGUI hint = Line(card.face, "ContinueHint", "Devam etmek için [Enter]", TextStyle.Small, CozyTheme.InkSoft, 36f, TextAlignmentOptions.Center, 19f);
+        hint.enableAutoSizing = false;
+        hint.gameObject.SetActive(false);
 
         root.gameObject.SetActive(false);
         Wire(Find<BranchUpgradeTransitionUI>(),
-            ("panelRoot", root.gameObject), ("canvasGroup", cg), ("badgeText", badgeText), ("titleText", titleText), ("detailsText", details));
-        Report.Add("• Şube yükseltme geçişi");
+            ("panelRoot", root.gameObject), ("canvasGroup", cg), ("cardGroup", cardGroup), ("badgeText", badgeText), ("titleText", titleText),
+            ("detailsText", null), ("capValueText", capValue), ("rentValueText", rentValue), ("perkRows", perks), ("continueHintText", hint));
+        Report.Add("• Şube yükseltme geçişi (şeffaflaşan arka plan, Enter ile geç)");
     }
 }
 #endif

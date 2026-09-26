@@ -198,6 +198,20 @@ public class AudioManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         EnsureAudioSources();
+
+        if (SettingsManager.Instance != null)
+        {
+            SetVolumeChannels(SettingsManager.Instance.masterVolume, SettingsManager.Instance.musicVolume, SettingsManager.Instance.sfxVolume, SettingsManager.Instance.ambienceVolume, SettingsManager.Instance.uiVolume);
+        }
+        else
+        {
+            float m = PlayerPrefs.GetFloat("Settings_MasterVolume", 1f);
+            float mu = PlayerPrefs.GetFloat("Settings_MusicVolume", 0.8f);
+            float s = PlayerPrefs.GetFloat("Settings_SfxVolume", 1f);
+            float a = PlayerPrefs.GetFloat("Settings_AmbienceVolume", 0.6f);
+            float u = PlayerPrefs.GetFloat("Settings_UiVolume", 0.85f);
+            SetVolumeChannels(m, mu, s, a, u);
+        }
     }
 
     private void Start()

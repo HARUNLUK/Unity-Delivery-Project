@@ -156,23 +156,12 @@ public class SettingsManager : MonoBehaviour
 
     public void LoadAllSettings()
     {
-        // 1. Audio (Ensure default 1.0f if uninitialized or zeroed accidentally)
-        masterVolume = PlayerPrefs.GetFloat(KEY_MASTER_VOL, 1.0f);
-        if (masterVolume <= 0.01f && !PlayerPrefs.HasKey(KEY_MASTER_VOL + "_Mute"))
-        {
-            masterVolume = 1.0f;
-        }
-
-        musicVolume = PlayerPrefs.GetFloat(KEY_MUSIC_VOL, 0.8f);
-
-        sfxVolume = PlayerPrefs.GetFloat(KEY_SFX_VOL, 1.0f);
-        if (sfxVolume <= 0.01f && !PlayerPrefs.HasKey(KEY_SFX_VOL + "_Mute"))
-        {
-            sfxVolume = 1.0f;
-        }
-
-        ambienceVolume = PlayerPrefs.GetFloat(KEY_AMBIENCE_VOL, 0.6f);
-        uiVolume = PlayerPrefs.GetFloat(KEY_UI_VOL, 0.85f);
+        // 1. Audio
+        masterVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(KEY_MASTER_VOL, 1.0f));
+        musicVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(KEY_MUSIC_VOL, 0.8f));
+        sfxVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(KEY_SFX_VOL, 1.0f));
+        ambienceVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(KEY_AMBIENCE_VOL, 0.6f));
+        uiVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(KEY_UI_VOL, 0.85f));
 
         // 2. Graphics (0: Düşük, 1: Orta, 2: Yüksek, 3: Ultra)
         qualityLevel = Mathf.Clamp(PlayerPrefs.GetInt(KEY_QUALITY_LEVEL, 2), 0, 3);
@@ -268,11 +257,7 @@ public class SettingsManager : MonoBehaviour
 
         if (AudioManager.Instance != null)
         {
-            AudioManager.Instance.masterVolume = masterVolume;
-            AudioManager.Instance.musicVolume = musicVolume;
-            AudioManager.Instance.sfxVolume = sfxVolume;
-            AudioManager.Instance.ambienceVolume = ambienceVolume;
-            AudioManager.Instance.uiVolume = uiVolume;
+            AudioManager.Instance.SetVolumeChannels(masterVolume, musicVolume, sfxVolume, ambienceVolume, uiVolume);
         }
     }
 
