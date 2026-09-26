@@ -380,11 +380,10 @@ public class FPSPlayerController : MonoBehaviour
 
         if (!isOnFoot)
         {
-            // Kamera modu (FPS/TPS) geçişi devre dışı bırakıldı (sadece TPS)
-            // if (!isUIOpen && KeyBindingManager.WasPressedThisFrame(GameAction.Camera))
-            // {
-            //     ToggleVehicleCameraMode();
-            // }
+            if (!isUIOpen && KeyBindingManager.WasPressedThisFrame(GameAction.Camera))
+            {
+                ToggleVehicleCameraMode();
+            }
 
             if (!isUIOpen)
             {
@@ -437,9 +436,40 @@ public class FPSPlayerController : MonoBehaviour
         {
             UpdateTPSCameraPosition();
         }
+        else if (!isOnFoot && vehicleCameraMode == VehicleCameraMode.FirstPerson && currentSeatPoint != null)
+        {
+            UpdateFPSCamera(false);
+        }
     }
 
+    private Quaternion fpsSmoothedBodyRot = Quaternion.identity;
+    [Tooltip("In-vehicle FPS camera: how fast the camera follows body pitch/roll (higher = stiffer, lower = smoother)")]
+    public float fpsBodyFollowSpeed = 14f;
+
+    private void UpdateFPSCamera(bool snap)
+    {
+        if (playerCamera == null || currentSeatPoint == null) return;
+
+        Vector3 offset = currentVehicle != null ? currentVehicle.fpsCameraOffset : Vector3.zero;
+        Quaternion bodyRot = currentSeatPoint.rotation;
+
+        if (snap) fpsSmoothedBodyRot = bodyRot;
+        else fpsSmoothedBodyRot = Quaternion.Slerp(fpsSmoothedBodyRot, bodyRot, 1f - Mathf.Exp(-fpsBodyFollowSpeed * Time.deltaTime));
+
+        playerCamera.transform.SetPositionAndRotation(
+            currentSeatPoint.TransformPoint(offset),
+            fpsSmoothedBodyRot * Quaternion.Euler(vehiclePitch, vehicleYaw, 0f));
+    }
+
+    private const string VehicleCameraModePrefKey = "Vehicle_LastCameraMode";
+
     public void ToggleVehicleCameraMode()
+    {
+        ToggleVehicleCameraModeInternal();
+        PlayerPrefs.SetInt(VehicleCameraModePrefKey, (int)vehicleCameraMode);
+    }
+
+    private void ToggleVehicleCameraModeInternal()
     {
         if (vehicleCameraMode == VehicleCameraMode.FirstPerson)
         {
@@ -453,12 +483,12 @@ public class FPSPlayerController : MonoBehaviour
             vehicleCameraMode = VehicleCameraMode.FirstPerson;
             if (currentSeatPoint != null && playerCamera != null)
             {
-                playerCamera.transform.SetParent(currentSeatPoint);
-                Vector3 offset = currentVehicle != null ? currentVehicle.fpsCameraOffset : Vector3.zero;
-                playerCamera.transform.localPosition = offset;
-                playerCamera.transform.localRotation = Quaternion.identity;
+                // Camera is NOT parented: LateUpdate follows the seat with a smoothed rotation (see UpdateFPSCamera)
+                playerCamera.transform.SetParent(null);
+                fpsSmoothedBodyRot = currentSeatPoint.rotation;
                 vehicleYaw = 0f;
                 vehiclePitch = 0f;
+                UpdateFPSCamera(true);
             }
         }
 
@@ -495,7 +525,7 @@ public class FPSPlayerController : MonoBehaviour
         vehiclePitch -= mouseY;
         vehiclePitch = Mathf.Clamp(vehiclePitch, inVehicleMinPitch, inVehicleMaxPitch);
 
-        playerCamera.transform.localRotation = Quaternion.Euler(vehiclePitch, vehicleYaw, 0f);
+        // Rotation is applied in LateUpdate (UpdateFPSCamera)
     }
 
     private void HandleTPSOrbitInput()
@@ -1386,14 +1416,16 @@ public class FPSPlayerController : MonoBehaviour
         currentVehicle = seatPoint.GetComponentInParent<DrivableVehicle>();
         currentVehicleTransform = currentVehicle != null ? currentVehicle.transform : seatPoint.root;
 
-        vehicleCameraMode = VehicleCameraMode.ThirdPerson;
+        // Restore the last used driving camera (default: first person)
+        vehicleCameraMode = (VehicleCameraMode)PlayerPrefs.GetInt(VehicleCameraModePrefKey, (int)VehicleCameraMode.FirstPerson);
         vehicleYaw = 0f;
         vehiclePitch = 0f;
         tpsYawOffset = 0f;
         tpsPitchOffset = 0f;
 
-        // TPS requires unparented camera to orbit freely
+        // Both driving cameras use an unparented camera (TPS orbits freely, FPS follows the seat in LateUpdate)
         playerCamera.transform.SetParent(null);
+        if (vehicleCameraMode == VehicleCameraMode.FirstPerson) UpdateFPSCamera(true);
 
         if (currentVehicle != null)
         {

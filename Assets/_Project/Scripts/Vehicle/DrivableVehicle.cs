@@ -318,6 +318,8 @@ public class DrivableVehicle : MonoBehaviour
         isPlayerInside = false;
         if (carController != null)
         {
+            carController.Initialize();
+            carController.ClearAllForces();
             carController.enabled = false;
         }
 

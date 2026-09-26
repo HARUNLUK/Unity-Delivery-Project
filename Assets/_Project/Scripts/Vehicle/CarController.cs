@@ -153,8 +153,22 @@ public class CarController : MonoBehaviour
         }
     }
 
+    private bool isInitialized;
+
     private void Start()
     {
+        Initialize();
+    }
+
+    /// <summary>
+    /// Applies rigidbody / wheel tuning. DrivableVehicle disables this component before Unity calls Start(),
+    /// so it is also invoked externally to give parked vehicles the same tuned setup (fixes idle jitter).
+    /// </summary>
+    public void Initialize()
+    {
+        if (isInitialized) return;
+        isInitialized = true;
+
         EnsureBaseSteeringEuler();
 
         rb = GetComponent<Rigidbody>();
