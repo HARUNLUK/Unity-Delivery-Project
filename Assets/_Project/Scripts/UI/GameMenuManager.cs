@@ -74,6 +74,13 @@ public class GameMenuManager : MonoBehaviour
     [Header("--- MAIN MENU UI REFERENCES ---")]
     public TextMeshProUGUI mainMenuTitleText;
     public TextMeshProUGUI mainMenuSaveInfoText;
+
+    [Header("--- KURYE DEFTERI SAVE TAG (optional, separate labels) ---")]
+    public TextMeshProUGUI saveTitleText;
+    public TextMeshProUGUI saveDayText;
+    public TextMeshProUGUI saveBranchText;
+    public TextMeshProUGUI saveBranchLevelText;
+    public TextMeshProUGUI saveCashText;
     public Button continueButton;
     public Button newGameButton;
     public Button playButton;
@@ -1192,6 +1199,12 @@ public class GameMenuManager : MonoBehaviour
 
     public void UpdateMainMenuSaveStats()
     {
+        if (saveDayText != null || saveBranchText != null || saveCashText != null)
+        {
+            UpdateSaveTagKurye();
+            return;
+        }
+
         if (mainMenuSaveInfoText == null) return;
 
         bool hasSave = HasSaveData();
@@ -1208,6 +1221,32 @@ public class GameMenuManager : MonoBehaviour
         else
         {
             mainMenuSaveInfoText.text = LocalizationManager.GetFormat("main_menu_new_info", tierName, cash);
+        }
+    }
+
+    /// <summary>Kurye Defteri save tag: day, branch and cash each in their own label.</summary>
+    private void UpdateSaveTagKurye()
+    {
+        bool hasSave = HasSaveData();
+        int cash = PlayerEconomyManager.Instance != null ? PlayerEconomyManager.Instance.CurrentLiveBalance : PlayerPrefs.GetInt("CARGO_PLAYER_TOTAL_BALANCE", PlayerPrefs.GetInt("Delivery_PlayerCash", 0));
+        int level = BranchManager.Instance != null ? BranchManager.Instance.CurrentBranchLevel : PlayerPrefs.GetInt("Delivery_BranchLevel", 1);
+        int day = DayTimeManager.Instance != null ? DayTimeManager.Instance.CurrentDay : PlayerPrefs.GetInt("Delivery_CurrentDay", 1);
+
+        if (saveTitleText != null)
+        {
+            saveTitleText.text = hasSave
+                ? LocalizationManager.Get("cozy_menu_last_save", "Son kayıt")
+                : LocalizationManager.Get("cozy_menu_new_career", "Yeni kariyer");
+        }
+        if (saveDayText != null) saveDayText.text = day.ToString();
+        // Only the branch level (Seviye 1 / 2 / 3), not the tier name.
+        string levelText = LocalizationManager.GetFormat("cozy_menu_level", level);
+        if (saveBranchText != null) saveBranchText.text = levelText;
+        if (saveBranchLevelText != null) saveBranchLevelText.text = levelText;
+        if (saveCashText != null)
+        {
+            saveCashText.text = CozyText.Money(cash);
+            saveCashText.color = cash < 0 ? CozyTheme.RedInk : CozyTheme.MintInk;
         }
     }
 
@@ -1316,6 +1355,9 @@ public class GameMenuManager : MonoBehaviour
 #endif
 
         if (!escPressed) return;
+
+        // A tutorial window (F1 list / replayed tip) closes first and swallows this ESC.
+        if (TutorialManager.Instance != null && (TutorialManager.Instance.IsBlockingOpen || TutorialManager.Instance.EscapeConsumedThisFrame)) return;
 
         if (currentState == GameFlowState.Playing)
         {
@@ -1470,7 +1512,8 @@ public class GameMenuManager : MonoBehaviour
             PlayerPrefs.SetInt("Delivery_PassiveDispatchLevel", 1);
         }
 
-        // 8. Reset tutorial preferences so the tutorial guide opens on the new game
+        // 8. Reset tutorial preferences so the tutorials play again on the new game
+        TutorialManager.ResetProgress();
         PlayerPrefs.DeleteKey(DeliveryTutorialUI.PREF_TUTORIAL_DONT_SHOW);
         PlayerPrefs.DeleteKey("Delivery_Tutorial_Seen");
         PlayerPrefs.DeleteKey(VehicleTutorialUI.PREF_VEHICLE_TUTORIAL_SEEN);

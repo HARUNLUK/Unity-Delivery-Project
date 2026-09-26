@@ -18,9 +18,9 @@ public static partial class CozyUIBuilder
     private static readonly string[] SiblingOrder =
     {
         "DeliveryHUD", "CenterCrosshair", "ThrowSlideBG", "InteractionPromptBox", "HeldCargoSideCard", "VehicleDashboardPanel",
-        "CargoTabletPanel", "DaySummaryPanel",
+        "TutorialCoachCard", "CargoTabletPanel", "DaySummaryPanel",
         "GarageWorkshopPanel", "InsuranceAgencyPanel", "PassiveDispatchPanel", "PropertyPurchaseModal",
-        "BranchUpgradeTransitionPanel", "DeliveryTutorial_Modal_Root", "VehicleTutorial_Modal_Root",
+        "BranchUpgradeTransitionPanel", "TutorialModal", "TutorialGuidePanel",
         "PauseMenuPanel", "MainMenuPanel", "SettingsPanel", "GameOver_Modal_Root", "FadeOverlayPanel"
     };
 
@@ -42,7 +42,7 @@ public static partial class CozyUIBuilder
             BuildPauseMenu(canvas);
             BuildSettings(canvas);
             BuildFadeOverlay(canvas);
-            BuildTutorials(canvas);
+            BuildTutorialSystem(canvas);
             BuildShops(canvas);
             BuildGameOver(canvas);
             BuildBranchTransition(canvas);
@@ -54,7 +54,7 @@ public static partial class CozyUIBuilder
     [MenuItem("Tools/Delivery Game/Cozy UI/Screens/Gün Sonu Fişi", false, 22)] public static void MenuSummary() => Run("Gün sonu", BuildDaySummary);
     [MenuItem("Tools/Delivery Game/Cozy UI/Screens/Menüler (Ana, Duraklat, Ayarlar)", false, 23)]
     public static void MenuMenus() => Run("Menüler", c => { BuildMainMenu(c); BuildPauseMenu(c); BuildSettings(c); BuildFadeOverlay(c); });
-    [MenuItem("Tools/Delivery Game/Cozy UI/Screens/Rehberler", false, 24)] public static void MenuTutorials() => Run("Rehberler", BuildTutorials);
+    [MenuItem("Tools/Delivery Game/Cozy UI/Screens/Rehber Sistemi (kart, gün sonu, F1 listesi)", false, 24)] public static void MenuTutorials() => Run("Rehber sistemi", BuildTutorialSystem);
     [MenuItem("Tools/Delivery Game/Cozy UI/Screens/Dükkanlar (Garaj, Sigorta, Dağıtım, Mülk)", false, 25)] public static void MenuShops() => Run("Dükkanlar", BuildShops);
     [MenuItem("Tools/Delivery Game/Cozy UI/Screens/İflas ve Şube Geçişi", false, 26)] public static void MenuOther() => Run("İflas + şube", c => { BuildGameOver(c); BuildBranchTransition(c); });
 

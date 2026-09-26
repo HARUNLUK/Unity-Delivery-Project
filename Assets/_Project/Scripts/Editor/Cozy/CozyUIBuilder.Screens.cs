@@ -280,7 +280,7 @@ public static partial class CozyUIBuilder
 
         // Save tag (luggage label)
         Card saveTag = PaperCard(root, "SaveInfoBadge", CozyTheme.Paper, 24f, 6f);
-        Place(saveTag.root, Anchor.BR, 140f, 120f, 470f, 176f);
+        Place(saveTag.root, Anchor.BR, 140f, 120f, 540f, 232f);
         saveTag.root.localEulerAngles = new Vector3(0f, 0f, 4f);
         RectTransform hole = Node("TagHole", saveTag.face);
         Place(hole, Anchor.ML, 22f, 0f, 24f, 24f);
@@ -289,11 +289,22 @@ public static partial class CozyUIBuilder
         holeImg.color = new Color(0.72f, 0.64f, 0.84f, 1f);
         Border(holeImg, CozyTheme.KraftDeep, 3f);
         RectTransform tagBody = Node("Body", saveTag.face);
-        Stretch(tagBody, 64f, 22f, 28f, 22f);
-        VStack(tagBody, 6f);
-        Loc(Line(tagBody, "Label", "Son kayıt", TextStyle.Label, CozyTheme.InkSoft, 22f), "cozy_menu_last_save", "Son kayıt");
-        TextMeshProUGUI saveInfo = Txt(tagBody, "SaveInfoText", "", TextStyle.BodyBold, CozyTheme.Ink, TextAlignmentOptions.TopLeft, 21f, true);
-        Size(saveInfo, -1f, -1f, 1f, 1f);
+        Stretch(tagBody, 68f, 22f, 26f, 24f);
+        VStack(tagBody, 14f);
+
+        RectTransform tagHead = Node("HeadRow", tagBody);
+        HStack(tagHead, 10f);
+        Size(tagHead, -1f, 36f);
+        TextMeshProUGUI saveTitle = Txt(tagHead, "Label", "Son kayıt", TextStyle.Label, CozyTheme.InkSoft, TextAlignmentOptions.MidlineLeft, 18f, false);
+        Size(saveTitle, -1f, 36f, 1f);
+
+        RectTransform stats = Node("Stats", tagBody);
+        HorizontalLayoutGroup statsLayout = HStack(stats, 10f);
+        statsLayout.childForceExpandHeight = true;
+        Size(stats, -1f, -1f, 1f, 1f);
+        TextMeshProUGUI saveDay = StatTile(stats, "DayTile", "sun", CozyTheme.Honey, CozyTheme.Ink, "cozy_menu_day", "Gün", "1", CozyTheme.Ink, 96f, 0f);
+        TextMeshProUGUI saveBranch = StatTile(stats, "BranchTile", "home", CozyTheme.Kraft, CozyTheme.Ink, "cozy_menu_branch", "Şube", "Seviye 1", CozyTheme.Ink, -1f, 1f);
+        TextMeshProUGUI saveCash = StatTile(stats, "CashTile", "coin", CozyTheme.MintTint, CozyTheme.MintInk, "cozy_hud_cash", "Kasa", "$0", CozyTheme.MintInk, 132f, 0f);
 
         // New game confirmation
         Card modal = Modal(root, "NewGameConfirmModal", 880f, 460f, out RectTransform modalRoot);
@@ -315,11 +326,35 @@ public static partial class CozyUIBuilder
 
         GameMenuManager gm = Find<GameMenuManager>();
         Wire(gm,
-            ("mainMenuPanel", root.gameObject), ("mainMenuTitleText", title), ("mainMenuSaveInfoText", saveInfo),
+            ("mainMenuPanel", root.gameObject), ("mainMenuTitleText", title), ("mainMenuSaveInfoText", null),
             ("continueButton", cont), ("newGameButton", newGame), ("playButton", null), ("mainMenuSettingsButton", settings),
-            ("mainMenuQuitButton", quit), ("newGameModalPanel", modalRoot.gameObject), ("confirmNewGameBtn", confirm), ("cancelNewGameBtn", cancel));
+            ("mainMenuQuitButton", quit), ("newGameModalPanel", modalRoot.gameObject), ("confirmNewGameBtn", confirm), ("cancelNewGameBtn", cancel),
+            ("saveTitleText", saveTitle), ("saveDayText", saveDay), ("saveBranchText", saveBranch), ("saveBranchLevelText", null), ("saveCashText", saveCash));
         SetBool(gm, "useKuryeDefteriLayout", true);
         Report.Add("• Ana menü + yeni oyun onayı");
+    }
+
+    /// <summary>Small stat card: icon badge, tiny label and a big value. Width fixed (or flexible with width -1).</summary>
+    private static TextMeshProUGUI StatTile(Transform parent, string name, string icon, Color badge, Color badgeInk, string labelKey, string label,
+        string value, Color valueColor, float width, float flexWidth)
+    {
+        RectTransform tile = Node(name, parent);
+        Surface(tile, CozyTheme.Well, 16f, CozyTheme.Line, 2f);
+        VStack(tile, 2f, Pad(12, 12, 10, 10), TextAnchor.MiddleLeft);
+        Size(tile, width, -1f, flexWidth, 1f);
+
+        RectTransform head = Node("Head", tile);
+        HStack(head, 6f);
+        Size(head, -1f, 24f);
+        Icon(head, "Icon", icon, 20f, badgeInk == CozyTheme.Ink ? CozyTheme.InkSoft : badgeInk);
+        TextMeshProUGUI l = Txt(head, "Label", label, TextStyle.Label, CozyTheme.InkSoft, TextAlignmentOptions.MidlineLeft, 15f, false);
+        l.characterSpacing = 3f;
+        Size(l, -1f, 24f, 1f);
+        Loc(l, labelKey, label);
+
+        TextMeshProUGUI v = Line(tile, "Value", value, TextStyle.Number, valueColor, 46f, TextAlignmentOptions.MidlineLeft, 30f);
+        Size(v, -1f, 46f, 1f);
+        return v;
     }
 
     // =====================================================================
@@ -391,7 +426,7 @@ public static partial class CozyUIBuilder
         // ---- Graphics & language ----
         RectTransform graphics = Section(content, "GraphicsSection");
         RectTransform langRow = SettingRow(graphics, "LanguageRow", "setting_language", "Oyun dili", out TextMeshProUGUI langLabel);
-        Spacer(langRow);
+        HSpacer(langRow);
         RectTransform seg = Node("Segmented", langRow);
         HStack(seg, 10f);
         Size(seg, 420f, 56f);
@@ -414,7 +449,7 @@ public static partial class CozyUIBuilder
         TMP_Dropdown display = DropdownRow(graphics, "FullscreenRow", "setting_display_mode", "Ekran modu");
         TMP_Dropdown resolution = DropdownRow(graphics, "ResolutionRow", "setting_resolution", "Çözünürlük");
         RectTransform vsyncRow = SettingRow(graphics, "VsyncRow", "setting_vsync", "Dikey senkronizasyon", out _);
-        Spacer(vsyncRow);
+        HSpacer(vsyncRow);
         Toggle vsync = ToggleCtrl(vsyncRow, "Toggle", 44f);
         TMP_Dropdown fps = DropdownRow(graphics, "FpsLimitRow", "setting_target_fps", "Kare hızı sınırı");
 
@@ -422,14 +457,14 @@ public static partial class CozyUIBuilder
         RectTransform controls = Section(content, "ControlsSection");
         (Slider sens, TextMeshProUGUI sensVal) = SliderRow(controls, "MouseSensRow", "setting_mouse_sens", "Fare hassasiyeti");
         RectTransform invertRow = SettingRow(controls, "InvertYRow", "setting_invert_y", "Fare Y eksenini ters çevir", out _);
-        Spacer(invertRow);
+        HSpacer(invertRow);
         Toggle invert = ToggleCtrl(invertRow, "Toggle", 44f);
 
         RectTransform kbHead = Node("KeybindingsHeaderRow", controls);
-        HStack(kbHead, 12f);
-        Size(kbHead, -1f, 52f);
+        HStack(kbHead, 12f, Pad(4, 4, 12, 18)); // room above, and below for the button lip
+        Size(kbHead, -1f, 78f);
         TextMeshProUGUI kbTitle = Txt(kbHead, "HeaderTitle", "Tuş atamaları", TextStyle.Label, CozyTheme.InkSoft, TextAlignmentOptions.MidlineLeft, 17f, false);
-        Size(kbTitle, -1f, 52f, 1f);
+        Size(kbTitle, -1f, 48f, 1f);
         Loc(kbTitle, "cozy_keybindings_title", "Tuş atamaları");
         Button reset = Btn(kbHead, "ResetBindingsBtn", "Varsayılana dön", CozyTheme.ButtonStyle.Soft, 48f, "back", 20f);
         Size(reset, 280f, 48f);
@@ -530,7 +565,7 @@ public static partial class CozyUIBuilder
     private static TMP_Dropdown DropdownRow(Transform section, string name, string key, string label)
     {
         RectTransform row = SettingRow(section, name, key, label, out _);
-        Spacer(row);
+        HSpacer(row);
         TMP_Dropdown dd = DropdownCtrl(row, "Dropdown", 56f);
         Size(dd, 420f, 56f, 0f);
         return dd;
@@ -605,104 +640,6 @@ public static partial class CozyUIBuilder
     }
 
     // =====================================================================
-    // 8. TUTORIALS
-    // =====================================================================
-
-    private static void BuildTutorials(Transform canvas)
-    {
-        DeliveryTutorialUI delivery = Find<DeliveryTutorialUI>();
-        VehicleTutorialUI vehicle = Find<VehicleTutorialUI>();
-        Sprite deliverySprite = delivery != null ? delivery.tutorialImage : null;
-        Sprite vehicleSprite = vehicle != null ? vehicle.tutorialImage : null;
-
-        Remove(canvas, "DeliveryTutorial_Modal_Root", "VehicleTutorial_Modal_Root");
-
-        TutorialParts d = TutorialModal(canvas, "DeliveryTutorial_Modal_Root", "box", "Lojistik ve kargo teslimat rehberi", deliverySprite,
-            "[F1] ile rehberi istediğin zaman tekrar açabilirsin.", "Anladım, vardiyaya başla");
-        Wire(delivery,
-            ("tutorialPanelRoot", d.root), ("deliveryPointImageUI", d.image), ("titleText", d.title), ("leftCaptionText", d.caption),
-            ("objectiveBodyText", d.body), ("startButton", d.start), ("closeButton", d.close), ("dontShowAgainToggle", null),
-            ("panelCanvasGroup", d.group));
-
-        TutorialParts v = TutorialModal(canvas, "VehicleTutorial_Modal_Root", "truck", "Araç sürüşü ve kargo taşıma", vehicleSprite,
-            "[F2] ile sürüş rehberini tekrar açabilirsin.", "Anladım, sürüşe başla");
-        Wire(vehicle,
-            ("tutorialPanelRoot", v.root), ("vehicleImageUI", v.image), ("titleText", v.title), ("leftCaptionText", v.caption),
-            ("objectiveBodyText", v.body), ("startButton", v.start), ("panelCanvasGroup", v.group));
-        if (vehicle != null) AddPersistentClick(v.close, vehicle.HideTutorial);
-
-        Report.Add("• Rehberler: teslimat ve sürüş");
-    }
-
-    private struct TutorialParts
-    {
-        public GameObject root;
-        public CanvasGroup group;
-        public Image image;
-        public TextMeshProUGUI title, caption, body;
-        public Button start, close;
-    }
-
-    private static TutorialParts TutorialModal(Transform canvas, string rootName, string icon, string title, Sprite sprite, string hint, string startLabel)
-    {
-        TutorialParts p = new TutorialParts();
-        Card card = Modal(canvas, rootName, 1260f, 760f, out RectTransform root);
-        p.root = root.gameObject;
-        p.group = root.gameObject.AddComponent<CanvasGroup>();
-        VStack(card.face, 22f, Pad(44, 44, 36, 34));
-
-        HeaderRow(card.face, icon, CozyTheme.Honey, CozyTheme.Ink, "Header_Title_Text", title, null, out p.title,
-            "Guide_Label", "Kurye rehberi", out TextMeshProUGUI guideLabel, "Close_X_Button", out p.close);
-        Loc(guideLabel, "cozy_guide_label", "Kurye rehberi");
-        // Label sits above the title in this header.
-        guideLabel.transform.SetSiblingIndex(0);
-        guideLabel.fontStyle = FontStyles.UpperCase;
-        guideLabel.font = A.bodyBold;
-        guideLabel.fontSize = guideLabel.fontSizeMax = 17f;
-        guideLabel.characterSpacing = 6f;
-
-        RectTransform body = Node("Body", card.face);
-        HorizontalLayoutGroup bl = HStack(body, 28f);
-        bl.childForceExpandHeight = true;
-        Size(body, -1f, -1f, 1f, 1f);
-
-        RectTransform left = Node("Left_Image_Column", body);
-        VStack(left, 14f);
-        Size(left, 440f, -1f);
-        RectTransform frame = Node("Image_Frame_Box", left);
-        Image frameImg = Shape(frame, CozyTheme.Kraft, 22f, false);
-        Mask mask = frame.gameObject.AddComponent<Mask>();
-        mask.showMaskGraphic = true;
-        Size(frame, -1f, 320f);
-        RectTransform picture = Node("Delivery_Point_Image", frame);
-        Stretch(picture);
-        p.image = picture.gameObject.AddComponent<Image>();
-        p.image.sprite = sprite;
-        p.image.color = sprite != null ? Color.white : CozyTheme.Kraft;
-        p.image.raycastTarget = false;
-        p.caption = Txt(left, "Left_Caption_Text", "", TextStyle.Body, CozyTheme.Ink, TextAlignmentOptions.TopLeft, 20f, true);
-        Size(p.caption, -1f, -1f, 1f, 1f);
-
-        RectTransform note = Node("Right_Text_Column", body);
-        Surface(note, CozyTheme.Hex("FFFBF3"), 22f, CozyTheme.Line, 2f);
-        Size(note, -1f, -1f, 1f, 1f);
-        p.body = Txt(note, "Objective_Body_Text", "", TextStyle.Body, CozyTheme.Ink, TextAlignmentOptions.TopLeft, 21f, true);
-        p.body.lineSpacing = 6f;
-        Stretch(p.body.rectTransform, 30f, 26f, 30f, 24f);
-
-        RectTransform footer = Node("Bottom_Action_Bar", card.face);
-        HStack(footer, 18f);
-        Size(footer, -1f, 72f);
-        TextMeshProUGUI hintText = Txt(footer, "F1_Hint_Text", hint, TextStyle.Small, CozyTheme.InkSoft, TextAlignmentOptions.MidlineLeft, 19f, true);
-        Size(hintText, -1f, 72f, 1f);
-        p.start = Btn(footer, "Start_Game_Button", startLabel, CozyTheme.ButtonStyle.Primary, 68f, null, 26f);
-        Size(p.start, 400f, 68f);
-
-        root.gameObject.SetActive(false);
-        return p;
-    }
-
-    // =====================================================================
     // 9. SHOPS
     // =====================================================================
 
@@ -749,10 +686,9 @@ public static partial class CozyUIBuilder
         Line(info, "InfoHead", "", TextStyle.Label, CozyTheme.InkSoft, 22f);
         TextMeshProUGUI infoDesc = Txt(info, "InfoDesc", "", TextStyle.Body, CozyTheme.Ink, TextAlignmentOptions.TopLeft, 19f, true);
         Size(infoDesc, -1f, -1f, 1f, 1f);
-        Line(left, "TuningInfo", "", TextStyle.BodyBold, CozyTheme.Ink, 34f, TextAlignmentOptions.MidlineLeft, 20f);
         Spacer(left);
         Btn(left, "RepairBtn", "Aracı tamir et", CozyTheme.ButtonStyle.Primary, 68f, "wrench", 24f, true);
-        Btn(left, "TuneBtn", "Motor ayarı", CozyTheme.ButtonStyle.Info, 64f, "bolt", 22f, true);
+        // Engine tuning is switched off for now (CommercialHubUIManager.garageTuningEnabled): repair and paint only.
         Btn(left, "DriveBtn", "Aracı çalıştır ve sür", CozyTheme.ButtonStyle.Soft, 64f, "truck", 22f, true);
 
         // Right: paint shop

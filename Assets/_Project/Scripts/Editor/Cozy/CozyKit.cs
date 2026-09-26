@@ -140,6 +140,14 @@ public static class CozyKit
         return rt;
     }
 
+    /// <summary>Spacer for horizontal rows: takes free width only, never asks its parent for extra height.</summary>
+    public static RectTransform HSpacer(Transform parent, float flex = 1f)
+    {
+        RectTransform rt = Node("Spacer", parent);
+        Size(rt, -1f, -1f, flex, 0f);
+        return rt;
+    }
+
     public static void IgnoreLayout(Component c)
     {
         LayoutElement le = c.GetComponent<LayoutElement>();
@@ -595,12 +603,19 @@ public static class CozyKit
         fill.sizeDelta = Vector2.zero;
         Shape(fill, CozyTheme.Sky, 7f);
 
+        // Unity's Slider stretches the handle vertically to the height of its slide area, so the area itself
+        // is exactly handle-sized (34px) and centred; the handle has width 34 and height offset 0.
         RectTransform handleArea = Node("Handle Slide Area", rt);
-        Stretch(handleArea, 17f, 0f, 17f, 0f);
+        handleArea.anchorMin = new Vector2(0f, 0.5f);
+        handleArea.anchorMax = new Vector2(1f, 0.5f);
+        handleArea.pivot = new Vector2(0.5f, 0.5f);
+        handleArea.sizeDelta = new Vector2(-34f, 34f);
+        handleArea.anchoredPosition = Vector2.zero;
         RectTransform handle = Node("Handle", handleArea);
-        handle.sizeDelta = new Vector2(34f, 34f);
-        handle.anchorMin = new Vector2(0f, 0.5f);
-        handle.anchorMax = new Vector2(0f, 0.5f);
+        handle.anchorMin = new Vector2(0f, 0f);
+        handle.anchorMax = new Vector2(0f, 1f);
+        handle.sizeDelta = new Vector2(34f, 0f);
+        handle.anchoredPosition = Vector2.zero;
         Image h = handle.gameObject.AddComponent<Image>();
         h.sprite = A.circle;
         h.color = Color.white;

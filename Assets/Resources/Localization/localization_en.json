@@ -1656,6 +1656,182 @@
     {
       "key": "cozy_guide_label",
       "value": "Courier guide"
+    },
+    {
+      "key": "cozy_menu_new_career",
+      "value": "New career"
+    },
+    {
+      "key": "cozy_menu_day",
+      "value": "Day"
+    },
+    {
+      "key": "cozy_menu_branch",
+      "value": "Branch"
+    },
+    {
+      "key": "cozy_menu_level",
+      "value": "Level {0}"
+    },
+    {
+      "key": "tut_label",
+      "value": "Guide"
+    },
+    {
+      "key": "tut_skip",
+      "value": "[Enter] to skip"
+    },
+    {
+      "key": "tut_btn_ok",
+      "value": "Got it"
+    },
+    {
+      "key": "tut_guide_title",
+      "value": "Guide"
+    },
+    {
+      "key": "tut_guide_sub",
+      "value": "Replay any tip you like."
+    },
+    {
+      "key": "tut_guide_seen",
+      "value": "Seen"
+    },
+    {
+      "key": "tut_guide_new",
+      "value": "New"
+    },
+    {
+      "key": "tut_guide_close",
+      "value": "[F1] to close"
+    },
+    {
+      "key": "tut_pages",
+      "value": "{0} pages"
+    },
+    {
+      "key": "tut_pickup_title",
+      "value": "Today's parcel is ready"
+    },
+    {
+      "key": "tut_pickup_p1",
+      "value": "Look at the parcel in the warehouse and press {Interact} to pick it up."
+    },
+    {
+      "key": "tut_pickup_sub",
+      "value": "Picking up your first parcel"
+    },
+    {
+      "key": "tut_clue_title",
+      "value": "Find the drop-off point"
+    },
+    {
+      "key": "tut_clue_p1",
+      "value": "Parcels must be left at their <b>drop-off point</b>. Read the <b>directions</b> on the label at the right and find that house's mailbox."
+    },
+    {
+      "key": "tut_clue_p2_title",
+      "value": "Far away? Take the van"
+    },
+    {
+      "key": "tut_clue_p2",
+      "value": "If the address is far, get in the van with {Vehicle}. You can carry parcels in the cargo bed."
+    },
+    {
+      "key": "tut_clue_sub",
+      "value": "Once you hold a parcel"
+    },
+    {
+      "key": "tut_vehicle_title",
+      "value": "Driving"
+    },
+    {
+      "key": "tut_vehicle_p1",
+      "value": "{MoveForward} {MoveBackward}   Gas and brake\n{MoveLeft} {MoveRight}   Steering\n{Jump}   Handbrake\n{Camera}   Switch camera"
+    },
+    {
+      "key": "tut_vehicle_p2_title",
+      "value": "Using the cargo bed"
+    },
+    {
+      "key": "tut_vehicle_p2",
+      "value": "Load parcels at the back: open the tailgate with {Interact}, then press {DropCargo} to place them gently inside."
+    },
+    {
+      "key": "tut_vehicle_sub",
+      "value": "The first time you drive"
+    },
+    {
+      "key": "tut_first_delivery_title",
+      "value": "First delivery done!"
+    },
+    {
+      "key": "tut_first_delivery_p1",
+      "value": "When every parcel is delivered, press {Tablet} to open your notebook and hit <b>End shift</b>. You'll see the result on the day-end receipt."
+    },
+    {
+      "key": "tut_first_delivery_sub",
+      "value": "After your first delivery"
+    },
+    {
+      "key": "tut_day_end_title",
+      "value": "Your day-end receipt is ready"
+    },
+    {
+      "key": "tut_day_end_subtitle",
+      "value": "Here is how your earnings work:"
+    },
+    {
+      "key": "tut_day_end_r1",
+      "value": "Parcels delivered correctly earn you a <b>reward</b>."
+    },
+    {
+      "key": "tut_day_end_r2",
+      "value": "Wrong-address or broken parcels cost you a <b>penalty</b>."
+    },
+    {
+      "key": "tut_day_end_r3",
+      "value": "The daily <b>branch rent</b> is counted too and deducted from your earnings."
+    },
+    {
+      "key": "tut_day_end_sub",
+      "value": "At your first day end"
+    },
+    {
+      "key": "tut_branch_upgrade_title",
+      "value": "You can upgrade your branch!"
+    },
+    {
+      "key": "tut_branch_upgrade_p1",
+      "value": "You have earned enough for level 2. Go to the branch terminal and press {Interact}. Each level's perks are listed on the terminal panel; upgrade from there."
+    },
+    {
+      "key": "tut_branch_upgrade_sub",
+      "value": "When you can afford an upgrade"
+    },
+    {
+      "key": "tut_low_fuel_title",
+      "value": "Fuel is running low"
+    },
+    {
+      "key": "tut_low_fuel_p1",
+      "value": "Fuel dropped below 20%. Without fuel the van will not run, so refill regularly. Head to the nearest gas station."
+    },
+    {
+      "key": "tut_low_fuel_sub",
+      "value": "When fuel drops below 20%"
+    },
+    {
+      "key": "tut_low_condition_title",
+      "value": "Your van is worn out"
+    },
+    {
+      "key": "tut_low_condition_p1",
+      "value": "Vehicle condition is below 30%. Left unrepaired, it will run poorly. Visit the auto shop and get it fixed."
+    },
+    {
+      "key": "tut_low_condition_sub",
+      "value": "When condition drops below 30%"
     }
   ]
 }

@@ -1656,6 +1656,182 @@
     {
       "key": "cozy_guide_label",
       "value": "Kurye rehberi"
+    },
+    {
+      "key": "cozy_menu_new_career",
+      "value": "Yeni kariyer"
+    },
+    {
+      "key": "cozy_menu_day",
+      "value": "Gün"
+    },
+    {
+      "key": "cozy_menu_branch",
+      "value": "Şube"
+    },
+    {
+      "key": "cozy_menu_level",
+      "value": "Seviye {0}"
+    },
+    {
+      "key": "tut_label",
+      "value": "Rehber"
+    },
+    {
+      "key": "tut_skip",
+      "value": "[Enter] ile geç"
+    },
+    {
+      "key": "tut_btn_ok",
+      "value": "Anladım"
+    },
+    {
+      "key": "tut_guide_title",
+      "value": "Rehber"
+    },
+    {
+      "key": "tut_guide_sub",
+      "value": "İstediğin ipucunu yeniden izleyebilirsin."
+    },
+    {
+      "key": "tut_guide_seen",
+      "value": "Görüldü"
+    },
+    {
+      "key": "tut_guide_new",
+      "value": "Yeni"
+    },
+    {
+      "key": "tut_guide_close",
+      "value": "[F1] ile kapat"
+    },
+    {
+      "key": "tut_pages",
+      "value": "{0} sayfa"
+    },
+    {
+      "key": "tut_pickup_title",
+      "value": "Günün kargosu hazır"
+    },
+    {
+      "key": "tut_pickup_p1",
+      "value": "Depodaki koliye bak ve {Interact} ile eline al."
+    },
+    {
+      "key": "tut_pickup_sub",
+      "value": "İlk kargoyu alırken"
+    },
+    {
+      "key": "tut_clue_title",
+      "value": "Teslim noktasını bul"
+    },
+    {
+      "key": "tut_clue_p1",
+      "value": "Kargo, adresindeki <b>teslim noktasına</b> bırakılmalı. Sağdaki etikette yazan <b>adres tarifini</b> oku, o evin posta kutusunu bul."
+    },
+    {
+      "key": "tut_clue_p2_title",
+      "value": "Uzaksa araca bin"
+    },
+    {
+      "key": "tut_clue_p2",
+      "value": "Adres uzaksa {Vehicle} ile araca bin. Koliyi bagaja koyup taşıyabilirsin."
+    },
+    {
+      "key": "tut_clue_sub",
+      "value": "Kolu eline alınca"
+    },
+    {
+      "key": "tut_vehicle_title",
+      "value": "Araç kullanımı"
+    },
+    {
+      "key": "tut_vehicle_p1",
+      "value": "{MoveForward} {MoveBackward}   Gaz ve fren\n{MoveLeft} {MoveRight}   Direksiyon\n{Jump}   El freni\n{Camera}   Kamera değiştir"
+    },
+    {
+      "key": "tut_vehicle_p2_title",
+      "value": "Bagaj kullanımı"
+    },
+    {
+      "key": "tut_vehicle_p2",
+      "value": "Koliyi arkaya taşı: {Interact} ile bagaj kapağını aç, {DropCargo} ile içine yavaşça bırak."
+    },
+    {
+      "key": "tut_vehicle_sub",
+      "value": "İlk kez araca binince"
+    },
+    {
+      "key": "tut_first_delivery_title",
+      "value": "İlk teslimat tamam!"
+    },
+    {
+      "key": "tut_first_delivery_p1",
+      "value": "Bütün kargoları teslim edince {Tablet} ile Kurye Defteri'ni aç ve <b>Vardiyayı bitir</b>'e bas. Sonucu gün sonu fişinde görürsün."
+    },
+    {
+      "key": "tut_first_delivery_sub",
+      "value": "İlk teslimattan sonra"
+    },
+    {
+      "key": "tut_day_end_title",
+      "value": "Gün sonu fişin hazır"
+    },
+    {
+      "key": "tut_day_end_subtitle",
+      "value": "Kazancın şöyle hesaplanır:"
+    },
+    {
+      "key": "tut_day_end_r1",
+      "value": "Doğru teslim ettiğin kargolar sana <b>ödül</b> kazandırır."
+    },
+    {
+      "key": "tut_day_end_r2",
+      "value": "Yanlış adrese bıraktığın ya da kırdığın kargolardan <b>ceza</b> kesilir."
+    },
+    {
+      "key": "tut_day_end_r3",
+      "value": "Günlük <b>şube kirası</b> da hesaba dahil edilir ve kazancından düşülür."
+    },
+    {
+      "key": "tut_day_end_sub",
+      "value": "İlk gün sonunda"
+    },
+    {
+      "key": "tut_branch_upgrade_title",
+      "value": "Şubeni yükseltebilirsin!"
+    },
+    {
+      "key": "tut_branch_upgrade_p1",
+      "value": "Kazandığın para seviye 2 için yetti. Şube terminaline gidip {Interact} ile aç. Her seviyenin yenilikleri terminal panelinde yazıyor; yükseltmeyi oradan yaparsın."
+    },
+    {
+      "key": "tut_branch_upgrade_sub",
+      "value": "Yükseltmeye paran yetince"
+    },
+    {
+      "key": "tut_low_fuel_title",
+      "value": "Benzin bitmek üzere"
+    },
+    {
+      "key": "tut_low_fuel_p1",
+      "value": "Yakıtın %20'nin altına düştü. Benzin bitince araç çalışmaz; düzenli doldurmayı unutma. En yakın benzin istasyonuna git."
+    },
+    {
+      "key": "tut_low_fuel_sub",
+      "value": "Yakıt %20'nin altına inince"
+    },
+    {
+      "key": "tut_low_condition_title",
+      "value": "Aracın hırpalandı"
+    },
+    {
+      "key": "tut_low_condition_p1",
+      "value": "Araç durumu %30'un altına düştü. Onarmazsan araç sorunlu çalışır. Oto servise uğrayıp aracını onar."
+    },
+    {
+      "key": "tut_low_condition_sub",
+      "value": "Araç durumu %30'un altına inince"
     }
   ]
 }

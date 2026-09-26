@@ -279,8 +279,12 @@ public class FPSPlayerController : MonoBehaviour
         if (BranchUpgradeTransitionUI.IsTransitioning)
             return true;
 
-        // 7. Delivery Tutorial Guide
+        // 7. Delivery Tutorial Guide (old full-screen guide, kept for compatibility)
         if (DeliveryTutorialUI.Instance != null && DeliveryTutorialUI.Instance.IsOpen)
+            return true;
+
+        // 7b. Tutorial system: F1 guide list or a replayed tip window
+        if (TutorialManager.Instance != null && TutorialManager.Instance.IsBlockingOpen)
             return true;
 
         // 8. Game Over Screen

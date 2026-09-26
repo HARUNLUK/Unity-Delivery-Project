@@ -41,6 +41,10 @@ public class CommercialHubUIManager : MonoBehaviour
         private set => instance = value;
     }
 
+    [Header("--- GARAGE OPTIONS ---")]
+    [Tooltip("Engine tuning (Stage 1-3) is switched off for now: the garage only offers repair and paint. Turn on to bring the tune button back.")]
+    public bool garageTuningEnabled = false;
+
     [Header("--- PANEL ROOTS ---")]
     public GameObject garagePanelRoot;
     public GameObject insurancePanelRoot;
@@ -238,7 +242,7 @@ public class CommercialHubUIManager : MonoBehaviour
             garageInfoDesc.text = LocalizationManager.Get("garage_info_desc", "Araç hasar aldığında maksimum yol tutuş performansı düşebilir. Görevler arasında aracınızı periyodik olarak tamir ettirmeniz önerilir.");
         }
 
-        if (garageTuningInfoText != null && VehicleServiceGarage.Instance != null)
+        if (garageTuningEnabled && garageTuningInfoText != null && VehicleServiceGarage.Instance != null)
         {
             int stage = VehicleServiceGarage.Instance.GetVehicleTuningStage(activeGarageVehicle.EffectiveVehicleId);
             string stageDesc = stage == 0 ? "Stock" : (stage == 1 ? "+15% Torque" : (stage == 2 ? "+30% Torque" : "+45% Torque Max"));
@@ -255,7 +259,7 @@ public class CommercialHubUIManager : MonoBehaviour
             }
         }
 
-        if (garageTuneBtn != null && VehicleServiceGarage.Instance != null)
+        if (garageTuningEnabled && garageTuneBtn != null && VehicleServiceGarage.Instance != null)
         {
             var txt = garageTuneBtn.GetComponentInChildren<TextMeshProUGUI>();
             if (txt != null)
@@ -845,6 +849,13 @@ public class CommercialHubUIManager : MonoBehaviour
         {
             garageTuneBtn.onClick.RemoveAllListeners();
             garageTuneBtn.onClick.AddListener(OnGarageTuneClicked);
+        }
+
+        // Tuning is off: hide the button and its stage line (also for panels built before this option existed).
+        if (!garageTuningEnabled)
+        {
+            if (garageTuneBtn != null) garageTuneBtn.gameObject.SetActive(false);
+            if (garageTuningInfoText != null) garageTuningInfoText.gameObject.SetActive(false);
         }
 
         garageDriveBtn = FindButtonRecursive(root.transform, "DriveBtn");
