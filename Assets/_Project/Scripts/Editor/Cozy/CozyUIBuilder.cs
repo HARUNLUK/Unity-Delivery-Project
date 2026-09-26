@@ -331,6 +331,7 @@ public static partial class CozyUIBuilder
             ("heldCargoAddressDescText", held.clue), ("heldCargoRewardLabelText", held.rewardLabel), ("heldCargoRewardText", held.reward),
             ("heldCargoPenaltyLabelText", held.penaltyLabel), ("heldCargoPenaltyText", held.penalty), ("heldCargoActionHintText", held.hint),
             ("heldCargoTypeChip", held.typeChip), ("heldCargoTypeIcon", held.typeIcon), ("heldCargoConditionChip", held.conditionChip),
+            ("heldCargoExtraRoot", held.extraRoot), ("heldCargoExtraBackground", held.extraBg), ("heldCargoExtraIcon", held.extraIcon), ("heldCargoExtraText", held.extraText),
             ("vehicleDashboardRoot", dash.root.gameObject), ("fuelGaugePanel", fuelRow.gameObject), ("fuelLabelText", fuelTitle),
             ("fuelBarFill", fuelFill), ("fuelValueText", fuelValue), ("conditionGaugePanel", condRow.gameObject),
             ("conditionLabelText", condTitle), ("conditionBarFill", condFill), ("conditionValueText", condValue));
@@ -393,7 +394,9 @@ public static partial class CozyUIBuilder
 
     private struct HeldCard
     {
-        public GameObject root, conditionChip;
+        public GameObject root, conditionChip, extraRoot;
+        public Image extraBg, extraIcon;
+        public TextMeshProUGUI extraText;
         public Image typeChip, typeIcon;
         public TextMeshProUGUI header, type, status, percentage, recipientLabel, recipient, addressLabel, address,
             clueLabel, clue, rewardLabel, reward, penaltyLabel, penalty, hint;
@@ -403,7 +406,8 @@ public static partial class CozyUIBuilder
     {
         h = new HeldCard();
         Card card = PaperCard(canvas, "HeldCargoSideCard", CozyTheme.Paper, 28f, 7f, true, false);
-        Place(card.root, Anchor.TR, 48f, 160f, 440f, 660f);
+        Place(card.root, Anchor.TR, 48f, 160f, 440f, 700f);
+        AutoHeight(card); // grows with the parcel type (extra money strip for fragile / express)
         h.root = card.root.gameObject;
         VStack(card.face, 0f);
 
@@ -475,6 +479,20 @@ public static partial class CozyUIBuilder
         Size(money, -1f, 60f);
         h.rewardLabel = MoneyTile(money, "Reward", "Ücret", CozyTheme.MintInk, out h.reward);
         h.penaltyLabel = MoneyTile(money, "Penalty", "Yanlış adres", CozyTheme.RedInk, out h.penalty);
+
+        // What breaking (fragile) or an on-time delivery (express) means in money; hidden for standard parcels
+        RectTransform extra = Node("ExtraStrip", body);
+        h.extraBg = Shape(extra, CozyTheme.RedTint, 18f);
+        HStack(extra, 12f, Pad(16, 16, 12, 12));
+        LayoutElement extraLayout = Size(extra, -1f, 64f);
+        extraLayout.preferredHeight = -1f;
+        h.extraIcon = Icon(extra, "Icon", "fragile", 28f, CozyTheme.RedInk);
+        h.extraText = Txt(extra, "Text", "", TextStyle.Body, CozyTheme.RedInk, TextAlignmentOptions.MidlineLeft, 19f, true, false);
+        h.extraText.enableAutoSizing = false;
+        h.extraText.overflowMode = TextOverflowModes.Overflow;
+        Size(h.extraText, -1f, -1f, 1f);
+        h.extraRoot = extra.gameObject;
+        extra.gameObject.SetActive(false);
 
         h.hint = Txt(body, "ActionHint", "[Sol Tık] Fırlat  ·  [Sağ Tık] Bırak", TextStyle.Small, CozyTheme.InkSoft, TextAlignmentOptions.MidlineLeft, 18f, true);
         Size(h.hint, -1f, 52f);

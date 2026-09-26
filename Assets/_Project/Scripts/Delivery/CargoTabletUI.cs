@@ -95,6 +95,11 @@ public class CargoTabletUI : MonoBehaviour
     public TextMeshProUGUI detailDeadlineText;
     public TextMeshProUGUI detailRewardText;
     public TextMeshProUGUI detailStatusText;
+    public TextMeshProUGUI detailWrongPenaltyText;
+    // Second penalty/bonus tile: fragile & explosive -> penalty if broken, express -> on-time bonus, standard -> hidden
+    public TextMeshProUGUI detailExtraLabelText;
+    public TextMeshProUGUI detailExtraText;
+    public GameObject detailExtraRoot;
     public GameObject detailTipRoot;
     public Image detailTipIcon;
     public TextMeshProUGUI detailTipText;
@@ -1913,6 +1918,38 @@ public class CargoTabletUI : MonoBehaviour
         bool isExpress = pkg.cargoType == CargoType.Express;
         if (detailDeadlineText != null) detailDeadlineText.text = isExpress ? pkg.GetFormattedTargetDeliveryTime() : ShiftEndTime();
         if (detailRewardText != null) { detailRewardText.text = CozyText.Money(pkg.deliveryReward); detailRewardText.color = CozyTheme.MintInk; }
+
+        // Penalties as they will really be charged (insurance discounts included)
+        float wrongMult = InsuranceAgencyManager.Instance != null ? InsuranceAgencyManager.Instance.GetWrongDeliveryPenaltyMultiplier() : 1f;
+        float breakMult = InsuranceAgencyManager.Instance != null ? InsuranceAgencyManager.Instance.GetFragilePenaltyMultiplier() : 1f;
+        if (detailWrongPenaltyText != null)
+        {
+            detailWrongPenaltyText.text = CozyText.Money(-Mathf.RoundToInt(pkg.wrongPenalty * wrongMult));
+            detailWrongPenaltyText.color = CozyTheme.RedInk;
+        }
+        bool isExpressParcel = pkg.cargoType == CargoType.Express;
+        bool canBreak = pkg.cargoType == CargoType.Fragile || pkg.cargoType == CargoType.Explosive;
+        if (detailExtraRoot != null) detailExtraRoot.SetActive(isExpressParcel || canBreak);
+        if (isExpressParcel)
+        {
+            float bonusRate = (BranchManager.Instance != null && BranchManager.Instance.expressOnTimeBonusRate > 0f) ? BranchManager.Instance.expressOnTimeBonusRate : 0.40f;
+            int bonus = Mathf.RoundToInt(pkg.deliveryReward * bonusRate);
+            if (detailExtraLabelText != null) detailExtraLabelText.text = string.Format(LocalizationManager.Get("cozy_fact_express_bonus", "{0} öncesi bonus"), pkg.GetFormattedTargetDeliveryTime());
+            if (detailExtraText != null)
+            {
+                detailExtraText.text = "+" + CozyText.Money(bonus);
+                detailExtraText.color = CozyTheme.MintInk;
+            }
+        }
+        else if (canBreak)
+        {
+            if (detailExtraLabelText != null) detailExtraLabelText.text = LocalizationManager.Get("cozy_fact_break_penalty", "Kırılırsa ceza");
+            if (detailExtraText != null)
+            {
+                detailExtraText.text = CozyText.Money(-Mathf.RoundToInt(pkg.wrongPenalty * breakMult));
+                detailExtraText.color = CozyTheme.RedInk;
+            }
+        }
 
         GetCargoStatus(pkg, out string status, out CozyTheme.Tone tone);
         CozyTheme.GetTone(tone, out Color _, out Color statusInk);

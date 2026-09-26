@@ -95,7 +95,8 @@ public static partial class CozyUIBuilder
             ("cargoSearchInput", cv.search), ("filterAllButton", cv.filterAll), ("filterInVehicleButton", cv.filterVehicle),
             ("filterExpressButton", cv.filterExpress), ("filterFragileButton", cv.filterFragile),
             ("detailTypeText", cv.factType), ("detailDeadlineText", cv.factDeadline), ("detailRewardText", cv.factReward),
-            ("detailStatusText", cv.factStatus), ("detailTipRoot", cv.tipRoot), ("detailTipIcon", cv.tipIcon), ("detailTipText", cv.tipText),
+            ("detailStatusText", cv.factStatus), ("detailWrongPenaltyText", cv.factWrongPenalty),
+            ("detailExtraLabelText", cv.factExtraLabel), ("detailExtraText", cv.factBreakPenalty), ("detailExtraRoot", cv.factBreakPenalty.transform.parent.gameObject), ("detailTipRoot", cv.tipRoot), ("detailTipIcon", cv.tipIcon), ("detailTipText", cv.tipText),
             ("vehicleFuelBarFill", vv.fuelFill), ("vehicleConditionBarFill", vv.condFill),
             ("vehicleFuelValueText", vv.fuelValue), ("vehicleConditionValueText", vv.condValue),
             ("tabletClockText", clockText), ("tabletCashText", cashText), ("cargoTabCountText", tabCount));
@@ -155,7 +156,7 @@ public static partial class CozyUIBuilder
         public TMP_InputField search;
         public Button filterAll, filterVehicle, filterExpress, filterFragile;
         public TextMeshProUGUI empty, detailHeader, tracking, recipient, address, hintTitle, description,
-            factType, factDeadline, factReward, factStatus, tipText;
+            factType, factDeadline, factReward, factStatus, tipText, factWrongPenalty, factBreakPenalty, factExtraLabel;
         public Image tipIcon;
     }
 
@@ -237,6 +238,16 @@ public static partial class CozyUIBuilder
         v.factDeadline = FactTile(facts, "Fact_Deadline", "cozy_fact_deadline", "Son saat");
         v.factReward = FactTile(facts, "Fact_Reward", "cozy_fact_reward", "Ücret");
         v.factStatus = FactTile(facts, "Fact_Status", "cozy_fact_status", "Durum");
+
+        RectTransform penalties = Node("PenaltyTiles", right);
+        HorizontalLayoutGroup pl = HStack(penalties, 14f);
+        pl.childForceExpandWidth = true;
+        Size(penalties, -1f, 92f);
+        v.factWrongPenalty = FactTile(penalties, "Fact_WrongPenalty", "cozy_fact_wrong_penalty", "Yanlış adres cezası");
+        v.factBreakPenalty = FactTile(penalties, "Fact_ExtraTile", "cozy_fact_break_penalty", "Kırılırsa ceza");
+        // The label of this tile changes with the parcel type (set by CargoTabletUI), so it must not be auto-localized.
+        v.factExtraLabel = v.factBreakPenalty.transform.parent.Find("Label").GetComponent<TextMeshProUGUI>();
+        Object.DestroyImmediate(v.factExtraLabel.GetComponent<LocalizedText>());
 
         v.hintTitle = Line(right, "HintLabel", "Adres tarifi", TextStyle.Label, CozyTheme.InkSoft, 22f);
         Loc(v.hintTitle, "cozy_tablet_hint", "Adres tarifi");

@@ -1892,6 +1892,30 @@
     {
       "key": "item_weapon_name",
       "value": "Silah"
+    },
+    {
+      "key": "cozy_fact_wrong_penalty",
+      "value": "Yanlış adres cezası"
+    },
+    {
+      "key": "cozy_fact_break_penalty",
+      "value": "Kırılırsa ceza"
+    },
+    {
+      "key": "cozy_fact_express_bonus",
+      "value": "{0} öncesi bonus"
+    },
+    {
+      "key": "cozy_held_break",
+      "value": "Kırılırsa <b>{0}</b> ceza kesilir."
+    },
+    {
+      "key": "cozy_held_explode",
+      "value": "Patlarsa <b>{0}</b> ceza kesilir."
+    },
+    {
+      "key": "cozy_held_express",
+      "value": "Son teslim <b>{0}</b>. Zamanında teslim edersen <b><color=#{2}>+{1}</color></b> bonus, geç kalırsan ücret yarıya iner."
     }
   ]
 }

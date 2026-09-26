@@ -1892,6 +1892,30 @@
     {
       "key": "item_weapon_name",
       "value": "Weapon"
+    },
+    {
+      "key": "cozy_fact_wrong_penalty",
+      "value": "Wrong-address penalty"
+    },
+    {
+      "key": "cozy_fact_break_penalty",
+      "value": "Penalty if broken"
+    },
+    {
+      "key": "cozy_fact_express_bonus",
+      "value": "Bonus before {0}"
+    },
+    {
+      "key": "cozy_held_break",
+      "value": "If it breaks, a <b>{0}</b> penalty is charged."
+    },
+    {
+      "key": "cozy_held_explode",
+      "value": "If it explodes, a <b>{0}</b> penalty is charged."
+    },
+    {
+      "key": "cozy_held_express",
+      "value": "Deliver by <b>{0}</b> for a <b><color=#{2}>+{1}</color></b> bonus. If you are late, the pay is cut in half."
     }
   ]
 }

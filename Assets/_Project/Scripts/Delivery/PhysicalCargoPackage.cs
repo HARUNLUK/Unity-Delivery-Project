@@ -412,25 +412,17 @@ public class PhysicalCargoPackage : MonoBehaviour
         health = 100f;
         spawnImmunityUntil = Time.time + spawnImmunityDuration;
 
-        // Apply bonus multiplier for specialty cargo
+        // Apply XP bonus for specialty cargo (Reward & Penalty are generated directly from per-type min/max settings)
         if (cargoType == CargoType.Fragile)
         {
-            deliveryReward = Mathf.RoundToInt(deliveryReward * 1.5f);
-            wrongPenalty = Mathf.RoundToInt(wrongPenalty * 1.5f);
             xpReward = Mathf.RoundToInt(xpReward * 1.4f);
         }
         else if (cargoType == CargoType.Express)
         {
-            deliveryReward = Mathf.RoundToInt(deliveryReward * 1.8f);
             xpReward = Mathf.RoundToInt(xpReward * 1.6f);
         }
         else if (cargoType == CargoType.Explosive)
         {
-            float mult = (BranchManager.Instance != null && BranchManager.Instance.explosiveRewardMultiplier > 0f) 
-                ? BranchManager.Instance.explosiveRewardMultiplier 
-                : 5.0f;
-            deliveryReward = Mathf.RoundToInt(deliveryReward * mult); // Ultra high reward (5.0x)
-            wrongPenalty = Mathf.Max(10, Mathf.RoundToInt(wrongPenalty * 0.25f)); // Very low penalty for unfulfilled explosive
             xpReward = Mathf.RoundToInt(xpReward * 2.5f);
         }
 
@@ -1163,7 +1155,10 @@ public class PhysicalCargoPackage : MonoBehaviour
                             float deliveryTime = exactDeliveryTimeDecHour.HasValue ? exactDeliveryTimeDecHour.Value : (DayTimeManager.Instance.CurrentHour + (DayTimeManager.Instance.CurrentMinute / 60f));
                             if (deliveryTime <= targetDeliveryHour)
                             {
-                                int bonus = Mathf.RoundToInt(deliveryReward * 0.4f);
+                                float bonusRate = (BranchManager.Instance != null && BranchManager.Instance.expressOnTimeBonusRate > 0f)
+                                    ? BranchManager.Instance.expressOnTimeBonusRate
+                                    : 0.40f;
+                                int bonus = Mathf.RoundToInt(deliveryReward * bonusRate);
                                 result.moneyChange += bonus;
                                 result.xpAwarded += 50;
                                 result.isExpressBonus = true;

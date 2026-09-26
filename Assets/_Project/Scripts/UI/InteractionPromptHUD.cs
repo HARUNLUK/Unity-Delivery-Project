@@ -75,6 +75,11 @@ public class InteractionPromptHUD : MonoBehaviour
     public Image heldCargoTypeChip;
     public Image heldCargoTypeIcon;
     public GameObject heldCargoConditionChip;
+    [Tooltip("Optional strip explaining what breaking (fragile) or an on-time delivery (express) means in money.")]
+    public GameObject heldCargoExtraRoot;
+    public Image heldCargoExtraBackground;
+    public Image heldCargoExtraIcon;
+    public TextMeshProUGUI heldCargoExtraText;
 
     [Header("--- VEHICLE DASHBOARD GAUGE (FUEL & CONDITION) ---")]
     public GameObject vehicleDashboardRoot;
@@ -1168,6 +1173,54 @@ public class InteractionPromptHUD : MonoBehaviour
         }
 
         ApplyHeldCargoChipStyle(pkg);
+        ApplyHeldCargoExtraInfo(pkg);
+    }
+
+    /// <summary>Fragile / explosive: what breaking costs. Express: the on-time bonus and what a late delivery does.</summary>
+    private void ApplyHeldCargoExtraInfo(PhysicalCargoPackage pkg)
+    {
+        if (heldCargoExtraRoot == null) return;
+
+        bool fragile = pkg.cargoType == CargoType.Fragile || pkg.cargoType == CargoType.Explosive;
+        bool express = pkg.cargoType == CargoType.Express;
+        heldCargoExtraRoot.SetActive(fragile || express);
+        if (!fragile && !express) return;
+
+        string text;
+        Color bg, ink;
+        string icon;
+        if (express)
+        {
+            float rate = (BranchManager.Instance != null && BranchManager.Instance.expressOnTimeBonusRate > 0f) ? BranchManager.Instance.expressOnTimeBonusRate : 0.40f;
+            int bonus = Mathf.RoundToInt(pkg.deliveryReward * rate);
+            string bonusHex = CozyTheme.ToHex(CozyTheme.MintInk);
+            text = string.Format(LocalizationManager.Get("cozy_held_express", "Son teslim <b>{0}</b>. Zamanında teslim edersen <b><color=#{2}>+{1}</color></b> bonus, geç kalırsan ücret yarıya iner."),
+                pkg.GetFormattedTargetDeliveryTime(), CozyText.Money(bonus).TrimStart('+'), bonusHex);
+            CozyTheme.GetTone(CozyTheme.Tone.Sky, out bg, out ink);
+            icon = "bolt";
+        }
+        else
+        {
+            float mult = InsuranceAgencyManager.Instance != null ? InsuranceAgencyManager.Instance.GetFragilePenaltyMultiplier() : 1f;
+            int penalty = Mathf.RoundToInt(pkg.wrongPenalty * mult);
+            string key = pkg.cargoType == CargoType.Explosive ? "cozy_held_explode" : "cozy_held_break";
+            string fallback = pkg.cargoType == CargoType.Explosive ? "Patlarsa <b>{0}</b> ceza kesilir." : "Kırılırsa <b>{0}</b> ceza kesilir.";
+            text = string.Format(LocalizationManager.Get(key, fallback), CozyText.Money(-penalty));
+            CozyTheme.GetTone(CozyTheme.Tone.Red, out bg, out ink);
+            icon = pkg.cargoType == CargoType.Explosive ? "flame" : "fragile";
+        }
+
+        if (heldCargoExtraBackground != null) heldCargoExtraBackground.color = bg;
+        if (heldCargoExtraText != null) { heldCargoExtraText.text = text; heldCargoExtraText.color = ink; }
+        if (heldCargoExtraIcon != null)
+        {
+            heldCargoExtraIcon.color = ink;
+            if (CozyAssets.Instance != null)
+            {
+                Sprite s = CozyAssets.Instance.Icon(icon);
+                if (s != null) heldCargoExtraIcon.sprite = s;
+            }
+        }
     }
 
     private void ApplyHeldCargoChipStyle(PhysicalCargoPackage pkg)

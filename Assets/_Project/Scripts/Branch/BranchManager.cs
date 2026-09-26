@@ -91,8 +91,73 @@ public class BranchManager : MonoBehaviour
     [Tooltip("Spawn immunity duration (seconds).")]
     public float fragileSpawnImmunityDuration = 3.5f;
 
-    [Tooltip("Delivery reward multiplier for explosive packages (e.g. 5.0 = 500% reward)")]
-    public float explosiveRewardMultiplier = 5.0f;
+    [Header("--- STANDART KARGO KAZANÇ AYARLARI ---")]
+    [Tooltip("Standart kargo minimum ödül ($)")]
+    public int standardMinReward = 80;
+    [Tooltip("Standart kargo maksimum ödül ($)")]
+    public int standardMaxReward = 180;
+    [Tooltip("Standart kargo yanlış adres cezası ($)")]
+    public int standardWrongPenalty = 40;
+
+    [Header("--- KIRILGAN (FRAGILE) KARGO KAZANÇ AYARLARI ---")]
+    [Tooltip("Kırılgan kargo minimum ödül ($)")]
+    public int fragileMinReward = 120;
+    [Tooltip("Kırılgan kargo maksimum ödül ($)")]
+    public int fragileMaxReward = 270;
+    [Tooltip("Kırılgan kargo hasar/yanlış teslim cezası ($)")]
+    public int fragileWrongPenalty = 60;
+
+    [Header("--- EKSPRES (EXPRESS) KARGO KAZANÇ AYARLARI ---")]
+    [Tooltip("Ekspres kargo minimum ödül ($)")]
+    public int expressMinReward = 150;
+    [Tooltip("Ekspres kargo maksimum ödül ($)")]
+    public int expressMaxReward = 320;
+    [Tooltip("Ekspres kargo yanlış teslim cezası ($)")]
+    public int expressWrongPenalty = 50;
+    [Tooltip("Ekspres saatinden önce teslim bonusu oranı (0.40 = +%40)")]
+    public float expressOnTimeBonusRate = 0.40f;
+
+    [Header("--- PATLAYICI (EXPLOSIVE) KARGO KAZANÇ AYARLARI ---")]
+    [Tooltip("Patlayıcı kargo minimum ödül ($)")]
+    public int explosiveMinReward = 400;
+    [Tooltip("Patlayıcı kargo maksimum ödül ($)")]
+    public int explosiveMaxReward = 900;
+    [Tooltip("Patlayıcı kargo ceza ($)")]
+    public int explosiveWrongPenalty = 20;
+
+    public void GetRewardAndPenalty(CargoType type, out int reward, out int penalty)
+    {
+        int min, max, pen;
+        switch (type)
+        {
+            case CargoType.Fragile:
+                min = fragileMinReward;
+                max = fragileMaxReward;
+                pen = fragileWrongPenalty;
+                break;
+            case CargoType.Express:
+                min = expressMinReward;
+                max = expressMaxReward;
+                pen = expressWrongPenalty;
+                break;
+            case CargoType.Explosive:
+                min = explosiveMinReward;
+                max = explosiveMaxReward;
+                pen = explosiveWrongPenalty;
+                break;
+            case CargoType.Standard:
+            default:
+                min = standardMinReward;
+                max = standardMaxReward;
+                pen = standardWrongPenalty;
+                break;
+        }
+
+        min = Mathf.Max(10, min);
+        max = Mathf.Max(min, max);
+        reward = UnityEngine.Random.Range(min / 10, (max / 10) + 1) * 10;
+        penalty = pen;
+    }
 
     [Header("--- DEFAULT & CUSTOM CARGO PACKAGE PREFABS ---")]
     [Tooltip("Primary default cargo box prefab (Fallback used if specific lists are empty)")]

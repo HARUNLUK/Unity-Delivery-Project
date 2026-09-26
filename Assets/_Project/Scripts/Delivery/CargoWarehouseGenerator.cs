@@ -143,7 +143,18 @@ public class CargoWarehouseGenerator : MonoBehaviour
         PhysicalCargoPackage pkg = boxObj.GetComponent<PhysicalCargoPackage>();
         if (pkg == null) pkg = boxObj.AddComponent<PhysicalCargoPackage>();
 
-        int reward = Random.Range(minReward / 10, (maxReward / 10) + 1) * 10;
+        int reward;
+        int penalty;
+        if (bm != null)
+        {
+            bm.GetRewardAndPenalty(chosenType, out reward, out penalty);
+        }
+        else
+        {
+            reward = Random.Range(minReward / 10, (maxReward / 10) + 1) * 10;
+            penalty = wrongPenalty;
+        }
+
         int xp = 70 + (targetPoint.requiredLevel * 20);
 
         if (bm != null)
@@ -163,7 +174,7 @@ public class CargoWarehouseGenerator : MonoBehaviour
             expressHour = bm != null ? bm.GenerateRandomExpressDeliveryHour() : 13.0f;
         }
 
-        pkg.SetupPackage(targetPoint.pointId, targetPoint.EffectiveAddressName, targetPoint.EffectiveRecipient, reward, wrongPenalty, chosenType, xp, targetPoint.EffectiveDescription, chosenMaterial, isCustom, expressHour);
+        pkg.SetupPackage(targetPoint.pointId, targetPoint.EffectiveAddressName, targetPoint.EffectiveRecipient, reward, penalty, chosenType, xp, targetPoint.EffectiveDescription, chosenMaterial, isCustom, expressHour);
         return pkg;
     }
 
