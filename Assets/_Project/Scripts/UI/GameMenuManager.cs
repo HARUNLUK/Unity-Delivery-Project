@@ -1338,6 +1338,15 @@ public class GameMenuManager : MonoBehaviour
 #endif
     }
 
+    private static int lastEscConsumedFrame = -1;
+
+    public static void ConsumeEscape()
+    {
+        lastEscConsumedFrame = Time.frameCount;
+    }
+
+    public static bool IsEscapeConsumedThisFrame => lastEscConsumedFrame == Time.frameCount;
+
     private void HandleInput()
     {
         bool escPressed = false;
@@ -1356,17 +1365,81 @@ public class GameMenuManager : MonoBehaviour
 
         if (!escPressed) return;
 
+        // If another UI/system has already consumed Escape this frame:
+        if (IsEscapeConsumedThisFrame) return;
+
         // A tutorial window (F1 list / replayed tip) closes first and swallows this ESC.
-        if (TutorialManager.Instance != null && (TutorialManager.Instance.IsBlockingOpen || TutorialManager.Instance.EscapeConsumedThisFrame)) return;
+        if (TutorialManager.Instance != null && (TutorialManager.Instance.IsBlockingOpen || TutorialManager.Instance.EscapeConsumedThisFrame))
+        {
+            if (TutorialManager.Instance.IsBlockingOpen)
+            {
+                TutorialManager.Instance.CloseAnyOpenTutorial();
+                ConsumeEscape();
+            }
+            return;
+        }
+
+        // If new game confirmation modal is open, close it
+        if (newGameModalPanel != null && newGameModalPanel.activeSelf)
+        {
+            newGameModalPanel.SetActive(false);
+            ConsumeEscape();
+            return;
+        }
 
         if (currentState == GameFlowState.Playing)
         {
-            // Do not intercept if tablet, garage, modal, or day summary is open (they close themselves first)
-            if (CargoTabletUI.Instance != null && CargoTabletUI.Instance.IsTabletOpen) return;
-            if (CommercialHubUIManager.Instance != null && CommercialHubUIManager.Instance.IsAnyPanelOpen) return;
+            // Close any currently open gameplay menus/overlays without pausing the game!
+            bool closedOverlay = false;
+
+            // 1. Cargo Tablet UI (Tab menu)
+            if (CargoTabletUI.Instance != null && CargoTabletUI.Instance.IsTabletOpen)
+            {
+                CargoTabletUI.Instance.CloseTablet();
+                closedOverlay = true;
+            }
+
+            // 2. Commercial Hub UI (Garage, Dealership, Insurance, Dispatch, Property purchase modal)
+            if (CommercialHubUIManager.Instance != null && CommercialHubUIManager.Instance.IsAnyPanelOpen)
+            {
+                CommercialHubUIManager.Instance.CloseAllPanels();
+                closedOverlay = true;
+            }
+
+            // 3. Delivery Selection Dropdown at customer doorstep
+            if (DeliverySelectionUI.Instance != null && DeliverySelectionUI.Instance.IsOpen)
+            {
+                DeliverySelectionUI.Instance.ClosePanel();
+                FPSPlayerController.LockCursor(true);
+                closedOverlay = true;
+            }
+
+            // 4. Delivery Tutorial Guide
+            if (DeliveryTutorialUI.Instance != null && DeliveryTutorialUI.Instance.IsOpen)
+            {
+                DeliveryTutorialUI.Instance.HideTutorial();
+                closedOverlay = true;
+            }
+
+            // 5. Vehicle Tutorial Guide
+            if (VehicleTutorialUI.Instance != null && VehicleTutorialUI.Instance.IsOpen)
+            {
+                VehicleTutorialUI.Instance.HideTutorial();
+                closedOverlay = true;
+            }
+
+            // Blocking gameplay states where Pause Menu should not open
             if (DaySummaryManager.Instance != null && DaySummaryManager.Instance.IsSummaryOpen) return;
             if (BranchUpgradeTransitionUI.IsTransitioning) return;
+            if (GameOverManager.Instance != null && GameOverManager.Instance.IsGameOver) return;
 
+            if (closedOverlay)
+            {
+                ConsumeEscape();
+                return;
+            }
+
+            // Only pause if no gameplay menu was open
             PauseGame();
         }
         else if (currentState == GameFlowState.Paused)
@@ -1378,6 +1451,7 @@ public class GameMenuManager : MonoBehaviour
             CloseSettings();
         }
     }
+
 
     #endregion
 

@@ -136,6 +136,7 @@ public class CommercialHubUIManager : MonoBehaviour
 
             if (closePressed)
             {
+                GameMenuManager.ConsumeEscape();
                 CloseAllPanels();
             }
         }
@@ -715,6 +716,10 @@ public class CommercialHubUIManager : MonoBehaviour
     public void CloseAllPanels()
     {
         bool wasOpen = IsAnyPanelOpen;
+        if (wasOpen)
+        {
+            GameMenuManager.ConsumeEscape();
+        }
 
         if (InteractionPromptHUD.Instance != null)
         {

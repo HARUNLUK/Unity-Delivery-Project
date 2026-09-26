@@ -427,7 +427,7 @@
     },
     {
       "key": "tablet_physical_delivery_tip",
-      "value": "<b>Physical Delivery:</b> Pick up package with <b>[E]</b> and drop in delivery zone."
+      "value": "<b>Physical Delivery:</b> Pick up the package with <b>[Left Click]</b> and drop it in the delivery zone."
     },
     {
       "key": "tablet_tracking_no",
@@ -995,7 +995,7 @@
     },
     {
       "key": "prompt_pickup_cargo",
-      "value": "[E] Pick up {0}"
+      "value": "[{1}] Pick up {0}"
     },
     {
       "key": "prompt_target_cargo",
@@ -1219,7 +1219,7 @@
     },
     {
       "key": "key_action_interact",
-      "value": "• <b>Interact / Pick Cargo / Shop</b>"
+      "value": "• <b>Interact / Vehicle / Shop</b>"
     },
     {
       "key": "key_action_vehicle",
@@ -1235,7 +1235,7 @@
     },
     {
       "key": "key_action_throw_cargo",
-      "value": "• <b>Throw Cargo (Charged)</b>"
+      "value": "• <b>Pick Up / Throw Cargo (Charged)</b>"
     },
     {
       "key": "key_action_drop_cargo",
@@ -1715,7 +1715,7 @@
     },
     {
       "key": "tut_pickup_p1",
-      "value": "Look at the parcel in the warehouse and press {Interact} to pick it up."
+      "value": "Look at the parcel in the warehouse and use {ThrowCargo} to pick it up."
     },
     {
       "key": "tut_pickup_sub",

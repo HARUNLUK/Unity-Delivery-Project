@@ -15,7 +15,7 @@ public static class TutorialTexts
         { "tut_guide_close", "[F1] ile kapat" },
         { "tut_pages", "{0} sayfa" },
         { "tut_pickup_title", "Günün kargosu hazır" },
-        { "tut_pickup_p1", "Depodaki koliye bak ve {Interact} ile eline al." },
+        { "tut_pickup_p1", "Depodaki koliye bak ve {ThrowCargo} ile eline al." },
         { "tut_pickup_sub", "İlk kargoyu alırken" },
         { "tut_clue_title", "Teslim noktasını bul" },
         { "tut_clue_p1", "Kargo, adresindeki <b>teslim noktasına</b> bırakılmalı. Sağdaki etikette yazan <b>adres tarifini</b> oku, o evin posta kutusunu bul." },

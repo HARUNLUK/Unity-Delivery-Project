@@ -527,6 +527,22 @@ public class TutorialManager : MonoBehaviour
     // F1 guide list
     // ---------------------------------------------------------------
 
+    public void CloseAnyOpenTutorial()
+    {
+        if (guideOpen)
+        {
+            escapeConsumedFrame = Time.frameCount;
+            GameMenuManager.ConsumeEscape();
+            CloseGuide();
+        }
+        else if (modalReplay)
+        {
+            escapeConsumedFrame = Time.frameCount;
+            GameMenuManager.ConsumeEscape();
+            OnModalOk();
+        }
+    }
+
     private void HandleGuideKey()
     {
         Keyboard kb = Keyboard.current;
@@ -542,11 +558,13 @@ public class TutorialManager : MonoBehaviour
             if (guideOpen)
             {
                 escapeConsumedFrame = Time.frameCount;
+                GameMenuManager.ConsumeEscape();
                 CloseGuide();
             }
             else if (modalReplay)
             {
                 escapeConsumedFrame = Time.frameCount;
+                GameMenuManager.ConsumeEscape();
                 OnModalOk();
             }
         }

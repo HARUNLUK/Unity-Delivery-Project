@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 using TMPro;
 
 public class DeliverySelectionUI : MonoBehaviour
@@ -169,8 +172,36 @@ public class DeliverySelectionUI : MonoBehaviour
         FPSPlayerController.LockCursor(true);
     }
 
+    private void Update()
+    {
+        if (!IsOpen) return;
+
+        bool escPressed = false;
+#if ENABLE_INPUT_SYSTEM
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            escPressed = true;
+        }
+#endif
+#if ENABLE_LEGACY_INPUT_MANAGER
+        try { if (Input.GetKeyDown(KeyCode.Escape)) escPressed = true; } catch { }
+#endif
+
+        if (escPressed)
+        {
+            ClosePanel();
+            FPSPlayerController.LockCursor(true);
+        }
+    }
+
     public void ClosePanel()
     {
+        bool wasOpen = IsOpen;
+        if (wasOpen)
+        {
+            GameMenuManager.ConsumeEscape();
+        }
+
         if (panelRoot != null) panelRoot.SetActive(false);
         selectedCargoItem = null;
         currentActiveZone = null;

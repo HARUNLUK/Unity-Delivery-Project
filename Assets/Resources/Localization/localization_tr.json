@@ -427,7 +427,7 @@
     },
     {
       "key": "tablet_physical_delivery_tip",
-      "value": "<b>Fiziksel Teslimat:</b> Koliyi <b>[E]</b> ile taşıyıp teslimat alanına bırakın."
+      "value": "<b>Fiziksel Teslimat:</b> Koliyi <b>[Sol Tık]</b> ile alıp teslimat alanına bırakın."
     },
     {
       "key": "tablet_tracking_no",
@@ -995,7 +995,7 @@
     },
     {
       "key": "prompt_pickup_cargo",
-      "value": "[E] Kargoyu Al: {0}"
+      "value": "[{1}] Kargoyu Al: {0}"
     },
     {
       "key": "prompt_target_cargo",
@@ -1219,7 +1219,7 @@
     },
     {
       "key": "key_action_interact",
-      "value": "• <b>Etkileşim / Kargo Alma / Dükkan</b>"
+      "value": "• <b>Etkileşim / Araç / Dükkan</b>"
     },
     {
       "key": "key_action_vehicle",
@@ -1235,7 +1235,7 @@
     },
     {
       "key": "key_action_throw_cargo",
-      "value": "• <b>Koli Fırlatma (Şarjlı)</b>"
+      "value": "• <b>Koli Alma / Fırlatma (Şarjlı)</b>"
     },
     {
       "key": "key_action_drop_cargo",
@@ -1715,7 +1715,7 @@
     },
     {
       "key": "tut_pickup_p1",
-      "value": "Depodaki koliye bak ve {Interact} ile eline al."
+      "value": "Depodaki koliye bak ve {ThrowCargo} ile eline al."
     },
     {
       "key": "tut_pickup_sub",

@@ -715,14 +715,41 @@ public class FPSPlayerController : MonoBehaviour
         controller.Move(velocity * Time.deltaTime);
     }
 
+    // Parcels are picked up with the primary action (left click by default); Interact (E) is for vehicles, shops, terminals.
+    // After a pickup the button may still be down: wait for its release so the click does not charge a throw.
+    private bool waitForPickupButtonRelease = false;
+
+    /// <summary>Key name of the pickup action for prompts, e.g. "Sol Tık".</summary>
+    private static string PickupKeyName()
+    {
+        InputBindingData b = KeyBindingManager.GetBinding(GameAction.ThrowCargo);
+        string name = b.IsAssigned ? b.GetDisplayName() : "?";
+        int paren = name.IndexOf('(');
+        return paren > 0 ? name.Substring(0, paren).Trim() : name;
+    }
+
     private void HandleInteraction()
     {
         bool interactPressed = KeyBindingManager.WasPressedThisFrame(GameAction.Interact);
+        bool pickupPressed = KeyBindingManager.WasPressedThisFrame(GameAction.ThrowCargo);
 
         // If holding an object
         if (grabber != null && grabber.IsHoldingObject)
         {
             UpdateCargoFocus(null);
+
+            // Picked up with the same button that throws: ignore it until it has been released once.
+            if (waitForPickupButtonRelease)
+            {
+                if (!KeyBindingManager.IsPressed(GameAction.ThrowCargo)) waitForPickupButtonRelease = false;
+                currentDropHoldTime = 0f;
+                if (InteractionPromptHUD.Instance != null)
+                {
+                    InteractionPromptHUD.Instance.HideThrowCharge();
+                    InteractionPromptHUD.Instance.HidePrompt();
+                }
+                return;
+            }
 
             if (afterGrabSafetyTimer > 0f)
             {
@@ -929,7 +956,7 @@ public class FPSPlayerController : MonoBehaviour
         if (hasPackageHit && !isTerminalInFront && closedTailgateInFront == null)
         {
             UpdateCargoFocus(targetedPackage);
-            if (interactPressed && grabber != null)
+            if (pickupPressed && grabber != null)
             {
                 UpdateCargoFocus(null);
                 Rigidbody rbToGrab = targetedPackage != null ? targetedPackage.GetComponent<Rigidbody>() : targetedRb;
@@ -939,6 +966,7 @@ public class FPSPlayerController : MonoBehaviour
                     grabber.GrabObject(rbToGrab);
                     afterGrabSafetyTimer = 0.25f;
                     currentDropHoldTime = 0f;
+                    waitForPickupButtonRelease = true;
                 }
                 return;
             }
@@ -946,7 +974,7 @@ public class FPSPlayerController : MonoBehaviour
             if (InteractionPromptHUD.Instance != null)
             {
                 string targetName = (targetedPackage != null) ? LocalizationManager.Get("prompt_target_cargo") : LocalizationManager.Get("prompt_target_object");
-                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_pickup_cargo", targetName));
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_pickup_cargo", targetName, PickupKeyName()));
             }
             return;
         }
@@ -1096,7 +1124,7 @@ public class FPSPlayerController : MonoBehaviour
                 if (pkg != null || (targetRb != null && !targetRb.isKinematic))
                 {
                     UpdateCargoFocus(pkg);
-                    if (interactPressed && grabber != null)
+                    if (pickupPressed && grabber != null)
                     {
                         UpdateCargoFocus(null);
                         Rigidbody rbToGrab = pkg != null ? pkg.GetComponent<Rigidbody>() : targetRb;
@@ -1106,6 +1134,7 @@ public class FPSPlayerController : MonoBehaviour
                             grabber.GrabObject(rbToGrab);
                             afterGrabSafetyTimer = 0.25f;
                             currentDropHoldTime = 0f;
+                            waitForPickupButtonRelease = true;
                         }
                         return;
                     }
@@ -1113,7 +1142,7 @@ public class FPSPlayerController : MonoBehaviour
                     if (InteractionPromptHUD.Instance != null)
                     {
                         string targetName = (pkg != null) ? LocalizationManager.Get("prompt_target_cargo") : LocalizationManager.Get("prompt_target_object");
-                        InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_pickup_cargo", targetName));
+                        InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_pickup_cargo", targetName, PickupKeyName()));
                     }
                     return;
                 }
@@ -1340,7 +1369,7 @@ public class FPSPlayerController : MonoBehaviour
         {
             UpdateCargoFocus(proxPkg);
 
-            if (interactPressed && grabber != null)
+            if (pickupPressed && grabber != null)
             {
                 UpdateCargoFocus(null);
                 Rigidbody rbToGrab = proxPkg != null ? proxPkg.GetComponent<Rigidbody>() : proxRb;
@@ -1350,6 +1379,7 @@ public class FPSPlayerController : MonoBehaviour
                     grabber.GrabObject(rbToGrab);
                     afterGrabSafetyTimer = 0.25f;
                     currentDropHoldTime = 0f;
+                    waitForPickupButtonRelease = true;
                 }
                 return;
             }
@@ -1357,7 +1387,7 @@ public class FPSPlayerController : MonoBehaviour
             if (InteractionPromptHUD.Instance != null)
             {
                 string targetName = (proxPkg != null) ? LocalizationManager.Get("prompt_target_cargo") : LocalizationManager.Get("prompt_target_object");
-                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_pickup_cargo", targetName));
+                InteractionPromptHUD.Instance.ShowPrompt(LocalizationManager.GetFormat("prompt_pickup_cargo", targetName, PickupKeyName()));
             }
             return;
         }

@@ -202,6 +202,7 @@ public class DeliveryTutorialUI : MonoBehaviour
         // Close on ESC if open
         if (isTutorialOpen && escapePressed)
         {
+            GameMenuManager.ConsumeEscape();
             HideTutorial();
         }
 

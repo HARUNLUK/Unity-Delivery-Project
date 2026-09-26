@@ -157,6 +157,7 @@ public class VehicleTutorialUI : MonoBehaviour
 
         if (isTutorialOpen && escapePressed)
         {
+            GameMenuManager.ConsumeEscape();
             HideTutorial();
             return;
         }

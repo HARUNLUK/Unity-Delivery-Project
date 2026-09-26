@@ -127,7 +127,7 @@ public class CargoTabletUI : MonoBehaviour
     private bool isTabletOpen = false;
     private bool isTerminalMode = false;
 
-    public bool IsTabletOpen => isTabletOpen;
+    public bool IsTabletOpen => isTabletOpen || (tabletPanelRoot != null && tabletPanelRoot.activeSelf);
     public bool IsTerminalMode => isTerminalMode;
     public TabletTab CurrentTab => currentTab;
 
@@ -359,6 +359,7 @@ public class CargoTabletUI : MonoBehaviour
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
                 cargoSearchInput.DeactivateInputField();
+                GameMenuManager.ConsumeEscape();
             }
             return false;
         }
@@ -375,6 +376,7 @@ public class CargoTabletUI : MonoBehaviour
 
             if (isTabletOpen && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
+                GameMenuManager.ConsumeEscape();
                 return true;
             }
         }
@@ -388,6 +390,7 @@ public class CargoTabletUI : MonoBehaviour
             }
             if (isTabletOpen && Input.GetKeyDown(KeyCode.Escape))
             {
+                GameMenuManager.ConsumeEscape();
                 return true;
             }
         }
@@ -505,6 +508,8 @@ public class CargoTabletUI : MonoBehaviour
 
     public void CloseTablet()
     {
+        GameMenuManager.ConsumeEscape();
+
         if (InteractionPromptHUD.Instance != null)
         {
             InteractionPromptHUD.Instance.SuppressPrompts(0.35f);
